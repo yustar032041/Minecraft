@@ -1,28 +1,17 @@
-# 8界風記 v7.1.0 — Git登録インデックス
+# 8界風記 v7.1.0
 
-このリポジトリは、8界風記 v7.1.0 のアドオン一式を保管する場所です。
+**Gitへの登録完了。** Behavior Pack、Resource Pack、完成設計書を展開済みの状態で保存しています。
 
-## 現在の登録状態
+## 収録内容
 
-- [展開・登録用ZIP](https://d2ol7oe51mr4n9.cloudfront.net/user_3Ji8roHXxNleqfmoEPE7eWzIIiu/6f9b224d-8cb3-4710-8af1-d7a5bc4c4208.zip) は外部転送ストレージに保管済みです。
-- **ZIP本体は、まだこのGitリポジトリのGitオブジェクトとして登録されていません。**
-- GitHub Actionsの利用上限に達したため、リポジトリ内のインポートワークフロー（`.github/workflows/import-expanded-hakkai.yml`）による展開・コミットが未実行です。
-- 元の単独MDファイルは削除済みです。
+| 項目 | ファイル数 |
+|---|---:|
+| Behavior Pack | 1,467 |
+| Resource Pack | 2,858 |
+| 完成設計書 | 1 |
+| **合計** | **4,326** |
 
-## パッケージ確認情報
-
-| 項目 | 値 |
-|---|---|
-| ファイル名 | `8界風記_GitHub投入用.zip` |
-| サイズ | 15,625,763 bytes |
-| SHA-256 | `05f9ae0bc3c12060fd8c9295761b478ed2b896cff96b89154f392b7b7219903d` |
-| ZIP整合性 | OK |
-| ZIP内ファイル数 | 4,326 |
-| Behavior Pack | 1,467 files |
-| Resource Pack | 2,858 files |
-| 設計書 | 1 file |
-
-## 登録後の配置予定
+## フォルダー構成
 
 ```text
 Hakkai_v7.1.0/
@@ -31,8 +20,16 @@ Hakkai_v7.1.0/
 8界風記完成設計書.md
 ```
 
-## インポート
+## 登録・確認
 
-GitHub Actionsの利用枠が回復した後、Actionsから `Import expanded Hakkai addon` を手動実行すると、上記ZIPを取得して展開し、パッケージと設計書をリポジトリへコミットするよう設定されています。
+- GitHub Actions: [インポート実行 #2](https://github.com/yustar032041/Minecraft/actions/runs/45197903651)
+- 実行結果: success
+- コミット: `76c1056`
+- ZIP整合性: OK
+- ZIP内件数: 4,326
+- Behavior Pack / Resource Pack の件数をGitHub上の再帰ツリーでも照合済み
+- 元の単独ファイル `8kai_x5f_v7.1_x5f_ai_x5f_friendly.md` は削除済み
 
-> 注意：このインデックスは登録状況と検証情報を記録するものです。ZIP本体や展開済みファイルがすでにGitに入っていることを意味しません。
+## 補足
+
+ZIPアーカイブそのものをGitに置くのではなく、中身を展開してフォルダー・ファイルとしてGitに登録しています。したがって、GitHub上から各ファイルを個別に確認・取得できます。
