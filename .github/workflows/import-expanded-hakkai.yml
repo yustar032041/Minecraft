@@ -3,7 +3,7 @@ name: Import expanded Hakkai addon
 on:
   push:
     paths:
-      - '8界風記_GitHub投入用.zip'
+      - '.github/workflows/import-expanded-hakkai.yml'
   workflow_dispatch:
 
 permissions:
@@ -19,20 +19,21 @@ jobs:
         with:
           ref: main
 
-      - name: Expand the packs without inspecting their contents
+      - name: Download and expand the supplied archive without inspecting its contents
         shell: bash
         run: |
           set -euo pipefail
+          curl -fL --retry 3 --retry-delay 2 \
+            -o /tmp/hakkai-import.zip \
+            'https://d2ol7oe51mr4n9.cloudfront.net/user_3Ji8roHXxNleqfmoEPE7eWzIIiu/6f9b224d-8cb3-4710-8af1-d7a5bc4c4208.zip'
+
           python3 - <<'PY'
           from pathlib import Path, PurePosixPath
           from zipfile import ZipFile
           import shutil
 
-          archive = Path("8界風記_GitHub投入用.zip")
-          if not archive.is_file():
-              raise SystemExit("Upload archive not found.")
-
-          staging = Path(".hakkai-import-staging")
+          archive = Path("/tmp/hakkai-import.zip")
+          staging = Path("/tmp/hakkai-import-staging")
           if staging.exists():
               shutil.rmtree(staging)
           staging.mkdir()
@@ -64,9 +65,7 @@ jobs:
 
           doc = staging / "8界風記完成設計書.md"
           source_root = staging / "Hakkai_v7.1.0"
-          bp_root = source_root / "BehaviorPack"
-          rp_root = source_root / "ResourcePack"
-          if not doc.is_file() or not bp_root.is_dir() or not rp_root.is_dir():
+          if not doc.is_file() or not (source_root / "BehaviorPack").is_dir() or not (source_root / "ResourcePack").is_dir():
               raise SystemExit("Expected folder structure was not created.")
 
           shutil.copy2(doc, Path("8界風記完成設計書.md"))
@@ -83,11 +82,11 @@ jobs:
           if old_file.exists():
               old_file.unlink()
 
-          archive.unlink()
           shutil.rmtree(staging)
+          archive.unlink()
           PY
 
-      - name: Commit imported folders and remove the previous single file
+      - name: Commit imported folders and remove the original single file
         shell: bash
         run: |
           set -euo pipefail
@@ -98,5 +97,5 @@ jobs:
             echo "No changes to commit."
             exit 0
           fi
-          git commit -m "Import expanded Hakkai v7.1.0 packs"
+          git commit -m "Import expanded Hakkai v7.1.0 folders"
           git push origin HEAD:main
