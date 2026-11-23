@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "hakkai_taunt_scroll",
+    "normal": "hakkai_taunt_scroll_normal",
+    "metalness_emissive_roughness": "hakkai_taunt_scroll_mer"
+  }
+}

@@ -1,14 +1,46 @@
+import { factoryTransaction } from './factory_transaction.js';
+import { setupShieldWear } from './shield_wear.js';
+import { deferShieldArrow } from './shield_reflect.js';
+import { setupCustomShield } from './custom_shield.js';
 import { world, system, BlockVolume, BlockPermutation, ItemStack, GameMode, EntityDamageCause, WeatherType, LiquidType, Difficulty, EquipmentSlot } from '@minecraft/server';
-import { ActionFormData, FormCancelationReason, CustomForm, ObservableNumber } from '@minecraft/server-ui';
+import { ActionFormData, FormCancelationReason } from '@minecraft/server-ui';
 import { setupMobSystem } from './mob_system.js';
+import { setupRealmEnders } from './realm_ender.js';
+import { setupFushiSystem } from './fushi_system.js';
+import { setupMoonBamboo, isMoonlitNight } from './moon_bamboo.js';
+import { setupFushiQuest } from './fushi_quest.js';
+import { setupShrineChiefs } from './shrine_chiefs.js';
+import { spawnRareEncounter, fushiThresholds } from './rare_encounters.js';
+import { setupWardenArena } from './warden_arena.js';
+import { setupWardenBoss } from './warden_boss.js';
+import { setupCombatResonance, combatEnemies, applyCombatHit } from './combat_resonance.js';
+import { setupCombatGuard } from './combat_guard.js';
+import { setupCombatParry } from './combat_parry.js';
+import { setupCombatRoll } from './combat_roll.js';
+import { setupAirDash } from './combat_air_dash.js';
+import { setupAirStrike } from './combat_air_strike.js';
+import { prepareWindRay, renderWindRay } from './combat_wind_ray.js';
+import { castNewMagic } from './combat_magic.js';
+import { setupFushiTotem } from './combat_totem.js';
+import { setupCombatUltimate } from './combat_ultimate.js';
+import { hasUltimateArmor, ultimateRegen, ultimateParryHeal } from './ultimate_armor.js';
+import { ULTIMATE_WEAPONS } from './ultimate_weapons.js';
+import { equippedSeries, ownsSeriesPiece, trialRewardSlot, seriesLegUpgrade } from './armor_series.js';
+import { setupCombatCharge, RELEASE_WEAPON_KINDS } from './combat_charge.js';
 import { places, atlas, linkedRealms, attrs, home, pairs, guardians, catalog, anchor, baseY, width, expandedY, expandedHeight, patterns, chronicles, biomes, families, wildlife, hudTokens, civicRoles, seasonalPlants } from './data.js';
 import { setupFrontierWorlds } from './frontier_worlds.js';
+import { isNaturalSite, initializeNaturalSitePlans, siteBounds } from './natural_sites.js';
 import { setupSeededWorlds } from './seeded_worlds.js';
+import { pickRealmWildlife } from './wildlife_selection.js';
+import { spawnWildlife } from './wildlife_spawn.js';
 import { setupExpeditionRecords } from './expedition_records.js';
+import { GUIDE_ENTRIES, GUIDE_ICONS, GUIDE_SECTIONS, selectGuidePage, creatureEntriesByRealm, gearKinds, filterGear } from './guide_navigation.js';
 
 const ns='hakkai:', dimID=(id)=>ns+'realm_'+id;
-let frontierWorlds, expeditionRecords, seededWorlds, mobSystem;
-const gear=new Map(catalog.map(g=>[ns+g.id,g]));
+let frontierWorlds, expeditionRecords, seededWorlds, mobSystem, realmEnders, fushiSystem, wardenArena, wardenBoss, combatResonance, combatGuard, combatRoll, combatParry, airDash, airStrike, fushiTotem, combatUltimate, combatCharge;
+const shieldWear=setupShieldWear({system});
+const customShield=setupCustomShield({catalog,prepare:shieldWear.prepare});
+const gear=new Map([...catalog,...ULTIMATE_WEAPONS].map(g=>[ns+g.id,g]));
 const atlasGrid=new Map(atlas.map(a=>[`${a.col},${a.row}`,a]));
 const travelSites=new Map([...places,...atlas,...linkedRealms].map(s=>[s.id,s]));
 const sessions=new Map();
@@ -105,7 +137,7 @@ function currentPlace(p){
    return a&&l.z>=-22&&l.z<23&&num(world,`built_${a.id}`)?a:undefined;
  }
  const trail=trails.find(s=>dim===0&&Math.abs(s.x-l.x+.5)<s.size/2&&Math.abs(s.z-l.z)<s.size/2+2);
- return trail??places.find(s=>s.kind!=='trail'&&s.dim===dim&&Math.abs(s.x-l.x)<(s.size??width)/2+2&&Math.abs(s.z-l.z)<(s.size??width)/2+2);
+ return trail??places.find(s=>s.kind!=='trail'&&(!isNaturalSite(s)||num(world,`built_${s.id}`))&&s.dim===dim&&Math.abs(s.x-l.x)<(s.size??width)/2+2&&Math.abs(s.z-l.z)<(s.size??width)/2+2);
 }
 function safeFloor(type){return !/(magma|cactus|campfire|leaves|powder_snow|rail|pressure_plate|carpet|fern|vine|dripleaf|pointed_dripstone)/.test(type);}
 function campfireNearby(p){
@@ -1428,20 +1460,24 @@ async function ensureSkyLandmarks(d){
 
 // --- 非戦闘地形ここまで ---
 
-async function build(site){
+async function build(site,onlyIfVacant=false){
  if(num(world,`built_${site.id}`))return;
  if(builds.has(site.id))return builds.get(site.id);
  const d=world.getDimension(dimID(site.dim)), from=origin(site), w=site.size??width,
    to={x:from.x+w-1,y:baseY+(site.size?expandedHeight:34)-1,z:from.z+w-1};
  const task=loaded(d,from,to,async()=>{
    if(!num(world,`built_${site.id}`)){
+     if(onlyIfVacant&&d.getPlayers().some(player=>Math.abs(player.location.x-site.x)<=(site.size??width)/2+2&&Math.abs(player.location.z-site.z)<=(site.size??width)/2+2))
+       throw Error(`プレイヤーが予定地内にいるため生成を延期: ${site.id}`);
      const special=site.kind==='atlas'||site.kind==='linked';
-     if(special&&d.containsBlock(new BlockVolume(from,to),{excludeTypes:['minecraft:air']}))
-       throw Error(`${site.kind==='atlas'?'風土図鑑':'八界本街道'}の未生成区画にブロックがあるため、上書きを中止: ${site.id}`);
+     // 初回配置でも、既存ワールドの建築や以前の生成物を上書きしない。
+     if(d.containsBlock(new BlockVolume(from,to),{excludeTypes:['minecraft:air']}))
+       throw Error(`未生成の ${site.name} の予定地にブロックがあるため、上書きを中止: ${site.id}`);
      world.structureManager.place(`${ns}${special?site.kind:'site'}_${site.id}`,d,from,{includeEntities:false});
      await timed(()=>{},2);
      if(!safeNear(d,coords(site),4))throw Error(`風記の到着床を確認できない: ${site.id}`);
      property(world,`built_${site.id}`,1);
+     if(onlyIfVacant&&isNaturalSite(site))property(world,`natural_join_${site.id}_v1`,1);
      if(site.id===1){
        try{
          const v=coords(site);
@@ -2314,7 +2350,22 @@ function recordEntry(p,site){
  if(site.kind==='island'||site.id>=9&&site.id<=20)property(p,'last_island',site.id);
  checkEightRealmMemory(p);
 }
+// 記録は旧IDを維持。配置はシード地形の区画キューが担当する。
+function naturalSiteTick(p,site){
+ if(isNaturalSite(site)&&num(world,`built_${site.id}`)&&!visited(p,site.id))recordEntry(p,site);
+}
+// Only untouched chunks qualify. A prior terrain job, partial structure or
+// player construction must never be overwritten on an upgraded world.
+async function buildSeededSite(site){
+ const b=siteBounds(site,width);
+ for(let cx=Math.floor(b.x0/16);cx<=Math.floor(b.x1/16);cx++)for(let cz=Math.floor(b.z0/16);cz<=Math.floor(b.z1/16);cz++){
+  if(num(world,`seed_land_${site.dim}_${cx}_${cz}_v1`)||num(world,`seed_land_${site.dim}_${cx}_${cz}_skip_v1`))
+   throw Error(`既存地形のため探索地 ${site.id} を保護: ${cx},${cz}`);
+ }
+ return build(site,true);
+}
 async function arrive(p,site){
+ if(isNaturalSite(site)){notice(p,'§eこの場所には各界を歩いて向かってください');return false;}
  const s=state(p);
  if(s.busy||!p.isValid)return false;
  if(system.currentTick<s.arrival){notice(p,'§e風が静まるまで待ってね');return;}
@@ -2380,6 +2431,7 @@ function updateWeather(site){
  currentWeather.set(d.id.replace(/^minecraft:/,''),weather);
 }
 function soundtrack(p,site,s){
+ if(wardenBoss?.musicActive(p.id)){if(s.sound){try{s.sound.stop();}catch{}s.sound=undefined;}s.lastMusic=undefined;s.musicAt=0;return;}
  const town=townNear(p.dimension,p.location), work=s.workSoundAt>system.currentTick, danger=site&&enemies(p,11,1).length>0;
  const scene=danger?'combat':town&&townFestival(town)?'festival':work?'workshop':town?'village':site?.kind==='atlas'?'atlas':undefined;
  const id=scene??site?.original??site?.id??-1;
@@ -2613,37 +2665,37 @@ function climate(p,site,s){
 }
 
 const effects=['speed','regeneration','fire_resistance','resistance','strength','night_vision','absorption','slow_falling','night_vision','absorption','invisibility','resistance','haste','regeneration','water_breathing','slow_falling','invisibility','haste','conduit_power','water_breathing'];
-function enemies(p,r,cap=6){
- const origin=p.location;
- return p.dimension.getEntities({location:origin,maxDistance:r,closest:cap+3,families:['monster'],excludeTypes:['minecraft:player']}).filter(e=>e.isValid).slice(0,cap);
-}
-function hit(p,e,str,a,mod,push){
- if(!e.isValid)return;
- try{
-   if(a===2||mod===2)e.setOnFire(3,true);
-   if([7,10,11,16].includes(a)||[7,10,11,16].includes(mod))e.addEffect('slowness',65,{amplifier:a===7?3:1,showParticles:false});
-   const dx=e.location.x-p.location.x,dz=e.location.z-p.location.z, d=Math.hypot(dx,dz)||1;
-   e.applyKnockback({x:push*dx/d,z:push*dz/d},.15);
-   e.applyDamage(str,{cause:EntityDamageCause.magic,damagingEntity:p});
- }catch{}
-}
+function enemies(p,r,cap=6){return combatEnemies(p,r,cap);}
+function hit(p,e,str,a,mod,push){return applyCombatHit(p,e,str,a,mod,push);}
 function cast(p,g,charged=false){
  const s=state(p),t=system.currentTick,ready=s.cd.get(g.id)??0;
  if(t<ready){notice(p,`§e再使用まで ${Math.ceil((ready-t)/20)}秒`);return;}
- const cost=g.cost+(charged?3:0), effort=charged?7:5;
+ const cost=g.cost+(charged?3:0), effort=charged?(['剣','斧','槍'].includes(g.kind)?8:7):5;
  if(!isCreative(p)&&(s.m<cost||s.s<effort)){notice(p,'§e魔力かスタミナが足りない');return;}
+ // A fully charged crouch-use replaces the normal area hit with one ray.
+ // Resolve terrain and entities before charging resources; API failure or an
+ // unloaded path must not spend the player's marks or mana.
+ const wantsRay=charged&&(combatResonance?.level(p,g,t)??0)===3;
+ const beam=wantsRay?prepareWindRay(p,g):undefined;
+ if(wantsRay&&!beam){notice(p,'§e風紋閃の進路を確認できません');return;}
  if(!isCreative(p)){s.m-=cost;s.s-=effort;}
+ const resonance=combatResonance?.consume(p,g)??false;
+ const combo=charged&&!resonance&&(combatResonance?.consumeCombo(p,g)??false);
  s.cd.set(g.id,t+g.seconds*20);
  const key=`xp_${g.id}`,old=num(p,key), lv=Math.min(5,1+Math.floor(old/8));
  if(old<32)property(p,key,old+1);
  const radius={'剣':4,'斧':5,'弓':14,'杖':9,'ハンマー':6,'槍':7,'扇':7,'盾':3,'鎧':3,'兜':2,'靴':3,'指輪':5,'首飾り':4,'マント':4}[g.kind]??5;
  const pushes={'ハンマー':.72,'斧':1.5,'扇':1.9,'盾':1.15,'槍':.54};
- const push=pushes[g.kind]??.65, site=currentPlace(p);
+ const push=(pushes[g.kind]??.65)*(combo?1.5:1), site=currentPlace(p);
  const such=site?.id>0&&home[aspect(site)].includes(g.a), night=world.getTimeOfDay()>13000;
- const str=Math.round(3+g.damage*.28+g.power*.05+lv*1.4+(g.a===4?3:0)+(such||g.a===8&&night?2:0)+(charged?2:0));
+ const str=Math.round((3+g.damage*.28+g.power*.05+lv*1.4+(g.a===4?3:0)+(such||g.a===8&&night?2:0)+(charged?2:0))*(resonance?1.25:combo?1.2:1));
  const directional=['剣','槍','扇','弓'].includes(g.kind), view=directional?p.getViewDirection():undefined;
- const candidates=enemies(p,radius+(charged?4:0),9).filter(e=>{
-   if(!directional)return true;
+ const candidates=beam?(beam.target?[beam.target]:[]):enemies(p,radius+(charged?4:0),9).filter(e=>{
+   if(!directional){
+    // Charged axe finishers must not damage enemies through walls.
+    if(combo&&g.kind==='斧')try{return visibleFrom(p,e.getHeadLocation());}catch{return false;}
+    return true;
+   }
    const a=e.location,b=p.location,x=a.x-b.x,z=a.z-b.z,len=Math.hypot(x,z);
    const cos=len===0?1:(x*view.x+z*view.z)/(len*Math.max(.01,Math.hypot(view.x,view.z)));
    if(cos<=({'剣':.18,'槍':.79,'扇':.22,'弓':.55}[g.kind]))return false;
@@ -2651,23 +2703,34 @@ function cast(p,g,charged=false){
  });
  const targetCount=({'槍':2,'剣':3,'弓':5,'盾':2,'兜':1,'杖':3}[g.kind]??6)+(charged&&['弓','扇','杖'].includes(g.kind)?1:0);
  for(const e of candidates.slice(0,targetCount)){
-   if(g.kind==='ハンマー')e.addEffect('slowness',35,{showParticles:false});
+   if(g.kind==='ハンマー')try{e.addEffect('slowness',35,{showParticles:false});}catch{}
    if(g.kind==='弓')try{e.dimension.spawnParticle('minecraft:basic_crit_particle',{...e.location,y:e.location.y+.5});}catch{}
    hit(p,e,g.kind==='扇'?Math.max(2,str-2):str,g.a,g.modifier,push);
+   if(resonance&&e.isValid)for(let i=0;i<4;i++){const a=i*Math.PI/2;try{e.dimension.spawnParticle('hakkai:wind_burst',{x:e.location.x+Math.cos(a)*.5,y:e.location.y+1,z:e.location.z+Math.sin(a)*.5});}catch{}}
  }
- if(g.kind==='槍'&&candidates.length&&view)try{along(p,view.x,view.z,.42,.08);}catch{}
+ if(!beam&&g.kind==='槍'&&candidates.length&&view)try{along(p,view.x,view.z,.42,.08);}catch{}
  if(g.kind==='靴'||g.kind==='マント')p.addEffect(g.kind==='靴'?'speed':'slow_falling',95,{showParticles:false});
  if(g.kind==='盾')for(const ally of p.dimension.getPlayers({location:p.location,maxDistance:charged?7:5,closest:4}))ally.addEffect('resistance',charged?105:60,{showParticles:false});
  p.addEffect(effects[g.a],75+lv*16,{showParticles:false});
  if(g.kind==='盾'||g.defense>=5)p.addEffect('resistance',55+g.defense*6,{showParticles:false});
  if(g.a===6)p.addEffect('regeneration',35,{showParticles:false});
- notice(p,`§b${charged?(g.kind==='弓'?'溜め撃ち・':'溜め技・'):''}${g.skill} §7Lv.${lv}`);
- const v=p.getViewDirection(), l=p.location,n=Number(g.number);
+ notice(p,`§b${beam?'風紋閃・':resonance?'風紋解放・':combo?'二連終撃・':''}${charged?(g.kind==='弓'?'溜め撃ち・':'溜め技・'):''}${g.skill} §7Lv.${lv}`);
+ const v=p.getViewDirection(), l=p.location,n=Number(g.number),visualId=g.visualId??g.id;
  const where={x:l.x+v.x*(directional?1.4:.3),y:l.y+(g.kind==='ハンマー'?.13:g.kind==='弓'?2.1:1),z:l.z+v.z*(directional?1.4:.3)};
- try{p.playAnimation(`animation.hakkai.cast.${g.id}`,{blendOutTime:.13,stopExpression:'query.any_animation_finished'});}catch{}
- try{p.dimension.spawnParticle(ns+g.id,where);p.playSound('random.orb',{volume:.36,pitch:.74+(n%21)*.038});}catch{}
+ try{p.playAnimation(`animation.hakkai.cast.${visualId}`,{blendOutTime:.13,stopExpression:'query.any_animation_finished'});}catch{}
+ if(beam)renderWindRay(p,beam);
+ if(combo){
+   const count=g.kind==='斧'?14:g.kind==='槍'?9:12;
+   for(let i=0;i<count;i++){
+    const side=(i/(count-1)-.5)*(g.kind==='斧'?3.4:2.2),forward=g.kind==='槍'?1+i*.18:1.1;
+    try{p.dimension.spawnParticle('hakkai:wind_burst',{x:l.x+v.x*forward-v.z*side,y:l.y+.55+i/count*.7,z:l.z+v.z*forward+v.x*side});}catch{}
+   }
+   try{p.playSound('random.orb',{volume:.35,pitch:.6});}catch{}
+ }
+ if(resonance)for(let i=0;i<16;i++){const a=i*Math.PI/8;try{p.dimension.spawnParticle('hakkai:wind_burst',{x:l.x+Math.cos(a)*1.7,y:l.y+.55,z:l.z+Math.sin(a)*1.7});}catch{}}
+ try{p.dimension.spawnParticle(ns+visualId,where);p.playSound('random.orb',{volume:.36,pitch:.74+(n%21)*.038});}catch{}
  if(g.rank>1||['弓','槍','ハンマー'].includes(g.kind))system.runTimeout(()=>{
-   if(p.isValid&&dist(p.location,l)<7)try{p.dimension.spawnParticle(ns+g.id,{x:where.x+v.x*.75,y:where.y+.25,z:where.z+v.z*.75});}catch{}
+   if(p.isValid&&dist(p.location,l)<7)try{p.dimension.spawnParticle(ns+visualId,{x:where.x+v.x*.75,y:where.y+.25,z:where.z+v.z*.75});}catch{}
  },4+n%7);
 }
 function castElement(p,a,b=-1,label=attrs[a]){
@@ -2693,9 +2756,9 @@ function castElement(p,a,b=-1,label=attrs[a]){
  });
  if(!defense)for(const e of targets){
    hit(p,e,(b>=0?12:8)+(boosted?2:0),a,b,a===0?1.5:.6);
-   if(a===7)e.addEffect('slowness',b===0?105:72,{amplifier:4,showParticles:false});
-   if(a===4||b===4)e.addEffect('weakness',84,{showParticles:false});
-   if(a===0&&b===1)e.addEffect('blindness',90,{showParticles:false});
+   try{if(a===7)e.addEffect('slowness',b===0?105:72,{amplifier:4,showParticles:false});}catch{}
+   try{if(a===4||b===4)e.addEffect('weakness',84,{showParticles:false});}catch{}
+   try{if(a===0&&b===1)e.addEffect('blindness',90,{showParticles:false});}catch{}
  }
  if(a===6&&targets.length){
    const h=p.getComponent('minecraft:health');
@@ -2725,10 +2788,10 @@ const chapters=[
  ['はじめに','ガイド本は持ち物から「使う」で開きます。迷ったらこの本の章を順に読んでね。風見の帰還石を使うと、風見台・ベッド・登録地点・元の世界に帰れます。風見台で旅の地図を使い、まずは始まりの草原へ。'],
  ['世界の生成とシード','8つの界はそれぞれ別の空間です。到着すると、今いる場所を中心に周囲4チャンク分（最大9×9チャンク）の地形を先に準備します。地形の高さ・山脈・谷・島・地表素材はワールドシードと界ごとの計算で決まり、同じワールドの同じ座標なら同じ地形になります。各界には12種ずつ、合計96種のシードバイオームがあり、歩き続けるほど新しい地形帯が続きます。拠点・街道・既存建築のある区画は上書きしません。'],
  ['最初のサバイバル','①ガイド本から旅の地図を開き、始まりの草原へ。②木・石・食料を集め、作業台とかまどを用意。③畑・釣り・牧場・採集を使って食料を確保。④スタミナ表示が減ったら走るのをやめて回復。⑤魔法を使うと魔力を消費するので、使いどころを考えよう。⑥ベッドでリスポーン地点を設定し、風見の帰還石も手元に置いておくと安心です。最初から守護獣に挑まず、食料と装備を整えてから遠征しよう。'],
- ['地形と集め方','8界・8つの奥地・32の離島には結晶鉱があります。到着地点近くの小さな鉱床を掘ると結晶が落ちます。守護獣を倒すと欠片が手に入り、同じ欠片2個とアメジストの欠片1個から結晶を作れます。バニラの敵も、ときどき欠片を落とします。'],
+ ['地形と集め方','各界の新しく生成される地形では、地表の下を掘って結晶鉱を探せます。浮島の地層は薄いので掘り抜きに注意。生成済みの場所には後から追加されません。到着地点近くにも小さな鉱床があります。守護獣を倒すと欠片が手に入り、同じ欠片2個とアメジストの欠片1個から結晶を作れます。バニラの敵も、ときどき欠片を落とします。'],
  ['野営とサバイバル','焚き火か魂の焚き火の近くで、しゃがんで静止すると野営休息になり、スタミナと魔力が速く回復します。野営のきのこ包み・根菜の焚き火焼き・森歩きの滋養食は採集や料理で作れます。乾燥肉・乾燥ベリー・燻製魚の切り身・乾燥昆布を作業台で合わせると野営の補給袋を2個作れます。畑・季節の菜園・釣り・牧場・かまどを組み合わせ、遠征前に食料を準備しましょう。'],
  ['戦闘とスタミナ','走る・泳ぐ・攻撃するとスタミナを使い、止まると回復。装備スキルや属性魔法を使えます。ガイド本の「八界の幻影闘技場」では、体力・魔力・相手の予告を見ながら行動を選ぶターン制ミニゲームに挑戦できます。記念館の達成度と記念品の収集が進むと、特別な第4戦が解放されます。闘技場はゲーム内の幻影戦で、実際のプレイヤーや建築物にはダメージを与えません。'],
- ['八属性と魔導書','本＋風の結晶＋水の結晶で魔導書を作れます。風・水・火・土・雷・光・闇・時の8属性を使え、一度訪れた場所の属性が解放されます。霧・溶岩・嵐・虹・疾風は両方の属性が必要です。'],
+ ['八属性と魔導書','本＋風の結晶＋水の結晶で魔導書を作れます。風・水・火・土・雷・光・闇・時の8属性を使え、一度訪れた場所の属性が解放されます。霧・溶岩・嵐・虹・疾風は両方の属性が必要です。光の矢は光を訪問後、魔力5で視線上の敵へ放ちます。絆の灯は風と水を訪問後、近くにもう一人いる時に魔力20で参加者を回復し敵を攻撃します。風・水・炎の専用魔法も選べます。FUSHIのトーテムから月のまどろみを使用すると確認後に消費します。魔法の再使用時間は共通6秒です。'],
  ['工場の組み方','加工機の西（X−）に入力樽、東（X＋）に出力樽を置きます。風力加工機は原鉄・原金・原銅を精錬。8界の高い屋外の風か、樽内の燃料（木・木炭・石炭・対応する結晶など）で動きます。採り機は燃料を使って真下6ブロックまでの対応鉱石を採ります。圧縮機は同じ欠片2個＋アメジストの欠片1個を結晶に変換。選別機は風記の素材を移し、コンベアは落ちた物を東へ。時間と天気によって効率が変わります。'],
  ['村の暮らし','風記の集落鐘を置くか、村人の近くで普通の鐘をしゃがんで使うと台帳が開きます。壁の数、高い見張り台、足止め罠、工場が守りを強くします。工場が出荷した備蓄は交易・村の成長・祭りに役立ちます。村人には朝・昼・夕の行き先があります。'],
  ['季節と釣り','季節は約3ゲーム日ごとに変わります。花壇を置くと季節の花に変わり、集落鐘の周りでは作物の成長も変化します。釣り竿を持ち物に入れてガイド本の「水辺の釣り」へ。釣果は季節や天気、水辺の種類で変わります。'],
@@ -2903,34 +2966,24 @@ async function rideTrain(p,start,target,ferry=false,stay=false){
 }
 async function harbor(p){
  const here=docks.find(s=>s.id===currentPlace(p)?.id);
- if(!here)return simple(p,'潮渡りの連絡船',`現地でガイド本から開きます。\n船着き場：${docks.map(s=>s.name).join('・')}`);
- const destinations=docks.filter(s=>s.id!==here.id);
- const ix=await form(p,'港の船便と市',`${here.name}\n各港では連絡船に乗れます。船を桟橋につないだまま釣り・料理・交易もできます。`,[
-   ['行き先を選ぶ'],['船上で過ごす'],['生のタラ2匹 → 焼き魚2匹'],['釣り祭りの記念札 → 港の欠片2個'],['岸から釣る']
+ if(!here)return simple(p,'港の市','港で開くと、停泊中の船や釣り、市を利用できます。');
+ const ix=await form(p,'港の市','船は桟橋につないで利用できます。各界の探索地へは歩いて向かってください。',[
+   ['船上で過ごす'],['生のタラ2匹 → 焼き魚2匹'],['釣り祭りの記念札 → 港の欠片2個'],['岸から釣る'],['閉じる']
  ]);
  if(!p.isValid||currentPlace(p)?.id!==here.id)return;
- if(ix===0){
-   const n=await form(p,'各港行き','目的地の界を訪れている必要があります。',destinations.map(s=>[`${unlocked(p,s)?'◇':'×'} ${s.name}行き`]));
-   if(n===undefined)return;
-   const target=destinations[n];
-   if(!unlocked(p,target))return notice(p,'§e目的地の界を訪れ、離島の通行札を持ってきてね');
-   return rideTrain(p,here,target,true);
- }
- if(ix===1)return rideTrain(p,here,here,true,true);
- if(ix===2&&exchange(p,'minecraft:cod',2,'minecraft:cooked_cod',2))notice(p,'§a港で魚を焼いた');
- if(ix===3&&exchange(p,ns+'fish_token',1,ns+'shard_18',2))notice(p,'§a港の欠片を受け取った');
- if(ix===4)return fishing(p);
+ if(ix===0)return rideTrain(p,here,here,true,true);
+ if(ix===1&&exchange(p,'minecraft:cod',2,'minecraft:cooked_cod',2))notice(p,'§a港で魚を焼いた');
+ if(ix===2&&exchange(p,ns+'fish_token',1,ns+'shard_18',2))notice(p,'§a港の欠片を受け取った');
+ if(ix===3)return fishing(p);
 }
 async function railOffice(p){
  const here=currentPlace(p);
- if(here?.id!==8&&here?.id!==yard.id&&here?.kind!=='era')return simple(p,'時の列車','第8界「時の終着駅」へ行き、ガイド本から開いてください。');
- if(here.id===8){
-   const ix=await form(p,'時の終着駅','時の列車は、暮刻の操車場から出発します。',[['乗り場へ移動'],['閉じる']]);
-   if(ix===0)return arrive(p,yard);
-   return;
- }
- const targets=here.kind==='era'?[yard]:eraStops;
- const ix=await form(p,'時の列車｜乗り場',`${here.name}\n行き先を選ぶと、ホームで乗車します。途中で降りると到着しません。`,[...targets.map(x=>[x.name]),['閉じる']]);
+ if(here?.id===8)return simple(p,'時の列車','乗り場までは第8界を歩いて探してください。ここから探索地への転送はできません。');
+ if(here?.id!==yard.id&&here?.kind!=='era')return simple(p,'時の列車','乗り場は第8界の探索中に見つかります。');
+ // No selectable destination may be one of the 40 natural sites. From an
+ // era station the train returns to the main realm entrance, not the yard.
+ const targets=here.kind==='era'?[places[8]]:eraStops;
+ const ix=await form(p,'時の列車｜乗り場','行き先を選ぶと、ホームで乗車します。途中で降りると到着しません。',[...targets.map(x=>[x.name]),['閉じる']]);
  if(ix!==undefined&&ix<targets.length)return rideTrain(p,here,targets[ix]);
 }
 async function help(p){
@@ -2939,13 +2992,35 @@ async function help(p){
 }
 /** @param {import('@minecraft/server').Player} p @param {(import('@minecraft/server').Vector3 & {dim:string})} [forgeAt] */
 async function details(p,forgeAt){
- const groups=Array.from({length:Math.ceil(catalog.length/12)},(_,i)=>[`${i*12+1}〜${Math.min(186,i*12+12)} 番`]);
- const gi=await form(p,forgeAt?'作業台｜風記の装備':'装備とレシピ図鑑','全186件。番号を選ぶと、素材の採れる場所とレシピを確認できます。',groups);
- if(gi===undefined)return;
- const gs=catalog.slice(gi*12,gi*12+12);
- const ix=await form(p,'装備とレシピ図鑑','調べたい装備を選んでね。',gs.map(g=>[`${g.number}　${g.label}`,itemTexture(g.id)]));
- if(ix===undefined)return;
- const g=gs[ix];const realm=(attribute)=>places[home.findIndex(h=>h.includes(attribute))+1].name;
+ let g;
+ while(p.isValid&&!g){
+  const mode=await form(p,forgeAt?'§6作業台｜風記の装備':'§6装備とレシピ図鑑',
+   '§7全186種。種類や属性から探すか、従来どおり番号順で選べます。',[
+    ['§b種類から探す\n§7剣・弓・鎧など',itemTexture('gear_048')],
+    ['§d属性から探す\n§7主属性・型のどちらも検索',itemTexture('element_tome')],
+    ['§6番号から探す\n§7これまでの番号順',itemTexture('guide')],['§8閉じる']
+   ]);
+  if(mode===undefined||mode===3)return;
+  const kinds=gearKinds(catalog);
+  const groups=Array.from({length:Math.ceil(catalog.length/12)},(_,i)=>[`${i*12+1}〜${Math.min(catalog.length,i*12+12)} 番`]);
+  const filters=mode===0?kinds.map(kind=>[kind]):mode===1?attrs.map((attr,i)=>[`${attr}の属性`,itemTexture(`crystal_${i}`)]):groups;
+  const title=mode===0?'§6装備の種類':mode===1?'§6装備の属性':'§6装備の番号';
+  const instruction=mode===1?'§7主属性または型に含まれる装備を表示します。':'§7絞り込みたい項目を選んでください。';
+  let filterPage=0;
+  while(p.isValid){
+   const selected=await guideSelect(p,title,instruction,filters,filterPage);
+   if(selected.closed)return;
+   if(selected.back)break;
+   filterPage=selected.page;
+   const gs=mode===0?filterGear(catalog,'kind',kinds[selected.index]):mode===1?filterGear(catalog,'attribute',selected.index):filterGear(catalog,'number',selected.index);
+   const chosen=await guideSelect(p,'§6装備とレシピ図鑑',`§7${gs.length}種類。装備を選ぶと性能と材料を確認できます。`,gs.map(entry=>[`${entry.number}　${entry.label}`,itemTexture(entry.id)]));
+   if(chosen.closed)return;
+   if(chosen.back)continue;
+   g=gs[chosen.index];break;
+  }
+ }
+ if(!g||!p.isValid)return;
+ const realm=(attribute)=>places[home.findIndex(h=>h.includes(attribute))+1].name;
  const rec=g.prev?`通常の不定形レシピ：${gear.get(ns+g.prev).label}＋紙2＋鉄＋結晶＋欠片`:
    `定形：\n${patterns[Math.floor((Number(g.number)-1)/20)].map(row=>[...row].map(c=>({' ':'□',P:'紙',I:'鉄',C:'晶',F:'片'})[c]).join(' ')).join('\n')}`;
  const body=`${g.stars}\n攻撃力 ${g.damage}　防御力 ${g.defense}　魔力 ${g.power}\n${g.skill}\n魔力消費 ${g.cost}　再使用 ${g.seconds}秒\n\n${rec}\n晶：${attrs[g.a]}の結晶（${realm(g.a)}）\n片：${attrs[g.modifier]}の欠片（${realm(g.modifier)}の守護獣）\n別の入手方法：${prizeKinds[prizeKind(g)]}（ガイド本の「装備を見つける・注文する」）\n紙を持ってしゃがみながら作業台を使うと、全等級とも元の材料で作れます。`;
@@ -2984,26 +3059,21 @@ function unlocked(p,site){
  return visited(p,site.dim+1)&&total(space(p),ns+'travel_pass')>0;
 }
 async function map(p){
- const part=await form(p,'風見の地図',`八つの界は順に解放されます。奥地は対応する界への訪問で、離島はさらに通行札で開きます。\n発見記録：${realmDiscoveryCount(p)}/8`,[
-   ['風見台',itemTexture('return_stone')],['八つの界'],['三十二の離島'],['八つの奥地'],['時の列車'],['徒歩で巡る八界街道'],['風土図鑑の展示を巡る'],['地続きの八界本街道']
+ const part=await form(p,'風見の地図',`八つの界は順に解放されます。各界の周囲を歩いて探索できます。\n発見記録：${realmDiscoveryCount(p)}/8`,[
+   ['風見台',itemTexture('return_stone')],['八つの界'],['時の列車'],['徒歩で巡る八界街道'],['風土図鑑の展示を巡る'],['地続きの八界本街道']
  ]);
  if(part===undefined)return;
  if(part===0)return arrive(p,places[0]);
- if(part===4)return railOffice(p);
- if(part===5)return trailMap(p);
- if(part===6)return atlasMenu(p);
- if(part===7)return linkedMenu(p);
- let dim;
- if(part===2){
-   dim=await form(p,'離島一覧','どの界の周辺を見る？',places.slice(1,9).map(x=>[x.name]));
-   if(dim===undefined)return;
- }
- const list=places.filter(x=>part===1?x.id>=1&&x.id<=8:part===3?x.kind==='frontier':x.dim===dim&&(x.kind==='island'||x.id>=9&&x.id<=20));
- const chosen=await form(p,part===1?'八つの界':part===3?'八つの奥地':'離島一覧','◆ 記録済み　◇ 未踏　× 未解放',
-   list.map(s=>[`${visited(p,s.id)?'◆':unlocked(p,s)?'◇':'×'}  ${s.name}${s.id>=1&&s.id<=8?(marked(p,'realm_discoveries',s.id-1)?'  §d✦発見済§r':'  §7◇記憶未発見§r'):''}\n${s.description}`]));
+ if(part===2)return railOffice(p);
+ if(part===3)return trailMap(p);
+ if(part===4)return atlasMenu(p);
+ if(part===5)return linkedMenu(p);
+ const list=places.filter(x=>x.id>=1&&x.id<=8);
+ const chosen=await form(p,'八つの界','◆ 記録済み　◇ 未踏　× 未解放',
+   list.map(s=>[`${visited(p,s.id)?'◆':unlocked(p,s)?'◇':'×'}  ${s.name}${marked(p,'realm_discoveries',s.id-1)?'  §d✦発見済§r':'  §7◇記憶未発見§r'}\n${s.description}`]));
  if(chosen===undefined)return;
  const site=list[chosen];
- if(!unlocked(p,site))return simple(p,'まだ風の道がない',site.id<=8?'一つ前の界を訪れてください。':site.kind==='frontier'?`${places[site.dim+1].name}を先に訪ねてください。`:`${places[site.dim+1].name}を訪ね、紙＋風の結晶＋風の欠片から通行札を作ってください。札は消費しません。`);
+ if(!unlocked(p,site))return simple(p,'まだ風の道がない','一つ前の界を訪れてください。');
  await arrive(p,site);
 }
 async function quest(p){
@@ -3044,7 +3114,7 @@ async function settings(p){
    [`HUD：${num(p,'hide_hud')?'非表示':'表示'}`],[`HUDテーマ：${num(p,'hud_color')?'淡色':'標準'}`],
    [`追加の環境音：${num(p,'mute')?'無効':'有効'}`],['今の足場を帰還地点に登録'],
    [`HUD位置：${['左上','右上','通常のアクションバー'][num(p,'hud_pos')]??'左上'}`],[`HUDの大きさ：${num(p,'hud_size')?'大きい':'標準'}`],
-   [`追加モブとバニラ行動：${num(p,'quiet_wildlife')?'控えめ':'有効'}`],
+   [`追加モブの出現：${num(p,'quiet_wildlife')?'控えめ':'有効'}`],
    [`各界の霧と天候演出：${num(p,'quiet_climate')?'無効':'有効'}`],
    [`バニラ村の自動検出：${num(p,'no_bell_search')?'無効':'有効'}`]
  ]);
@@ -3058,14 +3128,41 @@ async function settings(p){
  const l=point(p);if(!safe(p.dimension,l)){notice(p,'§e動かず安全な床に立って登録してね');return;}
  property(p,'home_point',JSON.stringify(l));notice(p,'§a帰還地点を登録した');
 }
+function castMagic(p,kind){
+ return castNewMagic({p,s:state(p),system,kind,notice,mark,visibleFrom,
+   consumeTotem:()=>selected(p)?.typeId===ns+'fushi_totem'&&debit(space(p),ns+'fushi_totem',1),
+   stagger:(enemy,duration)=>{
+     try{combatParry?.staggerTarget(enemy,system.currentTick,duration);}catch{}
+     try{mobSystem?.stagger(enemy,system.currentTick);}catch{}
+     try{realmEnders?.stagger(enemy,system.currentTick);}catch{}
+   }});
+}
+const magicItems={magic_hikari:['light',5],magic_kaze:['wind',0],magic_mizu:['water',1],magic_homura:['fire',2],magic_kizuna:['bond',0,1]};
+async function totemMagicMenu(p){
+ const slot=p.selectedSlotIndex,dim=p.dimension.id;
+ const choice=await form(p,'FUSHIのトーテム','月のまどろみ：魔力15で自分を回復し周囲の敵の動きと近接を一時抑制。ボスには無効。サバイバルでは月魔法を使うとトーテムを1個消費します。持ち手かオフハンドで致命傷を受けた時にも消費し、復活を試みます（試作・実機未検証）。',[['トーテムを消費して使う'],['やめる']]);
+ if(choice!==0||!p.isValid)return;
+ if(p.selectedSlotIndex!==slot||p.dimension.id!==dim||selected(p)?.typeId!==ns+'fushi_totem')return notice(p,'§eトーテムの位置が変わったため中止しました');
+ castMagic(p,'moon');
+}
 async function spells(p){
  const learned=(a)=>isCreative(p)||visited(p,home.findIndex(x=>x.includes(a))+1);
- const list=[...attrs.slice(0,8).map((s,i)=>({label:s,a:i,b:-1})),...pairs];
- const ix=await form(p,'八属性の魔導書','単属性：魔力12　合成：魔力19。各属性の界を訪れると解放されます。',
+ const slot=p.selectedSlotIndex,dimension=p.dimension.id;
+ const list=[...attrs.slice(0,8).map((s,i)=>({label:s,a:i,b:-1})),...pairs,
+   {label:'光の矢（魔力5）',a:5,b:-1,special:'light'},
+   {label:'絆の灯（魔力20・2人以上）',a:0,b:1,special:'bond'},
+   {label:'風の輪（魔力8）',a:0,b:-1,special:'wind'},
+   {label:'水の縛り（魔力10）',a:1,b:-1,special:'water'},
+   {label:'炎の環（魔力12）',a:2,b:-1,special:'fire'}];
+ const ix=await form(p,'八属性の魔導書','単属性：魔力12　合成：魔力19。専用魔法は表示された魔力を使います。各属性の界を訪れると解放されます。',
    list.map(({a,b,label},i)=>[`${marked(p,'learned_spells',i)?'◆':learned(a)&&(b<0||learned(b))?'◇':'×'}  ${label}${b>=0?`（${attrs[a]}＋${attrs[b]}）`:''}`]));
  if(ix===undefined)return;
- const {a,b,label}=list[ix];
+ const {a,b,label,special}=list[ix];
  if(!learned(a)||(b>=0&&!learned(b)))return notice(p,'§e対応する属性の界を先に訪れてね');
+ if(special){
+   if(!p.isValid||p.dimension.id!==dimension||p.selectedSlotIndex!==slot||selected(p)?.typeId!==ns+'element_tome')return notice(p,'§e魔導書の位置が変わったため中止しました');
+   return castMagic(p,special);
+ }
  castElement(p,a,b,label);
 }
 function shore(p){
@@ -3461,25 +3558,8 @@ async function realmGuideConversationBoard(p){
  const pick=await form(p,'風記の案内人たち',`八界を巡る案内人の言葉を聞き、季節の物語や秘密の章を年鑑に残しましょう。\n季節の物語：${realmSeasonStoryCount(p)}/8\n秘密の章：${realmSecretChapterCount(p)}/8`,rows);
  if(pick!==undefined&&pick<8)return realmGuideConversation(p,pick);
 }
-const realmRankDestinations=[
- {id:21,rank:1,story:'川と段丘の街道。旅の基本を学ぶ場所。'},
- {id:22,rank:2,story:'古木と苔の遊歩道。森の記録を深める場所。'},
- {id:23,rank:3,story:'赤砂の尾根と石柱遺跡。砂の歴史を読む場所。'},
- {id:24,rank:4,story:'氷河の水脈と雪嶺。季節の移ろいを観察する場所。'},
- {id:25,rank:4,story:'滝と岩棚の観測所。雷の記録をたどる場所。'},
- {id:26,rank:5,story:'結晶水路の大洞窟。地底の記憶を集める場所。'},
- {id:27,rank:6,story:'主島と小さな浮き岩を結ぶ雲海の群礁。'},
- {id:28,rank:7,story:'線路とホームが残る暮刻の操車場。時の物語の終章へ。'}
-];
 async function realmRankDestinationBoard(p){
- const rank=realmRankUpdate(p),rows=realmRankDestinations.map((d,i)=>{const site=places.find(x=>x.id===d.id);return [`${rank>=d.rank?'◇':'§8🔒'} ${site?.name??'特別訪問先'}｜必要ランク：${realmRanks[d.rank][1]}\n${d.story}`];});
- rows.push(['閉じる']);
- const pick=await form(p,'冒険者ランク別・特別訪問先',`現在の冒険者ランク：${realmRanks[rank][1]}\nランクが上がると、八界の奥にある特別な場所へ風の道が開きます。\n訪問済みの場所へ再訪することもできます。`,rows);
- if(pick===undefined||pick>=8||!p.isValid)return;
- const d=realmRankDestinations[pick],site=places.find(x=>x.id===d.id);
- if(rank<d.rank)return notice(p,`§e冒険者ランク「${realmRanks[d.rank][1]}」で解放されます。`);
- if(!site)return notice(p,'§e訪問先データが見つかりません。');
- await arrive(p,site);
+ return simple(p,'八界の探索','各界の奥にある景色は、転送先から選ぶのではなく歩いて探せます。冒険者ランクによる直接移動はありません。');
 }
 async function realmSeasonStoryArchive(p){
  const rows=realmSeasonStories.map(([title],i)=>[`${marked(p,'realm_season_stories',i)?'◆':'§8◇'} ${title}｜${marked(p,'realm_season_stories',i)?'読了':'未解放'}`]);
@@ -3626,8 +3706,8 @@ async function realmNpcRoster(p){
 }
 
 async function realmV36Board(p){
- const rank=realmRankUpdate(p),rows=[['風記の案内人と対話する（ガイド本）'],['ワールド内に案内人NPCを配置する'],['案内人との出会い帳・友好度'],['冒険者ランク別・特別訪問先'],['四季巡礼・物語の記録'],['八界の秘密の章'],['案内人の交流拠点・暮らし'],['v3.8.0の記録を見る'],['閉じる']];
- const pick=await form(p,'八界の四季巡礼と物語',`現在の季節：${era()}\n冒険者ランク：${realmRanks[rank][1]}\n季節の物語：${realmSeasonStoryCount(p)}/8\n秘密の章：${realmSecretChapterCount(p)}/8\n\n案内人との会話、特別な訪問先、八界に残る物語を楽しめます。`,rows);
+ const rank=realmRankUpdate(p),rows=[['風記の案内人と対話する（ガイド本）'],['ワールド内に案内人NPCを配置する'],['案内人との出会い帳・友好度'],['八界の探索について'],['四季巡礼・物語の記録'],['八界の秘密の章'],['案内人の交流拠点・暮らし'],['v3.8.0の記録を見る'],['閉じる']];
+ const pick=await form(p,'八界の四季巡礼と物語',`現在の季節：${era()}\n冒険者ランク：${realmRanks[rank][1]}\n季節の物語：${realmSeasonStoryCount(p)}/8\n秘密の章：${realmSecretChapterCount(p)}/8\n\n案内人との会話や、八界に残る物語を楽しめます。`,rows);
  if(pick===0)return realmGuideConversationBoard(p);
  if(pick===1)return realmNpcPlaceBoard(p);
  if(pick===2)return realmNpcRoster(p);
@@ -3641,61 +3721,56 @@ async function realmV36Board(p){
   if(ix!==undefined&&eligible[ix]!==undefined)return realmGuideConversation(p,eligible[ix]);
  }
  if(pick===6)return realmNpcCommunityBoard(p);
- if(pick===7)return simple(p,'v3.8.0｜案内人の交流と暮らし',`案内人は時間帯に合わせて交流拠点の周囲で過ごします。近くに複数の案内人がいると、1日1回の交流演出が発生し、年鑑に記録されます。会話は友好度や依頼進行によって変化します。\n\n季節イベントの記録をきっかけに、八界それぞれの季節の物語が解放されます。\n\n冒険者ランクに応じて特別訪問先が開き、既存の安全な移動システムで訪問できます。\n\n案内人はワールド内に村人NPCとして配置でき、会話・友好度・3段階の連続依頼が利用できます。依頼の進行と友好度はプレイヤーごとに保存されます。\n\n季節の物語：${realmSeasonStoryCount(p)}/8\n秘密の章：${realmSecretChapterCount(p)}/8`);
+ if(pick===7)return simple(p,'v3.8.0｜案内人の交流と暮らし',`案内人は時間帯に合わせて交流拠点の周囲で過ごします。近くに複数の案内人がいると、1日1回の交流演出が発生し、年鑑に記録されます。会話は友好度や依頼進行によって変化します。\n\n季節イベントの記録をきっかけに、八界それぞれの季節の物語が解放されます。\n\n各界の奥にある景色は、その界を歩いて探せます。\n\n案内人はワールド内に村人NPCとして配置でき、会話・友好度・3段階の連続依頼が利用できます。依頼の進行と友好度はプレイヤーごとに保存されます。\n\n季節の物語：${realmSeasonStoryCount(p)}/8\n秘密の章：${realmSecretChapterCount(p)}/8`);
 }
 
 const armorShowcase=[
- ['霧銀の旅装','霧色の青緑と銀の縁取り。細かな格子模様を抑え、胸元に淡い水晶の輝きを配置。','gear_010 / gear_011 / gear_012 / gear_013'],
- ['深影の黒曜甲','黒曜石色に紫の差し色。暗い金属面と鋭い縁取りで重厚感を表現。','gear_026 / gear_027 / gear_028 / gear_029'],
- ['紅蓮の守護装','深紅と琥珀金。炎を思わせる斜めの意匠と金属の留め具。','gear_042 / gear_043 / gear_044 / gear_045'],
- ['大地の古代装','砂岩色と苔の緑。石板のような面構成と銅色の装飾。','gear_058 / gear_059 / gear_060 / gear_061'],
- ['雷光の紫電装','青紫と明るい金。稲妻をイメージした発光ラインと鋭いシルエット。','gear_074 / gear_075 / gear_076 / gear_077'],
- ['星輝の白銀装','象牙白と金。星形の意匠と明るい縁取りで軽やかな英雄装備に。','gear_090 / gear_091 / gear_092 / gear_093'],
- ['夢幻の藤霞装','藤色と淡い桃色。柔らかな光沢と細い装飾ライン。','gear_106 / gear_107 / gear_108 / gear_109'],
- ['翠風の森装','深緑と金。葉脈のような模様と自然石の留め具。','gear_122 / gear_123 / gear_124 / gear_125'],
- ['蒼海の潮騎装','深い青と水色。波紋を思わせる曲線模様と銀の縁取り。','gear_138 / gear_139 / gear_140 / gear_141'],
- ['天空の白翼装','淡い空色と白銀。雲の層を思わせる明るい装甲面。','gear_154 / gear_155 / gear_156 / gear_157'],
- ['時環の覇者装','濃紺と古金。時計の歯車をイメージした幾何学模様。','gear_170 / gear_171 / gear_172 / gear_173'],
+ ['霧銀の旅装','霧色の青緑と銀の縁取り。細かな格子模様を抑え、胸元に淡い水晶の輝きを配置。','gear_010 / gear_011 / gear_012 / series_leggings_00（旧マント gear_013）'],
+ ['深影の黒曜甲','黒曜石色に紫の差し色。暗い金属面と鋭い縁取りで重厚感を表現。','gear_026 / gear_027 / gear_028 / series_leggings_01（旧マント gear_029）'],
+ ['紅蓮の守護装','深紅と琥珀金。炎を思わせる斜めの意匠と金属の留め具。','gear_042 / gear_043 / gear_044 / series_leggings_02（旧マント gear_045）'],
+ ['大地の古代装','砂岩色と苔の緑。石板のような面構成と銅色の装飾。','gear_058 / gear_059 / gear_060 / series_leggings_03（旧マント gear_061）'],
+ ['雷光の紫電装','青紫と明るい金。稲妻をイメージした発光ラインと鋭いシルエット。','gear_074 / gear_075 / gear_076 / series_leggings_04（旧マント gear_077）'],
+ ['星輝の白銀装','象牙白と金。星形の意匠と明るい縁取りで軽やかな英雄装備に。','gear_090 / gear_091 / gear_092 / series_leggings_05（旧マント gear_093）'],
+ ['夢幻の藤霞装','藤色と淡い桃色。柔らかな光沢と細い装飾ライン。','gear_106 / gear_107 / gear_108 / series_leggings_06（旧マント gear_109）'],
+ ['翠風の森装','深緑と金。葉脈のような模様と自然石の留め具。','gear_122 / gear_123 / gear_124 / series_leggings_07（旧マント gear_125）'],
+ ['蒼海の潮騎装','深い青と水色。波紋を思わせる曲線模様と銀の縁取り。','gear_138 / gear_139 / gear_140 / series_leggings_08（旧マント gear_141）'],
+ ['天空の白翼装','淡い空色と白銀。雲の層を思わせる明るい装甲面。','gear_154 / gear_155 / gear_156 / series_leggings_09（旧マント gear_157）'],
+ ['時環の覇者装','濃紺と古金。時計の歯車をイメージした幾何学模様。','gear_170 / gear_171 / gear_172 / series_leggings_10（旧マント gear_173）'],
  ['終章・夜渡りの鎧','黒紫と金の最終級胸甲。深い色合いに控えめな魔力の輝きを追加。','gear_186']
 ];
 async function armorShowcaseBook(p){
- const ix=await form(p,'八界の甲冑展示室','装備品の外観を八界の意匠に合わせて描き直しました。既存の性能・レシピ・入手方法は変わりません。',armorShowcase.map(x=>[x[0]]));
- if(ix!==undefined&&armorShowcase[ix])return simple(p,armorShowcase[ix][0],`${armorShowcase[ix][1]}\n\n対応装備：${armorShowcase[ix][2]}\n\n装備の性能・耐久値は従来どおりです。見た目の更新はリソースパックの装備テクスチャに反映されています。`);
+ const ix=await form(p,'八界の甲冑展示室','11系列の脚装備を追加。旧マントも残り、既存装備の性能・レシピは変わりません。',armorShowcase.map(x=>[x[0]]));
+ if(ix!==undefined&&armorShowcase[ix])return simple(p,armorShowcase[ix][0],`${armorShowcase[ix][1]}\n\n対応装備：${armorShowcase[ix][2]}\n\n旧装備の性能・耐久値は従来どおりです。新しい脚装備のレシピは収集帳で確認できます。立体モデルは実機未検証です。`);
 }
 
+const armorLegCrystals=[10,6,2,18,14,10,6,2,18,14,10];
 const armorSetDefs=[
- ['霧銀の旅装','gear_010','gear_011','gear_012','gear_013','霧の結晶片'],
- ['深影の黒曜甲','gear_026','gear_027','gear_028','gear_029','闇の結晶片'],
- ['紅蓮の守護装','gear_042','gear_043','gear_044','gear_045','火の結晶片'],
- ['大地の古代装','gear_058','gear_059','gear_060','gear_061','土の結晶片'],
- ['雷光の紫電装','gear_074','gear_075','gear_076','gear_077','雷の結晶片'],
- ['星輝の白銀装','gear_090','gear_091','gear_092','gear_093','光の結晶片'],
- ['夢幻の藤霞装','gear_106','gear_107','gear_108','gear_109','夢の結晶片'],
- ['翠風の森装','gear_122','gear_123','gear_124','gear_125','森の結晶片'],
- ['蒼海の潮騎装','gear_138','gear_139','gear_140','gear_141','海の結晶片'],
- ['天空の白翼装','gear_154','gear_155','gear_156','gear_157','空の結晶片'],
- ['時環の覇者装','gear_170','gear_171','gear_172','gear_173','時の結晶片']
+ ['霧銀の旅装','gear_010','gear_011','gear_012','series_leggings_00','霧の結晶片'],
+ ['深影の黒曜甲','gear_026','gear_027','gear_028','series_leggings_01','闇の結晶片'],
+ ['紅蓮の守護装','gear_042','gear_043','gear_044','series_leggings_02','火の結晶片'],
+ ['大地の古代装','gear_058','gear_059','gear_060','series_leggings_03','土の結晶片'],
+ ['雷光の紫電装','gear_074','gear_075','gear_076','series_leggings_04','雷の結晶片'],
+ ['星輝の白銀装','gear_090','gear_091','gear_092','series_leggings_05','光の結晶片'],
+ ['夢幻の藤霞装','gear_106','gear_107','gear_108','series_leggings_06','夢の結晶片'],
+ ['翠風の森装','gear_122','gear_123','gear_124','series_leggings_07','森の結晶片'],
+ ['蒼海の潮騎装','gear_138','gear_139','gear_140','series_leggings_08','海の結晶片'],
+ ['天空の白翼装','gear_154','gear_155','gear_156','series_leggings_09','空の結晶片'],
+ ['時環の覇者装','gear_170','gear_171','gear_172','series_leggings_10','時の結晶片']
 ];
 const armorSetBonusDefs=[
- ['霧銀の旅装','gear_010','gear_011','gear_012','gear_013','speed',0],
- ['深影の黒曜甲','gear_026','gear_027','gear_028','gear_029','night_vision',0],
- ['紅蓮の守護装','gear_042','gear_043','gear_044','gear_045','fire_resistance',0],
- ['大地の古代装','gear_058','gear_059','gear_060','gear_061','resistance',0],
- ['雷光の紫電装','gear_074','gear_075','gear_076','gear_077','haste',0],
- ['星輝の白銀装','gear_090','gear_091','gear_092','gear_093','regeneration',0],
- ['夢幻の藤霞装','gear_106','gear_107','gear_108','gear_109','slow_falling',0],
- ['翠風の森装','gear_122','gear_123','gear_124','gear_125','jump_boost',0],
- ['蒼海の潮騎装','gear_138','gear_139','gear_140','gear_141','water_breathing',0],
- ['天空の白翼装','gear_154','gear_155','gear_156','gear_157','health_boost',0],
- ['時環の覇者装','gear_170','gear_171','gear_172','gear_173','strength',0]
+ ['霧銀の旅装','gear_010','gear_011','gear_012','series_leggings_00','speed',0],
+ ['深影の黒曜甲','gear_026','gear_027','gear_028','series_leggings_01','night_vision',0],
+ ['紅蓮の守護装','gear_042','gear_043','gear_044','series_leggings_02','fire_resistance',0],
+ ['大地の古代装','gear_058','gear_059','gear_060','series_leggings_03','resistance',0],
+ ['雷光の紫電装','gear_074','gear_075','gear_076','series_leggings_04','haste',0],
+ ['星輝の白銀装','gear_090','gear_091','gear_092','series_leggings_05','regeneration',0],
+ ['夢幻の藤霞装','gear_106','gear_107','gear_108','series_leggings_06','slow_falling',0],
+ ['翠風の森装','gear_122','gear_123','gear_124','series_leggings_07','jump_boost',0],
+ ['蒼海の潮騎装','gear_138','gear_139','gear_140','series_leggings_08','water_breathing',0],
+ ['天空の白翼装','gear_154','gear_155','gear_156','series_leggings_09','health_boost',0],
+ ['時環の覇者装','gear_170','gear_171','gear_172','series_leggings_10','strength',0]
 ];
-function equippedSetParts(p,ids){
- const eq=p.getComponent('minecraft:equippable');
- const worn=[EquipmentSlot.Head,EquipmentSlot.Chest,EquipmentSlot.Legs,EquipmentSlot.Feet].map(slot=>eq?.getEquipment(slot)?.typeId??'');
- const equipped=ids.slice(0,3).filter(id=>worn.includes(ns+id)).length;
- const mantle=ownsArmorPiece(p,ids[3]);
- return {equipped,mantle,active:equipped>=3&&mantle};
-}
+function equippedSetParts(p,ids){return equippedSeries(p,ids,id=>ownsArmorPiece(p,id));}
 function ownsArmorPiece(p,id){
  if(inventoryCount(p,id)>0)return true;
  const eq=p.getComponent('minecraft:equippable');
@@ -3718,19 +3793,20 @@ function applyArmorSetVisuals(p){
 }
 async function armorCollectionArchive(p){
  const rows=armorSetDefs.map(([name,...ids])=>{
-  const have=ids.slice(0,4).filter(id=>ownsArmorPiece(p,id)).length;
+  const have=ids.slice(0,4).filter(id=>ownsSeriesPiece(id,x=>ownsArmorPiece(p,x))).length;
   const active=equippedSetParts(p,ids.slice(0,4)).active;
   return [`${have===4?'§a◆':'§7◇'} ${name}｜${have}/4${active?'｜§d演出発動中':''}`];
  });
- const complete=armorSetDefs.filter(([, ...ids])=>ids.slice(0,4).every(id=>ownsArmorPiece(p,id))).length;
+ const complete=armorSetDefs.filter(([, ...ids])=>ids.slice(0,4).every(id=>ownsSeriesPiece(id,x=>ownsArmorPiece(p,x)))).length;
  const pick=await form(p,'八界の甲冑図鑑・収集記録',`収集完成：${complete}/${armorSetDefs.length} セット
 全44種の甲冑を集めて、八界の装備コレクションを完成させましょう。
-3部位を装備し、4つ目を所持するとセット効果と専用粒子演出が発動します。`,[...rows,['閉じる']]);
+頭・胴・脚・足を装備するとセット効果が発動。旧マント所持でも従来どおり発動できます。`,[...rows,['閉じる']]);
  if(pick!==undefined&&pick<armorSetDefs.length){
   const [name,...ids]=armorSetDefs[pick];
-  const have=ids.slice(0,4).filter(id=>ownsArmorPiece(p,id)).length;
+  const have=ids.slice(0,4).filter(id=>ownsSeriesPiece(id,x=>ownsArmorPiece(p,x))).length;
   return simple(p,name,`収集状況：${have}/4
 必要装備：${ids.slice(0,4).join('・')}
+脚装備：鉄のレギンス＋crystal_${armorLegCrystals[pick]}＋shard_${pick}（作業台）。旧マントは脚の収集代替。
 セット効果：${armorSetBonusDefs.find(x=>x[0]===name)?.[5]??'特殊効果'}
 専用粒子：${have===4?'セット完成。装備条件を満たすと発動します。':'4部位を集めると専用演出が解放されます。'}`);
  }
@@ -3738,22 +3814,23 @@ async function armorCollectionArchive(p){
 function inventoryCount(p,id){const c=space(p);if(!c)return 0;let n=0;for(let i=0;i<c.size;i++){const x=c.getItem(i);if(x?.typeId===ns+id)n+=x.amount;}return n;}
 async function armorProgressBoard(p){
  const c=space(p);if(!c)return;
- const rows=armorSetDefs.map(([name,...ids])=>{const have=ids.slice(0,4).reduce((n,id)=>n+Math.min(1,ownsArmorPiece(p,id)),0);return [`${have===4?'◆': '◇'} ${name}｜4部位中 ${have}/4`];});
- const pick=await form(p,'八界の装備収集帳',`装備セットは4部位を集めて完成です。所持品にある装備だけを数えます。
-完成セット：${armorSetDefs.filter(([, ...ids])=>ids.slice(0,4).every(id=>ownsArmorPiece(p,id))).length}/${armorSetDefs.length}
+ const rows=armorSetDefs.map(([name,...ids])=>{const have=ids.slice(0,4).reduce((n,id)=>n+Math.min(1,ownsSeriesPiece(id,x=>ownsArmorPiece(p,x))),0);return [`${have===4?'◆': '◇'} ${name}｜4部位中 ${have}/4`];});
+ const pick=await form(p,'八界の装備収集帳',`装備セットは4部位を集めて完成です。装備中も数えます。旧マントもレギンスの代わりに収集扱いです。
+完成セット：${armorSetDefs.filter(([, ...ids])=>ids.slice(0,4).every(id=>ownsSeriesPiece(id,x=>ownsArmorPiece(p,x)))).length}/${armorSetDefs.length}
 
 セットの収集記録と、装備の強化をここから確認できます。`,[...rows,['装備を強化する'],['装備セットの試練'],['閉じる']]);
  if(pick===armorSetDefs.length)return enhanceHeldGear(p);
  if(pick===armorSetDefs.length+1)return armorSetTrial(p);
- if(pick!==undefined&&pick<armorSetDefs.length){const [name,...ids]=armorSetDefs[pick];const have=ids.slice(0,4).filter(id=>ownsArmorPiece(p,id)).length;return simple(p,name,`収集状況：${have}/4
+ if(pick!==undefined&&pick<armorSetDefs.length){const [name,...ids]=armorSetDefs[pick];const have=ids.slice(0,4).filter(id=>ownsSeriesPiece(id,x=>ownsArmorPiece(p,x))).length;return simple(p,name,`収集状況：${have}/4
 必要装備：${ids.slice(0,4).join('・')}
+脚装備：鉄のレギンス＋crystal_${armorLegCrystals[pick]}＋shard_${pick}（作業台）。
 
 4部位をそろえると、このセットの収集記録が完成します。
-装備ボーナス：${armorSetBonusDefs.find(x=>x[0]===name)?.[5]??'特殊効果'}（頭・胴・足の3部位を装備し、4つ目を所持品に入れると発動）
+装備ボーナス：${armorSetBonusDefs.find(x=>x[0]===name)?.[5]??'特殊効果'}（頭・胴・脚・足を装備、または旧マント所持で発動）
 装備セットの見た目はリソースパックに収録されています。`);}
 }
 async function armorSetTrial(p){
- const complete=armorSetDefs.filter(([, ...ids])=>ids.slice(0,4).every(id=>ownsArmorPiece(p,id)));
+ const complete=armorSetDefs.filter(([, ...ids])=>ids.slice(0,4).every(id=>ownsSeriesPiece(id,x=>ownsArmorPiece(p,x))));
  const claimed=num(p,'armor_set_trial_claimed');
  const ready=complete.length>0;
  const pick=await form(p,'八界の装備セット試練',`完成セット：${complete.length}/${armorSetDefs.length}
@@ -3763,13 +3840,13 @@ async function armorSetTrial(p){
 
 ${claimed?'報酬は受け取り済みです。':ready?'試練達成！報酬を受け取れます。':'まずは甲冑4部位を集めてください。'}`,[['試練の報酬を受け取る'],['戻る']]);
  if(pick!==0)return;
- if(claimed)return notice(p,'§eこの試練の報酬は受け取り済みです');
- if(!ready)return notice(p,'§e甲冑セットを4部位そろえてください');
+ if(num(p,'armor_set_trial_claimed'))return notice(p,'§eこの試練の報酬は受け取り済みです');
+ if(!armorSetDefs.some(([, ...ids])=>ids.slice(0,4).every(id=>ownsSeriesPiece(id,x=>ownsArmorPiece(p,x)))))return notice(p,'§e甲冑セットを4部位そろえてください');
  const c=space(p);if(!c)return;
- const slot=Array.from({length:c.size},(_,i)=>i).find(i=>!c.getItem(i));
- if(slot===undefined||!room(c,new ItemStack('minecraft:emerald',8)))return notice(p,'§e報酬を受け取るため、持ち物に空きを作ってください');
+ const slot=trialRewardSlot(c,new ItemStack('minecraft:emerald',8));
+ if(slot<0)return notice(p,'§e報酬を受け取るため、持ち物に空きを作ってください');
  c.setItem(slot,new ItemStack(ns+'gear_186',1));
- give(p,'minecraft:emerald',8);
+ if(!give(p,'minecraft:emerald',8)){c.setItem(slot);return notice(p,'§e報酬を受け取るため、持ち物に空きを作ってください');}
  property(p,'armor_set_trial_claimed',1);
  notice(p,'§d装備セット試練達成！ 終章・夜渡りの鎧を獲得');
  try{p.playSound('random.levelup',{volume:1,pitch:1.25});p.dimension.spawnParticle('minecraft:totem_particle',{x:p.location.x,y:p.location.y+1,z:p.location.z});}catch{}
@@ -4020,9 +4097,10 @@ async function legendGearTrialBoard(p){
 }
 
 async function enhanceHeldGear(p){
- const c=space(p),slot=p.selectedSlotIndex,held=selected(p);if(!c||!held?.typeId.startsWith(ns+'gear_'))return notice(p,'§e強化したい風記の装備を手に持ってください');
- const current=gear.get(held.typeId);if(!current)return notice(p,'§eこの装備は強化対象外です');
- const next=catalog.find(x=>x.prev===current.id);
+ const c=space(p),slot=p.selectedSlotIndex,held=selected(p);if(!c||!held?.typeId)return notice(p,'§e強化したい風記の装備を手に持ってください');
+ const leg=seriesLegUpgrade(held.typeId.startsWith(ns)?held.typeId.slice(ns.length):'',catalog);
+ const current=leg?.current??(held.typeId.startsWith(ns+'gear_')?gear.get(held.typeId):undefined);if(!current)return notice(p,'§eこの装備は強化対象外です');
+ const next=leg?leg.next:catalog.find(x=>x.prev===current.id);
  if(!next)return simple(p,'装備の最終段階',`${current.label}
 
 この装備は現在の系統で最終段階です。
@@ -4038,8 +4116,8 @@ ${next.label}
 
 必要冒険者ランク：${realmRanks[requiredRank][1]}
 ${labels}
-強化すると手持ちの装備を次の等級に置き換え、進化記録に登録します。`,[['進化させる'],['やめる']]);
- if(yes!==0||!p.isValid||selected(p)?.typeId!==ns+current.id)return;
+強化すると装備を次の等級に置き換え、進化記録に登録します。元のエンチャント・耐久などは引き継ぎません。`,[['進化させる'],['やめる']]);
+ if(yes!==0||!p.isValid||p.selectedSlotIndex!==slot||selected(p)?.typeId!==ns+current.id)return;
  if(!isCreative(p)&&costs.some(([id,n])=>total(c,id)<n))return notice(p,'§e進化素材が足りません');
  const product=new ItemStack(ns+next.id,held.amount);
  if(!isCreative(p))for(const [id,n] of costs)debit(c,id,n);
@@ -4072,7 +4150,10 @@ async function survivalGuide(p){
   ['季節の菜園・作物を育てる'],
   ['港の船便・交易と船旅'],
   ['風記の手引き・野営と休息'],
-  ['戻る']
+  ['生き物・素材・技図鑑'],
+  ['時空の闘技場・再入場'],
+  ['風紋連撃・戦闘の試作'],
+  ['風の旅帳へ戻る']
  ];
  const i=await paged(p,'サバイバル実践ガイド','冒険の準備から生活、探索、記録まで、実際に使える機能へ進めます。',rows);
  if(i===0)return map(p);
@@ -4084,47 +4165,82 @@ async function survivalGuide(p){
  if(i===6)return gardenGuide(p);
  if(i===7)return harbor(p);
  if(i===8)return help(p);
+ if(i===9)return openCreatureGuide(p);
+ if(i===10)return wardenArena?.open(p);
+ if(i===11)return simple(p,'風紋・防御・回避・パリィ（試作）','§b風記の剣・斧・槍で立ったまま敵に命中すると風紋がたまります。4秒以内の命中を3回、間隔は0.4秒以上。最大で6秒間維持します。\n\n§e2つたまったら、しゃがみながら武器の使用を約1.2秒長押しして離すと二連終撃。剣は前方3体、槍は前方2体、斧は周囲6体まで。威力と吹き飛ばしが上がります。3つたまってからの溜め技は代わりに風紋閃。壁や味方で止まります。どちらも外しても消費します。通常の近接命中はスタミナ3、溜め技は8と魔力が必要です。\n\n§b風記の剣・斧・槍を持ってしゃがむと、前方からの近接・飛び道具を70%軽減します。スタミナを毎秒5消費し、なくなったらしゃがみを解除して回復。構えの開始には最大約0.5秒かかります。\n\n§b風記の盾は両手どちらでも持て、しゃがむと試作の正面防御。斧を防ぐと約5秒無効。耐久と矢の跳ね返りは試作で、完全再現ではありません。実機確認まで頼らないでね。\n\n§a回避ロール：地上でしゃがみながら前進を素早く2回入力。スタミナ10、約0.5秒の攻撃回避。前方に安全な平地が必要です。\n\n§b空中ダッシュ：空中でしゃがまずに前進を一度離し、素早く2回入力。スタミナ15、着地まで1回。無敵や落下防止はありません。\n\n§b空中衝撃：風記の剣・斧・槍を持ち、しゃがまず落下中に敵へ近接を当てると、対象と近くの敵に追加ダメージ。着地まで1回、通常近接分を含めスタミナ12必要。落下ダメージは防ぎません。\n\n§6必殺：不屈の護符を持ち、スタミナ1〜20・魔力0〜20で使うと、見通せる近くの敵に攻撃。スタミナを全消費し1秒間通常ダメージを防ぎます。奈落や直接体力変更は防げず、30秒待機します。\n\n§eパリィ：盾を持たない剣・斧・槍の防御中にしゃがみを解除し、約0.3秒以内に正面から敵の近接か飛び道具を受けるとスタミナ15で防ぎます。近い敵の近接と一部の技を約2秒止めます。全攻撃・全行動が止まるわけではありません。管理者へのしゃがみ近接パリィも使えます。\n\n§7マナ・再使用時間は通常通り必要。操作・演出・バランスは試作で、統合版の検証が必要です。');
+ if(i===12)return guide(p);
 }
 
-async function bookSelector(p,title,status,rows,onChoose){
- const selectedPage=new ObservableNumber(0,{clientWritable:true});
- let form;
- form=new CustomForm(p,title)
-  .image('textures/ui/hakkai_book_banner.png','264d2bb6-d9e8-4ed4-9e39-96c2307a7a04',{width:1})
-  .header('八界風記｜風の旅帳')
-  .label(status)
-  .dropdown('項目を選ぶ（十字キー・矢印で移動）',selectedPage,rows.map((row,i)=>({label:row[0],value:i})))
-  .button('選んだ頁を開く',()=>{
-   const i=selectedPage.getData();
-   try{form.close();}catch{}
-   system.run(()=>{if(p.isValid)void onChoose(i);});
-  })
-  .closeButton();
- try{await form.show();}catch(err){report('風の旅帳',err);}
-}
+// The guide uses the same ActionFormData path as the rest of the pack. Every
+// page is awaited, including back navigation, so menu locks and user-busy
+// retries remain in effect across the whole interaction.
+const guideSelect=(p,title,body,rows,startPage=0)=>selectGuidePage(p,title,body,rows,form,startPage);
 async function openCreatureGuide(p){
  if(!mobSystem)return simple(p,'生き物・素材・技図鑑','図鑑データを読み込めませんでした。');
  const list=mobSystem.mobContentList;
- const rows=list.map((m,i)=>[`${String(i+1).padStart(3,'0')}｜${m.realmName}｜${m.name}`]);
- return bookSelector(p,'生き物・素材・技図鑑','全120種。生息界・生成バイオーム・固有技・専用ドロップを選んで確認できます。',rows,i=>{
-  const m=list[i];if(m)simple(p,`${m.name}｜${m.realmName}`,mobSystem.fieldGuide(p,i));
- });
+ while(p.isValid){
+  const rows=Array.from({length:8},(_,realm)=>{
+   const entries=creatureEntriesByRealm(list,realm);
+   const found=entries.filter(({profile})=>marked(p,'sight',wildlifeIndex.get(profile.id))).length;
+   return [`§b第${realm+1}界 §r${places[realm+1].name}\n§7観察 ${found}/${entries.length}`,itemTexture(`guardian_core_${realm}`)];
+  });
+  rows.push(['§d界渡りとFUSHIについて',itemTexture('pearl_7')],['§8↩ 本を閉じる']);
+  const realm=await form(p,'§6生き物・素材・技図鑑','§7調べたい界を選択。◆ は観察済み、◇ は未観察です。\n§7敵対種はピースフルでは出現しません。',rows);
+  if(realm===undefined||realm===9)return;
+  if(realm===8){
+   const fq=fushiQuest.status(p);
+   await simple(p,'§d界渡りとFUSHI', `§b友好の記録：竹 ${fq.bamboo}/16・月夜 ${fq.nights}/2 ${fq.claimed?'（受取済み）':''}\n\n各界を探索すると、その界のエンダーマンにまれに出会います。攻撃するまでは中立で、倒すと界のパールを落とします。使うと対応する界の到着地点へ帰還します（消費しません）。\n\n第8界では友好的なFUSHIとチーフもまれに出現します。新規地形の竹林では出会いやすく、竹を採って交換に使えます。チーフは攻撃された場合だけ反撃し、倒すと時の結晶を落とします。戦わず竹8本を届ければ、1日1回、時の欠片2個と交換できます。\n\nFUSHIのトーテムはチーフの討伐か竹16本との交換に加え、月竹林で新月以外の夜に竹を採るとまれに見つかります（取得後24000ティックは再獲得不可）。8種のパールと合わせると挑戦印を作れます。使うと確認後に消費して月のまどろみを発動できます。両手のいずれかで持つと致命傷からの復活を試みます（試作）。挑戦印から試作の時空の闘技場へ入れます。新しい月竹林には小さな社もあります。チーフから月夜に竹16本を2夜にわたり採る友好の贈り物も受け取れます。社と管理者の全技はまだ試作です。`);
+   continue;
+  }
+  const entries=creatureEntriesByRealm(list,realm);let page=0;
+  while(p.isValid){
+   const choices=entries.map(({profile})=>{
+    const seen=marked(p,'sight',wildlifeIndex.get(profile.id));
+    const type=profile.temper==='hostile'?'敵対':profile.temper==='neutral'?'中立':'友好';
+    return [`${seen?'§a◆':'§7◇'} §r${profile.name}\n§7${type}｜${profile.dropName}`,itemTexture(profile.dropId.slice(ns.length))];
+   });
+   const result=await guideSelect(p,`§6${places[realm+1].name}｜生き物`, '§7生き物を選ぶと、生息地・技・ドロップの使い道を表示します。',choices,page);
+   if(result.closed)return;
+   if(result.back)break;
+   page=result.page;
+   const entry=entries[result.index];if(!entry)continue;
+   const detail=await form(p,`§6${entry.profile.name}`,mobSystem.fieldGuide(p,entry.index),[['§b↩ 生き物の一覧へ'],['§8本を閉じる']]);
+   if(detail!==0)return;
+  }
+ }
 }
 async function colossusGuide(p){
- const rows=[['討伐記録・攻略情報'],['終焉の八界王を召喚']];
- return bookSelector(p,'終焉の八界王','八界の守護獣を全て倒した後、時の終着駅の開けた場所で挑戦できます。',rows,i=>{
-  if(i===1){mobSystem?.summonColossus(p);return;}
-  simple(p,'終焉の八界王｜攻略帳','三段階の巨大ボス。八界断ち、星骸落とし、時環封じ、蝕光爆ぜ、影兵招来、時空裂波、終焉咆哮、逆刻再編を使う。\n\n赤い予告輪の外へ退避し、最終形態では回復行動を止めるため攻撃を続けよう。討伐すると時蝕核を獲得できる。');
- });
+ const defeated=Array.from({length:8},(_,i)=>Boolean(num(p,'guards')&(1<<i))).filter(Boolean).length;
+ const choice=await form(p,'§4終焉の八界王',`§7守護獣の討伐記録 §e${defeated}/8\n§7八界すべての守護獣を倒し、時の終着駅の開けた場所で挑戦できます。`,[
+  ['§6攻略情報を読む',itemTexture('eclipse_core')],['§c八界王を召喚する',itemTexture('guardian_core_7')],['§8閉じる']
+ ]);
+ if(choice===1)return mobSystem?.summonColossus(p);
+ if(choice===0)return simple(p,'§4終焉の八界王｜攻略帳','三段階の巨大ボス。八界断ち、星骸落とし、時環封じ、蝕光爆ぜ、影兵招来、時空裂波、終焉咆哮、逆刻再編を使う。\n\n赤い予告輪の外へ退避し、最終形態では回復行動を止めるため攻撃を続けよう。討伐すると時蝕核を獲得できる。');
 }
 async function guide(p){
- const realmCount=checkEightRealmMemory(p);
- const rank=realmRankUpdate(p),rankName=realmRanks[rank][1];
- const realmStatus=realmCount===8?'§d八界踏破 完了§r':'八界踏破 '+realmCount+'/8';
- const echoStatus=`余韻 ${realmEchoCount(p)}/8`;
- const status=`${era()}　｜　${realmStatus}　｜　${echoStatus}\n称号：${rankName}（${realmProgressScore(p)}/155）\n訪問 ${places.filter(t=>visited(p,t.id)&&t.id!==0).length}/${places.length-1}　｜　${currentPlace(p)?.name??'バニラの世界'}`;
- const rows=[['旅の地図'],['風記の手引き'],['装備とレシピ図鑑'],['依頼帳'],['水辺の釣り'],['設定・帰還地点'],['ガイド本と帰還石の再発行'],['旅の記録を読む'],['自然調査ノート'],['時の列車'],['季節の収穫市'],['港の船便と市'],['村の集落台帳'],['バニラの遺跡と風の道'],['醸造と属性刻印'],['八属性と合成魔法の図鑑'],['装備を見つける・注文する'],['サバイバルの追加レシピ'],['季節の菜園'],['八界の発見記録'],['八界記念頁'],['八界の宝物庫'],['八界の探索試練'],['八界の秘密遺跡'],['八界の記憶断章'],['八界の余韻と記録'],['八界の記念品交換所'],['冒険者記録帳'],['八界の記念品図鑑'],['冒険者ランクと称号'],['八界の展示コーナー設計帳'],['八界の記念碑と特別称号'],['展示館の秘密記録'],['八界総合大図鑑'],['大記念館・最後の頁'],['八界の幻影闘技場'],['幻影闘技場・戦術図鑑'],['幻影闘技場の優勝記念展示'],['八界の巡礼・旅先イベント'],['八界の四季巡礼と物語'],['八界の甲冑展示室'],['八界の装備収集・進化'],['八界の伝説装備クエスト'],['八界の甲冑図鑑・収集記録'],['風記の装備進化年鑑'],['終章・夜渡りの鎧 覚醒試練'],['八界の覚醒装備・継承試練'],['八界の覚醒鎧・極進化'],['八界の守護核・収集年鑑'],['守護核継承工房・八界統合装備'],['八界統合・終章の大記念館'],['大遠征地・72地点の記録'],['サバイバル実践ガイド'],['生き物・素材・技図鑑'],['終焉の八界王']];
- return bookSelector(p,'8界風記｜風の旅帳',status,rows,ix=>dispatchGuide(p,ix));
+ while(p.isValid){
+  const realmCount=checkEightRealmMemory(p);
+  const rank=realmRankUpdate(p),rankName=realmRanks[rank][1];
+  const realmStatus=realmCount===8?'§d八界踏破 完了§r':`§b八界踏破 ${realmCount}/8§r`;
+  const status=`§6━━ 風の旅帳 ━━§r\n${era()}　｜　${realmStatus}　｜　余韻 ${realmEchoCount(p)}/8\n§7称号：§r${rankName}　§7訪問：§r${places.filter(t=>visited(p,t.id)&&t.id!==0).length}/${places.length-1}\n§7現在地：§r${currentPlace(p)?.name??'バニラの世界'}\n\n§7よく使う項目、または目的別の章を選んでください。`;
+  const rows=[
+   ['§b旅の地図\n§7行き先を選ぶ',itemTexture('return_stone')],
+   ['§aサバイバル実践ガイド\n§7はじめての冒険はこちら',itemTexture('trail_ration')],
+   ...GUIDE_SECTIONS.map(section=>[`§6${section.title}\n§7${section.hint}`,itemTexture(section.icon)]),
+   ['§8本を閉じる']
+  ];
+  const choice=await form(p,'§6§l8界風記 §r§7｜風の旅帳',status,rows);
+  if(choice===undefined||choice===rows.length-1)return;
+  if(choice===0)return dispatchGuide(p,0);
+  if(choice===1)return dispatchGuide(p,52);
+  const section=GUIDE_SECTIONS[choice-2];if(!section)return;
+  const sectionRows=section.ids.map(id=>[`§r${GUIDE_ENTRIES[id]}`,itemTexture(GUIDE_ICONS[id])]);
+  const picked=await guideSelect(p,`§6風の旅帳｜${section.title}`,`§7${section.hint}`,sectionRows);
+  if(picked.closed)return;
+  if(picked.back)continue;
+  const route=section.ids[picked.index];
+  if(route!==undefined)return dispatchGuide(p,route);
+ }
 }
 async function dispatchGuide(p,ix){
  if(ix===52)return survivalGuide(p);
@@ -4184,15 +4300,16 @@ async function dispatchGuide(p,ix){
  if(ix===51)return expeditionRecords?.journal(p);
 }
 async function magicIndex(p){
- const desc=['速さと突風','回復と水中呼吸','火炎と火への耐性','耐性と吸収','前方への雷撃と弱体化','毒・衰弱・盲目を解除','命中した敵から体力を吸収','敵の動きを大幅に遅くする','突風と目くらまし','熱と土の守り','雷と水の嵐','光と闇、吸収の加護','敵を遅くし、自分を速くする'];
- const names=[...attrs.slice(0,8),...pairs.map(r=>`${r.label}（${attrs[r.a]}＋${attrs[r.b]}）`)];
+ const desc=['速さと突風','回復と水中呼吸','火炎と火への耐性','耐性と吸収','前方への雷撃と弱体化','毒・衰弱・盲目を解除','命中した敵から体力を吸収','敵の動きを大幅に遅くする','突風と目くらまし','熱と土の守り','雷と水の嵐','光と闇、吸収の加護','敵を遅くし、自分を速くする','前方への光の一撃','仲間と共に回復と反撃','周囲の敵を吹き飛ばす','敵を大幅に遅くする','周囲の敵に火をつける','トーテムを消費し回復と眠り'];
+ const names=[...attrs.slice(0,8),...pairs.map(r=>`${r.label}（${attrs[r.a]}＋${attrs[r.b]}）`),'光の矢','絆の灯','風の輪','水の縛り','炎の環','月のまどろみ'];
  return paged(p,'魔法図鑑','◆ 発動したことがある魔法。訪問による解放と発動方法は魔導書に記載。',names.map((v,i)=>[`${marked(p,'learned_spells',i)?'◆':'◇'} ${v}：${desc[i]}`]));
 }
 async function recipeIndex(p){
  const entries=[
-  ['導入の道具','ガイド本：本＋羽根。風見の帰還石：アメジストの欠片＋紙＋丸石。離島の帰還石：帰還石＋離島の通行札＋時の結晶。'],
-  ['魔法と醸造','魔導書：本＋風と水の結晶。薄明の薬液：瓶＋グロウベリー。薬液＋水の結晶を醸造台で醸造（燃料はブレイズパウダー）。'],
+  ['導入の道具','ガイド本：本＋羽根。風見の帰還石：アメジストの欠片＋紙＋丸石。旧離島の帰還石も風見の帰還石と同じ帰還画面を開きます。'],
+  ['魔法と醸造','不屈の護符：アメジストの欠片＋風と時の結晶。魔導書：本＋風と水の結晶。専用魔法の本：本＋各属性の結晶（絆は風と水）。月はFUSHIのトーテムを使います。薄明の薬液：瓶＋グロウベリー。薬液＋水の結晶を醸造台で醸造（燃料はブレイズパウダー）。'],
   ['結晶と通行札','同属性の欠片2個＋アメジストの欠片で結晶。離島の通行札：紙＋風の結晶＋風の欠片。'],
+  ['生き物の素材と欠片','生き物の専用素材1個を作業台で加工すると、その界に対応する属性の欠片を2個入手できます。生き物ごとの属性は「生き物・素材・技図鑑」で確認できます。欠片2個＋アメジストの欠片1個から結晶を作り、装備や魔法に利用できます。'],
   ['牧場と遺跡','季節の花壇：牧場繊維＋育てのしるし＋土でも製作。時渡りの羅針盤：コンパス＋風記の断片＋時の結晶。'],
   ['装備・設備','装備の全レシピは「装備とレシピ図鑑」へ。土組み自動炉：かまど＋レンガ2個＋火の結晶。西に原料・燃料の樽、東に出力の樽。肉・ジャガイモ・砂などを加工します。集落鐘、圧縮機、鉱脈採り機などは作業台の検索でも探せます。'],
   ['旅人の携帯食','作業台で焼き牛肉1個＋ベイクドポテト1個＋パン1個＋ニンジン1個から2個作れます。食べると満腹度を回復し、スタミナも35回復します。焚き火か魂の焚き火の近くでしゃがんで静止すると、スタミナ回復が速くなります。']
@@ -4608,6 +4725,7 @@ async function usePhysicalRelic(p,at,type){
  const gate=type.endsWith('_time')?8:type.endsWith('_fire')?13:undefined;
  if(gate!==undefined){
    const site=places[gate];
+   if(isNaturalSite(site))return notice(p,'§eこの遺跡の先は各界を歩いて探してください');
    if(!isCreative(p)&&!(gate===8?[3,7]:[6]).some(i=>marked(p,'solved_relic',i)))return notice(p,'§e羅針盤で対応する遺跡の仕掛けを解いてください');
    if(await form(p,'遺跡の扉',`${site.name}への道が開きます。`,[['渡る'],['残る']])===0&&near()){
      state(p).arrival=0;return arrive(p,site);
@@ -4641,6 +4759,7 @@ async function openRelic(p){
    notice(p,'§6遺跡の仕掛けが解けた');
  }
  const site=places[relicDestinations[i]];
+ if(isNaturalSite(site))return notice(p,'§eこの場所には各界を歩いて向かってください');
  if(site&&await form(p,'時渡りの道',`${site.name}へ渡れます。`,[['渡る'],['ここに残る']])===0&&valid()){
    state(p).arrival=0;return arrive(p,site);
  }
@@ -4691,14 +4810,11 @@ safeSub('world','before','playerInteractWithBlock',e=>{
    });
  }
 });
-async function returnMenu(p,enhanced=false){
- const island=places[num(p,'last_island',-1)];
+async function returnMenu(p){
  const ix=await form(p,'風見の帰還石','安全な足場が確認できる場合だけ移動します。',[
-   ['風見台へ',itemTexture('return_stone')],['最後に登録されたベッドへ'],['自分の登録地点へ'],['元の世界へ戻る'],['旅の地図を開く'],
-   ...(enhanced&&island?[[`最後に訪れた離島：${island.name}`]]:[])
+   ['風見台へ',itemTexture('return_stone')],['最後に登録されたベッドへ'],['自分の登録地点へ'],['元の世界へ戻る'],['旅の地図を開く']
  ]);
  if(ix===0)return arrive(p,places[0]);if(ix===1)return returnNatural(p,'bed');
- if(ix===5&&enhanced&&island&&visited(p,island.id))return arrive(p,island);
  if(ix===2){if(!parsePoint(p,'home_point'))return notice(p,'§e先にガイド本の設定で位置を登録してね');return returnNatural(p,'home_point');}
  if(ix===3)return returnNatural(p,'overworld_point');
  if(ix===4)return map(p);
@@ -4717,8 +4833,18 @@ function use(e){
  if(t-s.useTick<7||s.busy||s.menu||p.isSneaking&&gear.has(id))return;
  s.useTick=t;
  if(id===ns+'guide')menu(p,guide);
+ if(id===ns+'warden_sigil')return menu(p,p=>wardenArena?.open(p));
+ if(id===ns+'fushi_totem')return menu(p,totemMagicMenu);
+ if(id===ns+'resolve_charm')return combatUltimate?.cast(p,s);
+ const magicName=id.slice(ns.length),magic=Object.prototype.hasOwnProperty.call(magicItems,magicName)?magicItems[magicName]:undefined;
+ if(id.startsWith(ns)&&magic){
+   if(!isCreative(p)&&magic.slice(1).some(a=>!visited(p,home.findIndex(x=>x.includes(a))+1)))return notice(p,'§e対応する属性の界を先に訪れてね');
+   return castMagic(p,magic[0]);
+ }
  if(id===ns+'return_stone')menu(p,returnMenu);
- if(id===ns+'island_stone')menu(p,p=>returnMenu(p,true));
+ const pearl=id.match(/^hakkai:pearl_([0-7])$/);
+ if(pearl){const realm=Number(pearl[1]);void arrive(p,places[realm===0?0:realm+1]);return;}
+ if(id===ns+'island_stone')menu(p,returnMenu);
  if(id===ns+'element_tome')menu(p,spells);
  if(id===ns+'trail_ration'){s.s=bounds(s.s+35,0,max);notice(p,'§a旅人の携帯食でスタミナが回復した');}
  if(id===ns+'camp_stew'){s.s=bounds(s.s+50,0,max);s.m=bounds(s.m+10,0,max);notice(p,'§a野営の具だくさんスープでスタミナと魔力が少し回復した');}
@@ -4753,29 +4879,18 @@ function use(e){
  if(book)return notice(p,'§eエンチャント台で、刻印書を持ってしゃがみながら使ってね');
  const g=gear.get(id);if(g)cast(p,g);
 }
-const bowDraws=new Map();
 function completeFocus({source:p,itemStack:item}){
  const g=gear.get(item?.typeId);
- if(!g||g.kind==='弓'||!p.isValid||!p.isSneaking||p.getGameMode()===GameMode.Spectator||selected(p)?.typeId!==item.typeId)return;
+ if(!g||!p?.isValid)return;
+ if(RELEASE_WEAPON_KINDS.has(g.kind)){combatCharge?.complete(p,item);return;}
+ if(g.kind==='弓'||!p.isSneaking||p.getGameMode()===GameMode.Spectator||selected(p)?.typeId!==item.typeId)return;
  const s=state(p),t=system.currentTick;
  if(s.busy||s.menu||t-s.useTick<7)return;
  s.useTick=t;cast(p,g,true);
 }
-safeSub('world','after','itemStartUse',({source:p,itemStack:item})=>{
- if(p.isSneaking&&gear.get(item.typeId)?.kind==='弓'&&p.getGameMode()!==GameMode.Spectator){
-   bowDraws.set(p.id,{type:item.typeId,slot:p.selectedSlotIndex,dim:p.dimension.id,start:system.currentTick});
- }
-});
-safeSub('world','after','itemReleaseUse',({source:p,itemStack:item})=>{
- const entry=bowDraws.get(p.id);
- bowDraws.delete(p.id);
- const t=system.currentTick,g=gear.get(item?.typeId);
- if(!entry||!g||!p.isValid||!p.isSneaking||p.getGameMode()===GameMode.Spectator||t-entry.start<18||t-entry.start>300||
-     p.dimension.id!==entry.dim||p.selectedSlotIndex!==entry.slot||selected(p)?.typeId!==entry.type||item.typeId!==entry.type)return;
- const s=state(p);
- if(s.busy||s.menu||t-s.useTick<7)return;
- s.useTick=t;cast(p,g,true);
-});
+safeSub('world','after','itemStartUse',({source:p,itemStack:item})=>{combatCharge?.start(p,item);});
+safeSub('world','after','itemReleaseUse',({source:p,itemStack:item})=>{combatCharge?.release(p,item);});
+try{world.afterEvents.itemStopUse?.subscribe(({source:p,itemStack:item})=>{combatCharge?.stop(p,item);});}catch{}
 
 function transfer(b){
  const d=b.dimension,x=b.x,y=b.y,z=b.z;
@@ -4832,8 +4947,9 @@ function transfer(b){
      if(!result)return;
      const output=new ItemStack(result,1);
      if(!room(to,output)||!power||total(from,power)<1)return;
-     stone.setType('minecraft:air');
-     if(debit(from,power,1)){to.addItem(output);production(b,2);}
+     const old=stone.permutation;
+     if(factoryTransaction({input:from,output:to,costs:[{id:power,count:1}],product:output,
+       commitExternal:()=>stone.setType('minecraft:air'),rollbackExternal:()=>stone.setPermutation(old),report}))production(b,2);
      return;
    }
    return;
@@ -4852,14 +4968,13 @@ function transfer(b){
      let n=Math.min(limit,total(from,item.typeId));
      while(n>0&&!room(to,new ItemStack(out,n)))n--;
      if(!n)return;
-     if(power&&!debit(from,power,1))return;
-     if(debit(from,item.typeId,n)){to.addItem(new ItemStack(out,n));production(b,n);}
+     const costs=[{id:item.typeId,count:n}];if(power)costs.push({id:power,count:1});
+     if(factoryTransaction({input:from,output:to,costs,product:new ItemStack(out,n),report}))production(b,n);
      return;
    }
    const product=new ItemStack(out,1);if(!room(to,product))return;
-   if(!debit(from,item.typeId,need))return;
-   if(aux)debit(from,aux,1);
-   to.addItem(product);production(b,1);return;
+   const costs=[{id:item.typeId,count:need}];if(aux)costs.push({id:aux,count:1});
+   if(factoryTransaction({input:from,output:to,costs,product,report}))production(b,1);return;
  }
 }
 safeSub('system','before','startup',({itemComponentRegistry,blockComponentRegistry})=>{
@@ -4958,10 +5073,6 @@ function permit(e,delay,scope='behavior'){
  if(tempCooldown.size>=512)return false;
  tempCooldown.set(key,t+delay);return true;
 }
-const herd=new Set(['cow','sheep','pig','chicken','goat','rabbit','camel','camel_husk']);
-const archers=new Set(['skeleton','stray','bogged','pillager','parched']);
-const forestCrew=new Set(['zombie','husk','villager','villager_v2','iron_golem','spider','wolf','fox','witch','piglin','enderman','creeper','blaze','ghast','dolphin','cat','bee']);
-const tracked=e=>{const type=e.typeId.replace('minecraft:','');return herd.has(type)||archers.has(type)||forestCrew.has(type);};
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z);
 function along(e,dx,dz,strength=.21,vertical=.02){
  const r=Math.hypot(dx,dz);
@@ -4978,6 +5089,15 @@ function visibleFrom(e,l){
  const h=e.getHeadLocation(),v={x:l.x-h.x,y:l.y-h.y,z:l.z-h.z},len=Math.hypot(v.x,v.y,v.z);
  return len<.4||!e.dimension.getBlockFromRay(h,{x:v.x/len,y:v.y/len,z:v.z/len},{maxDistance:len-.25});
 }
+// Rare neutral encounters use their own local caps and never alter terrain.
+function spawnRealmEnder(p,realm,t){
+ return spawnRareEncounter(p,ns+`ender_${realm}`,t,safe,{family:'hakkai_realm_ender'});
+}
+function spawnFushi(p,t,chief){
+ return spawnRareEncounter(p,ns+(chief?'fushi_chief':'fushi'),t,safe,{chief});
+}
+// Restrict hostile spawns to terrain-like floors; this is not a claim-detection system.
+const wildlifeNaturalFloors=new Set(['grass_block','dirt','coarse_dirt','rooted_dirt','podzol','mycelium','moss_block','mud','sand','red_sand','sandstone','gravel','clay','stone','deepslate','tuff','andesite','calcite','snow_block','ice','packed_ice','blue_ice','terracotta','quartz_block'].map(id=>'minecraft:'+id));
 function wildlifeTick(p,b,site){
  const s=state(p), t=system.currentTick, d=p.dimension;
  if(num(p,'quiet_wildlife')||s.busy||t<(s.wildAt??0))return;
@@ -4985,129 +5105,81 @@ function wildlifeTick(p,b,site){
  s.wildAt=t+420+Math.floor(Math.random()*260);
  const realmId=d.id.startsWith(ns+'realm_')?Number(d.id.slice((ns+'realm_').length)):-1;
  const seededBiome=realmId>=0&&realmId<8?seededWorlds?.biomeAt(realmId,p.location):undefined;
+ const inRealm=Number.isInteger(realmId)&&realmId>=0&&realmId<8;
  const procedural=Boolean(seededBiome&&b?.id===seededBiome.id);
  const place=site?.id>0&&site.kind!=='era';
- if(!place&&!procedural&&(!b||b.profile.mode==='water'||b.key==='end'&&Math.hypot(p.location.x,p.location.z)<160))return;
- const around=d.getEntities({families:['hakkai_wildlife'],location:p.location,maxDistance:68,closest:7});
+ // In the eight void dimensions the reserved areas and unrecognised biomes
+ // still need a local wildlife pool. Keep vanilla-world rules unchanged.
+ if(!inRealm&&!place&&!procedural&&(!b||b.profile.mode==='water'||b.key==='end'&&Math.hypot(p.location.x,p.location.z)<160))return;
+ // 近距離の密度を制限しつつ、遠くの個体が新規出現を永久に塞がないようにする。
+ const around=d.getEntities({families:['hakkai_wildlife'],location:p.location,maxDistance:32,closest:6});
+ const night=world.getTimeOfDay()>=13000;
+ if(realmId===7){
+  const grove=seededWorlds?.isGenerated(7,p.location)&&seededWorlds?.isMoonGrove(p.location);
+  const roll=Math.random(),chances=fushiThresholds(grove,isMoonlitNight(world));
+  if(roll<chances.chief&&spawnFushi(p,t,true))return;
+  if(roll<chances.normal&&spawnFushi(p,t,false))return;
+ }
+ if(realmId>=0&&realmId<8&&Math.random()<(night?.18:.09)&&spawnRealmEnder(p,realmId,t))return;
  if(around.length>=5)return;
- const night=world.getTimeOfDay()>=13000, season=seasons.indexOf(era()), rare=night?.40:season===3?.20:.12;
  if(site?.kind==='atlas'&&families[site.family].mode==='water')return;
  let m;
  if(site?.kind==='atlas')m=wildlifeById.get(ns+families[site.family].species);
  else if(place){
-   const realm=aspect(site),core=wildlife.filter(entry=>entry.dim===realm&&!entry.additional),added=wildlife.filter(entry=>entry.dim===realm&&entry.additional);
-   if(added.length&&Math.random()<(night?.38:.24))m=added[Math.floor(Math.random()*added.length)];
-   else if(core.length)m=core[Math.random()<rare?2:Math.random()<(season===0?.72:.42)?0:1];
+   m=pickRealmWildlife(wildlife,aspect(site),entry=>marked(p,'sight',wildlifeIndex.get(entry.id))||marked(p,'wild_spawn_seen',wildlifeIndex.get(entry.id)),world.getDifficulty()===Difficulty.Peaceful);
  }else if(procedural){
+   // 地形帯ごとの出現を主に保ちつつ、希少な地形帯の生物にも出会える。
+   if(Math.random()<.4)m=pickRealmWildlife(wildlife,realmId,entry=>marked(p,'sight',wildlifeIndex.get(entry.id))||marked(p,'wild_spawn_seen',wildlifeIndex.get(entry.id)),world.getDifficulty()===Difficulty.Peaceful);
    const encounterChance=Math.min(.58,(b.profile.rareChance??.24)+(night?.09:0)+(p.location.y>110?.08:0));
    const rare=b.profile.rareSpecies&&Math.random()<encounterChance;
-   m=wildlifeById.get(ns+(rare?b.profile.rareSpecies:b.profile.species));
+   m??=wildlifeById.get(ns+(rare?b.profile.rareSpecies:b.profile.species));
+ }else if(inRealm){
+   m=pickRealmWildlife(wildlife,realmId,entry=>marked(p,'sight',wildlifeIndex.get(entry.id))||marked(p,'wild_spawn_seen',wildlifeIndex.get(entry.id)),world.getDifficulty()===Difficulty.Peaceful);
  }else m=wildlifeById.get(ns+b.profile.species);
- if(!m||m.temper==='hostile'&&world.getDifficulty()===Difficulty.Peaceful)return;
+ const peaceful=world.getDifficulty()===Difficulty.Peaceful;
+ if(inRealm&&(!m||m.temper==='hostile'&&peaceful||around.some(e=>e.typeId===ns+m.id&&dist(e.location,p.location)<28))){
+   const available=wildlife.filter(entry=>!around.some(e=>e.typeId===ns+entry.id&&dist(e.location,p.location)<28));
+   m=pickRealmWildlife(available,realmId,entry=>marked(p,'sight',wildlifeIndex.get(entry.id))||marked(p,'wild_spawn_seen',wildlifeIndex.get(entry.id)),peaceful);
+ }
+ if(!m||m.temper==='hostile'&&peaceful)return;
  if(around.some(e=>e.typeId===ns+m.id&&dist(e.location,p.location)<28))return;
- for(let i=0;i<8;i++){
-   const r=8+i%3*2, a=i*2.39996+(t%100)/100, l=p.location;
-   const x=Math.floor(l.x+Math.cos(a)*r)+.5,z=Math.floor(l.z+Math.sin(a)*r)+.5;
-   for(const dy of [0,-1,1,-2,2]){
-     const pos={x,y:Math.floor(l.y)+dy,z};
-     if(!d.isChunkLoaded(pos)||!safe(d,pos))continue;
-     if(place&&m.temper==='hostile'&&dist(pos,coords(site))<9)continue;
-     if(procedural&&seededWorlds?.biomeAt(realmId,pos)?.id!==b.id)continue;
-     if(!place&&!procedural&&d.getBiome(pos).id.replace(/^minecraft:/,'')!==b.id)continue;
-     if(d.getPlayers({location:pos,maxDistance:6,closest:1}).length)continue;
-     d.spawnEntity(ns+m.id,pos,{spawnEvent:'hakkai:wild',initialPersistence:false});
-     return;
-   }
- }
+ const spawned=spawnWildlife({
+  player:p,type:ns+m.id,tick:t,safe,allowNearbyBiome:inRealm,
+  avoid:pos=>{
+   if(m.temper!=='hostile')return false;
+   // Keep the central arrival areas clear even when the player stands outside.
+   if(inRealm&&places.slice(0,9).some(s=>s.dim===realmId&&Math.hypot(pos.x-s.x,pos.z-s.z)<16))return true;
+   if(site&&dist(pos,coords(site))<9)return true;
+   if(inRealm){const floor=d.getBlock({x:Math.floor(pos.x),y:Math.floor(pos.y)-1,z:Math.floor(pos.z)});return !floor||!wildlifeNaturalFloors.has(floor.typeId);}
+   return false;
+  },
+  preferred:pos=>{
+   if(procedural)return seededWorlds?.biomeAt(realmId,pos)?.id===b.id;
+   if(inRealm||place)return true;
+   return d.getBiome(pos).id.replace(/^minecraft:/,'')===b.id;
+  }
+ });
+ if(spawned){
+  // Recording a spawn is separate from observing an entity in the guide.
+  mark(p,'wild_spawn_seen',wildlifeIndex.get(m.id));
+ }else s.wildAt=t+160; // retry a safe search sooner, without a per-tick loop
+
 }
-function behaviorTick(p){
- if(num(p,'quiet_wildlife')||state(p).busy)return;
- const d=p.dimension,l=p.location,night=world.getTimeOfDay()>=13000;
- const close=d.getEntities({location:l,maxDistance:18,closest:24,excludeTypes:['minecraft:player','minecraft:item','minecraft:xp_orb']}).filter(tracked).slice(0,12);
- for(const e of close){
-   try{
-     if(!e.isValid||!permit(e,60)||e.getComponent('minecraft:tameable')?.isTamed)continue;
-     const m=e.typeId.slice(10), pos=e.location, r=dist(pos,l),dx=l.x-pos.x,dz=l.z-pos.z;
-     if(herd.has(m)){
-       if(r<4&&p.isSprinting)along(e,-dx,-dz);
-       else{
-         const mate=close.find(x=>x.id!==e.id&&x.typeId===e.typeId&&dist(x.location,pos)>=4&&dist(x.location,pos)<11);
-         if(mate)along(e,mate.location.x-pos.x,mate.location.z-pos.z,.12);
-       }
-     }else if(archers.has(m)&&r>4&&r<13&&visibleFrom(e,p.getHeadLocation())){
-       const sign=(system.currentTick%3===0?1:-1);
-       along(e,-dz*sign,dx*sign,.23)||along(e,dz*sign,-dx*sign,.23);
-     }else if((night||d.id==='minecraft:nether')&&['zombie','husk','spider'].includes(m)){
-       const v=close.find(x=>x.typeId.startsWith('minecraft:villager'));
-       if(v&&dist(v.location,pos)<10&&visibleFrom(e,v.getHeadLocation()))e.addEffect('speed',55,{amplifier:0,showParticles:false});
-     }else if(m==='villager'||m==='villager_v2'||m==='iron_golem'){
-       const foe=close.find(x=>['minecraft:zombie','minecraft:husk','minecraft:pillager'].includes(x.typeId)&&dist(x.location,pos)<9&&visibleFrom(e,x.getHeadLocation()));
-       if(foe){
-         const sign=m==='iron_golem'?1:-1;
-         along(e,(foe.location.x-pos.x)*sign,(foe.location.z-pos.z)*sign,.17);
-       }
-     }else if(m==='fox'&&night&&r<6&&p.isSprinting)along(e,-dx,-dz,.25);
-     else if(m==='wolf'&&night){
-       const prey=close.find(x=>['minecraft:sheep','minecraft:rabbit'].includes(x.typeId)&&dist(x.location,pos)<10);
-       const pack=close.some(x=>x.id!==e.id&&x.typeId===e.typeId&&dist(x.location,pos)<6);
-       if(prey&&pack&&visibleFrom(e,prey.getHeadLocation()))along(e,prey.location.x-pos.x,prey.location.z-pos.z,.22);
-     }else if(m==='cat'&&night&&!p.isSprinting){
-       const village=close.find(x=>x.typeId.startsWith('minecraft:villager')&&dist(x.location,pos)<8);
-       if(village&&r>4)along(e,village.location.x-pos.x,village.location.z-pos.z,.12);
-     }else if(m==='creeper'&&night&&r>4&&r<8&&visibleFrom(e,p.getHeadLocation())){
-       along(e,dx,dz,.08,0);
-     }else if(m==='witch'&&night&&r<10){
-       const ally=close.find(x=>['minecraft:zombie','minecraft:husk'].includes(x.typeId)&&dist(x.location,pos)<6);
-       if(ally&&visibleFrom(e,ally.getHeadLocation()))ally.addEffect('speed',50,{showParticles:false});
-     }else if(m==='piglin'&&r>=3&&r<8&&selected(p)?.typeId==='minecraft:gold_ingot'){
-       e.lookAt(p.getHeadLocation());
-     }else if(m==='enderman'&&r<12&&night&&Math.random()<.35){
-       d.spawnParticle('hakkai:climate_5',{...pos,y:pos.y+1.3});
-     }else if((m==='blaze'||m==='ghast')&&r<17&&Math.random()<.25){
-       d.spawnParticle('minecraft:basic_smoke_particle',{...pos,y:pos.y+.8});
-     }
-     else if(m==='dolphin'&&p.isSwimming&&r>=3&&r<=8&&e.isSwimming&&e.getVelocity().y<.02&&waterAt(d,{...pos,y:pos.y+1})){
-       const k=Math.hypot(dx,dz);if(k>.1)e.applyImpulse({x:dx/k*.1,y:.12,z:dz/k*.1});
-     }
-   }catch{}
- }
-}
-safeSub('world','after','entityHurt',({hurtEntity:e,damageSource:source})=>{
+safeSub('world','after','entityHurt',({hurtEntity:e,damageSource:source,damage})=>{
+ if(source.cause===EntityDamageCause.entityAttack&&source.damagingEntity?.typeId==='minecraft:player'&&!isCreative(source.damagingEntity))try{
+   const p=source.damagingEntity,g=gear.get(selected(p)?.typeId);combatResonance?.onHurt(p,e,g,damage);
+   airStrike?.onHurt(p,e,state(p),g,damage,system.currentTick);
+ }catch(err){report('風紋連撃',err);}
  mobSystem?.onHurt({hurtEntity:e,damageSource:source});
+ realmEnders?.onHurt({hurtEntity:e,damageSource:source});
+ fushiSystem?.onHurt({hurtEntity:e,damageSource:source});
  const by=source.damagingEntity;
  if(e.isValid&&e.typeId==='minecraft:player'&&by?.isValid&&by.typeId!=='minecraft:player'&&
      [EntityDamageCause.entityAttack,EntityDamageCause.projectile].includes(source.cause)&&permit(e,24,'armor')){
    const wearer=/** @type {import('@minecraft/server').Player} */ (e);
    if(wearer.getGameMode()===GameMode.Survival)for(const item of armorItems(wearer))growAffinity(wearer,item,30,'防具');
  }
- if(!by?.isValid||!e.isValid||!tracked(e)&&!wildlifeById.has(e.typeId)&&!wildlifeById.has(by.typeId))return;
- try{
-   if(source.cause!==EntityDamageCause.entityAttack&&source.cause!==EntityDamageCause.projectile)return;
-   const p=/** @type {import('@minecraft/server').Player|undefined} */ (by.typeId==='minecraft:player'?by:e.typeId==='minecraft:player'?e:e.dimension.getPlayers({location:e.location,maxDistance:13,closest:1})[0]);
-   if(!p||num(p,'quiet_wildlife')||state(p).busy||isCreative(p))return;
-   const m=wildlifeById.get(by.typeId),struck=wildlifeById.get(e.typeId);
-   if(m?.temper==='hostile'&&e.typeId==='minecraft:player'&&permit(by,135)){
-     switch(m.talent){
-       case 'web':e.addEffect('slowness',55,{amplifier:1,showParticles:false});break;
-       case 'frost':e.addEffect('mining_fatigue',70,{showParticles:false});break;
-       case 'gust':along(e,e.location.x-by.location.x,e.location.z-by.location.z,.27,.11);break;
-       case 'charge':by.addEffect('speed',42,{showParticles:false});break;
-       case 'time':e.addEffect('weakness',65,{showParticles:false});break;
-       case 'leap':along(by,e.location.x-by.location.x,e.location.z-by.location.z,.29,.16);break;
-       case 'thorns':e.addEffect('slowness',36,{showParticles:false});break;
-     }
-   }else if(struck?.talent==='armor'&&permit(e,120))e.addEffect('resistance',75,{showParticles:false});
-   else if(by.typeId==='minecraft:player'&&permit(e,100)){
-     const type=e.typeId.slice(10),dx=e.location.x-by.location.x,dz=e.location.z-by.location.z;
-     if(e.getComponent('minecraft:tameable')?.isTamed)return;
-     if(herd.has(type)||type==='villager'||type==='villager_v2'||type==='fox')along(e,dx,dz,.24);
-     if(type==='witch')e.addEffect('speed',42,{showParticles:false});
-     if(type==='creeper'&&dist(e.location,by.location)>4)along(e,-dz,dx,.15);
-     if(type==='piglin'||type==='enderman')e.addEffect('resistance',38,{showParticles:false});
-     if(type==='blaze'||type==='ghast')e.addEffect('resistance',38,{showParticles:false});
-     if(type==='wolf'&&e.isOnGround)along(e,dx,dz,.2);
-   }
- }catch{}
+
 });
 safeSub('world','after','entityDie',({deadEntity,damageSource})=>{
  const killer=/** @type {import('@minecraft/server').Player | undefined} */ (damageSource.damagingEntity);
@@ -5135,7 +5207,12 @@ safeSub('world','after','entityDie',({deadEntity,damageSource})=>{
    }
  }
 });
-safeSub('world','after','entityDie',e=>{try{mobSystem?.onDeath(e);}catch(err){report('追加MOBの討伐記録',err);}});
+safeSub('world','after','entityDie',e=>{combatParry?.clearAttacker(e.deadEntity.id);try{realmEnders?.onDeath(e);fushiSystem?.onDeath(e);wardenBoss?.onDeath(e);mobSystem?.onDeath(e);}catch(err){report('追加MOBの討伐記録',err);}});
+// Optional events clear a stored wind mark promptly; the identity/expiry
+// check in the controller still protects older API versions.
+try{world.afterEvents.playerHotbarSelectedSlotChange?.subscribe(({player})=>{combatResonance?.clear(player.id);combatGuard?.invalidate(player.id);combatParry?.clear(player.id);combatCharge?.clear(player.id);});}catch{}
+try{world.afterEvents.playerDimensionChange?.subscribe(({player})=>{combatResonance?.clear(player.id);combatGuard?.invalidate(player.id);combatRoll?.clear(player.id);combatParry?.clear(player.id);airDash?.clear(player.id);airStrike?.clear(player.id);combatUltimate?.invalidate(player.id);combatCharge?.clear(player.id);});}catch{}
+safeSub('world','after','entityDie',({deadEntity})=>{if(deadEntity?.typeId==='minecraft:player'){customShield.clear(deadEntity.id);wardenBoss?.clearMusic(deadEntity.id);combatResonance?.clear(deadEntity.id);combatGuard?.clear(deadEntity.id);combatRoll?.clear(deadEntity.id);combatParry?.clear(deadEntity.id);airDash?.clear(deadEntity.id);airStrike?.clear(deadEntity.id);combatUltimate?.clear(deadEntity.id);combatCharge?.clear(deadEntity.id);}});
 safeSub('world','before','playerInteractWithEntity',e=>{
  const p=e.player;
  if(['minecraft:villager','minecraft:villager_v2'].includes(e.target.typeId)&&typeof e.target.nameTag==='string'&&e.target.nameTag.startsWith('§d風記の案内人§r｜')){
@@ -5143,6 +5220,24 @@ safeSub('world','before','playerInteractWithEntity',e=>{
    const match=e.target.nameTag.match(/§d風記の案内人§r｜(\d+)｜/);
    const index=match?Number(match[1]):-1;
    if(index>=0&&index<8)menu(p,async()=>realmNpcConversation(p,index));
+   return;
+ }
+ if(e.target.typeId===ns+'fushi'||e.target.typeId===ns+'fushi_chief'){
+   e.cancel=true;const target=e.target,chief=target.typeId===ns+'fushi_chief';
+   menu(p,async()=>{
+    const near=()=>p.isValid&&target.isValid&&target.dimension.id===p.dimension.id&&dist(target.location,p.location)<6;
+    if(!near())return;
+    if(!chief)return simple(p,'FUSHI','§dふわふわの案内役。第8界をゆっくり歩いています。竹を手に持つと近づいてくることがあります。チーフには竹を届けて、時の欠片を分けてもらえます。');
+    const q=fushiQuest.status(p);
+    const choice=await form(p,'FUSHIのチーフ',`§d争わずに竹を届けられます。それぞれ1ゲーム日1回。\n§b友好の贈り物：月夜に月竹林で竹を16本採り、2夜を過ごそう。竹 ${q.bamboo}/16・月夜 ${q.nights}/2 ${q.claimed?'（受取済み）':''}\n\n§eトーテムの復活は実機未検証です。`, [['竹8本 → 時の欠片2個'],['竹16本 → FUSHIのトーテム'],['友好の贈り物を受け取る'],['閉じる']]);
+    if(!near())return;
+    if(choice===2){fushiQuest.claim(p);return;}
+    if(choice!==0&&choice!==1)return;
+    const now=world.getAbsoluteTime(),key=choice===0?'fushi_gift_at':'fushi_totem_at',last=num(p,key,-24000);
+    if(now<last+24000)return notice(p,'§eこの交換は次の日まで待ってね');
+    const input=choice===0?8:16,output=choice===0?'shard_7':'fushi_totem',count=choice===0?2:1;
+    if(exchange(p,'minecraft:bamboo',input,ns+output,count)){property(p,key,now);notice(p,choice===0?'§d時の欠片を分けてもらった':'§dFUSHIのトーテムを受け取った');}
+   });
    return;
  }
  if(p.isSneaking&&wildlifeById.has(e.target.typeId)){
@@ -5167,20 +5262,30 @@ safeSub('world','before','playerInteractWithEntity',e=>{
  });
 });
 safeSub('world','before','entityHurt',e=>{
+ if(e.cancel)return;
  const victim=/** @type {import('@minecraft/server').Player} */ (e.hurtEntity);
+ try{if(fushiTotem?.isReplaying(victim))return;}catch{}
+ try{if(combatRoll?.blocks(victim,e.damageSource,system.currentTick)||combatUltimate?.blocks(victim,e.damageSource,system.currentTick)){e.cancel=true;return;}}catch{}
+ try{if(customShield.blocks(victim,e.damageSource,system.currentTick)&&shieldWear.reserve(victim,customShield.equipped(victim),e.damage)){e.cancel=true;deferShieldArrow({system,player:victim,source:e.damageSource});const broken=customShield.recordBlock(victim,e.damageSource,system.currentTick);try{system.run(()=>{if(victim.isValid){try{victim.playSound(broken?'item.shield.break':'item.shield.block',{volume:.5});}catch{}if(broken)notice(victim,'§e盾の構えが崩れた（約5秒）',60);}});}catch{}return;}}catch{}
+ try{if(e.damageSource?.cause===EntityDamageCause.entityAttack&&combatParry?.isStaggered(e.damageSource.damagingEntity,system.currentTick)){e.cancel=true;return;}}catch{}
+ try{if(victim?.typeId==='minecraft:player'&&combatParry?.tryHit(victim,gear.get(selected(victim)?.typeId),sessions.get(victim.id),e.damageSource,system.currentTick)){e.cancel=true;return;}}catch{}
  if(victim?.typeId==='minecraft:player'&&!isCreative(victim)&&[EntityDamageCause.entityAttack,EntityDamageCause.projectile].includes(e.damageSource.cause)){
    const worn=armorItems(victim);
    const points=worn.reduce((n,item)=>n+Math.floor(num(victim,`affinity_${item.typeId.slice(10)}`)/30),0);
    if(points>0)e.damage*=1-Math.min(.12,points*.015);
+   const g=gear.get(selected(victim)?.typeId);
+   try{e.damage=combatGuard?.scale(victim,g,e.damageSource,system.currentTick,e.damage)??e.damage;}catch{}
  }
  const p=e.damageSource.damagingEntity;
- if(p?.typeId!=='minecraft:player'||e.damageSource.cause!==EntityDamageCause.entityAttack||isCreative(p))return;
- const s=state(p);
- if(s.s<=0)e.damage*=.55;
- const id=selected(p)?.typeId;
- if(id?.startsWith('minecraft:')&&(_melee.test(id))){
+ if(p?.typeId==='minecraft:player'&&e.damageSource.cause===EntityDamageCause.entityAttack&&!isCreative(p)){
+  const s=state(p);
+  if(s.s<=0)e.damage*=.55;
+  const id=selected(p)?.typeId;
+  if(id?.startsWith('minecraft:')&&(_melee.test(id))){
    e.damage+=Math.min(2,Math.floor(num(p,`affinity_${id.slice(10)}`)/35))*(s.s<=0?.5:1);
+  }
  }
+ try{fushiTotem?.before(e);}catch{}
 });
 const _melee=/_(sword|axe)$/;
 const armorSlots=[EquipmentSlot.Head,EquipmentSlot.Chest,EquipmentSlot.Legs,EquipmentSlot.Feet];
@@ -5193,6 +5298,13 @@ function growAffinity(p,item,milestone,label){
  if(was<milestone*2){property(p,key,was+1);if((was+1)%milestone===0)notice(p,`§6${label}への愛着度が上がった`);}
  return Math.min(2,Math.floor((was+1)/milestone));
 }
+const shrineChiefs=setupShrineChiefs({world,report});
+safeSub('world','after','entityLoad',({entity})=>shrineChiefs.onLoad(entity));
+safeSub('world','after','entityDie',({deadEntity})=>shrineChiefs.onDeath(deadEntity));
+safeSub('world','after','entityRemove',({removedEntityId})=>shrineChiefs.onRemove(removedEntityId));
+const fushiQuest=setupFushiQuest({give,notice,report});
+const moonBamboo=setupMoonBamboo({world,isMoonGrove:at=>Boolean(seededWorlds?.isGenerated(7,at)&&seededWorlds?.isMoonGrove(at)),report,onEligibleBreak:fushiQuest.progress});
+safeSub('world','after','playerBreakBlock',e=>moonBamboo.onBreak(e));
 safeSub('world','after','playerBreakBlock',({player,brokenBlockPermutation,itemStackBeforeBreak:item})=>{
  if(player.getGameMode()!==GameMode.Survival||!item?.typeId.startsWith('minecraft:'))return;
  const b=brokenBlockPermutation.type.id;
@@ -5229,8 +5341,11 @@ safeSub('world','after','playerInteractWithEntity',({player,target,beforeItemSta
 });
 safeSub('world','after','entityHitEntity',({damagingEntity:p,hitEntity})=>{
  if(p.typeId!=='minecraft:player'||!p.isValid||isCreative(p))return;
+ let parried=false;try{parried=wardenBoss?.onMeleeParry({damagingEntity:p,hitEntity})??false;}catch(err){report('管理者へのパリィ',err);}
+ if(parried)ultimateParryHeal(p);
  const s=state(p),g=gear.get(selected(p)?.typeId);
- s.s=Math.max(0,s.s-4);
+ let chargedMelee=false;try{chargedMelee=airStrike?.chargeMelee(p,hitEntity,s,g,system.currentTick)??false;}catch{}
+ if(!chargedMelee)s.s=Math.max(0,s.s-(['剣','斧','槍'].includes(g?.kind)?3:4));
  const item=selected(p),id=item?.typeId;
  if(id?.startsWith('minecraft:')&&_melee.test(id)&&hitEntity.typeId!=='minecraft:player'){
    const k=`affinity_${id.slice(10)}`,was=num(p,k);
@@ -5248,13 +5363,13 @@ safeSub('world','after','entityHitEntity',({damagingEntity:p,hitEntity})=>{
      if(rune===3){hitEntity.addEffect('slowness',65,{showParticles:false});notice(p,'§d時の刻印が発動：相手を減速');}
    }
  }
- if(g&&p.isSneaking&&hitEntity.typeId!=='minecraft:player'&&system.currentTick-s.useTick>=7){s.useTick=system.currentTick;cast(p,g);}
+ if(g&&!parried&&p.isSneaking&&hitEntity.typeId!=='minecraft:player'&&system.currentTick-s.useTick>=7){s.useTick=system.currentTick;cast(p,g);}
 });
 safeSub('world','after','playerSpawn',({player:p,initialSpawn})=>{
  system.runTimeout(()=>{
    if(!p.isValid)return;
    const s=state(p);
-   if(!initialSpawn){s.s=100;s.m=100;persist(p,s);}
+   if(!initialSpawn){combatResonance?.clear(p.id);s.s=100;s.m=100;persist(p,s);}
    if(!num(p,'onboard')||!initialSpawn){
      if(restore(p)){
        if(!num(p,'onboard'))p.sendMessage('§6【8界風記】風記のガイド本を手に持って使い、旅の地図から風見台へ。');
@@ -5263,11 +5378,13 @@ safeSub('world','after','playerSpawn',({player:p,initialSpawn})=>{
    }
  },12);
 });
-safeSub('world','after','playerLeave',({playerId})=>{sessions.delete(playerId);bowDraws.delete(playerId);});
+safeSub('world','after','playerLeave',({playerId})=>{sessions.delete(playerId);customShield.clear(playerId);shrineChiefs.clearPlayer(playerId);expeditionRecords?.clear(playerId);wardenArena?.clearPlayer(playerId);wardenBoss?.clearMusic(playerId);combatCharge?.clear(playerId);combatResonance?.clear(playerId);combatGuard?.clear(playerId);combatRoll?.clear(playerId);combatParry?.clear(playerId);airDash?.clear(playerId);airStrike?.clear(playerId);combatUltimate?.clear(playerId);});
 const bar=n=>'■'.repeat(Math.floor(n/20))+'□'.repeat(5-Math.floor(n/20));
 function hudLine(p,s,t){
  const pale=num(p,'hud_color'),st=Math.floor(s.s),mana=Math.floor(s.m),show=t<s.until,mode=num(p,'hud_pos');
- const boss=mobSystem?.bossHudLine(p,t),extra=[show?s.action:undefined,boss].filter(Boolean).join('\n');
+ const held=gear.get(selected(p)?.typeId),boss=mobSystem?.bossHudLine(p,t),marks=combatResonance?.level(p,held,t)??0,guard=combatGuard?.status(p,held,t);
+ const remaining=held?Math.max(0,(s.cd.get(held.id)??0)-t):0;
+ const extra=[customShield.cooldown(p,t)>0?`§e盾の構え直し ${Math.ceil(customShield.cooldown(p,t)/20)}秒`:undefined,combatCharge?.status(p,t),combatUltimate?.status(p,t),combatParry?.status(p,t),combatRoll?.status(p,t),airDash?.status(p),guard,marks?`§b風紋 ${'◆'.repeat(marks)}${'◇'.repeat(3-marks)}${marks===3?' 解放可能':marks===2?' 溜め終撃可能':''}`:undefined,remaining?`§7武器技 ${Math.ceil(remaining/20)}秒`:undefined,show?s.action:undefined,boss].filter(Boolean).join('\n');
  if(num(p,'hide_hud'))return extra||undefined;
  if(mode===2){
    const line=`${pale?'§f':'§c'}スタミナ ${bar(st)} ${st}§r  ${pale?'§7':'§b'}魔力 ${bar(mana)} ${mana}§r`;
@@ -5288,7 +5405,7 @@ system.runInterval(()=>{
  for(const p of world.getAllPlayers()){
    try{
      const s=state(p);
-     if(p.getGameMode()===GameMode.Spectator)continue;
+     if(p.getGameMode()===GameMode.Spectator){combatGuard?.clear(p.id);continue;}
      if(t>=s.campCheckAt){
        s.campCheckAt=t+20;
        const v=p.getVelocity(),still=Math.hypot(v.x,v.z)<.04&&Math.abs(v.y)<.04;
@@ -5302,39 +5419,51 @@ system.runInterval(()=>{
        s.nextRestore=t+80;
        if(restore(p)){s.needsRestore=false;property(p,'onboard',1);}
      }
+     const shieldHeld=Boolean(customShield.equipped(p));
+     const shieldStance=shieldHeld&&p.isSneaking&&!p.isSwimming;
+     if(shieldStance)combatGuard?.clear(p.id);
+     const guarding=shieldStance?true:(combatGuard?.tick(p,gear.get(selected(p)?.typeId),s,t)??false);
      if(isCreative(p)){s.s=max;s.m=max;}else{
-       s.s=bounds(s.s+(p.isSwimming||p.isSprinting?-1.4:s.campResting?4.5:2.5),0,max);
-       s.m=bounds(s.m+(s.campResting?2.2:1.1),0,max);
+       const finalSet=hasUltimateArmor(p);
+       if(!guarding)s.s=bounds(s.s+ultimateRegen(p.isSwimming||p.isSprinting?-1.4:s.campResting?4.5:2.5,finalSet),0,max);
+       s.m=bounds(s.m+ultimateRegen(s.campResting?2.2:1.1,finalSet),0,max);
+     }
+     // The trial dimension is not a normal realm. Keep unrelated wildlife,
+     // site and terrain systems out of it, and run the boss independently.
+     if(p.dimension.id===ns+'warden_arena'){
+       if(t>=(s.wardenAt??0)){s.wardenAt=t+40;persist(p,s);}
+       const hud=hudLine(p,s,t);if(hud!==undefined)p.onScreenDisplay.setActionBar(hud);
+       continue;
      }
      const site=currentPlace(p);
      if(p.dimension.id===dimID(0)&&num(world,'built_0')&&num(world,'built_1')&&!num(world,meadowTerrainKey)&&!num(world,meadowTerrainSkippedKey)&&!meadowTerrainTask&&t>=meadowTerrainRetryAt){
        void buildMeadowTerrain().catch(err=>report('草原地形生成',err));
      }
-     if(p.dimension.id===dimID(1)&&num(world,'built_2')&&num(world,'built_20')&&!num(world,forestTerrainKey)&&!num(world,forestTerrainSkippedKey)&&!forestTerrainTask&&t>=forestTerrainRetryAt){
+     if(p.dimension.id===dimID(1)&&num(world,'built_2')&&num(world,'built_20')&&world.getDynamicProperty(ns+'natural_site_plan_20_v2')===undefined&&!num(world,forestTerrainKey)&&!num(world,forestTerrainSkippedKey)&&!forestTerrainTask&&t>=forestTerrainRetryAt){
        void buildForestTerrain().catch(err=>report('霧の森地形生成',err));
      }
-     if(p.dimension.id===dimID(2)&&num(world,'built_3')&&num(world,'built_11')&&!num(world,desertTerrainKey)&&!num(world,desertTerrainSkippedKey)&&!desertTerrainTask&&t>=desertTerrainRetryAt){
+     if(p.dimension.id===dimID(2)&&num(world,'built_3')&&num(world,'built_11')&&world.getDynamicProperty(ns+'natural_site_plan_11_v2')===undefined&&!num(world,desertTerrainKey)&&!num(world,desertTerrainSkippedKey)&&!desertTerrainTask&&t>=desertTerrainRetryAt){
        void buildDesertTerrain().catch(err=>report('砂の回廊地形生成',err));
      }
-     if(p.dimension.id===dimID(3)&&num(world,'built_4')&&num(world,'built_12')&&!num(world,iceTerrainKey)&&!num(world,iceTerrainSkippedKey)&&!iceTerrainTask&&t>=iceTerrainRetryAt){
+     if(p.dimension.id===dimID(3)&&num(world,'built_4')&&num(world,'built_12')&&world.getDynamicProperty(ns+'natural_site_plan_12_v2')===undefined&&!num(world,iceTerrainKey)&&!num(world,iceTerrainSkippedKey)&&!iceTerrainTask&&t>=iceTerrainRetryAt){
        void buildIceTerrain().catch(err=>report('氷の鏡湖地形生成',err));
      }
-     if(p.dimension.id===dimID(4)&&num(world,'built_5')&&num(world,'built_13')&&!num(world,cliffTerrainKey)&&!num(world,cliffTerrainSkippedKey)&&!cliffTerrainTask&&t>=cliffTerrainRetryAt){
+     if(p.dimension.id===dimID(4)&&num(world,'built_5')&&num(world,'built_13')&&world.getDynamicProperty(ns+'natural_site_plan_13_v2')===undefined&&!num(world,cliffTerrainKey)&&!num(world,cliffTerrainSkippedKey)&&!cliffTerrainTask&&t>=cliffTerrainRetryAt){
        void buildCliffTerrain().catch(err=>report('雷の断崖地形生成',err));
      }
      if(p.dimension.id===dimID(4)&&num(world,cliffTerrainKey)&&!num(world,cliffLandmarkKey)&&!num(world,cliffLandmarkSkippedKey)&&!cliffLandmarkTask){
        const d=p.dimension;cliffLandmarkTask=loaded(d,{x:48,y:88,z:10},{x:54,y:98,z:16},async()=>{await ensureCliffLandmarks(d);return true;}).catch(err=>report('雷の断崖ランドマーク',err)).finally(()=>{cliffLandmarkTask=undefined;});
      }
-     if(p.dimension.id===dimID(5)&&num(world,'built_6')&&num(world,'built_14')&&!num(world,caveTerrainKey)&&!num(world,caveTerrainSkippedKey)&&!caveTerrainTask&&t>=caveTerrainRetryAt){
+     if(p.dimension.id===dimID(5)&&num(world,'built_6')&&num(world,'built_14')&&world.getDynamicProperty(ns+'natural_site_plan_14_v2')===undefined&&!num(world,caveTerrainKey)&&!num(world,caveTerrainSkippedKey)&&!caveTerrainTask&&t>=caveTerrainRetryAt){
        void buildCaveTerrain().catch(err=>report('闇の地下庭園地形生成',err));
      }
      if(p.dimension.id===dimID(5)&&num(world,caveTerrainKey)&&!num(world,caveLandmarkKey)&&!num(world,caveLandmarkSkippedKey)&&!caveLandmarkTask){
        const d=p.dimension;caveLandmarkTask=loaded(d,{x:48,y:88,z:-19},{x:54,y:104,z:-13},async()=>{await ensureCaveLandmarks(d);return true;}).catch(err=>report('地下庭園ランドマーク',err)).finally(()=>{caveLandmarkTask=undefined;});
      }
-     if(p.dimension.id===dimID(6)&&num(world,'built_7')&&num(world,'built_15')&&!num(world,skyTerrainKey)&&!num(world,skyTerrainSkippedKey)&&!skyTerrainTask&&t>=skyTerrainRetryAt){
+     if(p.dimension.id===dimID(6)&&num(world,'built_7')&&num(world,'built_15')&&world.getDynamicProperty(ns+'natural_site_plan_15_v2')===undefined&&!num(world,skyTerrainKey)&&!num(world,skyTerrainSkippedKey)&&!skyTerrainTask&&t>=skyTerrainRetryAt){
        void buildSkyTerrain().catch(err=>report('空の浮島群地形生成',err));
      }
-     if(p.dimension.id===dimID(7)&&num(world,'built_8')&&num(world,'built_16')&&!num(world,timeTerrainKey)&&!num(world,timeTerrainSkippedKey)&&!timeTerrainTask&&t>=timeTerrainRetryAt){
+     if(p.dimension.id===dimID(7)&&num(world,'built_8')&&num(world,'built_16')&&world.getDynamicProperty(ns+'natural_site_plan_16_v2')===undefined&&!num(world,timeTerrainKey)&&!num(world,timeTerrainSkippedKey)&&!timeTerrainTask&&t>=timeTerrainRetryAt){
        void buildTimeTerrain().catch(err=>report('時の終着駅地形生成',err));
      }
      if(p.dimension.id===dimID(6)&&num(world,skyTerrainKey)&&!num(world,skyLandmarkKey)&&!num(world,skyLandmarkSkippedKey)&&!skyLandmarkTask){
@@ -5344,7 +5473,9 @@ system.runInterval(()=>{
        const d=p.dimension;timeLandmarkTask=loaded(d,{x:29,y:95,z:16},{x:33,y:106,z:20},async()=>ensureTimeLandmarks(d)).catch(err=>report('時の終着駅ランドマーク',err)).finally(()=>{timeLandmarkTask=undefined;});
      }
      realmDiscoveryTick(p,site);
+     naturalSiteTick(p,site,t);
      seededWorlds?.tick(p,t);
+     shrineChiefs.tick(p,t);
      frontierWorlds?.tick(p,t);
      expeditionRecords?.tick(p,t);
      realmTrialTick(p,site);
@@ -5356,10 +5487,11 @@ system.runInterval(()=>{
      trailTick(p,site,s);
      atlasTick(p,site,s);
      linkedTick(p,site,s);
-     if(p.dimension.id.startsWith(ns+'realm_')&&p.location.y<74&&!s.busy&&!isCreative(p)&&t>=(s.rescueAt??0)){
+     if(p.dimension.id.startsWith(ns+'realm_')&&p.location.y<40&&!s.busy&&!isCreative(p)&&t>=(s.rescueAt??0)){
        s.rescueAt=t+100;
        s.arrival=0;
-       void arrive(p,travelSites.get(num(p,'last_site'))??places[0]).then(ok=>{
+       const last=travelSites.get(num(p,'last_site')),destination=isNaturalSite(last)?places[last.dim+1]:(last??places[0]);
+       void arrive(p,destination).then(ok=>{
          if(ok===false&&p.isValid)return returnNatural(p,'overworld_point');
        }).catch(err=>report('救出',err));
      }
@@ -5381,8 +5513,9 @@ system.runInterval(()=>{
      }
      if(t>=(s.natureAt??0)){
        s.natureAt=t+40;
-       try{const profile=survey(p);if(!isCreative(p))wildlifeTick(p,profile,site);behaviorTick(p);}catch{}
-     try{mobSystem?.tick(p,t);}catch{}
+       let profile;try{profile=survey(p);}catch{}
+       if(!isCreative(p))try{wildlifeTick(p,profile,site);}catch(err){if(t%200===0)report('生き物の出現',err);}
+     try{mobSystem?.tick(p,t);realmEnders?.tick(p,t);fushiSystem?.tick(p,t);}catch{}
      }
      const hud=hudLine(p,s,t);
      if(hud!==undefined)p.onScreenDisplay.setActionBar(hud);
@@ -5390,9 +5523,67 @@ system.runInterval(()=>{
  }
 },10);
 
+// Fast input sampling is isolated from the heavier half-second world loop.
+system.runInterval(()=>{
+ const t=system.currentTick,players=world.getAllPlayers();
+ for(const p of players)try{
+  const s=state(p);
+  // Isolate optional input/API failures so one feature can't disable others.
+  try{customShield.tick(p,t);}catch{}
+  try{combatRoll?.tick(p,s,t);}catch{}
+  try{airDash?.tick(p,s,t);}catch{}
+  try{airStrike?.tick(p,t);}catch{}
+  try{combatParry?.tick(p,gear.get(selected(p)?.typeId),s,t);}catch{}
+ }catch{}
+ // Update every player's input before resolving the shared boss attack. This
+ // avoids denying later-listed players a parry on the same server tick.
+ for(const p of players)try{
+  wardenArena?.rescuePlayer(p,t);
+  wardenBoss?.tick(p,t);
+  if(wardenBoss?.musicActive(p.id)){const s=state(p);if(s.sound){try{s.sound.stop();}catch{}s.sound=undefined;}s.lastMusic=undefined;s.musicAt=0;}
+ }catch(err){if(t%200===0)report('時空の管理者',err);}
+ combatParry?.flush(t);
+},1);
+
 // v5.2.0: integrate the non-combat frontier terrain and 72 expedition records.
 frontierWorlds=setupFrontierWorlds({ns,world,system,num,property,report});
 expeditionRecords=setupExpeditionRecords({ns,world,places,num,property,notice,form,give,drop:(d,id,n,l)=>{try{d.spawnItem(new ItemStack(id,n),l);}catch{}},paged,simple,frontierWorlds});
 
-seededWorlds=setupSeededWorlds({ns,world,system,num,property,report,places,biomes,families});
-mobSystem=setupMobSystem({ns,world,system,num,property,report});
+// World.seed and dynamic properties are unavailable during early execution.
+// Never silently plan with a fallback seed if initialization fails.
+safeSub('world','after','worldLoad',()=>{
+ try{
+  const seed=world.seed;
+  if(typeof seed!=='string')throw Error('ワールドシードを取得できません');
+  initializeNaturalSitePlans({places,seed,world,num,property,ns});
+  seededWorlds=setupSeededWorlds({ns,world,system,num,property,report,places,biomes,families,buildSite:buildSeededSite,onShrineChief:shrineChiefs.created});
+ }catch(err){report('シード地形の初期化',err);}
+});
+combatRoll=setupCombatRoll({notice,safe});
+airDash=setupAirDash({notice});
+airStrike=setupAirStrike({notice,visibleFrom});
+fushiTotem=setupFushiTotem({system,notice});
+combatUltimate=setupCombatUltimate({system,notice,visibleFrom});
+combatCharge=setupCombatCharge({system,gear,selected,state,cast});
+combatGuard=setupCombatGuard({notice});
+combatParry=setupCombatParry({guard:combatGuard,onSuccess:({p,attacker,near,at})=>{
+ ultimateParryHeal(p);
+ notice(p,near?'§bパリィ成功！ 近くの敵をひるませた':'§bパリィ成功！',45);
+ try{p.playSound('random.anvil_land',{volume:.35,pitch:1.7});}catch{}
+ try{p.playAnimation('animation.hakkai.parry_rebound',{blendOutTime:.12,stopExpression:'query.any_animation_finished'});}catch{}
+ for(let i=0;i<8;i++)try{const a=i*Math.PI/4;p.dimension.spawnParticle('hakkai:wind_burst',{x:p.location.x+Math.cos(a),y:p.location.y+1,z:p.location.z+Math.sin(a)});}catch{}
+ if(near){
+  // Suppress scripted boss actions without moving knockback-immune bosses.
+  try{wardenBoss?.stagger(attacker,at);mobSystem?.stagger(attacker,at);realmEnders?.stagger(attacker,at);fushiSystem?.stagger(attacker,at);}catch{}
+  // Ordinary engine AI is slowed; the hurt hook suppresses its melee hits.
+  try{attacker.addEffect('slowness',40,{amplifier:4,showParticles:false});}catch{}
+ }
+}});
+const tryScriptParry=(p,attacker)=>{try{return combatParry?.tryHit(p,gear.get(selected(p)?.typeId),sessions.get(p.id),{cause:EntityDamageCause.entityAttack,damagingEntity:attacker},system.currentTick)??false;}catch{return false;}};
+const isEvading=p=>Boolean(combatRoll?.evading(p,system.currentTick)||combatUltimate?.active(p,system.currentTick));
+mobSystem=setupMobSystem({ns,world,system,num,property,report,isEvading,tryParry:tryScriptParry});
+realmEnders=setupRealmEnders({world,system,report,safe,isEvading,tryParry:tryScriptParry});
+fushiSystem=setupFushiSystem({world,system,report,isEvading,tryParry:tryScriptParry});
+wardenArena=setupWardenArena({world,system,num,property,notice,report,loaded,safe,safeNear,point,parsePoint,returnNatural,form,total,space});
+wardenBoss=setupWardenBoss({world,system,property,report,musicMuted:p=>Boolean(num(p,'mute')),isEvading,tryParry:tryScriptParry,spendParry:(p,cost)=>{const s=state(p);if(s.s<cost){notice(p,'§eパリィに必要なスタミナが足りない');return false;}s.s-=cost;return true;}});
+combatResonance=setupCombatResonance({system,notice});

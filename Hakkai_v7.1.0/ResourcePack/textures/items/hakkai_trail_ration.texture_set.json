@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "hakkai_trail_ration",
+    "normal": "hakkai_trail_ration_normal",
+    "metalness_emissive_roughness": "hakkai_trail_ration_mer"
+  }
+}

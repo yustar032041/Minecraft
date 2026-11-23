@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "hakkai_village_badge",
+    "normal": "hakkai_village_badge_normal",
+    "metalness_emissive_roughness": "hakkai_village_badge_mer"
+  }
+}

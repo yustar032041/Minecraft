@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';import {places} from '../Hakkai_v7.1.0/BehaviorPack/scripts/data.js';
+import {setupExpeditionRecords} from '../Hakkai_v7.1.0/BehaviorPack/scripts/expedition_records.js';
+const props=new Map(),notices=[],rewards=[];const world={};
+const num=(e,k)=>props.get(`${e.id??'world'}:${k}`)??0,property=(e,k,v)=>props.set(`${e.id??'world'}:${k}`,v);
+const frontierWorlds={siteCoords:(_r,i)=>i===3?[310,25]:[700+i*20,0],isGenerated:()=>true};
+const records=setupExpeditionRecords({ns:'hakkai:',world,places,num,property,frontierWorlds,notice:(p,s)=>notices.push([p.id,s]),give:(p,id)=>{rewards.push([p.id,id]);return true;},drop:()=>assert.fail(),form:()=>{},paged:()=>{},simple:()=>{}});
+const dim={id:'hakkai:realm_0',spawnParticle:()=>{}};
+const p={id:'p',dimension:dim,location:{x:118,y:88,z:0},playSound:()=>{}};
+records.tick(p,13);assert.equal(records.count(p),1,'discovery does not require a tick divisible by 20');assert.equal(rewards.length,1);
+p.location={x:310,y:88,z:25};records.tick(p,23);assert.equal(records.count(p),1,'per-player 20 tick throttle');records.tick(p,33);assert.equal(records.count(p),2,'distinct discoveries retain old coordinates and records');
+const q={...p,id:'q'};records.tick(q,13);assert.equal(records.count(q),1,'different players are throttled independently');records.clear('p');p.location={x:78,y:88,z:19};records.tick(p,34);assert.equal(records.count(p),3,'clearing a player releases its throttle');
+console.log('Expedition discovery: irregular tick phase, per-player throttle and preserved record coordinates (mocked)');

@@ -1,0 +1,58 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "hakkai:time_warden",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "form0": "textures/entity/hakkai_time_warden_form0",
+        "form1": "textures/entity/hakkai_time_warden_form1",
+        "form2": "textures/entity/hakkai_time_warden_form2",
+        "form3": "textures/entity/hakkai_time_warden_form3",
+        "form4": "textures/entity/hakkai_time_warden_form4"
+      },
+      "geometry": {
+        "default": "geometry.hakkai.time_warden"
+      },
+      "render_controllers": [
+        "controller.render.hakkai.warden"
+      ],
+      "animations": {
+        "walk": "animation.hakkai.realm_ender.walk",
+        "warning": "animation.hakkai.warden_warning",
+        "slash": "animation.hakkai.warden_slash",
+        "sky_cast": "animation.hakkai.warden_sky_cast",
+        "slam": "animation.hakkai.warden_slam",
+        "thunder_cast": "animation.hakkai.warden_thunder_cast",
+        "moon_cast": "animation.hakkai.warden_moon_cast",
+        "transform": "animation.hakkai.warden_transform",
+        "recoil": "animation.hakkai.warden_recoil",
+        "wing_flight": "animation.hakkai.warden_wing_flight",
+        "hover": "animation.hakkai.warden_hover",
+        "idle": "animation.hakkai.warden_idle",
+        "halo": "animation.hakkai.warden_halo"
+      },
+      "scripts": {
+        "animate": [
+          {
+            "walk": "query.modified_move_speed > 0.01 && !query.property('hakkai:flying')"
+          },
+          {
+            "idle": "!query.property('hakkai:flying')"
+          },
+          {
+            "wing_flight": "query.property('hakkai:flying')"
+          },
+          {
+            "hover": "query.property('hakkai:flying')"
+          },
+          {
+            "halo": "query.property('hakkai:form') == 4"
+          }
+        ]
+      }
+    }
+  }
+}

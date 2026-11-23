@@ -1,0 +1,85 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "hakkai:ender_3",
+      "is_spawnable": true,
+      "is_summonable": true
+    },
+    "components": {
+      "minecraft:type_family": {
+        "family": [
+          "mob",
+          "hakkai_realm_ender"
+        ]
+      },
+      "minecraft:health": {
+        "value": 57,
+        "max": 57
+      },
+      "minecraft:collision_box": {
+        "width": 0.65,
+        "height": 2.75
+      },
+      "minecraft:physics": {},
+      "minecraft:movement": {
+        "value": 0.21200000000000002
+      },
+      "minecraft:movement.basic": {},
+      "minecraft:jump.static": {},
+      "minecraft:navigation.walk": {
+        "avoid_water": true,
+        "avoid_damage_blocks": true
+      },
+      "minecraft:knockback_resistance": {
+        "value": 0.5
+      },
+      "minecraft:loot": {
+        "table": "loot_tables/hakkai/entities/ender_3.json"
+      },
+      "minecraft:behavior.float": {
+        "priority": 0
+      },
+      "minecraft:behavior.hurt_by_target": {
+        "priority": 1
+      },
+      "minecraft:behavior.move_towards_target": {
+        "priority": 2,
+        "speed_multiplier": 1.0,
+        "within_radius": 16
+      },
+      "minecraft:behavior.random_stroll": {
+        "priority": 6,
+        "speed_multiplier": 0.8
+      },
+      "minecraft:behavior.look_at_player": {
+        "priority": 7,
+        "look_distance": 12,
+        "probability": 0.1
+      },
+      "minecraft:behavior.random_look_around": {
+        "priority": 8
+      },
+      "minecraft:nameable": {}
+    },
+    "component_groups": {
+      "hakkai:wild": {
+        "minecraft:despawn": {
+          "despawn_from_distance": {
+            "min_distance": 36,
+            "max_distance": 80
+          }
+        }
+      }
+    },
+    "events": {
+      "hakkai:wild": {
+        "add": {
+          "component_groups": [
+            "hakkai:wild"
+          ]
+        }
+      }
+    }
+  }
+}

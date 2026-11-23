@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';import fs from 'node:fs';import vm from 'node:vm';
+import {setupCombatUltimate} from '../Hakkai_v7.1.0/BehaviorPack/scripts/combat_ultimate.js';
+import {EntityDamageCause as Cause} from '@minecraft/server';
+const src=fs.readFileSync('Hakkai_v7.1.0/BehaviorPack/scripts/main.js','utf8');const code=src.slice(src.indexOf("safeSub('world','before','entityHurt'"),src.indexOf('const _melee='));
+let handler;const d={id:'r',spawnParticle:()=>{}},p={id:'p',typeId:'minecraft:player',isValid:true,dimension:d,location:{x:0,y:0,z:0},getGameMode:()=> 'survival',playSound:()=>{},playAnimation:()=>{}};
+const enemy={id:'e',typeId:'minecraft:zombie',isValid:true,dimension:d,location:{x:1,y:0,z:0},getHeadLocation(){return this.location},applyDamage:()=>{},applyKnockback:()=>{},setOnFire:()=>{},addEffect:()=>{}};d.getEntities=o=>o.type?[]:[enemy];
+const sys={currentTick:100},s={s:10,m:10},ult=setupCombatUltimate({system:sys,notice:()=>{},visibleFrom:()=>true});assert.equal(ult.cast(p,s),true);
+const ctx={safeSub:(_,__,___,fn)=>handler=fn,system:sys,EntityDamageCause:Cause,fushiTotem:undefined,combatUltimate:ult,combatRoll:undefined,combatParry:undefined,combatGuard:undefined,isCreative:()=>false,armorItems:()=>[],gear:new Map(),selected:()=>undefined,state:()=>s,num:()=>0,_melee:/_sword$/};vm.createContext(ctx);vm.runInContext(code,ctx);
+let e={cancel:false,hurtEntity:p,damage:50,damageSource:{cause:'fall'}};handler(e);assert.equal(e.cancel,true);
+e={cancel:false,hurtEntity:p,damage:50,damageSource:{cause:'void'}};handler(e);assert.equal(e.cancel,false);
+sys.currentTick=120;e={cancel:false,hurtEntity:p,damage:50,damageSource:{cause:'fall'}};handler(e);assert.equal(e.cancel,false);
+assert.ok(src.includes('combatRoll?.evading(p,system.currentTick)||combatUltimate?.active(p,system.currentTick)'),'script attacks share immunity');
+console.log('Actual damage hook: ultimate protection, exempt causes and expiration (mocked)');

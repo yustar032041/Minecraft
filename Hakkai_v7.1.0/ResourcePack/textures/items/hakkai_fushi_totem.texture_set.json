@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "hakkai_fushi_totem",
+    "normal": "hakkai_fushi_totem_normal",
+    "metalness_emissive_roughness": "hakkai_fushi_totem_mer"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "hakkai_ender_r5",
+    "normal": "hakkai_ender_r5_n",
+    "metalness_emissive_roughness": "hakkai_ender_r5_mer"
+  }
+}

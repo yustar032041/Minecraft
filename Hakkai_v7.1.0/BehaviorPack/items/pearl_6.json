@@ -1,0 +1,21 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:item": {
+    "description": {
+      "identifier": "hakkai:pearl_6",
+      "menu_category": {
+        "category": "items"
+      }
+    },
+    "components": {
+      "minecraft:display_name": {
+        "value": "item.hakkai:pearl_6.name"
+      },
+      "minecraft:icon": "hakkai_pearl_6",
+      "minecraft:max_stack_size": 16,
+      "minecraft:glint": true,
+      "hakkai:use": {},
+      "minecraft:interact_button": "action.interact.hakkai.use"
+    }
+  }
+}

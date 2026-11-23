@@ -1,0 +1,32 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "hakkai:fushi_chief",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/hakkai_fushi_chief"
+      },
+      "geometry": {
+        "default": "geometry.hakkai.fushi_chief"
+      },
+      "render_controllers": [
+        "controller.render.hakkai.beast"
+      ],
+      "animations": {
+        "idle": "animation.hakkai.fushi.idle"
+      },
+      "scripts": {
+        "animate": [
+          "idle"
+        ]
+      },
+      "spawn_egg": {
+        "base_color": "#dfd6f2",
+        "overlay_color": "#e8c46b"
+      }
+    }
+  }
+}

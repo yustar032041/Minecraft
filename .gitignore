@@ -1,0 +1,7 @@
+# Generated builds, local dependency caches, and Python bytecode
+/build/
+/.cache/
+/__pycache__/
+**/__pycache__/
+*.py[cod]
+/*.mcaddon

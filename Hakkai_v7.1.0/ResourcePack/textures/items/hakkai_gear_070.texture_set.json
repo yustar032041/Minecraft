@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "hakkai_gear_070",
+    "normal": "hakkai_gear_070_normal",
+    "metalness_emissive_roughness": "hakkai_gear_070_mer"
+  }
+}

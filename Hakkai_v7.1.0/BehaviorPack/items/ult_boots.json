@@ -1,0 +1,29 @@
+{
+  "format_version": "1.26.60",
+  "minecraft:item": {
+    "description": {
+      "identifier": "hakkai:ult_boots",
+      "menu_category": {
+        "category": "equipment"
+      }
+    },
+    "components": {
+      "minecraft:display_name": {
+        "value": "item.hakkai:ult_boots.name"
+      },
+      "minecraft:icon": "hakkai_ult_boots",
+      "minecraft:max_stack_size": 1,
+      "minecraft:wearable": {
+        "slot": "slot.armor.feet",
+        "protection": 4
+      },
+      "minecraft:durability": {
+        "max_durability": 850
+      },
+      "minecraft:enchantable": {
+        "slot": "armor_feet",
+        "value": 15
+      }
+    }
+  }
+}

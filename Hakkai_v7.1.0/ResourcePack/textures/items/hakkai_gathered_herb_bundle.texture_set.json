@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "hakkai_gathered_herb_bundle",
+    "normal": "hakkai_gathered_herb_bundle_normal",
+    "metalness_emissive_roughness": "hakkai_gathered_herb_bundle_mer"
+  }
+}

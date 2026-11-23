@@ -1,0 +1,127 @@
+{
+  "format_version": "1.26.60",
+  "minecraft:item": {
+    "description": {
+      "identifier": "hakkai:ult_pickaxe",
+      "menu_category": {
+        "category": "equipment",
+        "group": "minecraft:itemGroup.name.pickaxe"
+      }
+    },
+    "components": {
+      "minecraft:display_name": {
+        "value": "item.hakkai:ult_pickaxe.name"
+      },
+      "minecraft:icon": "hakkai_ult_pickaxe",
+      "minecraft:max_stack_size": 1,
+      "minecraft:hand_equipped": true,
+      "minecraft:damage": 7,
+      "minecraft:durability": {
+        "max_durability": 2500
+      },
+      "minecraft:enchantable": {
+        "slot": "pickaxe",
+        "value": 15
+      },
+      "minecraft:tags": {
+        "tags": [
+          "minecraft:is_pickaxe",
+          "minecraft:is_tool",
+          "minecraft:digger",
+          "minecraft:netherite_tier"
+        ]
+      },
+      "minecraft:digger": {
+        "use_efficiency": true,
+        "destroy_speeds": [
+          {
+            "block": {
+              "tags": "q.any_tag('minecraft:is_pickaxe_item_destructible')"
+            },
+            "speed": 10
+          },
+          {
+            "block": "hakkai:ore_0",
+            "speed": 10
+          },
+          {
+            "block": "hakkai:ore_1",
+            "speed": 10
+          },
+          {
+            "block": "hakkai:ore_2",
+            "speed": 10
+          },
+          {
+            "block": "hakkai:ore_3",
+            "speed": 10
+          },
+          {
+            "block": "hakkai:ore_4",
+            "speed": 10
+          },
+          {
+            "block": "hakkai:ore_5",
+            "speed": 10
+          },
+          {
+            "block": "hakkai:ore_6",
+            "speed": 10
+          },
+          {
+            "block": "hakkai:ore_7",
+            "speed": 10
+          },
+          {
+            "block": "hakkai:ore_8",
+            "speed": 10
+          },
+          {
+            "block": "hakkai:ore_9",
+            "speed": 10
+          },
+          {
+            "block": "hakkai:ore_10",
+            "speed": 10
+          },
+          {
+            "block": "hakkai:ore_11",
+            "speed": 10
+          },
+          {
+            "block": "hakkai:ore_12",
+            "speed": 10
+          },
+          {
+            "block": "hakkai:ore_13",
+            "speed": 10
+          },
+          {
+            "block": "hakkai:ore_14",
+            "speed": 10
+          },
+          {
+            "block": "hakkai:ore_15",
+            "speed": 10
+          },
+          {
+            "block": "hakkai:ore_16",
+            "speed": 10
+          },
+          {
+            "block": "hakkai:ore_17",
+            "speed": 10
+          },
+          {
+            "block": "hakkai:ore_18",
+            "speed": 10
+          },
+          {
+            "block": "hakkai:ore_19",
+            "speed": 10
+          }
+        ]
+      }
+    }
+  }
+}

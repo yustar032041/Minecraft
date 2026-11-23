@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
+const src=fs.readFileSync('Hakkai_v7.1.0/BehaviorPack/scripts/main.js','utf8');
+const code=src.slice(src.indexOf('async function spells(p){'),src.indexOf('function shore(p){'));
+let choice=13,unlock=new Set([7]),held='hakkai:element_tome',onForm=()=>{},newCasts=[],oldCasts=[],notices=[],rows;
+const p={isValid:true,selectedSlotIndex:0,dimension:{id:'a'}};
+const c={isCreative:()=>false,visited:(_,i)=>unlock.has(i),home:[[0],[1],[2],[3],[4],[6],[5],[7]],attrs:['風','水','火','土','雷','光','闇','時'],pairs:[{a:0,b:1,label:'霧'},{a:2,b:3,label:'溶岩'},{a:4,b:1,label:'嵐'},{a:5,b:6,label:'虹'},{a:7,b:0,label:'疾風'}],form:async(_,title,body,r)=>{rows=r;onForm();return choice;},marked:()=>false,notice:(_,s)=>notices.push(s),selected:()=>({typeId:held}),ns:'hakkai:',castMagic:(_,kind)=>newCasts.push(kind),castElement:(...x)=>oldCasts.push(x),state:()=>({}),system:{},mark:()=>{},visibleFrom:()=>{}};
+vm.createContext(c);vm.runInContext(code,c);
+await c.spells(p);assert.deepEqual(newCasts,['light']);assert.equal(rows.length,18);
+unlock.clear();await c.spells(p);assert.deepEqual(newCasts,['light'],'locked light');
+choice=14;unlock=new Set([1]);await c.spells(p);assert.equal(newCasts.length,1,'both elements required');unlock.add(2);await c.spells(p);assert.deepEqual(newCasts,['light','bond']);
+onForm=()=>p.selectedSlotIndex=1;await c.spells(p);assert.equal(newCasts.length,2,'slot change invalidates');
+p.selectedSlotIndex=0;onForm=()=>{held='minecraft:book'};await c.spells(p);assert.equal(newCasts.length,2,'item change invalidates');
+onForm=()=>{};choice=0;await c.spells(p);assert.equal(oldCasts.length,1,'old magic still routed');
+console.log('Actual magic menu: unlocks, changes while open, legacy spell routing (mocked)');

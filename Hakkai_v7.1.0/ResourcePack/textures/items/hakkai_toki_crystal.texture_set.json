@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "hakkai_toki_crystal",
+    "normal": "hakkai_toki_crystal_normal",
+    "metalness_emissive_roughness": "hakkai_toki_crystal_mer"
+  }
+}

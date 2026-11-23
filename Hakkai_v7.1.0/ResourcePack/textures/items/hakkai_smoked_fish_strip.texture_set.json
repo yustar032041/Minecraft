@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "hakkai_smoked_fish_strip",
+    "normal": "hakkai_smoked_fish_strip_normal",
+    "metalness_emissive_roughness": "hakkai_smoked_fish_strip_mer"
+  }
+}

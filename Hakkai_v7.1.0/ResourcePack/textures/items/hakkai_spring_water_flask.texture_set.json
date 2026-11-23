@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "hakkai_spring_water_flask",
+    "normal": "hakkai_spring_water_flask_normal",
+    "metalness_emissive_roughness": "hakkai_spring_water_flask_mer"
+  }
+}

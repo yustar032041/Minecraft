@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "hakkai_dried_meat",
+    "normal": "hakkai_dried_meat_normal",
+    "metalness_emissive_roughness": "hakkai_dried_meat_mer"
+  }
+}

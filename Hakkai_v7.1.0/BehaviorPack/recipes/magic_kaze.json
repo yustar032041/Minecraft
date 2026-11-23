@@ -1,0 +1,23 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "hakkai:magic_kaze"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:book"
+      },
+      {
+        "item": "hakkai:crystal_0"
+      }
+    ],
+    "result": {
+      "item": "hakkai:magic_kaze",
+      "count": 1
+    }
+  }
+}

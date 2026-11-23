@@ -1,0 +1,2 @@
+# Optional: needed for art generation and the gear/misc/planned art tests, not for the pack.
+Pillow>=10,<13

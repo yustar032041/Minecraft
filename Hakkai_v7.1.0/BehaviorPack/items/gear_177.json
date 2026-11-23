@@ -19,7 +19,7 @@
         "max_durability": 289
       },
       "minecraft:use_modifiers": {
-        "use_duration": 1.2,
+        "use_duration": 15.0,
         "movement_modifier": 0.85
       },
       "hakkai:use": {},

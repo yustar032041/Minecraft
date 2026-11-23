@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';import fs from 'node:fs';import vm from 'node:vm';
+import {setupFushiTotem} from '../Hakkai_v7.1.0/BehaviorPack/scripts/combat_totem.js';
+import {EntityDamageCause as Cause} from '@minecraft/server';
+const src=fs.readFileSync('Hakkai_v7.1.0/BehaviorPack/scripts/main.js','utf8');
+const code=src.slice(src.indexOf("safeSub('world','before','entityHurt'"),src.indexOf('const _melee='));
+let handler;const queue=[],s={s:30},h={currentValue:5,setCurrentValue(v){this.currentValue=v}},items={Mainhand:{typeId:'hakkai:fushi_totem'},Offhand:undefined};
+const inventory={getItem:()=>items.Mainhand,setItem:(_,x)=>items.Mainhand=x};
+const equipment={getEquipment:slot=>items[slot],setEquipment:(slot,item)=>(items[slot]=item,true)};
+const p={id:'p',isValid:true,typeId:'minecraft:player',selectedSlotIndex:0,location:{x:0,y:0,z:0},dimension:{spawnParticle:()=>{}},getGameMode:()=> 'survival',getComponent:id=>id==='minecraft:health'?h:id==='minecraft:equippable'?equipment:id==='minecraft:inventory'?{container:inventory}:undefined,getEffects:()=>[],addEffect:()=>{},playSound:()=>{}};
+const sys={currentTick:10,run:fn=>queue.push(fn)},totem=setupFushiTotem({system:sys,notice:()=>{}});let blocking=false,guardFactor=1;
+const ctx={safeSub:(_,__,___,fn)=>handler=fn,system:sys,EntityDamageCause:Cause,fushiTotem:totem,combatUltimate:{blocks:()=>false},combatRoll:{blocks:()=>blocking},combatParry:undefined,combatGuard:{scale:(_p,_g,_src,_t,n)=>n*guardFactor},isCreative:()=>false,armorItems:()=>[],num:()=>0,gear:new Map(),selected:()=>items.Mainhand,state:()=>s,_melee:/_sword$/};
+vm.createContext(ctx);vm.runInContext(code,ctx);
+const make=()=>({cancel:false,hurtEntity:p,damage:10,damageSource:{cause:Cause.entityAttack,damagingEntity:{typeId:'minecraft:zombie'}}});
+blocking=true;let e=make();handler(e);assert.equal(e.cancel,true);assert.equal(queue.length,0,'roll before totem');
+blocking=false;guardFactor=.3;e=make();handler(e);assert.equal(e.cancel,false);assert.equal(e.damage,3);assert.equal(queue.length,0,'guard makes damage nonlethal');
+guardFactor=1;e=make();handler(e);assert.equal(e.cancel,true);assert.equal(queue.length,1);queue.shift()();assert.equal(h.currentValue,1);assert.equal(items.Mainhand,undefined);
+console.log('Actual damage hook: roll and guard precedence, deferred totem debit (mocked)');

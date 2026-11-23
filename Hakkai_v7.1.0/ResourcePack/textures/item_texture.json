@@ -1336,6 +1336,162 @@
     },
     "hakkai_wind_legacy_memorial": {
       "textures": "textures/items/hakkai_wind_legacy_memorial"
+    },
+    "hakkai_pearl_0": {
+      "textures": "textures/items/hakkai_pearl_0"
+    },
+    "hakkai_pearl_1": {
+      "textures": "textures/items/hakkai_pearl_1"
+    },
+    "hakkai_pearl_2": {
+      "textures": "textures/items/hakkai_pearl_2"
+    },
+    "hakkai_pearl_3": {
+      "textures": "textures/items/hakkai_pearl_3"
+    },
+    "hakkai_pearl_4": {
+      "textures": "textures/items/hakkai_pearl_4"
+    },
+    "hakkai_pearl_5": {
+      "textures": "textures/items/hakkai_pearl_5"
+    },
+    "hakkai_pearl_6": {
+      "textures": "textures/items/hakkai_pearl_6"
+    },
+    "hakkai_pearl_7": {
+      "textures": "textures/items/hakkai_pearl_7"
+    },
+    "hakkai_fushi_totem": {
+      "textures": "textures/items/hakkai_fushi_totem"
+    },
+    "hakkai_warden_sigil": {
+      "textures": "textures/items/hakkai_warden_sigil"
+    },
+    "hakkai_realm_guide_0": {
+      "textures": "textures/items/hakkai_realm_guide_0"
+    },
+    "hakkai_realm_guide_1": {
+      "textures": "textures/items/hakkai_realm_guide_1"
+    },
+    "hakkai_realm_guide_2": {
+      "textures": "textures/items/hakkai_realm_guide_2"
+    },
+    "hakkai_realm_guide_3": {
+      "textures": "textures/items/hakkai_realm_guide_3"
+    },
+    "hakkai_realm_guide_4": {
+      "textures": "textures/items/hakkai_realm_guide_4"
+    },
+    "hakkai_realm_guide_5": {
+      "textures": "textures/items/hakkai_realm_guide_5"
+    },
+    "hakkai_realm_guide_6": {
+      "textures": "textures/items/hakkai_realm_guide_6"
+    },
+    "hakkai_realm_guide_7": {
+      "textures": "textures/items/hakkai_realm_guide_7"
+    },
+    "hakkai_realm_return_stone_0": {
+      "textures": "textures/items/hakkai_realm_return_stone_0"
+    },
+    "hakkai_realm_return_stone_1": {
+      "textures": "textures/items/hakkai_realm_return_stone_1"
+    },
+    "hakkai_realm_return_stone_2": {
+      "textures": "textures/items/hakkai_realm_return_stone_2"
+    },
+    "hakkai_realm_return_stone_3": {
+      "textures": "textures/items/hakkai_realm_return_stone_3"
+    },
+    "hakkai_realm_return_stone_4": {
+      "textures": "textures/items/hakkai_realm_return_stone_4"
+    },
+    "hakkai_realm_return_stone_5": {
+      "textures": "textures/items/hakkai_realm_return_stone_5"
+    },
+    "hakkai_realm_return_stone_6": {
+      "textures": "textures/items/hakkai_realm_return_stone_6"
+    },
+    "hakkai_realm_return_stone_7": {
+      "textures": "textures/items/hakkai_realm_return_stone_7"
+    },
+    "hakkai_ult_sword": {
+      "textures": "textures/items/hakkai_ult_sword"
+    },
+    "hakkai_ult_axe": {
+      "textures": "textures/items/hakkai_ult_axe"
+    },
+    "hakkai_ult_helmet": {
+      "textures": "textures/items/hakkai_ult_helmet"
+    },
+    "hakkai_ult_chest": {
+      "textures": "textures/items/hakkai_ult_chest"
+    },
+    "hakkai_ult_boots": {
+      "textures": "textures/items/hakkai_ult_boots"
+    },
+    "hakkai_magic_kaze": {
+      "textures": "textures/items/hakkai_magic_kaze"
+    },
+    "hakkai_magic_mizu": {
+      "textures": "textures/items/hakkai_magic_mizu"
+    },
+    "hakkai_magic_homura": {
+      "textures": "textures/items/hakkai_magic_homura"
+    },
+    "hakkai_magic_hikari": {
+      "textures": "textures/items/hakkai_magic_hikari"
+    },
+    "hakkai_magic_tsuki": {
+      "textures": "textures/items/hakkai_magic_tsuki"
+    },
+    "hakkai_magic_kizuna": {
+      "textures": "textures/items/hakkai_magic_kizuna"
+    },
+    "hakkai_warden_core": {
+      "textures": "textures/items/hakkai_warden_core"
+    },
+    "hakkai_resolve_charm": {
+      "textures": "textures/items/hakkai_resolve_charm"
+    },
+    "hakkai_ult_leggings": {
+      "textures": "textures/items/hakkai_ult_leggings"
+    },
+    "hakkai_series_leggings_00": {
+      "textures": "textures/items/hakkai_series_leggings_00"
+    },
+    "hakkai_series_leggings_01": {
+      "textures": "textures/items/hakkai_series_leggings_01"
+    },
+    "hakkai_series_leggings_02": {
+      "textures": "textures/items/hakkai_series_leggings_02"
+    },
+    "hakkai_series_leggings_03": {
+      "textures": "textures/items/hakkai_series_leggings_03"
+    },
+    "hakkai_series_leggings_04": {
+      "textures": "textures/items/hakkai_series_leggings_04"
+    },
+    "hakkai_series_leggings_05": {
+      "textures": "textures/items/hakkai_series_leggings_05"
+    },
+    "hakkai_series_leggings_06": {
+      "textures": "textures/items/hakkai_series_leggings_06"
+    },
+    "hakkai_series_leggings_07": {
+      "textures": "textures/items/hakkai_series_leggings_07"
+    },
+    "hakkai_series_leggings_08": {
+      "textures": "textures/items/hakkai_series_leggings_08"
+    },
+    "hakkai_series_leggings_09": {
+      "textures": "textures/items/hakkai_series_leggings_09"
+    },
+    "hakkai_series_leggings_10": {
+      "textures": "textures/items/hakkai_series_leggings_10"
+    },
+    "hakkai_ult_pickaxe": {
+      "textures": "textures/items/hakkai_ult_pickaxe"
     }
   }
 }

@@ -1,0 +1,62 @@
+{
+  "format_version": "1.8.0",
+  "render_controllers": {
+    "controller.render.hakkai.warden": {
+      "arrays": {
+        "textures": {
+          "Array.forms": [
+            "Texture.form0",
+            "Texture.form1",
+            "Texture.form2",
+            "Texture.form3",
+            "Texture.form4"
+          ]
+        }
+      },
+      "geometry": "Geometry.default",
+      "materials": [
+        {
+          "*": "Material.default"
+        }
+      ],
+      "textures": [
+        "Array.forms[query.property('hakkai:form')]"
+      ],
+      "part_visibility": [
+        {
+          "*": 1
+        },
+        {
+          "form_time": "query.property('hakkai:form') == 0"
+        },
+        {
+          "form_sky": "query.property('hakkai:form') == 1"
+        },
+        {
+          "form_earth": "query.property('hakkai:form') == 2"
+        },
+        {
+          "form_thunder": "query.property('hakkai:form') == 3"
+        },
+        {
+          "form_true": "query.property('hakkai:form') == 4"
+        },
+        {
+          "wing_left": "query.property('hakkai:flying')"
+        },
+        {
+          "wing_right": "query.property('hakkai:flying')"
+        },
+        {
+          "wing_true_left": "query.property('hakkai:flying') && query.property('hakkai:form') == 4"
+        },
+        {
+          "wing_true_right": "query.property('hakkai:flying') && query.property('hakkai:form') == 4"
+        },
+        {
+          "halo_true": "query.property('hakkai:form') == 4"
+        }
+      ]
+    }
+  }
+}

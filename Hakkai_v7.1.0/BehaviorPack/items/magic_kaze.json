@@ -1,0 +1,20 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:item": {
+    "description": {
+      "identifier": "hakkai:magic_kaze",
+      "menu_category": {
+        "category": "items"
+      }
+    },
+    "components": {
+      "minecraft:display_name": {
+        "value": "item.hakkai:magic_kaze.name"
+      },
+      "minecraft:icon": "hakkai_magic_kaze",
+      "minecraft:max_stack_size": 1,
+      "hakkai:use": {},
+      "minecraft:interact_button": "action.interact.hakkai.use"
+    }
+  }
+}

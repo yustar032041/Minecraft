@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "hakkai_ult_sword",
+    "normal": "hakkai_ult_sword_normal",
+    "metalness_emissive_roughness": "hakkai_ult_sword_mer"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "hakkai:fushi",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/hakkai_fushi"
+      },
+      "geometry": {
+        "default": "geometry.hakkai.fushi"
+      },
+      "render_controllers": [
+        "controller.render.hakkai.beast"
+      ],
+      "animations": {
+        "idle": "animation.hakkai.fushi.idle"
+      },
+      "scripts": {
+        "animate": [
+          "idle"
+        ]
+      },
+      "spawn_egg": {
+        "base_color": "#dfd6f2",
+        "overlay_color": "#b9a5de"
+      }
+    }
+  }
+}

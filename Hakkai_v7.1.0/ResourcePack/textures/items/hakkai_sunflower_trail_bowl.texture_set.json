@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "hakkai_sunflower_trail_bowl",
+    "normal": "hakkai_sunflower_trail_bowl_normal",
+    "metalness_emissive_roughness": "hakkai_sunflower_trail_bowl_mer"
+  }
+}

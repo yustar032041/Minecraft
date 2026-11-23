@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';import fs from 'node:fs';import vm from 'node:vm';
+import {setupWardenBoss} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_boss.js';
+import {setupCombatParry} from '../Hakkai_v7.1.0/BehaviorPack/scripts/combat_parry.js';
+import {setupCombatGuard} from '../Hakkai_v7.1.0/BehaviorPack/scripts/combat_guard.js';
+import {GameMode,Difficulty} from '@minecraft/server';
+const hits=[],effects=[];let fastLoop;
+const dim={id:'hakkai:warden_arena',getEntities:()=>[boss],getPlayers:()=>[a,b],spawnParticle:()=>{}};
+const player=id=>({id,isValid:true,typeId:'minecraft:player',dimension:dim,selectedSlotIndex:0,isSneaking:false,isSwimming:false,location:{x:0,y:80,z:-3},getGameMode:()=>GameMode.Survival,getViewDirection:()=>({x:0,y:0,z:-1}),sendMessage:()=>{},playAnimation:()=>{},playSound:()=>{},applyDamage:n=>hits.push([id,n]),addEffect:()=>effects.push(id)});
+const a=player('a'),b=player('b'),health={currentValue:4500,effectiveMax:5000,setCurrentValue(v){this.currentValue=v}},boss={id:'boss',typeId:'hakkai:time_warden',isValid:true,dimension:dim,location:{x:0,y:80,z:-6},getComponent:()=>health,getDynamicProperty:()=>undefined,setDynamicProperty:()=>{}};
+const world={getAllPlayers:()=>[a,b],getDifficulty:()=>Difficulty.Normal},system={currentTick:0,runInterval:fn=>fastLoop=fn},g={id:'s',kind:'剣'},states=new Map([[a.id,{s:40}],[b.id,{s:40}]]),guard=setupCombatGuard({notice:()=>{}});let warden;
+const parry=setupCombatParry({guard,onSuccess:({attacker,at})=>warden.stagger(attacker,at)});
+warden=setupWardenBoss({world,system,property:()=>{},report:(_,e)=>{throw e;},tryParry:(p,e)=>parry.tryHit(p,g,states.get(p.id),{cause:'entityAttack',damagingEntity:e},system.currentTick)});
+warden.tick(a,0);warden.tick(a,80);b.isSneaking=true;guard.tick(b,g,states.get('b'),114);parry.tick(b,g,states.get('b'),114);b.isSneaking=false;
+const src=fs.readFileSync('Hakkai_v7.1.0/BehaviorPack/scripts/main.js','utf8'),start=src.indexOf('// Fast input sampling is isolated'),end=src.indexOf('// v5.2.0:',start);
+const ctx={system,world,GameMode,ns:'hakkai:',state:p=>states.get(p.id),gear:new Map([['s',g]]),selected:()=>({typeId:'s'}),combatRoll:undefined,airDash:undefined,airStrike:undefined,combatParry:parry,wardenArena:undefined,wardenBoss:warden,report:()=>assert.fail()};
+vm.createContext(ctx);vm.runInContext(src.slice(start,end),ctx);system.currentTick=120;fastLoop();
+assert.deepEqual(hits,[['a',9]],'later-listed player parries while first player is hit');assert.deepEqual(effects,['a']);assert.equal(states.get('b').s,20);
+console.log('Real fast loop: all players get a same-tick release parry against the shared warden attack (mocked)');

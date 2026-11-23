@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "hakkai_shard_7",
+    "normal": "hakkai_shard_7_normal",
+    "metalness_emissive_roughness": "hakkai_shard_7_mer"
+  }
+}

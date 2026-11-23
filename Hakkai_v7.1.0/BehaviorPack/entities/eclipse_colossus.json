@@ -67,7 +67,7 @@
         "table": "loot_tables/hakkai/entities/eclipse_colossus.json"
       },
       "minecraft:knockback_resistance": {
-        "value": 0.95
+        "value": 1.0
       },
       "minecraft:attack": {
         "damage": 18
@@ -87,6 +87,10 @@
         "name": "終焉の八界王",
         "hud_range": 84,
         "should_darken_sky": true
+      },
+      "minecraft:pushable": {
+        "is_pushable": false,
+        "is_pushable_by_piston": false
       }
     }
   }

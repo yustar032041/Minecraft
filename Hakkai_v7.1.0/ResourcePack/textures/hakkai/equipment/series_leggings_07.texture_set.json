@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "series_leggings_07",
+    "normal": "series_leggings_07_n",
+    "metalness_emissive_roughness": "series_leggings_07_mer"
+  }
+}

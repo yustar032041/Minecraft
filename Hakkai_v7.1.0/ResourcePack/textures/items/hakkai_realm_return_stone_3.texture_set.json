@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "hakkai_realm_return_stone_3",
+    "normal": "hakkai_realm_return_stone_3_normal",
+    "metalness_emissive_roughness": "hakkai_realm_return_stone_3_mer"
+  }
+}

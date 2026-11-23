@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "hakkai_forager_nut_mix",
+    "normal": "hakkai_forager_nut_mix_normal",
+    "metalness_emissive_roughness": "hakkai_forager_nut_mix_mer"
+  }
+}

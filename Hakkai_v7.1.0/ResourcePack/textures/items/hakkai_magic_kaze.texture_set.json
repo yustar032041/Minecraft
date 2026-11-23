@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "hakkai_magic_kaze",
+    "normal": "hakkai_magic_kaze_normal",
+    "metalness_emissive_roughness": "hakkai_magic_kaze_mer"
+  }
+}

@@ -1,0 +1,99 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "hakkai:fushi_chief",
+      "is_spawnable": true,
+      "is_summonable": true
+    },
+    "components": {
+      "minecraft:type_family": {
+        "family": [
+          "mob",
+          "animal",
+          "hakkai_fushi",
+          "hakkai_boss"
+        ]
+      },
+      "minecraft:health": {
+        "value": 180,
+        "max": 180
+      },
+      "minecraft:collision_box": {
+        "width": 1.4,
+        "height": 1.5
+      },
+      "minecraft:physics": {},
+      "minecraft:movement": {
+        "value": 0.16
+      },
+      "minecraft:movement.basic": {},
+      "minecraft:jump.static": {},
+      "minecraft:navigation.walk": {
+        "avoid_water": true,
+        "avoid_damage_blocks": true
+      },
+      "minecraft:behavior.float": {
+        "priority": 0
+      },
+      "minecraft:behavior.random_stroll": {
+        "priority": 6,
+        "speed_multiplier": 0.55
+      },
+      "minecraft:behavior.look_at_player": {
+        "priority": 7,
+        "look_distance": 9,
+        "probability": 0.1
+      },
+      "minecraft:behavior.random_look_around": {
+        "priority": 8
+      },
+      "minecraft:nameable": {},
+      "minecraft:scale": {
+        "value": 1.65
+      },
+      "minecraft:knockback_resistance": {
+        "value": 1.0
+      },
+      "minecraft:pushable": {
+        "is_pushable": false,
+        "is_pushable_by_piston": false
+      },
+      "minecraft:boss": {
+        "name": "FUSHIのチーフ",
+        "hud_range": 32,
+        "should_darken_sky": false
+      },
+      "minecraft:behavior.hurt_by_target": {
+        "priority": 1
+      },
+      "minecraft:behavior.move_towards_target": {
+        "priority": 2,
+        "speed_multiplier": 0.75,
+        "within_radius": 12
+      },
+      "minecraft:loot": {
+        "table": "loot_tables/hakkai/entities/fushi_chief.json"
+      }
+    },
+    "component_groups": {
+      "hakkai:wild": {
+        "minecraft:despawn": {
+          "despawn_from_distance": {
+            "min_distance": 36,
+            "max_distance": 80
+          }
+        }
+      }
+    },
+    "events": {
+      "hakkai:wild": {
+        "add": {
+          "component_groups": [
+            "hakkai:wild"
+          ]
+        }
+      }
+    }
+  }
+}

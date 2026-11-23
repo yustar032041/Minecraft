@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "hakkai_wind_legacy_memorial",
+    "normal": "hakkai_wind_legacy_memorial_normal",
+    "metalness_emissive_roughness": "hakkai_wind_legacy_memorial_mer"
+  }
+}

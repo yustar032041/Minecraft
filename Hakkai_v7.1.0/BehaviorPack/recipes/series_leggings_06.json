@@ -1,0 +1,26 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "hakkai:series_leggings_06"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:iron_leggings"
+      },
+      {
+        "item": "hakkai:crystal_6"
+      },
+      {
+        "item": "hakkai:shard_6"
+      }
+    ],
+    "result": {
+      "item": "hakkai:series_leggings_06",
+      "count": 1
+    }
+  }
+}

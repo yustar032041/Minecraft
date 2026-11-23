@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "ult_chest",
+    "normal": "ult_chest_n",
+    "metalness_emissive_roughness": "ult_chest_mer"
+  }
+}

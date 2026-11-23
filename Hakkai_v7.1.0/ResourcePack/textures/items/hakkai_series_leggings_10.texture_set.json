@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "hakkai_series_leggings_10",
+    "normal": "hakkai_series_leggings_10_normal",
+    "metalness_emissive_roughness": "hakkai_series_leggings_10_mer"
+  }
+}

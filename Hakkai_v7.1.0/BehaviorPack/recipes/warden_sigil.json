@@ -1,0 +1,44 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "hakkai:warden_sigil"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "hakkai:pearl_0"
+      },
+      {
+        "item": "hakkai:pearl_1"
+      },
+      {
+        "item": "hakkai:pearl_2"
+      },
+      {
+        "item": "hakkai:pearl_3"
+      },
+      {
+        "item": "hakkai:pearl_4"
+      },
+      {
+        "item": "hakkai:pearl_5"
+      },
+      {
+        "item": "hakkai:pearl_6"
+      },
+      {
+        "item": "hakkai:pearl_7"
+      },
+      {
+        "item": "hakkai:fushi_totem"
+      }
+    ],
+    "result": {
+      "item": "hakkai:warden_sigil",
+      "count": 1
+    }
+  }
+}

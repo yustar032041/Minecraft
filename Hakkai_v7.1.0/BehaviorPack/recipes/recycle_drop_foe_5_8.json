@@ -1,0 +1,20 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "hakkai:recycle_drop_foe_5_8"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "hakkai:drop_foe_5_8"
+      }
+    ],
+    "result": {
+      "item": "hakkai:shard_6",
+      "count": 2
+    }
+  }
+}

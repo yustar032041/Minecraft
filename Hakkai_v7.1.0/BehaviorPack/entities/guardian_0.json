@@ -35,7 +35,7 @@
         "avoid_damage_blocks": true
       },
       "minecraft:knockback_resistance": {
-        "value": 0.08
+        "value": 1.0
       },
       "minecraft:loot": {
         "table": "loot_tables/hakkai/entities/guardian_0.json"
@@ -77,7 +77,11 @@
       "minecraft:behavior.random_look_around": {
         "priority": 8
       },
-      "minecraft:nameable": {}
+      "minecraft:nameable": {},
+      "minecraft:pushable": {
+        "is_pushable": false,
+        "is_pushable_by_piston": false
+      }
     }
   }
 }

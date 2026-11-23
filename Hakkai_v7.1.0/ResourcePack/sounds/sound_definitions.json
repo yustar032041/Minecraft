@@ -640,6 +640,56 @@
           "stream": true
         }
       ]
+    },
+    "hakkai.warden_phase_1": {
+      "category": "music",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/warden_phase_1",
+          "volume": 0.8,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.warden_phase_2": {
+      "category": "music",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/warden_phase_2",
+          "volume": 0.8,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.warden_phase_3": {
+      "category": "music",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/warden_phase_3",
+          "volume": 0.8,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.warden_phase_4": {
+      "category": "music",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/warden_phase_4",
+          "volume": 0.8,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.warden_phase_5": {
+      "category": "music",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/warden_phase_5",
+          "volume": 0.8,
+          "stream": true
+        }
+      ]
     }
   }
 }

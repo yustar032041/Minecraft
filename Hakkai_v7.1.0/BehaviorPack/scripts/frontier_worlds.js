@@ -1,8 +1,9 @@
 import { BlockVolume } from '@minecraft/server';
+import { FRONTIER_SITES, SKY_FRONTIER_SITES } from './natural_sites.js';
 
-// Each realm keeps its original 128x128 expedition and grows a 512x512
-// wilderness beyond it. The deep wilderness is generated one loaded 32x32
-// sector at a time, so remote chunks and player builds are never swept.
+// Legacy expedition coordinates and saved markers are retained for records.
+// The old bulk builders below are frozen; new areas use seeded_worlds in
+// loaded chunks, and partially prepared legacy footprints are protected.
 const X0=288, X1=415, Z0=-64, Z1=63, TILE=8;
 const DEEP_X0=448, DEEP_X1=959, DEEP_Z0=-256, DEEP_Z1=255, SECTOR=32;
 const SURFACES=[
@@ -15,8 +16,7 @@ const SURFACES=[
  ['minecraft:calcite','minecraft:quartz_block','minecraft:stone'],
  ['minecraft:copper_block','minecraft:oxidized_copper','minecraft:deepslate']
 ];
-const SITES=[[310,25],[352,-24],[394,25]];
-const SKY_SITES=[[302,0],[342,0],[398,0]];
+const SITES=FRONTIER_SITES, SKY_SITES=SKY_FRONTIER_SITES;
 const DEEP_SITES=[[[544,-160],[704,0],[864,160]],[[544,160],[704,-32],[864,-160]],[[544,-160],[704,64],[864,160]],[[544,160],[704,-64],[864,-160]],[[544,-160],[704,0],[864,160]],[[544,160],[704,-32],[864,-160]],[[544,-160],[704,64],[864,160]],[[544,160],[704,-64],[864,-160]]];
 
 export function setupFrontierWorlds(ctx){
@@ -173,33 +173,13 @@ export function setupFrontierWorlds(ctx){
   for(let i=0;i<3;i++){const [lx,lz]=DEEP_SITES[realm][i];if(Math.floor((lx-DEEP_X0)/SECTOR)===sx&&Math.floor((lz-DEEP_Z0)/SECTOR)===sz)deepLandmark(d,realm,i);}
   property(world,key,1);
  }
- function tick(p,t){
-  const realm=realmOf(p);if(realm<0||t<(retryAt.get(realm)??0))return;
-  if(!num(world,`built_${21+realm}`)||num(world,`frontier_land_${realm}_skipped_v1`))return;
-  bridge(p.dimension,realm);
-  deepBridge(p.dimension,realm);
-  if(!done.has(realm)&&!num(world,`frontier_land_${realm}_v1`)){
-   if(p.location.x>=278&&p.location.x<=426&&Math.abs(p.location.z)<=84&&!active.has(realm)){
-    retryAt.set(realm,t+100);
-    if(p.dimension.isChunkLoaded({x:344,y:88,z:0})){active.add(realm);void build(p,realm).catch(err=>report('大規模遠征地形',err)).finally(()=>active.delete(realm));}
-   }
-   return;
-  }
-  // v7 seed terrain owns the former 512x512 fixed wilderness. The old sector
-  // generator remains available only through its saved completion markers.
-  if(p.location.x>=DEEP_X0-16&&p.location.x<=DEEP_X1+16&&p.location.z>=DEEP_Z0-16&&p.location.z<=DEEP_Z1+16)return;
-  if(p.location.x<DEEP_X0-16||p.location.x>DEEP_X1+16||p.location.z<DEEP_Z0-16||p.location.z>DEEP_Z1+16)return;
-  if(t<(deepRetry.get(p.id)??0))return;
-  deepRetry.set(p.id,t+20);
-  const sx=Math.max(0,Math.min(15,Math.floor((p.location.x-DEEP_X0)/SECTOR))),sz=Math.max(0,Math.min(15,Math.floor((p.location.z-DEEP_Z0)/SECTOR)));
-  const key=`${realm}:${sx}:${sz}`;
-  if(activeSectors.has(key))return;
-  activeSectors.add(key);
-  void buildSector(p,realm,sx,sz).catch(err=>report('界の超大規模外縁地形',err)).finally(()=>activeSectors.delete(key));
- }
+ // New terrain is generated in loaded chunks by seeded_worlds. Do not resume
+ // an interrupted old bulk build: its previously prepared footprint stays
+ // reserved and untouched so player builds cannot be overwritten.
+ function tick(_p,_t){}
  function siteCoords(realm,index){if(index>=6)return DEEP_SITES[realm]?.[index-6]??[0,0];return (realm===6?SKY_SITES:SITES)[index-3]??[0,0];}
  function isGenerated(realm,location){
-  if(location.x>=X0&&location.x<=X1&&location.z>=Z0&&location.z<=Z1)return Boolean(num(world,`frontier_land_${realm}_v1`));
+  if(location.x>=X0&&location.x<=X1&&location.z>=Z0&&location.z<=Z1)return Boolean(num(world,`frontier_land_${realm}_v1`)||num(world,`seed_land_${realm}_${Math.floor(location.x/16)}_${Math.floor(location.z/16)}_v1`));
   if(location.x<DEEP_X0||location.x>DEEP_X1||location.z<DEEP_Z0||location.z>DEEP_Z1)return false;
   const sx=Math.floor((location.x-DEEP_X0)/SECTOR),sz=Math.floor((location.z-DEEP_Z0)/SECTOR);
   const legacy=Boolean(num(world,sectorKey(realm,sx,sz)));

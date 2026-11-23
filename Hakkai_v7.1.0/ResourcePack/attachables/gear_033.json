@@ -8,11 +8,11 @@
         "enchanted": "entity_alphatest_glint"
       },
       "textures": {
-        "default": "textures/hakkai/equipment/gear_033",
+        "default": "textures/hakkai/weapon_detail/gear_033",
         "enchanted": "textures/misc/enchanted_item_glint"
       },
       "geometry": {
-        "default": "geometry.hakkai.held_1"
+        "default": "geometry.hakkai.weapon_gear_033"
       },
       "scripts": {
         "animate": [

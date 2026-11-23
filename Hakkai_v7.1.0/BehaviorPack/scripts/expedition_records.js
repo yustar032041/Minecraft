@@ -2,7 +2,7 @@
 // Keeps discovery records and rewards, while leaving the old combat-contract hooks disabled.
 export function setupExpeditionRecords(ctx){
  const {ns,world,places,num,property,notice,form,give,drop,paged,simple,frontierWorlds}=ctx;
- const offsets=[[22,0],[-18,19],[-20,-21]];
+ const offsets=[[22,0],[-18,19],[-20,-21]], nextScan=new Map();
  const baseNames=['風の道標','忘れられた野営地','見晴らしの岩棚'];
  const frontierNames=['古代の境界塔','風脈の渡り場','封印された見張り台'];
  const deepNames=[
@@ -43,7 +43,8 @@ export function setupExpeditionRecords(ctx){
   return Boolean(pt&&frontierWorlds?.isGenerated(s.realm,pt));
  }
  function tick(p,t){
-  if(t%20!==0||!p.dimension.id.startsWith(ns+'realm_'))return;
+  if(!p.dimension.id.startsWith(ns+'realm_')||t<(nextScan.get(p.id)??0))return;
+  nextScan.set(p.id,t+20);
   const realm=Number(p.dimension.id.slice((ns+'realm_').length));
   if(!Number.isInteger(realm)||realm<0||realm>7)return;
   for(const s of realms){
@@ -73,5 +74,5 @@ export function setupExpeditionRecords(ctx){
   const s=realms[index],pt=coordinates(s),generated=ready(s,pt);
   return simple(p,`${s.realmName}｜${s.name}`,`${has(p,s.id)?'§a発見済み':'§7未発見'}\n\n${s.clue}\n\n${s.index<3?'界の入口付近にある探索地点です。':s.index<6?(generated?'大遠征地の生成済み地点です。':'大遠征地がまだ生成されていません。'):(generated?'外縁地帯の生成済み地点です。':'この区画はまだ生成されていません。')}`);
  }
- return {tick,journal,count:total};
+ return {tick,journal,count:total,clear:id=>nextScan.delete(id)};
 }
