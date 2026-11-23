@@ -1,4 +1,5 @@
-import { kineticPower, hasAdjacentWater, factoryRecipe, animateKinetic } from './factory_network.js';
+import { kineticNetwork, hasAdjacentWater, factoryRecipe } from './factory_network.js';
+import { syncKineticVisual, cleanKineticVisuals } from './factory_visual.js';
 import { factoryTransaction } from './factory_transaction.js';
 import { setupShieldWear } from './shield_wear.js';
 import { deferShieldArrow } from './shield_reflect.js';
@@ -2795,7 +2796,7 @@ const chapters=[
  ['野営とサバイバル','焚き火か魂の焚き火の近くで、しゃがんで静止すると野営休息になり、スタミナと魔力が速く回復します。野営のきのこ包み・根菜の焚き火焼き・森歩きの滋養食は採集や料理で作れます。乾燥肉・乾燥ベリー・燻製魚の切り身・乾燥昆布を作業台で合わせると野営の補給袋を2個作れます。畑・季節の菜園・釣り・牧場・かまどを組み合わせ、遠征前に食料を準備しましょう。'],
  ['戦闘とスタミナ','走る・泳ぐ・攻撃するとスタミナを使い、止まると回復。装備スキルや属性魔法を使えます。ガイド本の「八界の幻影闘技場」では、体力・魔力・相手の予告を見ながら行動を選ぶターン制ミニゲームに挑戦できます。記念館の達成度と記念品の収集が進むと、特別な第4戦が解放されます。闘技場はゲーム内の幻影戦で、実際のプレイヤーや建築物にはダメージを与えません。'],
  ['八属性と魔導書','本＋風の結晶＋水の結晶で魔導書を作れます。風・水・火・土・雷・光・闇・時の8属性を使え、一度訪れた場所の属性が解放されます。霧・溶岩・嵐・虹・疾風は両方の属性が必要です。光の矢は光を訪問後、魔力5で視線上の敵へ放ちます。絆の灯は風と水を訪問後、近くにもう一人いる時に魔力20で参加者を回復し敵を攻撃します。風・水・炎の専用魔法も選べます。FUSHIのトーテムから月のまどろみを使用すると確認後に消費します。魔法の再使用時間は共通6秒です。'],
- ['工場の組み方','加工機の西（X−）に入力樽、東（X＋）に出力樽を置きます。風力加工機は原鉄・原金・原銅を精錬。8界の高い屋外の風か、樽内の燃料（木・木炭・石炭・対応する結晶など）で動きます。採り機は燃料を使って真下6ブロックまでの対応鉱石を採ります。圧縮機は同じ欠片2個＋アメジストの欠片1個を結晶に変換。選別機は風記の素材を移し、コンベアは落ちた物を東へ。風車（高さ64以上・上空32ブロックに障害なし）か、隣に水がある水車を軸で機械に接続すると燃料不要。軸は最大32個まで探索。破砕は丸石→砂利→砂、骨→骨粉。洗浄は水を隣に置き砂利→火打石、砂→粘土玉。プレスは粘土玉4→粘土、砂4→砂岩、金属→ナゲット。製材は原木→板材4。搬送管は西の樽から東の樽へ1個ずつ運ぶ。各機械は西入力・東出力。時間と天気によって効率が変わります。'],
+ ['工場の組み方','加工機は西（X−）に入力樽、東（X＋）に出力樽。風力回転機は高さ64以上で上空32ブロックが空き、水力回転機は隣に水が必要。軸で機械につなぐと燃料不要。増速歯車箱は西から東へ2倍・逆回転、減速歯車箱は半分・逆回転。歯車箱は西東だけ接続。しゃがんで空手で機械か軸を触ると回転数・容量・負荷が見えます。負荷は接続した機械すべてで予約し、容量不足や矛盾した輪は停止。破砕機は丸石→砂利→砂、結晶→欠片2。洗浄機は隣に水を置き砂利→火打石、砂→粘土玉。圧縮機は欠片2とアメジストの欠片1→結晶。プレス・製材・自動炉も使えます。搬送管は西樽から東樽に運びます。'],
  ['村の暮らし','風記の集落鐘を置くか、村人の近くで普通の鐘をしゃがんで使うと台帳が開きます。壁の数、高い見張り台、足止め罠、工場が守りを強くします。工場が出荷した備蓄は交易・村の成長・祭りに役立ちます。村人には朝・昼・夕の行き先があります。'],
  ['季節と釣り','季節は約3ゲーム日ごとに変わります。花壇を置くと季節の花に変わり、集落鐘の周りでは作物の成長も変化します。釣り竿を持ち物に入れてガイド本の「水辺の釣り」へ。釣果は季節や天気、水辺の種類で変わります。'],
  ['時の列車','第8界の時の終着駅に着いたら、ガイド本の「時の列車」へ。操車場で過去か未来を選ぶと乗車します。しゃがんで降りると、旅を中止できます。各時代の駅から現在へ戻れます。'],
@@ -4886,6 +4887,9 @@ function use(e){
  if(book)return notice(p,'§eエンチャント台で、刻印書を持ってしゃがみながら使ってね');
  const g=gear.get(id);if(g)cast(p,g);
 }
+system.runInterval(()=>{
+ for(const id of ['minecraft:overworld','minecraft:nether','minecraft:the_end',...Array.from({length:8},(_,i)=>`hakkai:realm_${i}`)])try{cleanKineticVisuals(world.getDimension(id));}catch{}
+},100);
 function completeFocus({source:p,itemStack:item}){
  const g=gear.get(item?.typeId);
  if(!g||!p?.isValid)return;
@@ -4899,11 +4903,18 @@ safeSub('world','after','itemStartUse',({source:p,itemStack:item})=>{combatCharg
 safeSub('world','after','itemReleaseUse',({source:p,itemStack:item})=>{combatCharge?.release(p,item);});
 try{world.afterEvents.itemStopUse?.subscribe(({source:p,itemStack:item})=>{combatCharge?.stop(p,item);});}catch{}
 
+const factoryCycleAt=new Map();
+function factoryMeter(player,block){
+ if(!player?.isSneaking)return;
+ const n=kineticNetwork(block.dimension,{x:block.x,y:block.y,z:block.z});
+ const status={running:'稼働',no_source:'動力源なし',incomplete:'未読込または規模上限',conflict:'歯車の矛盾・動力源の回転数不一致',overload:'容量不足',speed_limit:'回転数の許容範囲外'}[n.status]??n.status;
+ player.sendMessage(`§b動力 ${status}｜回転 ${n.rpm} RPM｜負荷 ${n.demand} / 容量 ${n.capacity} SU`);
+}
 function transfer(b){
  const d=b.dimension,x=b.x,y=b.y,z=b.z;
  const t=world.getTimeOfDay(), night=t>=13000&&t<23000, evening=t>=12000&&t<13000;
  const weather=currentWeather.get(d.id?.replace(/^minecraft:/,'')),thunder=weather===WeatherType.Thunder, wet=thunder||weather===WeatherType.Rain;
- if(['shaft','wind_rotor','water_wheel'].some(id=>b.typeId===ns+id)){animateKinetic(b);return;}
+ if(['shaft','wind_rotor','water_wheel','gear_up','gear_down'].some(id=>b.typeId===ns+id)){syncKineticVisual(b,kineticNetwork(d,{x,y,z}));return;}
  if(b.typeId===ns+'conveyor'){
    try{
      const thrust=night?.23:thunder?.36:wet?.28:evening?.25:.31;
@@ -4938,10 +4949,13 @@ function transfer(b){
  const cycle=b.typeId===ns+'compressor'?(thunder?2:night?5:evening?4:wet?3:2):
    b.typeId===ns+'sorter'?(wet||night?4:evening?3:2):2;
  if(cycle>2&&Math.floor(system.currentTick/27)%cycle>=2)return;
- let power='',limit=1;
+ let power='',limit=1,kinetic;
  if(['mill','miner','kiln','crusher','washer','press','saw'].some(id=>b.typeId===ns+id)){
    const l={x:x+.5,y:y+1.01,z:z+.5};
-   let wind=kineticPower(d,{x,y,z});
+   kinetic=kineticNetwork(d,{x,y,z});
+   if(kinetic.status!=='running'&&kinetic.status!=='no_source')return;
+   let wind=kinetic.status==='running';
+   // Preserve the original independent high-altitude mill wind fallback.
    try{wind=wind||d.id.startsWith(ns)&&y>=84&&b.typeId===ns+'mill'&&!d.getBlockFromRay(l,{x:0,y:1,z:0},{maxDistance:22});}catch{}
    if(!wind){
      for(let i=0;i<from.size;i++){
@@ -4955,6 +4969,14 @@ function transfer(b){
    if(b.typeId===ns+'mill'&&thunder&&power)limit++;
    if(night&&limit>1)limit=Math.max(1,Math.floor(limit/2));
  }
+ if(b.typeId===ns+'compressor'||b.typeId===ns+'sorter'){
+   kinetic=kineticNetwork(d,{x,y,z});
+   if(kinetic.status!=='running'&&kinetic.status!=='no_source')return;
+ }
+ const cycleKey=`${d.id}:${x},${y},${z}`;
+ const delay=kinetic?.status==='running'?Math.max(10,Math.ceil(40*16/Math.abs(kinetic.rpm))):40;
+ if(system.currentTick-(factoryCycleAt.get(cycleKey)??-Infinity)<delay)return;
+ const worked=n=>{if(factoryCycleAt.size>=8192)factoryCycleAt.clear();factoryCycleAt.set(cycleKey,system.currentTick);production(b,n);};
  if(b.typeId===ns+'miner'){
    if(night&&Math.floor(system.currentTick/30)%2||wet&&Math.floor(system.currentTick/30)%(thunder?3:4)===0)return;
    for(let step=1;step<=6;step++){
@@ -4969,7 +4991,7 @@ function transfer(b){
      if(!room(to,output)||power&&total(from,power)<1)return;
      const old=stone.permutation;
      if(factoryTransaction({input:from,output:to,costs:power?[{id:power,count:1}]:[],product:output,
-       commitExternal:()=>stone.setType('minecraft:air'),rollbackExternal:()=>stone.setPermutation(old),report}))production(b,2);
+       commitExternal:()=>stone.setType('minecraft:air'),rollbackExternal:()=>stone.setPermutation(old),report}))worked(2);
      return;
    }
    return;
@@ -4991,17 +5013,17 @@ function transfer(b){
      while(n>0&&!room(to,new ItemStack(out,n)))n--;
      if(!n)return;
      const costs=[{id:item.typeId,count:n}];if(power)costs.push({id:power,count:1});
-     if(factoryTransaction({input:from,output:to,costs,product:new ItemStack(out,n),report}))production(b,n);
+     if(factoryTransaction({input:from,output:to,costs,product:new ItemStack(out,n),report}))worked(n);
      return;
    }
    const product=new ItemStack(out,outputCount);if(!room(to,product))return;
    const costs=[{id:item.typeId,count:need}];if(aux)costs.push({id:aux,count:1});if(power)costs.push({id:power,count:1});
-   if(factoryTransaction({input:from,output:to,costs,product,report}))production(b,outputCount);return;
+   if(factoryTransaction({input:from,output:to,costs,product,report}))worked(outputCount);return;
  }
 }
 safeSub('system','before','startup',({itemComponentRegistry,blockComponentRegistry})=>{
  safeReg(itemComponentRegistry,ns+'use',{onUse:use,onUseOn:use,onCompleteUse:completeFocus});
- safeReg(blockComponentRegistry,ns+'factory',{onTick:({block})=>transfer(block)});
+ safeReg(blockComponentRegistry,ns+'factory',{onTick:({block})=>transfer(block),onPlayerInteract:({player,block})=>{try{if(player?.isSneaking)factoryMeter(player,block);}catch{}}});
  safeReg(blockComponentRegistry,ns+'town',{onTick:({block})=>townTick(block),onPlayerInteract:({player,block})=>{
    if(player&&player.getGameMode()!==GameMode.Spectator)menu(player,p=>townMenu(p,townGet(block.dimension,block.location,true)));
  }});

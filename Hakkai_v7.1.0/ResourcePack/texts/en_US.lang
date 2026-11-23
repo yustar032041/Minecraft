@@ -890,3 +890,5 @@ tile.hakkai:press.name=プレス機
 tile.hakkai:saw.name=製材機
 
 tile.hakkai:factory_pipe.name=搬送管
+tile.hakkai:gear_up.name=増速歯車箱
+tile.hakkai:gear_down.name=減速歯車箱

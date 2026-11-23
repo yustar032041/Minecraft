@@ -1,0 +1,28 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "hakkai:kinetic_visual",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/hakkai_kinetic"
+      },
+      "geometry": {
+        "default": "geometry.hakkai.kinetic_visual"
+      },
+      "animations": {
+        "rotate": "animation.hakkai.kinetic.rotate"
+      },
+      "scripts": {
+        "animate": [
+          "rotate"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.hakkai.kinetic"
+      ]
+    }
+  }
+}

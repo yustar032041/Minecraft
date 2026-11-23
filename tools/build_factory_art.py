@@ -59,3 +59,7 @@ for lang in ('ja_JP','en_US'):
   if line not in s:s+='\n'+line
  p.write_text(s.rstrip()+'\n',encoding='utf8')
 save(atlas,a)
+
+# Reapply the later kinetic geometry and tick definitions when regenerating art.
+import runpy
+runpy.run_path(str(Path(__file__).with_name("build_kinetic_assets.py")),run_name="__main__")

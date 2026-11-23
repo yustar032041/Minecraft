@@ -1,0 +1,38 @@
+{
+  "format_version": "1.8.0",
+  "animations": {
+    "animation.hakkai.kinetic.rotate": {
+      "loop": true,
+      "bones": {
+        "shaft": {
+          "rotation": [
+            "math.mod(query.life_time * query.property('hakkai:rpm') * 6, 360)",
+            0,
+            0
+          ]
+        },
+        "wind": {
+          "rotation": [
+            "math.mod(query.life_time * query.property('hakkai:rpm') * 6, 360)",
+            0,
+            0
+          ]
+        },
+        "water": {
+          "rotation": [
+            "math.mod(query.life_time * query.property('hakkai:rpm') * 6, 360)",
+            0,
+            0
+          ]
+        },
+        "gear": {
+          "rotation": [
+            "math.mod(query.life_time * query.property('hakkai:rpm') * 6, 360)",
+            0,
+            0
+          ]
+        }
+      }
+    }
+  }
+}

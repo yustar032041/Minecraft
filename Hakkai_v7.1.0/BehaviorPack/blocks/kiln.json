@@ -29,8 +29,8 @@
       "minecraft:loot": "loot_tables/hakkai/blocks/kiln.json",
       "minecraft:tick": {
         "interval_range": [
-          32,
-          42
+          8,
+          10
         ],
         "looping": true
       },

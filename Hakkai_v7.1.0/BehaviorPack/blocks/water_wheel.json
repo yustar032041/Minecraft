@@ -17,7 +17,7 @@
     },
     "components": {
       "minecraft:display_name": "tile.hakkai:water_wheel.name",
-      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:geometry": "geometry.hakkai.kinetic_base",
       "minecraft:material_instances": {
         "*": {
           "texture": "hakkai_water_wheel_0",
@@ -43,41 +43,6 @@
         "looping": true
       },
       "hakkai:factory": {}
-    },
-    "permutations": [
-      {
-        "condition": "q.block_state('hakkai:spin') == 1",
-        "components": {
-          "minecraft:material_instances": {
-            "*": {
-              "texture": "hakkai_water_wheel_1",
-              "render_method": "opaque"
-            }
-          }
-        }
-      },
-      {
-        "condition": "q.block_state('hakkai:spin') == 2",
-        "components": {
-          "minecraft:material_instances": {
-            "*": {
-              "texture": "hakkai_water_wheel_2",
-              "render_method": "opaque"
-            }
-          }
-        }
-      },
-      {
-        "condition": "q.block_state('hakkai:spin') == 3",
-        "components": {
-          "minecraft:material_instances": {
-            "*": {
-              "texture": "hakkai_water_wheel_3",
-              "render_method": "opaque"
-            }
-          }
-        }
-      }
-    ]
+    }
   }
 }

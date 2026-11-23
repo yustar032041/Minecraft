@@ -1,6 +1,6 @@
 // Runs the actual transfer function with simulated Minecraft objects.
 import assert from 'node:assert/strict';import fs from 'node:fs';import vm from 'node:vm';
-import {kineticPower,hasAdjacentWater,factoryRecipe,animateKinetic} from '../Hakkai_v7.1.0/BehaviorPack/scripts/factory_network.js';
+import {kineticNetwork,hasAdjacentWater,factoryRecipe} from '../Hakkai_v7.1.0/BehaviorPack/scripts/factory_network.js';
 import {factoryTransaction} from '../Hakkai_v7.1.0/BehaviorPack/scripts/factory_transaction.js';
 class ItemStack {constructor(typeId,amount=1){Object.assign(this,{typeId,amount,maxAmount:64});}clone(){const c=new ItemStack(this.typeId,this.amount);c.nameTag=this.nameTag;return c;}isStackableWith(x){return this.typeId===x.typeId&&this.nameTag===x.nameTag;}}
 class Container {constructor(items){this.items=items;this.size=items.length;this.failOnce=false;}getItem(i){return this.items[i]?.clone();}setItem(i,v){this.items[i]=v?.clone();if(this.failOnce){this.failOnce=false;throw Error('write failed');}}}
@@ -9,11 +9,12 @@ function fixture(kind,inputs,outputs=[undefined,undefined]){
  const from=new Container(inputs),to=new Container(outputs),reports=[],produced=[];
  const ore={typeId:'hakkai:ore_3',permutation:{id:'ore'},setType(id){this.typeId=id;if(this.failOnce){this.failOnce=false;throw Error('block failed');}},setPermutation(p){this.typeId=p.id==='ore'?'hakkai:ore_3':p.id;}};
  const barrel=c=>({typeId:'minecraft:barrel',getComponent:()=>({container:c})});
- const d={id:'hakkai:realm_0',isChunkLoaded:()=>true,getBlockFromRay:()=>({}),getBlock:l=>l.x===-1?barrel(from):l.x===1?barrel(to):ore};
+ const d={id:'hakkai:realm_0',isChunkLoaded:()=>true,getBlockFromRay:()=>({})};
  const b={typeId:'hakkai:'+kind,dimension:d,x:0,y:80,z:0};
+ d.getBlock=l=>l.y===80&&l.z===0&&l.x===-1?barrel(from):l.y===80&&l.z===0&&l.x===1?barrel(to):l.y===80&&l.z===0&&l.x===0?b:l.x===0&&l.z===0&&l.y<80?ore:{typeId:'minecraft:air'};
  const total=(c,id)=>c.items.reduce((a,v)=>a+(v?.typeId===id?v.amount:0),0);
  const room=(c,s)=>c.items.reduce((a,v)=>a+(!v?s.maxAmount:v.isStackableWith(s)?v.maxAmount-v.amount:0),0)>=s.amount;
- const ctx={ns:'hakkai:',world:{getTimeOfDay:()=>6000},currentWeather:new Map(),WeatherType:{Thunder:'thunder',Rain:'rain'},system:{currentTick:0},ItemStack,total,room,factoryTransaction,kineticPower,hasAdjacentWater,factoryRecipe,animateKinetic,production:(_,n)=>produced.push(n),report:(...x)=>reports.push(x)};
+ const ctx={ns:'hakkai:',world:{getTimeOfDay:()=>6000},currentWeather:new Map(),WeatherType:{Thunder:'thunder',Rain:'rain'},system:{currentTick:0},ItemStack,total,room,factoryTransaction,kineticNetwork,hasAdjacentWater,factoryRecipe,syncKineticVisual:()=>{},factoryCycleAt:new Map(),production:(_,n)=>produced.push(n),report:(...x)=>reports.push(x)};
  vm.createContext(ctx);vm.runInContext(src.slice(start,end),ctx);
  return {from,to,ore,b,ctx,reports,produced,run:()=>ctx.transfer(b)};
 }
@@ -53,7 +54,7 @@ for(const [kind,raw,count,out,amount] of [
 }
 {
  const f=fixture('crusher',[item('minecraft:cobblestone')]);
- const get=f.b.dimension.getBlock;f.b.dimension.getBlock=p=>p.z===1?{typeId:'hakkai:wind_rotor',x:0,y:80,z:1,location:p}:get(p);
+ const get=f.b.dimension.getBlock;f.b.dimension.getBlock=p=>p.x===0&&p.y===80&&p.z===1?{typeId:'hakkai:wind_rotor',x:0,y:80,z:1,location:p}:get(p);
  f.b.dimension.getBlockFromRay=()=>undefined;f.run();assert.deepEqual(snap(f.to),[['minecraft:gravel',1],undefined]);
 }
 {
@@ -72,4 +73,36 @@ console.log('Crusher, washer, press, saw and pipe transactions OK (simulated)');
 for(const kind of ['factory_pipe','crusher']){
  const f=fixture(kind,kind==='crusher'?[item('minecraft:coal'),item('minecraft:cobblestone')]:[item('minecraft:diamond',2)]);
  const before=snap(f.from);f.to.failOnce=true;f.run();assert.deepEqual(snap(f.from),before);assert.deepEqual(snap(f.to),[undefined,undefined]);assert.ok(f.reports.length);
+}
+// Network speed actually changes operation cadence. Capacity failure takes
+// precedence even when fuel is available; neither items nor fuel are spent.
+{
+ const f=fixture('crusher',[item('minecraft:cobblestone',4)]),get=f.b.dimension.getBlock;
+ f.b.dimension.getBlock=p=>p.x===0&&p.y===80&&p.z===1?{typeId:'hakkai:wind_rotor',...p,location:p}:get(p);
+ f.b.dimension.getBlockFromRay=()=>undefined;
+ f.run();assert.equal(f.to.getItem(0).amount,1);f.ctx.system.currentTick=39;f.run();assert.equal(f.to.getItem(0).amount,1);
+ f.ctx.system.currentTick=40;f.run();assert.equal(f.to.getItem(0).amount,2);
+}
+{
+ const f=fixture('crusher',[item('minecraft:coal'),item('minecraft:cobblestone')]);
+ // Inject an overloaded real network. Connected machines reserve load.
+ const get=f.b.dimension.getBlock,blocks=new Map([
+  ['0,80,1','wind_rotor'],['0,80,2','gear_up'], // gear side-only; replace with direct heavy loads
+  ['0,80,-1','miner'],['0,81,0','press'],['0,79,0','kiln']]);
+ blocks.delete('0,80,2');f.b.dimension.getBlock=p=>{
+  const name=blocks.get(`${p.x},${p.y},${p.z}`);return name?{typeId:'hakkai:'+name,...p,location:p}:get(p);
+ };
+ f.b.dimension.getBlockFromRay=()=>undefined;f.run();
+ assert.deepEqual(snap(f.from),[['minecraft:coal',1],['minecraft:cobblestone',1]]);assert.deepEqual(snap(f.to),[undefined,undefined]);
+}
+{
+ const f=fixture('crusher',[item('minecraft:coal'),item('hakkai:crystal_5')]);f.run();assert.deepEqual(snap(f.to),[['hakkai:shard_5',2],undefined]);
+}
+{
+ const f=fixture('crusher',[item('minecraft:cobblestone',3)]),get=f.b.dimension.getBlock;
+ const blocks=new Map([['0,81,0','shaft'],['-1,81,0','gear_up'],['-2,81,0','wind_rotor']]);
+ f.b.dimension.getBlock=p=>{const name=blocks.get(`${p.x},${p.y},${p.z}`);return name?{typeId:'hakkai:'+name,...p,location:p}:get(p);};f.b.dimension.getBlockFromRay=()=>undefined;
+ assert.equal(kineticNetwork(f.b.dimension,{x:0,y:80,z:0}).rpm,-32);
+ f.run();f.ctx.system.currentTick=19;f.run();assert.equal(f.to.getItem(0).amount,1);
+ f.ctx.system.currentTick=20;f.run();assert.equal(f.to.getItem(0).amount,2);
 }
