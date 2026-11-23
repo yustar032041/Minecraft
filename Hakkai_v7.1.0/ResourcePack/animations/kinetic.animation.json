@@ -31,6 +31,39 @@
             0,
             0
           ]
+        },
+        "millwork": {
+          "rotation": [
+            "math.mod(query.life_time * query.property('hakkai:rpm') * 6, 360)",
+            0,
+            0
+          ]
+        },
+        "mixwork": {
+          "rotation": [
+            "math.mod(query.life_time * query.property('hakkai:rpm') * 6, 360)",
+            0,
+            0
+          ]
+        },
+        "assembly": {
+          "rotation": [
+            "math.mod(query.life_time * query.property('hakkai:rpm') * 6, 360)",
+            0,
+            0
+          ]
+        },
+        "ram": {
+          "rotation": [
+            "query.property('hakkai:rpm') * 0",
+            0,
+            0
+          ],
+          "position": [
+            0,
+            "query.property('hakkai:rpm') != 0 ? math.sin(query.life_time * math.abs(query.property('hakkai:rpm')) * 6) * 3 : 0",
+            0
+          ]
         }
       }
     }

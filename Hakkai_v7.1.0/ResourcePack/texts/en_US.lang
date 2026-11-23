@@ -892,3 +892,6 @@ tile.hakkai:saw.name=製材機
 tile.hakkai:factory_pipe.name=搬送管
 tile.hakkai:gear_up.name=増速歯車箱
 tile.hakkai:gear_down.name=減速歯車箱
+tile.hakkai:mixer.name=動力混合機
+tile.hakkai:assembler.name=動力組立機
+tile.hakkai:filter_router.name=見本式仕分け機

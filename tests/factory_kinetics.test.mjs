@@ -24,3 +24,8 @@ function fixture(){const map=new Map(),d={id:'minecraft:overworld',isChunkLoaded
  for(const p of [[0,80,1],[1,80,1],[2,80,1]])put(...p,'shaft');assert.equal(kineticNetwork(d,{x:2,y:80,z:0}).status,'conflict');
 }
 console.log('Kinetic gear ratios, direction, capacity, loops, limits and unloaded boundaries OK (simulated)');
+{
+ const {d,put}=fixture();put(0,80,0,'wind_rotor');put(1,80,0,'mixer');put(1,80,1,'assembler');put(0,80,1,'filter_router');
+ const n=kineticNetwork(d,{x:1,y:80,z:0});assert.equal(n.status,'running');assert.equal(n.demand,104);assert.equal(n.capacity,128);
+ put(1,81,0,'press');assert.equal(kineticNetwork(d,{x:1,y:80,z:0}).status,'overload');
+}

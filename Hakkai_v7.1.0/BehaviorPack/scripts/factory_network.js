@@ -1,3 +1,4 @@
+import { recycleProduct } from './factory_lines.js';
 // Small bounded mechanical graph, computed synchronously from loaded blocks.
 // Gearboxes are fixed west->east two-port devices, not omnidirectional shafts.
 const DIRS=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
@@ -10,7 +11,7 @@ function generatorWorks(d,b){
  if(b.typeId!=='hakkai:wind_rotor'||b.y<64)return false;
  try{return !d.getBlockFromRay({x:b.x+.5,y:b.y+1.01,z:b.z+.5},{x:0,y:1,z:0},{maxDistance:32});}catch{return false;}
 }
-const LOAD={mill:32,miner:64,kiln:32,crusher:32,washer:24,press:48,saw:24,compressor:32,sorter:16};
+const LOAD={mill:32,miner:64,kiln:32,crusher:32,washer:24,press:48,saw:24,compressor:32,sorter:16,mixer:48,assembler:40,filter_router:16};
 const GEN={wind_rotor:128,water_wheel:192};
 const CONDUCTORS=new Set(['shaft',...Object.keys(LOAD),...Object.keys(GEN)]);
 const GEARS={gear_up:1,gear_down:-1};
@@ -63,6 +64,7 @@ export function kineticPower(d,origin){return kineticNetwork(d,origin).status===
 // Each operation is a fixed recipe. Products are vanilla and no inventory
 // metadata is transformed unless the input is an ordinary named item type.
 export function factoryRecipe(kind,id){
+ if(kind==='crusher'&&recycleProduct(id))return [recycleProduct(id),1,2];
  if(kind==='crusher'&&/^hakkai:crystal_(?:[0-9]|1[0-9])$/.test(id))return [id.replace('crystal_','shard_'),1,2];
  const recipes={
   crusher:{'minecraft:cobblestone':['minecraft:gravel',1,1],'minecraft:gravel':['minecraft:sand',1,1],'minecraft:bone':['minecraft:bone_meal',1,3]},

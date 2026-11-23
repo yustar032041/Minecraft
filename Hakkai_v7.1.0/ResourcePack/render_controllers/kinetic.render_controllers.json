@@ -23,6 +23,18 @@
         },
         {
           "gear": "query.property('hakkai:kind') == 3"
+        },
+        {
+          "millwork": "query.property('hakkai:kind') == 4"
+        },
+        {
+          "ram": "query.property('hakkai:kind') == 5"
+        },
+        {
+          "mixwork": "query.property('hakkai:kind') == 6 || query.property('hakkai:kind') == 7"
+        },
+        {
+          "assembly": "query.property('hakkai:kind') == 8"
         }
       ]
     }

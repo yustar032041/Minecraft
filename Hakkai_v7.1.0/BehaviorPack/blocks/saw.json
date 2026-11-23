@@ -17,7 +17,7 @@
     },
     "components": {
       "minecraft:display_name": "tile.hakkai:saw.name",
-      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:geometry": "geometry.hakkai.factory_frame",
       "minecraft:material_instances": {
         "*": {
           "texture": "hakkai_saw_0",

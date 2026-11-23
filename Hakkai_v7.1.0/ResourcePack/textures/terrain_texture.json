@@ -300,6 +300,42 @@
     },
     "hakkai_saw_3": {
       "textures": "textures/blocks/hakkai_saw_3"
+    },
+    "hakkai_mixer_0": {
+      "textures": "textures/blocks/hakkai_mixer_0"
+    },
+    "hakkai_mixer_1": {
+      "textures": "textures/blocks/hakkai_mixer_1"
+    },
+    "hakkai_mixer_2": {
+      "textures": "textures/blocks/hakkai_mixer_2"
+    },
+    "hakkai_mixer_3": {
+      "textures": "textures/blocks/hakkai_mixer_3"
+    },
+    "hakkai_assembler_0": {
+      "textures": "textures/blocks/hakkai_assembler_0"
+    },
+    "hakkai_assembler_1": {
+      "textures": "textures/blocks/hakkai_assembler_1"
+    },
+    "hakkai_assembler_2": {
+      "textures": "textures/blocks/hakkai_assembler_2"
+    },
+    "hakkai_assembler_3": {
+      "textures": "textures/blocks/hakkai_assembler_3"
+    },
+    "hakkai_filter_router_0": {
+      "textures": "textures/blocks/hakkai_filter_router_0"
+    },
+    "hakkai_filter_router_1": {
+      "textures": "textures/blocks/hakkai_filter_router_1"
+    },
+    "hakkai_filter_router_2": {
+      "textures": "textures/blocks/hakkai_filter_router_2"
+    },
+    "hakkai_filter_router_3": {
+      "textures": "textures/blocks/hakkai_filter_router_3"
     }
   }
 }

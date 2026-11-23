@@ -44,3 +44,6 @@ for y in range(64):
   else:c=(58+(x+y)%20,122+(x*2+y)%31,145+(x+y*3)%32,255)
   im.putpixel((x,y),c)
 im.save(rp/'textures/entity/hakkai_kinetic.png',optimize=True)
+
+import runpy
+runpy.run_path(str(Path(__file__).with_name('build_factory_lines_assets.py')),run_name='__main__')

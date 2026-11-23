@@ -20,3 +20,13 @@ for kind in ('shaft','wind_rotor','water_wheel','gear_up','gear_down'):
  assert b['components']['hakkai:factory']=={}
  assert (bp/f'loot_tables/hakkai/blocks/{kind}.json').exists()
 print('3D entity, synced speed, geometry, animation, block housing and recipes statically linked (not a Bedrock render test)')
+assert e['description']['properties']['hakkai:kind']['range'][1] >= 8
+for kind in ('crusher','washer','press','saw','mixer','assembler'):
+ b=load(bp/f'blocks/{kind}.json')['minecraft:block']
+ assert b['components']['minecraft:geometry']=='geometry.hakkai.factory_frame'
+for name in ('millwork','ram','mixwork','assembly'):
+ assert name in a['bones']
+assert "query.property('hakkai:rpm')" in a['bones']['ram']['position'][1]
+for kind in ('mixer','assembler','filter_router'):
+ assert (bp/f'recipes/{kind}.json').exists()
+print('Machine housings, animated ram and production-line block definitions statically linked')

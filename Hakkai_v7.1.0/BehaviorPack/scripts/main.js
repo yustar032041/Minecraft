@@ -1,3 +1,4 @@
+import { findLineRecipe, filteredDestination } from './factory_lines.js';
 import { kineticNetwork, hasAdjacentWater, factoryRecipe } from './factory_network.js';
 import { syncKineticVisual, cleanKineticVisuals } from './factory_visual.js';
 import { factoryTransaction } from './factory_transaction.js';
@@ -2797,6 +2798,7 @@ const chapters=[
  ['戦闘とスタミナ','走る・泳ぐ・攻撃するとスタミナを使い、止まると回復。装備スキルや属性魔法を使えます。ガイド本の「八界の幻影闘技場」では、体力・魔力・相手の予告を見ながら行動を選ぶターン制ミニゲームに挑戦できます。記念館の達成度と記念品の収集が進むと、特別な第4戦が解放されます。闘技場はゲーム内の幻影戦で、実際のプレイヤーや建築物にはダメージを与えません。'],
  ['八属性と魔導書','本＋風の結晶＋水の結晶で魔導書を作れます。風・水・火・土・雷・光・闇・時の8属性を使え、一度訪れた場所の属性が解放されます。霧・溶岩・嵐・虹・疾風は両方の属性が必要です。光の矢は光を訪問後、魔力5で視線上の敵へ放ちます。絆の灯は風と水を訪問後、近くにもう一人いる時に魔力20で参加者を回復し敵を攻撃します。風・水・炎の専用魔法も選べます。FUSHIのトーテムから月のまどろみを使用すると確認後に消費します。魔法の再使用時間は共通6秒です。'],
  ['工場の組み方','加工機は西（X−）に入力樽、東（X＋）に出力樽。風力回転機は高さ64以上で上空32ブロックが空き、水力回転機は隣に水が必要。軸で機械につなぐと燃料不要。増速歯車箱は西から東へ2倍・逆回転、減速歯車箱は半分・逆回転。歯車箱は西東だけ接続。しゃがんで空手で機械か軸を触ると回転数・容量・負荷が見えます。負荷は接続した機械すべてで予約し、容量不足や矛盾した輪は停止。破砕機は丸石→砂利→砂、結晶→欠片2。洗浄機は隣に水を置き砂利→火打石、砂→粘土玉。圧縮機は欠片2とアメジストの欠片1→結晶。プレス・製材・自動炉も使えます。搬送管は西樽から東樽に運びます。'],
+ ['工場の自動加工','動力混合機と動力組立機は動力必須。西の樽に材料をまとめて入れ、東の樽で完成品を受け取ります。混合機は魔力の薬や季節料理、組立機は包帯・弁当・携帯食などを既存レシピと同じ材料で加工。破砕機は界の生き物の素材120種を対応する欠片2個に変えます。見本式仕分け機は西が入力、北が見本樽、東が一致した出力、南がそれ以外の出力。見本は消費せず、先頭の素材を1個ずつ運びます。見本なしや出力満杯では停止。動力不足でも材料は使いません。'],
  ['村の暮らし','風記の集落鐘を置くか、村人の近くで普通の鐘をしゃがんで使うと台帳が開きます。壁の数、高い見張り台、足止め罠、工場が守りを強くします。工場が出荷した備蓄は交易・村の成長・祭りに役立ちます。村人には朝・昼・夕の行き先があります。'],
  ['季節と釣り','季節は約3ゲーム日ごとに変わります。花壇を置くと季節の花に変わり、集落鐘の周りでは作物の成長も変化します。釣り竿を持ち物に入れてガイド本の「水辺の釣り」へ。釣果は季節や天気、水辺の種類で変わります。'],
  ['時の列車','第8界の時の終着駅に着いたら、ガイド本の「時の列車」へ。操車場で過去か未来を選ぶと乗車します。しゃがんで降りると、旅を中止できます。各時代の駅から現在へ戻れます。'],
@@ -4316,6 +4318,7 @@ async function recipeIndex(p){
   ['生き物の素材と欠片','生き物の専用素材1個を作業台で加工すると、その界に対応する属性の欠片を2個入手できます。生き物ごとの属性は「生き物・素材・技図鑑」で確認できます。欠片2個＋アメジストの欠片1個から結晶を作り、装備や魔法に利用できます。'],
   ['牧場と遺跡','季節の花壇：牧場繊維＋育てのしるし＋土でも製作。時渡りの羅針盤：コンパス＋風記の断片＋時の結晶。'],
   ['装備・設備','装備の全レシピは「装備とレシピ図鑑」へ。土組み自動炉：かまど＋レンガ2個＋火の結晶。西に原料・燃料の樽、東に出力の樽。肉・ジャガイモ・砂などを加工します。集落鐘、圧縮機、鉱脈採り機などは作業台の検索でも探せます。軸で風車か水車をつなぐと、破砕機・洗浄機・プレス機・製材機も燃料なしで動きます。'],
+  ['工場の自動レシピ','混合機：魔力の薬、野営スープ、夏陽のシチュー、春庭スープ、紅葉ポタージュ、氷花の煮込み。組立機：包帯、携帯食、保存食、野営の補給袋、遠征弁当、森歩きの滋養食、コーンパン、燻製魚、乾燥ベリー。各材料と個数は作業台の元レシピと同じです。複数のレシピが同時に揃う時は決まった順に加工します。'],
   ['旅人の携帯食','作業台で焼き牛肉1個＋ベイクドポテト1個＋パン1個＋ニンジン1個から2個作れます。食べると満腹度を回復し、スタミナも35回復します。焚き火か魂の焚き火の近くでしゃがんで静止すると、スタミナ回復が速くなります。']
  ];
  const i=await form(p,'追加レシピ一覧','開きたい種類を選んでください。',entries.map(([title])=>[title]));
@@ -4441,7 +4444,7 @@ function gatherTown(t){
    let b;try{b=d.getBlock(at);if(!b||b.isAir)continue;}catch{continue;}
    const id=b.typeId, type=fortressPart.test(id)&&y>=0&&y<3?'wall':id===ns+'watch_post'&&y>=3?'tower':
      id===ns+'snare'?'trap':id==='minecraft:bed'?'shelter':workBlocks.has(id)?'work':
-     /^hakkai:(mill|miner|compressor|kiln)$/.test(id)?'machine':cropIds.has(id)?'crop':'';
+     /^hakkai:(mill|miner|compressor|kiln|crusher|washer|press|saw|mixer|assembler)$/.test(id)?'machine':cropIds.has(id)?'crop':'';
    if(type){
      const list=t.list[type]??=[];
      if(list.length<32)list.push({...at,id});
@@ -4915,6 +4918,9 @@ function transfer(b){
  const t=world.getTimeOfDay(), night=t>=13000&&t<23000, evening=t>=12000&&t<13000;
  const weather=currentWeather.get(d.id?.replace(/^minecraft:/,'')),thunder=weather===WeatherType.Thunder, wet=thunder||weather===WeatherType.Rain;
  if(['shaft','wind_rotor','water_wheel','gear_up','gear_down'].some(id=>b.typeId===ns+id)){syncKineticVisual(b,kineticNetwork(d,{x,y,z}));return;}
+ const kind=b.typeId.slice(ns.length),visualMachine=['crusher','washer','press','saw','mixer','assembler'].includes(kind);
+ let kinetic;
+ if(visualMachine){kinetic=kineticNetwork(d,{x,y,z});syncKineticVisual(b,kinetic);}
  if(b.typeId===ns+'conveyor'){
    try{
      const thrust=night?.23:thunder?.36:wet?.28:evening?.25:.31;
@@ -4949,10 +4955,10 @@ function transfer(b){
  const cycle=b.typeId===ns+'compressor'?(thunder?2:night?5:evening?4:wet?3:2):
    b.typeId===ns+'sorter'?(wet||night?4:evening?3:2):2;
  if(cycle>2&&Math.floor(system.currentTick/27)%cycle>=2)return;
- let power='',limit=1,kinetic;
+ let power='',limit=1;
  if(['mill','miner','kiln','crusher','washer','press','saw'].some(id=>b.typeId===ns+id)){
    const l={x:x+.5,y:y+1.01,z:z+.5};
-   kinetic=kineticNetwork(d,{x,y,z});
+   kinetic=kinetic??kineticNetwork(d,{x,y,z});
    if(kinetic.status!=='running'&&kinetic.status!=='no_source')return;
    let wind=kinetic.status==='running';
    // Preserve the original independent high-altitude mill wind fallback.
@@ -4969,6 +4975,10 @@ function transfer(b){
    if(b.typeId===ns+'mill'&&thunder&&power)limit++;
    if(night&&limit>1)limit=Math.max(1,Math.floor(limit/2));
  }
+ if(['mixer','assembler','filter_router'].includes(kind)){
+   kinetic=kinetic??kineticNetwork(d,{x,y,z});
+   if(kinetic.status!=='running')return;
+ }
  if(b.typeId===ns+'compressor'||b.typeId===ns+'sorter'){
    kinetic=kineticNetwork(d,{x,y,z});
    if(kinetic.status!=='running'&&kinetic.status!=='no_source')return;
@@ -4976,7 +4986,22 @@ function transfer(b){
  const cycleKey=`${d.id}:${x},${y},${z}`;
  const delay=kinetic?.status==='running'?Math.max(10,Math.ceil(40*16/Math.abs(kinetic.rpm))):40;
  if(system.currentTick-(factoryCycleAt.get(cycleKey)??-Infinity)<delay)return;
- const worked=n=>{if(factoryCycleAt.size>=8192)factoryCycleAt.clear();factoryCycleAt.set(cycleKey,system.currentTick);production(b,n);};
+ const schedule=()=>{if(factoryCycleAt.size>=8192)factoryCycleAt.clear();factoryCycleAt.set(cycleKey,system.currentTick);};
+ const worked=n=>{schedule();production(b,n);};
+ if(kind==='filter_router'){
+   let north,south;try{north=d.getBlock({x,y,z:z-1});south=d.getBlock({x,y,z:z+1});}catch{return;}
+   if(north?.typeId!=='minecraft:barrel'||south?.typeId!=='minecraft:barrel')return;
+   const filter=north.getComponent('minecraft:inventory')?.container,reject=south.getComponent('minecraft:inventory')?.container;
+   const route=filteredDestination(from,filter,to,reject);if(!route)return;
+   // The selected item is the first input stack, preserving its metadata.
+   if(factoryTransaction({input:from,output:route.output,costs:[{id:route.id,count:1}],product:route.product,report}))schedule();
+   return;
+ }
+ if(kind==='mixer'||kind==='assembler'){
+   const recipe=findLineRecipe(kind,from,total);if(!recipe)return;
+   if(factoryTransaction({input:from,output:to,costs:recipe.costs,product:new ItemStack(recipe.output,recipe.amount),report}))worked(recipe.amount);
+   return;
+ }
  if(b.typeId===ns+'miner'){
    if(night&&Math.floor(system.currentTick/30)%2||wet&&Math.floor(system.currentTick/30)%(thunder?3:4)===0)return;
    for(let step=1;step<=6;step++){
@@ -4999,7 +5024,7 @@ function transfer(b){
  for(let i=0;i<from.size;i++){
    const item=from.getItem(i);if(!item)continue;
    let out,need=1,aux='',outputCount=1;
-   const kind=b.typeId.slice(ns.length),recipe=factoryRecipe(kind,item.typeId);
+   const recipe=factoryRecipe(kind,item.typeId);
    if(recipe){[out,need,outputCount]=recipe;if(kind==='washer'&&!hasAdjacentWater(d,{x,y,z}))return;}
    if(b.typeId===ns+'mill')out=mill[item.typeId];
    if(b.typeId===ns+'kiln')out=kiln[item.typeId];
