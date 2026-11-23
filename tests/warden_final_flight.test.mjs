@@ -32,7 +32,7 @@ function fixture(){
 {
  const f=fixture();for(let t=0;t<=141;t++){if(t===122){f.e.isOnGround=false;f.e.location.y=80.6;}f.tick(t);}
  f.hits.length=0;f.e.location.y=82.3;f.tick(142);
- assert.ok(f.removed.some(([t,id])=>t===142&&id==='levitation'));
+ assert.ok(!f.removed.some(([t,id])=>t===142&&id==='levitation'),'flight continues at moderate height');
  for(let t=143;t<=210;t++)f.tick(t);assert.deepEqual(f.hits,[]);
  assert.equal(f.messages.filter(([t,m])=>t>142&&m.includes('（約2秒）')).length,0,'no more attacks until safe landing');
  f.e.isOnGround=true;f.e.location.y=80;f.tick(211);for(let t=212;t<=250;t++)f.tick(t);

@@ -8,7 +8,7 @@ function setVisual(e,s,key,value,t){
 function clearLevitation(e){try{e.removeEffect('levitation');}catch{}}
 export function cancelWardenFlight(e,s,t){
  if(s.takeoffAt!==undefined&&!s.flightAborted){clearLevitation(e);s.flightAborted=true;}
- s.nextFlight=Math.max(s.nextFlight??0,t+320);
+ s.nextFlight=Math.max(s.nextFlight??0,t+120);
 }
 function safeTakeoff(e){
  try{
@@ -24,8 +24,7 @@ function safeTakeoff(e){
   return true;
  }catch{return false;}
 }
-// True blocks new warnings. Phase two waits for landing; the final phase may
-// attack while low in the air. If it climbs too high, caller cancels any
+// True blocks new warnings. Both flying forms may attack while low in the air. If it climbs too high, caller cancels any
 // warning/front that began in flight, keeping a close counter reachable.
 export function updateWardenAppearance(e,s,phase,t,{idle=false,peaceful=false}={}){
  setVisual(e,s,'hakkai:form',phase,t);
@@ -38,18 +37,24 @@ export function updateWardenAppearance(e,s,phase,t,{idle=false,peaceful=false}={
   if(phase!==s.takeoffPhase||peaceful||t<(s.stopHealUntil??0))cancelWardenFlight(e,s,t);
   const elapsed=t-s.takeoffAt;
   let altitude;try{altitude=e.location.y-s.takeoffY;}catch{}
-  if(Number.isFinite(altitude)&&altitude>2.2){s.flightUnsafe=true;cancelWardenFlight(e,s,t);}
+  // High flight is allowed for movement, but attacks launched in flight are
+  // cancelled above close-counter height. Cap ascent before the arena ceiling.
+  if(Number.isFinite(altitude)){
+   s.flightUnsafe=altitude>2.2;
+   if(altitude>5.5)cancelWardenFlight(e,s,t);
+  }
   if((elapsed>=15&&grounded===true)||elapsed>=180){
    clearLevitation(e);s.takeoffAt=undefined;s.takeoffPhase=undefined;s.flightAborted=false;s.flightUnsafe=grounded!==true||(Number.isFinite(altitude)&&altitude>2.2);
+   s.nextFlight=Math.max(s.nextFlight??0,t+(phase===4?90:120));
    if(s.flightUnsafe)return true;
   }else {
    // Attack only after real takeoff and within reach of ground-level players.
-   const canAttack=phase===4&&s.takeoffPhase===4&&s.sentForm===4&&s.sentFlight===true&&!s.flightAborted&&!s.flightUnsafe&&grounded===false&&elapsed>=12&&Number.isFinite(altitude)&&altitude>=.15&&altitude<=1.8;
+   const canAttack=(phase===1||phase===4)&&s.takeoffPhase===phase&&s.sentForm===phase&&s.sentFlight===true&&!s.flightAborted&&!s.flightUnsafe&&grounded===false&&elapsed>=12&&Number.isFinite(altitude)&&altitude>=.15&&altitude<=1.8;
    return !canAttack;
   }
  }
  if((phase!==1&&phase!==4)||peaceful||!idle||grounded!==true||s.sentForm!==phase||s.sentFlight!==false||t<s.nextFlight||t<(s.stopHealUntil??0))return false;
- s.nextFlight=t+(phase===4?240:320);
+ s.nextFlight=t+(phase===4?90:120);
  if(!safeTakeoff(e))return false;
  // Slow falling softens the landing; if either API is unsupported do not
  // start an unsafely tracked flight. No world blocks are changed.

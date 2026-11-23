@@ -12,7 +12,7 @@ function fixture(){
 function arm(f,t=0){f.p.isOnGround=true;f.ctrl.tick(f.p,f.s,t);f.p.isOnGround=false;f.set(0,0);f.ctrl.tick(f.p,f.s,t+1);}
 function tap(f,t=2){f.set(0,1);f.ctrl.tick(f.p,f.s,t);f.set(0,0);f.ctrl.tick(f.p,f.s,t+1);f.set(0,1);f.ctrl.tick(f.p,f.s,t+2);}
 {
- const f=fixture();arm(f);tap(f);assert.equal(f.s.s,35);assert.deepEqual(f.impulses,[{x:.30,y:0,z:0}]);assert.equal(f.checks.length,63);
+ const f=fixture();arm(f);tap(f);assert.equal(f.s.s,35);assert.deepEqual(f.impulses,[{x:1.50,y:0,z:0}]);assert.equal(f.checks.length,279);
  assert.equal(f.animations[0][0],'animation.hakkai.air_dash');assert.equal(f.particles.length,10);assert.ok(f.ctrl.status(f.p).includes('着地'));
  tap(f,8);assert.equal(f.impulses.length,1,'once per airtime');assert.equal(f.s.s,35);
  arm(f,20);assert.equal(f.ctrl.status({...f.p,isOnGround:true}),'');tap(f,22);assert.equal(f.impulses.length,2);assert.equal(f.s.s,20);

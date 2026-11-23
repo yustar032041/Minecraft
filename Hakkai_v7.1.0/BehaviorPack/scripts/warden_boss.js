@@ -2,6 +2,7 @@ import { EntityDamageCause, GameMode, Difficulty, EquipmentSlot } from '@minecra
 import { WARDEN_DIMENSION } from './warden_arena.js';
 import { rescueWarden,isOutsideWardenArena } from './warden_rescue.js';
 import { updateWardenAppearance,cancelWardenFlight } from './warden_appearance.js';
+import { steerWarden } from './warden_movement.js';
 import { WARDEN_ADVANCED } from './warden_advanced_attacks.js';
 import { WARDEN_MOVING,startMoving,advanceMoving } from './warden_moving_attacks.js';
 import { wardenTransition,wardenCharge,wardenImpact,wardenParried,wardenStrikePose,wardenFlightAura } from './warden_visuals.js';
@@ -168,13 +169,14 @@ export function setupWardenBoss({world,system,property,report,isEvading=()=>fals
   // Retry a failed write rather than losing an irreversible transition on reload.
   if(s.phaseDirty&&t>=(s.phaseSaveRetry??0)){try{e.setDynamicProperty('hakkai:warden_phase',phase);s.phaseDirty=false;}catch{s.phaseSaveRetry=t+20;}}
   const flightBusy=updateWardenAppearance(e,s,phase,t,{idle:!s.pending&&!s.active});
-  if(s.takeoffAt===t&&phase===4)s.nextAt=Math.min(s.nextAt,t+20);
+  if(s.takeoffAt===t&&(phase===1||phase===4))s.nextAt=Math.min(s.nextAt,t+20);
   try{if(s.takeoffAt!==undefined&&e.isOnGround===false&&(t-s.takeoffAt)%12===0)wardenFlightAura(e,phase);}catch{}
   // If a flight begun attack goes too high for a close counter, stop it rather
   // than resolving a warning that the player could not reasonably parry.
   if(s.flightUnsafe&&(s.pending?.airborne||s.active?.airborne)){
    s.pending=undefined;s.active=undefined;s.nextAt=t+100;
   }
+  steerWarden(e,s,phase,t,{idle:!s.pending&&!s.active});
   // Tick-driven healing stops when no player is loading the boss; never grant
   // a large burst when a chunk reloads after a long absence.
   const seconds=Math.min(2,Math.floor((t-Math.max(s.lastHeal,s.stopHealUntil))/20));
@@ -241,7 +243,7 @@ export function setupWardenBoss({world,system,property,report,isEvading=()=>fals
    if(!warned.includes(p.id)){s.nextAt=t+100;return;}
    if(!telegraph(e.dimension,aim,attack)){s.nextAt=t+100;return;}
    wardenCharge(e,phase,0);
-   s.pending={warned,aim,attack,phase,airborne:phase===4&&s.takeoffAt!==undefined,at:t+40,remaining:attack.strikes??1};
+   s.pending={warned,aim,attack,phase,airborne:(phase===1||phase===4)&&s.takeoffAt!==undefined,at:t+40,remaining:attack.strikes??1};
   }
  }
  function tick(p,t){

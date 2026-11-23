@@ -6,7 +6,7 @@ import {EntityDamageCause as Cause,GameMode} from '@minecraft/server';
 const src=fs.readFileSync('Hakkai_v7.1.0/BehaviorPack/scripts/main.js','utf8');
 const code=src.slice(src.indexOf("safeSub('world','before','entityHurt'"),src.indexOf('const _melee='));
 let input=0,handler,guardCalls=0;
-const dim={id:'realm',isChunkLoaded:()=>true,spawnParticle:()=>{}},p={id:'p',typeId:'minecraft:player',isValid:true,isSneaking:true,isOnGround:true,dimension:dim,location:{x:0,y:80,z:0},getGameMode:()=>GameMode.Survival,getComponent:()=>undefined,inputPermissions:{isPermissionCategoryEnabled:()=>true},inputInfo:{getMovementVector:()=>({x:0,y:input})},getVelocity:()=>({x:0,z:0}),getViewDirection:()=>({x:1,z:0}),applyImpulse:()=>{},playSound:()=>{},playAnimation:()=>{}};
+const dim={id:'realm',isChunkLoaded:()=>true,spawnParticle:()=>{}},p={id:'p',typeId:'minecraft:player',isValid:true,isSneaking:true,isOnGround:true,dimension:dim,location:{x:0,y:80,z:0},getGameMode:()=>GameMode.Survival,getComponent:()=>undefined,inputPermissions:{isPermissionCategoryEnabled:()=>true},inputInfo:{getMovementVector:()=>({x:0,y:input})},getVelocity:()=>({x:0,z:0}),getViewDirection:()=>({x:1,z:0}),clearVelocity:()=>{},tryTeleport:()=>true,playSound:()=>{},playAnimation:()=>{}};
 const s={s:50},roll=setupCombatRoll({notice:()=>{},safe:()=>true});
 input=1;roll.tick(p,s,0);input=0;roll.tick(p,s,1);input=1;roll.tick(p,s,2);
 const system={currentTick:2};const ctx={safeSub:(a,b,c,fn)=>handler=fn,combatRoll:roll,combatGuard:{scale:(p,g,source,t,damage)=>{guardCalls++;return damage*.3;}},system,EntityDamageCause:Cause,isCreative:()=>false,armorItems:()=>[],num:()=>0,gear:new Map(),selected:()=>undefined,state:()=>s,_melee:/_sword$/};

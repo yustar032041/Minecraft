@@ -1,7 +1,9 @@
 import {GameMode,InputPermissionCategory} from '@minecraft/server';
 // A conservative, once-per-airtime horizontal impulse. Unlike the ground
 // roll this is not a dodge and has no invulnerability or fall protection.
-const DOUBLE_TAP=9,COST=15,IMPULSE=.30;
+// The impulse and checked corridor are 5x the previous values; real travel
+// depends on Bedrock physics and the amount of airborne time remaining.
+const DOUBLE_TAP=9,COST=15,IMPULSE=1.50;
 export function setupAirDash({notice}){
  const entries=new Map();
  function tick(p,s,t){
@@ -27,7 +29,7 @@ export function setupAirDash({notice}){
    const v=p.getVelocity(),look=p.getViewDirection(),n=Math.hypot(look.x,look.z),at=p.location,d=p.dimension;
    if(![v.x,v.y,v.z,n,at.x,at.y,at.z].every(Number.isFinite)||n<.01||Math.hypot(v.x,v.z)>.4){notice(p,'§e安全にダッシュできない速度です',35);return;}
    const x=look.x/n,z=look.z/n;
-   for(let step=0;step<=3;step+=.5)for(const side of [-.28,0,.28])for(const height of [0,.9,1.7]){
+   for(let step=0;step<=15;step+=.5)for(const side of [-.28,0,.28])for(const height of [0,.9,1.7]){
     const pos={x:at.x+x*step-z*side,y:at.y+height,z:at.z+z*step+x*side};
     if(!d.isChunkLoaded(pos)||!d.getBlock(pos)?.isAir){notice(p,'§e前方に十分な空間が必要です',35);return;}
    }
