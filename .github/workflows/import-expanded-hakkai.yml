@@ -43,8 +43,8 @@ jobs:
               files = [m for m in members if not m.is_dir()]
               bp = [m for m in files if m.filename.startswith("Hakkai_v7.1.0/BehaviorPack/")]
               rp = [m for m in files if m.filename.startswith("Hakkai_v7.1.0/ResourcePack/")]
-              if len(bp) != 1467 or len(rp) != 2858:
-                  raise SystemExit(f"Unexpected file counts: BP={len(bp)}, RP={len(rp)}")
+              if len(bp) != 1467 or len(rp) != 2858 or len(files) != 4326:
+                  raise SystemExit(f"Unexpected file counts: total={len(files)}, BP={len(bp)}, RP={len(rp)}")
 
               for member in members:
                   name = member.filename
@@ -78,10 +78,6 @@ jobs:
                   shutil.rmtree(target)
               shutil.copytree(source, target)
 
-          old_file = Path("8kai_x5f_v7.1_x5f_ai_x5f_friendly.md")
-          if old_file.exists():
-              old_file.unlink()
-
           shutil.rmtree(staging)
           archive.unlink()
           PY
@@ -99,3 +95,5 @@ jobs:
           fi
           git commit -m "Import expanded Hakkai v7.1.0 folders"
           git push origin HEAD:main
+          
+# Import verification: total archive files 4,326; BP 1,467; RP 2,858; design document 1.
