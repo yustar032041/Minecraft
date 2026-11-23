@@ -5492,6 +5492,9 @@ system.runInterval(()=>{
      }
      realmDiscoveryTick(p,site);
      naturalSiteTick(p,site,t);
+     // Boss timers run on the ten-tick loop; nature scans remain at forty ticks.
+     try{mobSystem?.tickBosses(p,t);}catch(err){if(t%200===0)report('八界王',err);}
+     try{fushiSystem?.tickChiefs(p,t);}catch(err){if(t%200===0)report('チーフ',err);}
      shrineChiefs.tick(p,t);
      frontierWorlds?.tick(p,t);
      expeditionRecords?.tick(p,t);

@@ -89,7 +89,7 @@ export function bambooCandidates(cx,cz,hash,isGrove){
 // Miniature points of interest: paths only in local empty air, with a bounded
 // footprint. Their silhouettes vary by realm; they never replace ground blocks.
 export function scenicPlan(realm,cx,cz,y,hash){
- if(realm<0||realm>7||hash(cx,cz,realm,701)>=.24)return [];
+ if(realm<0||realm>7||hash(cx,cz,realm,701)>=.32)return [];
  const x=cx*16+8,z=cz*16+8;
  const palettes=[
   ['hakkai:windworn_sandstone','hakkai:sky_crystal'],
@@ -102,7 +102,7 @@ export function scenicPlan(realm,cx,cz,y,hash){
   ['hakkai:clockstone','hakkai:timeglass']
  ];
  const [stone,accent]=palettes[realm],out=[],occupied=new Set();
- const variant=Math.min(5,Math.floor(hash(cx,cz,realm,733)*6));
+ const variant=Math.min(9,Math.floor(hash(cx,cz,realm,733)*10));
  const rotation=Math.min(3,Math.floor(hash(cx,cz,realm,739)*4));
  const add=(dx,dy,dz,type,cache=false)=>{
   for(let i=0;i<rotation;i++)[dx,dz]=[-dz,dx];
@@ -131,12 +131,36 @@ export function scenicPlan(realm,cx,cz,y,hash){
   pillar(-2,-2,7,false);pillar(2,-2,6,false);pillar(-2,2,5,false);
   for(let dx=-1;dx<=1;dx++)add(dx,6,-2,stone);
   add(-2,8,-2,accent);add(0,1,1,'minecraft:barrel',true);
- }else{ // leaning fossil or crystalline ribs
+ }else if(variant===5){ // leaning fossil or crystalline ribs
   for(let i=0;i<4;i++){
    const dx=-3+i*2,height=2+i%2*2;
    pillar(dx,0,height,false);add(dx,height+1,0,accent);
   }
   add(0,2,1,stone);add(0,3,1,stone);
+ }else if(variant===6){ // ruined wayside shelter with an open entrance
+  for(const dx of [-3,3])for(const dz of [-3,3])pillar(dx,dz,4,false);
+  for(let dx=-3;dx<=3;dx++)for(let dz=-3;dz<=3;dz++)
+   if(Math.abs(dx)===3||Math.abs(dz)===3||Math.abs(dx)+Math.abs(dz)<4)add(dx,5,dz,stone);
+  for(let dx=-2;dx<=2;dx++)for(let dy=1;dy<=3;dy++)if(dx!==0||dy!==2)add(dx,dy,-3,stone);
+  add(0,6,0,accent);add(2,1,1,'minecraft:barrel',true);
+ }else if(variant===7){ // compact two-level observation tower
+  for(const dx of [-2,2])for(const dz of [-2,2])pillar(dx,dz,7,false);
+  for(let dx=-2;dx<=2;dx++)for(let dz=-2;dz<=2;dz++)if(Math.abs(dx)===2||Math.abs(dz)===2)add(dx,5,dz,stone);
+  for(let dx=-2;dx<=2;dx++)for(let dz=-2;dz<=2;dz++)add(dx,8,dz,stone);
+  for(const dx of [-2,0,2])add(dx,9,-2,accent);
+  add(0,1,0,'minecraft:barrel',true);
+ }else if(variant===8){ // small open archive / shrine, with a broken wall
+  for(const dx of [-3,3])for(const dz of [-2,2])pillar(dx,dz,4,false);
+  for(let dx=-2;dx<=2;dx++)for(let dy=1;dy<=3;dy++)if(dx!==1||dy!==3)add(dx,dy,-2,stone);
+  for(let dx=-3;dx<=3;dx++)for(let dz=-2;dz<=2;dz++)add(dx,5,dz,stone);
+  for(let dx=-2;dx<=2;dx++)add(dx,6,0,accent);
+  add(-2,1,1,'minecraft:barrel',true);add(1,1,1,accent);
+ }else{ // stepped pavilion / abandoned workshop
+  for(const dx of [-3,3])for(const dz of [-3,3])pillar(dx,dz,4,false);
+  for(let dx=-3;dx<=3;dx++)for(let dz=-3;dz<=3;dz++)if(Math.abs(dx)===3||Math.abs(dz)===3)add(dx,5,dz,stone);
+  for(let dx=-2;dx<=2;dx++)for(let dz=-2;dz<=2;dz++)add(dx,6,dz,stone);
+  for(let dx=-1;dx<=1;dx++)for(let dz=-1;dz<=1;dz++)add(dx,7,dz,stone);
+  add(0,8,0,accent);add(-2,1,0,'minecraft:barrel',true);add(2,1,0,accent);
  }
  return out;
 }

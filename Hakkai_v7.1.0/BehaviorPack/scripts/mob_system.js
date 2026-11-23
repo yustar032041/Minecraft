@@ -163,12 +163,14 @@ export function setupMobSystem(ctx){
   const bossCenter=['summon','eclipse_burst','rift_wave','roar','rewind'].includes(kind);
   const mark=bossCenter?entity.location:target.location;
   const labels={cleave:'八界断ち',starfall:'星骸落とし',time_snare:'時環封じ',eclipse_burst:'蝕光爆ぜ',summon:'影兵招来',rift_wave:'時空裂波',roar:'終焉咆哮',rewind:'逆刻再編'};
+  const warnedPlayers=entity.dimension.getPlayers({location:entity.location,maxDistance:84}).filter(validPlayer).map(p=>p.id);
   const warned=announce(entity.dimension,entity.location,`§c§l${labels[kind]}§r §7— ${windup/20}秒後に発動`);
   const radius={cleave:3.5,starfall:4,time_snare:6,eclipse_burst:9,summon:7,rift_wave:18,roar:18,rewind:16}[kind]??3;
-  if(!warned||!warningRing(entity.dimension,mark,radius)){state.nextAt=t+120;return;}
-  state.pending={kind,at:t+windup,targetId:target.id,aim:{...mark}};
+  if(!warned||!warnedPlayers.includes(target.id)||!warningRing(entity.dimension,mark,radius)){state.nextAt=t+120;return;}
+  state.pending={kind,at:t+windup,targetId:target.id,aim:{...mark},warnedPlayers};
   for(let i=0;i<6;i++)particle(entity.dimension,'minecraft:basic_smoke_particle',{x:mark.x+(Math.random()-.5)*2,y:mark.y+.3+i*.35,z:mark.z+(Math.random()-.5)*2});
  }
+ function bossHit(entity,target,damage){return hit(entity,target,damage*1.5);}
  function resolveBossAttack(entity,state,phase){
   const attack=state.pending;if(!attack)return;
   state.pending=undefined;
@@ -184,39 +186,39 @@ export function setupMobSystem(ctx){
   }
   if(attack.kind==='rewind'){
    heal(entity,95+phase*25);addEffect(entity,'resistance',90,1);ring(d,attack.aim,16,7);
-   for(const p of d.getPlayers({location:attack.aim,maxDistance:16}).filter(p=>validPlayer(p)&&!isEvading(p)&&!tryParry(p,entity))){if(dist(p.location,attack.aim)>=9||hit(entity,p,7+phase*2))addEffect(p,'weakness',80,1);}
+   for(const p of d.getPlayers({location:attack.aim,maxDistance:16}).filter(p=>validPlayer(p)&&attack.warnedPlayers.includes(p.id)&&!isEvading(p)&&!tryParry(p,entity))){if(dist(p.location,attack.aim)>=9||bossHit(entity,p,7+phase*2))addEffect(p,'weakness',80,1);}
    return;
   }
   if(attack.kind==='starfall'){
    const aim=attack.aim;ring(d,aim,4,7);
-   for(const p of d.getPlayers({location:aim,maxDistance:4}).filter(p=>validPlayer(p)&&!isEvading(p)&&!tryParry(p,entity))){
-    if(hit(entity,p,12+phase*3)){push(entity,p,1.1,.4);addEffect(p,'weakness',45,0);}
+   for(const p of d.getPlayers({location:aim,maxDistance:4}).filter(p=>validPlayer(p)&&attack.warnedPlayers.includes(p.id)&&!isEvading(p)&&!tryParry(p,entity))){
+    if(bossHit(entity,p,12+phase*3)){push(entity,p,1.1,.4);addEffect(p,'weakness',45,0);}
    }
    return;
   }
   if(attack.kind==='time_snare'){
    const aim=attack.aim;
-   for(const p of d.getPlayers({location:aim,maxDistance:6}).filter(p=>validPlayer(p)&&!isEvading(p)&&!tryParry(p,entity))){if(hit(entity,p,4+phase*2)){addEffect(p,'slowness',95,3);addEffect(p,'weakness',75,1);}}
+   for(const p of d.getPlayers({location:aim,maxDistance:6}).filter(p=>validPlayer(p)&&attack.warnedPlayers.includes(p.id)&&!isEvading(p)&&!tryParry(p,entity))){if(bossHit(entity,p,4+phase*2)){addEffect(p,'slowness',95,3);addEffect(p,'weakness',75,1);}}
    return;
   }
   if(attack.kind==='eclipse_burst'){
-   for(const p of d.getPlayers({location:attack.aim,maxDistance:9}).filter(p=>validPlayer(p)&&!isEvading(p)&&!tryParry(p,entity))){if(hit(entity,p,9+phase*3)){push(entity,p,1.45,.42);addEffect(p,'blindness',30,0);}}
+   for(const p of d.getPlayers({location:attack.aim,maxDistance:9}).filter(p=>validPlayer(p)&&attack.warnedPlayers.includes(p.id)&&!isEvading(p)&&!tryParry(p,entity))){if(bossHit(entity,p,9+phase*3)){push(entity,p,1.45,.42);addEffect(p,'blindness',30,0);}}
    ring(d,attack.aim,9,7);return;
   }
   if(attack.kind==='rift_wave'){
-   for(const p of d.getPlayers({location:attack.aim,maxDistance:18}).filter(p=>validPlayer(p)&&!isEvading(p)&&!tryParry(p,entity))){if(hit(entity,p,8+phase*2)){addEffect(p,'slowness',50,2);push(entity,p,1.2,.62);}}
+   for(const p of d.getPlayers({location:attack.aim,maxDistance:18}).filter(p=>validPlayer(p)&&attack.warnedPlayers.includes(p.id)&&!isEvading(p)&&!tryParry(p,entity))){if(bossHit(entity,p,8+phase*2)){addEffect(p,'slowness',50,2);push(entity,p,1.2,.62);}}
    ring(d,attack.aim,18,7);return;
   }
   if(attack.kind==='roar'){
-   for(const p of d.getPlayers({location:attack.aim,maxDistance:18}).filter(p=>validPlayer(p)&&!isEvading(p)&&!tryParry(p,entity))){if(dist(p.location,attack.aim)>=12||hit(entity,p,6+phase*2)){addEffect(p,'weakness',120,1);addEffect(p,'mining_fatigue',100,1);}}
+   for(const p of d.getPlayers({location:attack.aim,maxDistance:18}).filter(p=>validPlayer(p)&&attack.warnedPlayers.includes(p.id)&&!isEvading(p)&&!tryParry(p,entity))){if(dist(p.location,attack.aim)>=12||bossHit(entity,p,6+phase*2)){addEffect(p,'weakness',120,1);addEffect(p,'mining_fatigue',100,1);}}
    addEffect(entity,'strength',140,1);return;
   }
   if(attack.kind==='cleave'){
    const aim=attack.aim;
-   for(const p of d.getPlayers({location:aim,maxDistance:3.5}).filter(p=>validPlayer(p)&&!isEvading(p)&&!tryParry(p,entity))){if(hit(entity,p,13+phase*3)){push(entity,p,1.75,.34);addEffect(p,'slowness',42,1);}}
+   for(const p of d.getPlayers({location:aim,maxDistance:3.5}).filter(p=>validPlayer(p)&&attack.warnedPlayers.includes(p.id)&&!isEvading(p)&&!tryParry(p,entity))){if(bossHit(entity,p,13+phase*3)){push(entity,p,1.75,.34);addEffect(p,'slowness',42,1);}}
    return;
   }
-  if(validPlayer(target)&&target.dimension.id===d.id&&dist(target.location,entity.location)<8&&!isEvading(target)&&!tryParry(target,entity)){if(hit(entity,target,8+phase*2))push(entity,target,1.35,.32);}
+  if(validPlayer(target)&&attack.warnedPlayers.includes(target.id)&&target.dimension.id===d.id&&dist(target.location,entity.location)<8&&!isEvading(target)&&!tryParry(target,entity)){if(bossHit(entity,target,8+phase*2))push(entity,target,1.35,.32);}
  }
  function tickBoss(entity,t){
   if(lastBossTick.get(entity.id)===t)return;
@@ -230,7 +232,7 @@ export function setupMobSystem(ctx){
    addEffect(entity,'resistance',110,phase===2?2:1);addEffect(entity,'speed',120,phase);
    for(const p of d.getPlayers({location:entity.location,maxDistance:50}))particle(d,'hakkai:climate_7',{x:p.location.x,y:p.location.y+1,z:p.location.z});
   }
-  if(s.pending&&t>=s.pending.at){if(t===s.pending.at)resolveBossAttack(entity,s,s.phase);else s.pending=undefined;s.nextAt=t+(s.phase===2?105:s.phase===1?130:155);}
+  if(s.pending&&t>=s.pending.at){if(t===s.pending.at)resolveBossAttack(entity,s,s.phase);else s.pending=undefined;s.nextAt=t+(s.phase===2?60:s.phase===1?70:80);}
   if(!s.pending&&t>=s.nextAt){const target=bossTarget(entity);if(target)startBossAttack(entity,s,t,target,s.phase);else s.nextAt=t+40;}
   if(t%20===0)particle(entity.dimension,'hakkai:climate_7',{x:entity.location.x,y:entity.location.y+2.2,z:entity.location.z});
  }
@@ -307,6 +309,17 @@ export function setupMobSystem(ctx){
   }catch(err){if(t%200===0)report('追加MOBの固有行動',err);}
   for(const [id,state] of mobStates)if(t>state.nextAt+2400)mobStates.delete(id);
  }
+ // Called every 10 ticks by the main loop. The regular creature scan may also
+ // see the boss; lastBossTick prevents duplicate resolution in multiplayer.
+ function tickBosses(player,t){
+  if(!player?.isValid)return;
+  try{
+   const peaceful=world.getDifficulty()===Difficulty.Peaceful;
+   for(const entity of player.dimension.getEntities({type:BOSS,location:player.location,maxDistance:25,closest:4})){
+    if(peaceful)bossStates.delete(entity.id);else tickBoss(entity,t);
+   }
+  }catch(err){if(t%200===0)report('八界王の行動',err);}
+ }
  function bossHudLine(player,t){
   try{
    const boss=player.dimension.getEntities({type:BOSS,location:player.location,maxDistance:84,closest:1})[0];
@@ -323,5 +336,5 @@ export function setupMobSystem(ctx){
   const materialUse=attribute===undefined?'':`\n作業台：${profile.dropName} 1個 → ${attrs[attribute]}の欠片 2個。欠片2個とアメジストの欠片から同属性の結晶を作れます。`;
   return `§b${profile.realmName} §7｜${profile.temper==='hostile'?'敵対':profile.temper==='neutral'?'中立':'友好'}§r\n\n§6━━ 生息地 ━━§r\n${profile.biomeNames.join('・')}\n\n§6━━ 行動と技 ━━§r\n${profile.actionName}：${profile.actionDetail}\n${profile.signatureName}：${profile.signatureDetail}\n\n§6━━ 素材と使い道 ━━§r\n${profile.dropName}${materialUse}`;
  }
- return {tick,onHurt,onDeath,summonColossus,bossHudLine,fieldGuide,mobContentList,stagger};
+ return {tick,tickBosses,onHurt,onDeath,summonColossus,bossHudLine,fieldGuide,mobContentList,stagger};
 }

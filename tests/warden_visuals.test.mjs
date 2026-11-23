@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {wardenTransition,wardenCharge,wardenImpact,wardenParried} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_visuals.js';
-import {WARDEN_PHASES,WARDEN_ALTERNATES,WARDEN_EXTRA,inWardenWarning,setupWardenBoss} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_boss.js';
+import {WARDEN_PHASES,WARDEN_ALTERNATES,WARDEN_EXTRA,WARDEN_DAMAGE_MULTIPLIER,inWardenWarning,setupWardenBoss} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_boss.js';
 import {Difficulty,GameMode} from '@minecraft/server';
 const ids=['time','sky','earth','thunder','moon'].map(n=>`hakkai:warden_${n}`);
 const anims=['slash','sky_cast','slam','thunder_cast','moon_cast'].map(n=>`animation.hakkai.warden_${n}`);
@@ -33,17 +33,17 @@ function fixture(){
 }
 {
  const f=fixture();f.tick(0);f.tick(80);assert.equal(f.particles.filter(([id])=>id==='hakkai:warning_marker').length,20);assert.ok(f.animations.includes('animation.hakkai.warden_warning'));
- f.tick(100);f.tick(110);f.tick(120);assert.deepEqual(f.hits,[9]);assert.ok(f.animations.includes(anims[0]));assert.ok(f.sounds.includes('random.explode'));
+ f.tick(100);f.tick(110);f.tick(120);assert.deepEqual(f.hits,[9*WARDEN_DAMAGE_MULTIPLIER]);assert.ok(f.animations.includes(anims[0]));assert.ok(f.sounds.includes('random.explode'));
  f.health.currentValue=3990;f.tick(121);assert.ok(f.animations.includes('animation.hakkai.warden_transform'));
 }
 {
  const f=fixture();for(const t of [0,80,120,220,260,360])f.tick(t);
  const strikes=()=>f.animations.filter(a=>a===anims[0]).length,initial=strikes();
  for(const [t,n] of [[400,1],[420,2],[440,3]]){f.tick(t);assert.equal(strikes(),initial+n,'one impact animation per warned combo hit');}
- assert.deepEqual(f.hits.slice(-3),[6,6,6]);
+ assert.deepEqual(f.hits.slice(-3),[6*WARDEN_DAMAGE_MULTIPLIER,6*WARDEN_DAMAGE_MULTIPLIER,6*WARDEN_DAMAGE_MULTIPLIER]);
 }
 {
- const f=fixture();f.d.fail='hakkai:warden_time';f.tick(0);f.tick(80);f.tick(100);f.tick(110);f.tick(120);assert.deepEqual(f.hits,[9],'cosmetic failure does not block combat');
+ const f=fixture();f.d.fail='hakkai:warden_time';f.tick(0);f.tick(80);f.tick(100);f.tick(110);f.tick(120);assert.deepEqual(f.hits,[9*WARDEN_DAMAGE_MULTIPLIER],'cosmetic failure does not block combat');
 }
 {
  const f=fixture();f.d.fail='hakkai:warning_marker';f.tick(0);f.tick(80);f.tick(120);assert.deepEqual(f.hits,[]);assert.ok(!f.animations.includes(anims[0]),'no strike FX without warning');

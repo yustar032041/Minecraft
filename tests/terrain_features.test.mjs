@@ -31,7 +31,7 @@ for(let r=0;r<8;r++){
   if(plan.length){scenes++;sceneShapes.add(`${plan.length},${Math.max(...plan.map(p=>p.y))},${plan.filter(p=>p.cache).length}`);}
   assert.deepEqual(plan,scenicPlan(r,cx,cz,90,hash));
   for(const at of plan){
-   assert.ok(at.x>=cx*16&&at.x<cx*16+16&&at.z>=cz*16&&at.z<cz*16+16&&at.y>90&&at.y<=98);
+   assert.ok(at.x>=cx*16&&at.x<cx*16+16&&at.z>=cz*16&&at.z<cz*16+16&&at.y>90&&at.y<=99);
    if(at.type.startsWith('hakkai:'))assert.ok(fs.existsSync(`Hakkai_v7.1.0/BehaviorPack/blocks/${at.type.slice(7)}.json`),at.type);
   }
  }
@@ -127,3 +127,19 @@ console.log('Cave junction chambers: expanded, connected, roofed and ore-safe pl
  assert.ok(groves>100&&empty>100&&stems>1000);
 }
 console.log('Moon grove: continuous field, deterministic chunk-safe bamboo candidates OK');
+
+// Force each new design and rotation: deterministic, bounded, cache-bearing
+// buildings with substantial differences, without relying on the random seed.
+for(let realm=0;realm<8;realm++)for(let rotation=0;rotation<4;rotation++){
+ const shapes=[];
+ for(let variant=6;variant<10;variant++){
+  const h=(x,z,r,salt)=>salt===701?0:salt===733?(variant+.1)/10:salt===739?(rotation+.1)/4:.5;
+  const plan=scenicPlan(realm,-3,4,90,h);
+  assert.ok(plan.length>=60,`building ${variant}`);
+  assert.equal(plan.filter(p=>p.cache).length,1);
+  assert.equal(new Set(plan.map(p=>`${p.x},${p.y},${p.z}`)).size,plan.length);
+  assert.ok(plan.every(p=>p.x>=-48&&p.x< -32&&p.z>=64&&p.z<80&&p.y>=91&&p.y<=99));
+  shapes.push(JSON.stringify(plan));
+ }
+ assert.equal(new Set(shapes).size,4);
+}

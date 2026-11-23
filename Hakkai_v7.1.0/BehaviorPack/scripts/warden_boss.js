@@ -68,6 +68,9 @@ export function wardenPhase(hp,max=5000){
  return 0;
 }
 export const WARDEN_HEAL_PER_SECOND=12;
+// Increase all 100 scripted patterns without changing their warning geometry.
+export const WARDEN_DAMAGE_MULTIPLIER=1.8;
+export const WARDEN_RECOVERY_TICKS=40;
 // Every fifth selection belongs to the same source form. Final starts with its
 // own attack, then alternates through forms 1–4 before repeating that order.
 export function wardenPatterns(phase){
@@ -184,10 +187,10 @@ export function setupWardenBoss({world,system,property,report,isEvading=()=>fals
    for(const p of result.targets){
     m.hit.add(p.id); // One hit or parry per player, not one per visual frame.
     if(tryParry(p,e))continue;
-    let hit=false;try{hit=Boolean(p.applyDamage(m.attack.damage,{cause:EntityDamageCause.entityAttack,damagingEntity:e}));}catch{}
+    let hit=false;try{hit=Boolean(p.applyDamage(m.attack.damage*WARDEN_DAMAGE_MULTIPLIER,{cause:EntityDamageCause.entityAttack,damagingEntity:e}));}catch{}
     if(hit)try{p.addEffect(m.attack.effect,60,{amplifier:0,showParticles:false});}catch{}
    }
-   if(result.done){s.active=undefined;s.nextAt=t+100;}
+   if(result.done){s.active=undefined;s.nextAt=t+WARDEN_RECOVERY_TICKS;}
    return;
   }
   if(s.pending&&t>=s.pending.at){
@@ -208,11 +211,11 @@ export function setupWardenBoss({world,system,property,report,isEvading=()=>fals
    for(const p of world.getAllPlayers())if(warned.includes(p.id)&&valid(p)&&p.dimension.id===WARDEN_DIMENSION&&inWardenWarning(p.location,aim,attack)&&!isEvading(p)){
     if(tryParry(p,e))continue;
     const warded=attack.totemWard&&hasFushiTotem(p);
-    let hit=false;try{hit=Boolean(p.applyDamage(warded?attack.damage/2:attack.damage,{cause:EntityDamageCause.entityAttack,damagingEntity:e}));}catch{}
+    let hit=false;try{hit=Boolean(p.applyDamage((warded?attack.damage/2:attack.damage)*WARDEN_DAMAGE_MULTIPLIER,{cause:EntityDamageCause.entityAttack,damagingEntity:e}));}catch{}
     if(hit&&warded)try{p.sendMessage('§dFUSHIのトーテムが月光の審判を和らげた！');}catch{}
     if(hit)try{p.addEffect(attack.effect,60,{amplifier:0,showParticles:false});}catch{}
    }
-   if(!followUp(e,s,pending,t))s.nextAt=t+100;
+   if(!followUp(e,s,pending,t))s.nextAt=t+WARDEN_RECOVERY_TICKS;
    return;
   }
   if(s.pending&&(t===s.pending.at-20||t===s.pending.at-10))wardenCharge(e,s.pending.phase,t===s.pending.at-20?1:2);

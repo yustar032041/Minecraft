@@ -260,3 +260,27 @@ console.log('legacy central terrain and relocated-site migration (mocked)');
  assert.equal(f.dimension.writes.length,0);assert.equal(f.dimension.blocks.get(key(400,90,120)),'minecraft:diamond_block');
 }
 console.log('Sky site route generation and pre-existing block protection (mocked)');
+// Find a real seeded candidate among the new larger buildings, then place a
+// player block after the 256 terrain columns but before decorations. The
+// entire building must be abandoned rather than overwriting that block.
+{
+ let seedHash=2166136261;for(const c of '731')seedHash=Math.imul(seedHash^c.charCodeAt(0),16777619)>>>0;
+ function hash(x,z,r,salt=0){
+  let h=(seedHash^Math.imul(x|0,0x9e3779b1)^Math.imul(z|0,0x85ebca6b)^Math.imul(r+1,0xc2b2ae35)^salt)>>>0;
+  h=Math.imul(h^(h>>>16),0x7feb352d)>>>0;h=Math.imul(h^(h>>>15),0x846ca68b)>>>0;return ((h^(h>>>16))>>>0)/4294967295;
+ }
+ let found;
+ for(let cx=100;cx<260&&!found;cx++){
+  const cz=110,r=0,variant=Math.min(9,Math.floor(hash(cx,cz,r,733)*10));
+  if(hash(cx,cz,r,701)>=.32||variant<6)continue;
+  const f=fixture(r,cx,cz);f.generator.tick(f.player,20);f.run();
+  const barrel=f.dimension.writes.find(w=>w.type==='minecraft:barrel');if(barrel)found={cx,cz,barrel};
+ }
+ assert.ok(found,'a new building can be placed on a real seeded chunk');
+ const {cx,cz,barrel}=found,f=fixture(0,cx,cz);f.generator.tick(f.player,20);f.step(256);
+ f.dimension.blocks.set(key(barrel.x,barrel.y,barrel.z),'minecraft:diamond_block');f.run();
+ assert.equal(f.dimension.getBlock(barrel).typeId,'minecraft:diamond_block');
+ assert.equal(f.dimension.writes.some(w=>w.type==='minecraft:barrel'),false);
+ assert.equal(f.reports.length,0);
+}
+console.log('New seeded building placement and late player block protection (mocked)');

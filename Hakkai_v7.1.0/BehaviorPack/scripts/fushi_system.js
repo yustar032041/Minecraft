@@ -2,9 +2,9 @@ import { EntityDamageCause, GameMode, Difficulty } from '@minecraft/server';
 import { inEnderWarning } from './realm_ender.js';
 
 export const CHIEF_ATTACKS=[
- {name:'月光の体当たり',radius:3,damage:7,effect:'slowness',duration:45},
- {name:'月光の弾',radius:3.5,damage:6,effect:'weakness',duration:70},
- {name:'眠りの霧',radius:4,damage:3,effect:'slowness',duration:100}
+ {name:'月光の体当たり',radius:3,damage:10,effect:'slowness',duration:45},
+ {name:'月光の弾',radius:3.5,damage:9,effect:'weakness',duration:70},
+ {name:'眠りの霧',radius:4,damage:5,effect:'slowness',duration:100}
 ];
 export function setupFushiSystem({world,system,report,isEvading=()=>false,tryParry=()=>false}){
  const states=new Map();
@@ -39,7 +39,7 @@ export function setupFushiSystem({world,system,report,isEvading=()=>false,tryPar
     let hit=false;try{hit=Boolean(p.applyDamage(attack.damage,{cause:EntityDamageCause.entityAttack,damagingEntity:e}));}catch{}
     if(hit)try{p.addEffect(attack.effect,attack.duration,{amplifier:attack.name==='眠りの霧'?1:0,showParticles:false});}catch{}
    }
-   s.nextAt=t+120;return;
+   s.nextAt=t+70;return;
   }
   if(!s.pending&&t>=s.nextAt){
    const attack=CHIEF_ATTACKS[s.index++%CHIEF_ATTACKS.length],aim={...p.location};
@@ -61,9 +61,14 @@ export function setupFushiSystem({world,system,report,isEvading=()=>false,tryPar
   }catch(err){if(t%200===0)report('FUSHIの行動',err);}
   for(const [id,s] of states)if(t-s.lastSeen>2400)states.delete(id);
  }
+ function tickChiefs(player,t){
+  if(!player?.isValid||!states.size)return;
+  try{for(const entity of player.dimension.getEntities({type:'hakkai:fushi_chief',location:player.location,maxDistance:28,closest:8}))tickChief(entity,t);}
+  catch(err){if(t%200===0)report('FUSHIのチーフの行動',err);}
+ }
  function stagger(entity,t){
   const s=states.get(entity?.id);if(!s)return;
   s.pending=undefined;s.nextAt=Math.max(s.nextAt,t+40);
  }
- return {onHurt,onDeath,tick,stagger};
+ return {onHurt,onDeath,tick,tickChiefs,stagger};
 }

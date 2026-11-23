@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {wardenPhase,WARDEN_PHASES,WARDEN_ALTERNATES,inWardenWarning,setupWardenBoss} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_boss.js';
+import {wardenPhase,WARDEN_PHASES,WARDEN_ALTERNATES,WARDEN_DAMAGE_MULTIPLIER,inWardenWarning,setupWardenBoss} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_boss.js';
 import {Difficulty,GameMode} from '@minecraft/server';
 import {setupCombatGuard} from '../Hakkai_v7.1.0/BehaviorPack/scripts/combat_guard.js';
 import {setupCombatParry} from '../Hakkai_v7.1.0/BehaviorPack/scripts/combat_parry.js';
@@ -22,12 +22,12 @@ function fixture(){
  assert.equal(f.health.currentValue,4524,'twelve HP per second');
  f.ctrl.tick(f.p,40);assert.equal(f.health.currentValue,4524,'no duplicate multiplayer ticks');
  f.ctrl.tick(f.p,80);assert.equal(f.particles.filter(([id])=>id==='hakkai:warning_marker').length,20);assert.equal(f.damage.length,0);
- f.ctrl.tick(f.p,120);assert.deepEqual(f.damage,[9]);assert.equal(f.effects[0][0],'slowness');
+ f.ctrl.tick(f.p,120);assert.deepEqual(f.damage,[9*WARDEN_DAMAGE_MULTIPLIER]);assert.equal(f.effects[0][0],'slowness');
 }
 for(let phase=0;phase<5;phase++){
  const f=fixture();f.health.currentValue=[5000,3990,2990,1990,990][phase];
  f.ctrl.tick(f.p,0);f.ctrl.tick(f.p,80);f.ctrl.tick(f.p,120);
- assert.equal(f.damage[0],WARDEN_PHASES[phase].damage);assert.ok(f.messages.some(m=>m.includes(WARDEN_PHASES[phase].name)));
+ assert.equal(f.damage[0],WARDEN_PHASES[phase].damage*WARDEN_DAMAGE_MULTIPLIER);assert.ok(f.messages.some(m=>m.includes(WARDEN_PHASES[phase].name)));
 }
 {
  const f=fixture();f.ctrl.tick(f.p,0);f.ctrl.tick(f.p,80);f.p.location.x=9;f.ctrl.tick(f.p,120);assert.equal(f.damage.length,0,'dodge leaves marked area');
@@ -47,7 +47,7 @@ for(let phase=0;phase<5;phase++){
  const second=make('second'),failed=make('failed',()=>{throw Error('offline');}),late=make('late');
  let players=[f.p,second,failed];f.dim.getPlayers=()=>players;f.world.getAllPlayers=()=>players;
  f.ctrl.tick(f.p,0);f.ctrl.tick(f.p,80);players=[...players,late];f.ctrl.tick(f.p,120);
- assert.deepEqual(hits,['second']);assert.deepEqual(f.damage,[9]);
+ assert.deepEqual(hits,['second']);assert.deepEqual(f.damage,[9*WARDEN_DAMAGE_MULTIPLIER]);
 }
 // Phase is monotonic across controller reloads even after regeneration.
 {
@@ -56,7 +56,7 @@ for(let phase=0;phase<5;phase++){
  f.health.currentValue=5000;
  const ctrl=setupWardenBoss({world:f.world,system:{},property:()=>{},report:()=>assert.fail('unexpected error')});
  ctrl.tick(f.p,100);ctrl.tick(f.p,180);ctrl.tick(f.p,220);
- assert.equal(f.damage[0],WARDEN_PHASES[4].damage);
+ assert.equal(f.damage[0],WARDEN_PHASES[4].damage*WARDEN_DAMAGE_MULTIPLIER);
 }
 {
  const f=fixture();f.dim.spawnParticle=()=>{throw Error('marker missing')};
@@ -105,7 +105,7 @@ for(let phase=0;phase<5;phase++){
  const ctrl=setupWardenBoss({world:f.world,system:f.system,property:()=>{},report:()=>{},spendParry:()=>false});
  ctrl.tick(f.p,0);ctrl.tick(f.p,80);f.system.currentTick=112;
  assert.equal(ctrl.onMeleeParry({damagingEntity:f.p,hitEntity:f.boss}),false,'insufficient stamina cannot parry');
- ctrl.tick(f.p,120);assert.equal(f.damage[0],9,'failed parry must not cancel attack');
+ ctrl.tick(f.p,120);assert.equal(f.damage[0],9*WARDEN_DAMAGE_MULTIPLIER,'failed parry must not cancel attack');
 }
 // A roll protects only its owner, including the scripted status effect.
 {
@@ -114,7 +114,7 @@ for(let phase=0;phase<5;phase++){
  f.dim.getPlayers=()=>[f.p,q];f.world.getAllPlayers=()=>[f.p,q];
  const ctrl=setupWardenBoss({world:f.world,system:f.system,property:()=>{},report:()=>{},isEvading:p=>p.id==='p'});
  ctrl.tick(f.p,0);ctrl.tick(f.p,80);ctrl.tick(f.p,120);
- assert.deepEqual(f.damage,[]);assert.deepEqual(f.effects,[]);assert.deepEqual(hits,[9]);assert.deepEqual(debuffs,['slowness']);
+ assert.deepEqual(f.damage,[]);assert.deepEqual(f.effects,[]);assert.deepEqual(hits,[9*WARDEN_DAMAGE_MULTIPLIER]);assert.deepEqual(debuffs,['slowness']);
 }
 // The release parry is per-player: other warned players still take the hit.
 // The queued boss callback pauses regeneration without moving the boss.
@@ -128,7 +128,7 @@ for(let phase=0;phase<5;phase++){
  ctrl=setupWardenBoss({world:f.world,system:f.system,property:()=>{},report:()=>{},tryParry:(p,e)=>p.id==='p'&&parry.tryHit(p,gear,s,{cause:'entityAttack',damagingEntity:e},f.system.currentTick)});
  ctrl.tick(f.p,0);ctrl.tick(f.p,80);guard.tick(f.p,gear,s,114);parry.tick(f.p,gear,s,114);
  f.p.isSneaking=false;parry.tick(f.p,gear,s,118);f.system.currentTick=120;ctrl.tick(f.p,120);
- assert.deepEqual(f.damage,[]);assert.deepEqual(f.effects,[]);assert.deepEqual(hits,[9]);assert.deepEqual(effects,['slowness']);assert.equal(s.s,20);
+ assert.deepEqual(f.damage,[]);assert.deepEqual(f.effects,[]);assert.deepEqual(hits,[9*WARDEN_DAMAGE_MULTIPLIER]);assert.deepEqual(effects,['slowness']);assert.equal(s.s,20);
  const hp=f.health.currentValue;parry.flush(121);ctrl.tick(f.p,160);assert.equal(f.health.currentValue,hp,'release parry pauses warden healing');
 }
 // Distinct patterns are alternated within each phase. Boundary tests describe
@@ -150,10 +150,17 @@ for(let phase=0;phase<4;phase++){
   f.p.location.x+=3;
  }
  assert.equal(inWardenWarning({x:aim.x,y:aim.y+4,z:aim.z},aim,a),false);
- f.ctrl.tick(f.p,280);assert.equal(f.damage.at(-1),a.damage);
+ f.ctrl.tick(f.p,280);assert.equal(f.damage.at(-1),a.damage*WARDEN_DAMAGE_MULTIPLIER);
 }
 console.log('Prototype warden: phase boundaries, regeneration, warning/dodge, peaceful and completion OK (simulated)');
 // Refused damage and API errors must not leave a standalone debuff.
 for(const fail of [()=>false,()=>{throw Error('not available');}]){
  const f=fixture();f.p.applyDamage=fail;f.ctrl.tick(f.p,0);f.ctrl.tick(f.p,80);f.ctrl.tick(f.p,120);assert.deepEqual(f.effects,[]);
+}
+
+// Successful attacks retain a full two-second warning but recover in 40 ticks.
+{
+ const f=fixture();for(let t=0;t<=200;t++)f.ctrl.tick(f.p,t);
+ assert.ok(f.messages.some(m=>m.includes(WARDEN_ALTERNATES[0].attack)), 'second warning by tick 160');
+ assert.deepEqual(f.damage,[9*WARDEN_DAMAGE_MULTIPLIER,8*WARDEN_DAMAGE_MULTIPLIER]);
 }

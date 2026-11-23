@@ -70,7 +70,7 @@
         "value": 1.0
       },
       "minecraft:attack": {
-        "damage": 18
+        "damage": 26
       },
       "minecraft:behavior.hurt_by_target": {
         "priority": 1
