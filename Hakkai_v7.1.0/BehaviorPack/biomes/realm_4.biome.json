@@ -1,0 +1,14 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:biome": {
+    "description": {
+      "identifier": "hakkai:realm_thunder"
+    },
+    "components": {
+      "minecraft:climate": {
+        "temperature": 0.35,
+        "downfall": 0.65
+      }
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "hakkai:travel_pass"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:paper"
+      },
+      {
+        "item": "hakkai:crystal_0"
+      },
+      {
+        "item": "hakkai:shard_0"
+      }
+    ],
+    "result": {
+      "item": "hakkai:travel_pass",
+      "count": 1
+    }
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "hakkai:eclipse_colossus",
+      "is_spawnable": false,
+      "is_summonable": true
+    },
+    "components": {
+      "minecraft:type_family": {
+        "family": [
+          "mob",
+          "monster",
+          "hakkai_boss",
+          "brute"
+        ]
+      },
+      "minecraft:health": {
+        "value": 1800,
+        "max": 1800
+      },
+      "minecraft:collision_box": {
+        "width": 1.5,
+        "height": 2.8
+      },
+      "minecraft:physics": {},
+      "minecraft:movement": {
+        "value": 0.23
+      },
+      "minecraft:movement.basic": {},
+      "minecraft:jump.static": {},
+      "minecraft:navigation.walk": {
+        "avoid_water": true,
+        "avoid_damage_blocks": true
+      },
+      "minecraft:behavior.float": {
+        "priority": 0
+      },
+      "minecraft:behavior.random_stroll": {
+        "priority": 6,
+        "speed_multiplier": 0.55
+      },
+      "minecraft:behavior.look_at_player": {
+        "priority": 7,
+        "look_distance": 6,
+        "probability": 0.04
+      },
+      "minecraft:behavior.random_look_around": {
+        "priority": 8
+      },
+      "minecraft:nameable": {},
+      "minecraft:behavior.nearest_attackable_target": {
+        "priority": 2,
+        "must_see": true,
+        "entity_types": [
+          {
+            "filters": {
+              "test": "is_family",
+              "subject": "other",
+              "value": "player"
+            },
+            "max_dist": 64
+          }
+        ]
+      },
+      "minecraft:loot": {
+        "table": "loot_tables/hakkai/entities/eclipse_colossus.json"
+      },
+      "minecraft:knockback_resistance": {
+        "value": 0.95
+      },
+      "minecraft:attack": {
+        "damage": 18
+      },
+      "minecraft:behavior.hurt_by_target": {
+        "priority": 1
+      },
+      "minecraft:behavior.melee_attack": {
+        "priority": 3,
+        "speed_multiplier": 1.08,
+        "track_target": true
+      },
+      "minecraft:scale": {
+        "value": 3.15
+      },
+      "minecraft:boss": {
+        "name": "終焉の八界王",
+        "hud_range": 84,
+        "should_darken_sky": true
+      }
+    }
+  }
+}

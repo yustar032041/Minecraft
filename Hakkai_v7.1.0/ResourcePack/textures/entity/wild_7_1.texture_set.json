@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "wild_7_1",
+    "metalness_emissive_roughness": "wild_7_1_mer",
+    "normal": "wild_7_1_n"
+  }
+}

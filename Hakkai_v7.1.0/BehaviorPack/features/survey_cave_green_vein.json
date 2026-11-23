@@ -1,0 +1,15 @@
+{
+  "format_version": "1.13.0",
+  "minecraft:ore_feature": {
+    "description": {
+      "identifier": "hakkai:survey_cave_green_vein"
+    },
+    "count": 5,
+    "places_block": "hakkai:ore_13",
+    "may_replace": [
+      "minecraft:stone",
+      "minecraft:deepslate",
+      "minecraft:moss_block"
+    ]
+  }
+}

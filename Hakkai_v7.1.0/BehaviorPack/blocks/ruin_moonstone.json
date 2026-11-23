@@ -1,0 +1,31 @@
+{
+  "format_version": "1.26.60",
+  "minecraft:block": {
+    "description": {
+      "identifier": "hakkai:ruin_moonstone",
+      "menu_category": {
+        "category": "construction"
+      }
+    },
+    "components": {
+      "minecraft:display_name": "tile.hakkai:ruin_moonstone.name",
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "hakkai_ore_11",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:map_color": "#7d77a9",
+      "minecraft:sound": {
+        "sound": "stone"
+      },
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 1.2
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 5
+      }
+    }
+  }
+}

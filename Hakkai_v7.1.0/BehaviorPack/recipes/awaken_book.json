@@ -1,0 +1,41 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "hakkai:awaken_book"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "hakkai:toki_crystal"
+      },
+      {
+        "item": "hakkai:toki_crystal"
+      },
+      {
+        "item": "hakkai:toki_crystal"
+      },
+      {
+        "item": "hakkai:toki_crystal"
+      },
+      {
+        "item": "hakkai:toki_crystal"
+      },
+      {
+        "item": "hakkai:toki_crystal"
+      },
+      {
+        "item": "minecraft:book"
+      },
+      {
+        "item": "minecraft:diamond"
+      }
+    ],
+    "result": {
+      "item": "hakkai:awaken_book",
+      "count": 1
+    }
+  }
+}

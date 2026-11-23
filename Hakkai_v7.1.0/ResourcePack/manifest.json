@@ -1,0 +1,32 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "8界風記｜リソース",
+    "description": "8界風記 v7.1.0。バニラMOBの標準テクスチャを保持し、120種の追加MOB専用高精細モデルと全カスタムアイテムの固有絵柄を収録。",
+    "uuid": "264d2bb6-d9e8-4ed4-9e39-96c2307a7a04",
+    "version": [
+      7,
+      1,
+      0
+    ],
+    "min_engine_version": [
+      1,
+      26,
+      60
+    ]
+  },
+  "modules": [
+    {
+      "type": "resources",
+      "uuid": "1708d183-fc56-4516-809c-ffef2b037cb0",
+      "version": [
+        7,
+        1,
+        0
+      ]
+    }
+  ],
+  "capabilities": [
+    "pbr"
+  ]
+}

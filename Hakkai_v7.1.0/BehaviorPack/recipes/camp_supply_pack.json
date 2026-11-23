@@ -1,0 +1,29 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "hakkai:camp_supply_pack"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "hakkai:dried_meat"
+      },
+      {
+        "item": "hakkai:dried_sweet_berries"
+      },
+      {
+        "item": "hakkai:smoked_fish_strip"
+      },
+      {
+        "item": "minecraft:dried_kelp"
+      }
+    ],
+    "result": {
+      "item": "hakkai:camp_supply_pack",
+      "count": 2
+    }
+  }
+}

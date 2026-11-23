@@ -1,0 +1,33 @@
+{
+  "format_version": "1.26.60",
+  "minecraft:block": {
+    "description": {
+      "identifier": "hakkai:realm_gallery_mist",
+      "menu_category": {
+        "category": "decorations"
+      }
+    },
+    "components": {
+      "minecraft:display_name": "tile.hakkai:realm_gallery_mist.name",
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "hakkai_glow_moss",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:map_color": "#6f9a83",
+      "minecraft:light_emission": 4,
+      "minecraft:sound": {
+        "sound": "amethyst"
+      },
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 1.1
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 5
+      },
+      "minecraft:loot": "loot_tables/hakkai/blocks/realm_gallery_mist.json"
+    }
+  }
+}

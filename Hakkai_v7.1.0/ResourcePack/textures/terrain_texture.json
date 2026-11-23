@@ -1,0 +1,206 @@
+{
+  "resource_pack_name": "hakkai",
+  "texture_name": "atlas.terrain",
+  "padding": 8,
+  "num_mip_levels": 4,
+  "texture_data": {
+    "hakkai_ore_0": {
+      "textures": "textures/blocks/hakkai_ore_0"
+    },
+    "hakkai_ore_1": {
+      "textures": "textures/blocks/hakkai_ore_1"
+    },
+    "hakkai_ore_2": {
+      "textures": "textures/blocks/hakkai_ore_2"
+    },
+    "hakkai_ore_3": {
+      "textures": "textures/blocks/hakkai_ore_3"
+    },
+    "hakkai_ore_4": {
+      "textures": "textures/blocks/hakkai_ore_4"
+    },
+    "hakkai_ore_5": {
+      "textures": "textures/blocks/hakkai_ore_5"
+    },
+    "hakkai_ore_6": {
+      "textures": "textures/blocks/hakkai_ore_6"
+    },
+    "hakkai_ore_7": {
+      "textures": "textures/blocks/hakkai_ore_7"
+    },
+    "hakkai_ore_8": {
+      "textures": "textures/blocks/hakkai_ore_8"
+    },
+    "hakkai_ore_9": {
+      "textures": "textures/blocks/hakkai_ore_9"
+    },
+    "hakkai_ore_10": {
+      "textures": "textures/blocks/hakkai_ore_10"
+    },
+    "hakkai_ore_11": {
+      "textures": "textures/blocks/hakkai_ore_11"
+    },
+    "hakkai_ore_12": {
+      "textures": "textures/blocks/hakkai_ore_12"
+    },
+    "hakkai_ore_13": {
+      "textures": "textures/blocks/hakkai_ore_13"
+    },
+    "hakkai_ore_14": {
+      "textures": "textures/blocks/hakkai_ore_14"
+    },
+    "hakkai_ore_15": {
+      "textures": "textures/blocks/hakkai_ore_15"
+    },
+    "hakkai_ore_16": {
+      "textures": "textures/blocks/hakkai_ore_16"
+    },
+    "hakkai_ore_17": {
+      "textures": "textures/blocks/hakkai_ore_17"
+    },
+    "hakkai_ore_18": {
+      "textures": "textures/blocks/hakkai_ore_18"
+    },
+    "hakkai_ore_19": {
+      "textures": "textures/blocks/hakkai_ore_19"
+    },
+    "hakkai_mill": {
+      "textures": "textures/blocks/hakkai_mill"
+    },
+    "hakkai_sorter": {
+      "textures": "textures/blocks/hakkai_sorter"
+    },
+    "hakkai_conveyor": {
+      "textures": "textures/blocks/hakkai_conveyor"
+    },
+    "hakkai_compressor": {
+      "textures": "textures/blocks/hakkai_compressor"
+    },
+    "hakkai_miner": {
+      "textures": "textures/blocks/hakkai_miner"
+    },
+    "hakkai_kiln": {
+      "textures": "textures/blocks/hakkai_kiln"
+    },
+    "hakkai_town_bell": {
+      "textures": "textures/blocks/hakkai_town_bell"
+    },
+    "hakkai_watch_post": {
+      "textures": "textures/blocks/hakkai_watch_post"
+    },
+    "hakkai_snare": {
+      "textures": "textures/blocks/hakkai_snare"
+    },
+    "hakkai_season_plot": {
+      "textures": "textures/blocks/hakkai_season_plot"
+    },
+    "hakkai_season_0": {
+      "textures": "textures/blocks/hakkai_season_0"
+    },
+    "hakkai_season_1": {
+      "textures": "textures/blocks/hakkai_season_1"
+    },
+    "hakkai_season_2": {
+      "textures": "textures/blocks/hakkai_season_2"
+    },
+    "hakkai_season_3": {
+      "textures": "textures/blocks/hakkai_season_3"
+    },
+    "hakkai_spring_tulip": {
+      "textures": "textures/blocks/hakkai_spring_tulip"
+    },
+    "hakkai_summer_corn": {
+      "textures": "textures/blocks/hakkai_summer_corn"
+    },
+    "hakkai_autumn_squash": {
+      "textures": "textures/blocks/hakkai_autumn_squash"
+    },
+    "hakkai_ice_blossom": {
+      "textures": "textures/blocks/hakkai_ice_blossom"
+    },
+    "hakkai_summer_sunflower": {
+      "textures": "textures/blocks/hakkai_summer_sunflower"
+    },
+    "hakkai_canopy_0": {
+      "textures": "textures/blocks/hakkai_canopy_0"
+    },
+    "hakkai_canopy_1": {
+      "textures": "textures/blocks/hakkai_canopy_1"
+    },
+    "hakkai_canopy_2": {
+      "textures": "textures/blocks/hakkai_canopy_2"
+    },
+    "hakkai_canopy_3": {
+      "textures": "textures/blocks/hakkai_canopy_3"
+    },
+    "hakkai_field_cache": {
+      "textures": "textures/blocks/hakkai_field_cache"
+    },
+    "hakkai_relic_statue": {
+      "textures": "textures/blocks/hakkai_relic_statue"
+    },
+    "hakkai_relic_gate_time": {
+      "textures": "textures/blocks/hakkai_relic_gate_time"
+    },
+    "hakkai_relic_gate_fire": {
+      "textures": "textures/blocks/hakkai_relic_gate_fire"
+    },
+    "hakkai_chronicle": {
+      "textures": "textures/blocks/hakkai_chronicle"
+    },
+    "hakkai_windworn_sandstone": {
+      "textures": "textures/blocks/hakkai_windworn_sandstone"
+    },
+    "hakkai_red_dune_stone": {
+      "textures": "textures/blocks/hakkai_red_dune_stone"
+    },
+    "hakkai_mirror_ice": {
+      "textures": "textures/blocks/hakkai_mirror_ice"
+    },
+    "hakkai_frost_stone": {
+      "textures": "textures/blocks/hakkai_frost_stone"
+    },
+    "hakkai_frost_crystal": {
+      "textures": "textures/blocks/hakkai_frost_crystal"
+    },
+    "hakkai_thunderstone": {
+      "textures": "textures/blocks/hakkai_thunderstone"
+    },
+    "hakkai_copper_slate": {
+      "textures": "textures/blocks/hakkai_copper_slate"
+    },
+    "hakkai_storm_crystal": {
+      "textures": "textures/blocks/hakkai_storm_crystal"
+    },
+    "hakkai_abyssal_stone": {
+      "textures": "textures/blocks/hakkai_abyssal_stone"
+    },
+    "hakkai_glow_moss": {
+      "textures": "textures/blocks/hakkai_glow_moss"
+    },
+    "hakkai_moonstone": {
+      "textures": "textures/blocks/hakkai_moonstone"
+    },
+    "hakkai_cloudstone": {
+      "textures": "textures/blocks/hakkai_cloudstone"
+    },
+    "hakkai_aether_stone": {
+      "textures": "textures/blocks/hakkai_aether_stone"
+    },
+    "hakkai_sky_crystal": {
+      "textures": "textures/blocks/hakkai_sky_crystal"
+    },
+    "hakkai_clockstone": {
+      "textures": "textures/blocks/hakkai_clockstone"
+    },
+    "hakkai_brasswork": {
+      "textures": "textures/blocks/hakkai_brasswork"
+    },
+    "hakkai_timeglass": {
+      "textures": "textures/blocks/hakkai_timeglass"
+    },
+    "hakkai_memory_pedestal": {
+      "textures": "textures/blocks/hakkai_chronicle"
+    }
+  }
+}

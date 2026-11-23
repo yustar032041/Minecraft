@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "hakkai_glow_moss",
+    "metalness_emissive_roughness": "hakkai_glow_moss_mer",
+    "normal": "hakkai_glow_moss_n"
+  }
+}

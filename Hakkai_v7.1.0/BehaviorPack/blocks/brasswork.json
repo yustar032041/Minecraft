@@ -1,0 +1,33 @@
+{
+  "format_version": "1.26.60",
+  "minecraft:block": {
+    "description": {
+      "identifier": "hakkai:brasswork",
+      "menu_category": {
+        "category": "construction"
+      }
+    },
+    "components": {
+      "minecraft:display_name": "tile.hakkai:brasswork.name",
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "hakkai_brasswork",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:map_color": "#b58a45",
+      "minecraft:sound": {
+        "sound": "stone"
+      },
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 1.2
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 5
+      },
+      "minecraft:light_dampening": 1,
+      "minecraft:light_emission": 2
+    }
+  }
+}

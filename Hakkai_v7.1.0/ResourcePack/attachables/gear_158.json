@@ -1,0 +1,36 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:attachable": {
+    "description": {
+      "identifier": "hakkai:gear_158",
+      "materials": {
+        "default": "entity_alphatest",
+        "enchanted": "entity_alphatest_glint"
+      },
+      "textures": {
+        "default": "textures/hakkai/equipment/gear_158",
+        "enchanted": "textures/misc/enchanted_item_glint"
+      },
+      "geometry": {
+        "default": "geometry.hakkai.held_10"
+      },
+      "scripts": {
+        "animate": [
+          {
+            "first": "context.is_first_person"
+          },
+          {
+            "third": "!context.is_first_person"
+          }
+        ]
+      },
+      "animations": {
+        "first": "animation.hakkai.equipment.first",
+        "third": "animation.hakkai.equipment.third"
+      },
+      "render_controllers": [
+        "controller.render.item_default"
+      ]
+    }
+  }
+}

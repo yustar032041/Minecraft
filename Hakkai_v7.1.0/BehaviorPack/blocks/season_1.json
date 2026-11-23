@@ -1,0 +1,64 @@
+{
+  "format_version": "1.26.60",
+  "minecraft:block": {
+    "description": {
+      "identifier": "hakkai:season_1",
+      "menu_category": {
+        "category": "construction"
+      }
+    },
+    "components": {
+      "minecraft:display_name": "tile.hakkai:season_1.name",
+      "minecraft:geometry": "geometry.hakkai.flowerbed",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "hakkai_season_1",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:map_color": "#e0bb65",
+      "minecraft:sound": {
+        "sound": "wood"
+      },
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 1
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 3
+      },
+      "minecraft:loot": "loot_tables/hakkai/season_1.json",
+      "hakkai:season_plot": {},
+      "minecraft:tick": {
+        "interval_range": [
+          100,
+          140
+        ],
+        "looping": true
+      },
+      "minecraft:collision_box": {
+        "origin": [
+          -8,
+          0,
+          -8
+        ],
+        "size": [
+          16,
+          6,
+          16
+        ]
+      },
+      "minecraft:selection_box": {
+        "origin": [
+          -8,
+          0,
+          -8
+        ],
+        "size": [
+          16,
+          14,
+          16
+        ]
+      }
+    }
+  }
+}

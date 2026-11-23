@@ -1,0 +1,30 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "hakkai:village_mage",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/village_mage"
+      },
+      "geometry": {
+        "default": "geometry.hakkai.village_mage"
+      },
+      "render_controllers": [
+        "controller.render.hakkai.beast"
+      ],
+      "animations": {
+        "walk": "animation.hakkai.brute.stride"
+      },
+      "scripts": {
+        "animate": [
+          {
+            "walk": "query.modified_move_speed > 0.01"
+          }
+        ]
+      }
+    }
+  }
+}

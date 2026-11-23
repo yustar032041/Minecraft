@@ -1,0 +1,19 @@
+{
+  "format_version": "1.21.60",
+  "minecraft:structure_template_feature": {
+    "description": {
+      "identifier": "hakkai:field_soul_beacon_feature"
+    },
+    "structure_name": "hakkai:field_soul_beacon",
+    "facing_direction": "random",
+    "ground_level": 0,
+    "constraints": {
+      "grounded": {},
+      "block_intersection": {
+        "block_allowlist": [
+          "minecraft:air"
+        ]
+      }
+    }
+  }
+}

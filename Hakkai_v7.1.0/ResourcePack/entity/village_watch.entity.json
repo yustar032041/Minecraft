@@ -1,0 +1,30 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "hakkai:village_watch",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/village_watch"
+      },
+      "geometry": {
+        "default": "geometry.hakkai.village_watch"
+      },
+      "render_controllers": [
+        "controller.render.hakkai.beast"
+      ],
+      "animations": {
+        "walk": "animation.hakkai.brute.stride"
+      },
+      "scripts": {
+        "animate": [
+          {
+            "walk": "query.modified_move_speed > 0.01"
+          }
+        ]
+      }
+    }
+  }
+}

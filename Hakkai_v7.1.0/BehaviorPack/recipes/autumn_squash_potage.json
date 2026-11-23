@@ -1,0 +1,26 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "hakkai:autumn_squash_potage"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "hakkai:autumn_squash_produce"
+      },
+      {
+        "item": "minecraft:baked_potato"
+      },
+      {
+        "item": "minecraft:bowl"
+      }
+    ],
+    "result": {
+      "item": "hakkai:autumn_squash_potage",
+      "count": 1
+    }
+  }
+}

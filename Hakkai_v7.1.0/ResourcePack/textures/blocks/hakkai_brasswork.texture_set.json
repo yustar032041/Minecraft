@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "hakkai_brasswork",
+    "metalness_emissive_roughness": "hakkai_brasswork_mer",
+    "normal": "hakkai_brasswork_n"
+  }
+}

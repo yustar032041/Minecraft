@@ -1,0 +1,20 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "hakkai:shore_ferry",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/shore_ferry"
+      },
+      "geometry": {
+        "default": "geometry.hakkai.shore_ferry"
+      },
+      "render_controllers": [
+        "controller.render.hakkai.beast"
+      ]
+    }
+  }
+}

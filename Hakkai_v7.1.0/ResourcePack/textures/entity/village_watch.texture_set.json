@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "village_watch",
+    "metalness_emissive_roughness": "village_watch_mer",
+    "normal": "village_watch_n"
+  }
+}

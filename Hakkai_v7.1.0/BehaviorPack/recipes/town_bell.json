@@ -1,0 +1,26 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "hakkai:town_bell"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:bell"
+      },
+      {
+        "item": "minecraft:oak_planks"
+      },
+      {
+        "item": "hakkai:crystal_0"
+      }
+    ],
+    "result": {
+      "item": "hakkai:town_bell",
+      "count": 1
+    }
+  }
+}

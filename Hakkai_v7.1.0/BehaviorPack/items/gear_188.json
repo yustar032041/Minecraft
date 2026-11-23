@@ -1,0 +1,35 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:item": {
+    "description": {
+      "identifier": "hakkai:gear_188",
+      "menu_category": {
+        "category": "equipment"
+      }
+    },
+    "components": {
+      "minecraft:display_name": {
+        "value": "item.hakkai:gear_188.name"
+      },
+      "minecraft:icon": "hakkai_gear_188",
+      "minecraft:max_stack_size": 1,
+      "minecraft:wearable": {
+        "slot": "slot.armor.chest",
+        "protection": 8
+      },
+      "minecraft:durability": {
+        "max_durability": 600
+      },
+      "minecraft:use_modifiers": {
+        "use_duration": 1.2,
+        "movement_modifier": 0.85
+      },
+      "hakkai:use": {},
+      "minecraft:interact_button": "action.interact.hakkai.use",
+      "minecraft:enchantable": {
+        "slot": "armor_torso",
+        "value": 12
+      }
+    }
+  }
+}

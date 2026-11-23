@@ -1,0 +1,13 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:recipe_furnace": {
+    "description": {
+      "identifier": "hakkai:dried_meat"
+    },
+    "tags": [
+      "smoker"
+    ],
+    "input": "minecraft:cooked_beef",
+    "output": "hakkai:dried_meat"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:biome": {
+    "description": {
+      "identifier": "hakkai:realm_mist"
+    },
+    "components": {
+      "minecraft:climate": {
+        "temperature": 0.55,
+        "downfall": 0.85
+      }
+    }
+  }
+}

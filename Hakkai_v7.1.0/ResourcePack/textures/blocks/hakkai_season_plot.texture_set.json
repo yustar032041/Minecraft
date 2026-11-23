@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "hakkai_season_plot",
+    "metalness_emissive_roughness": "hakkai_season_plot_mer",
+    "normal": "hakkai_season_plot_n"
+  }
+}

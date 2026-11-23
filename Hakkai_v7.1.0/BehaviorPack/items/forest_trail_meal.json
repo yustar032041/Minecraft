@@ -1,0 +1,28 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:item": {
+    "description": {
+      "identifier": "hakkai:forest_trail_meal",
+      "menu_category": {
+        "category": "items"
+      }
+    },
+    "components": {
+      "minecraft:display_name": {
+        "value": "item.hakkai:forest_trail_meal.name"
+      },
+      "minecraft:icon": "hakkai_forest_trail_meal",
+      "minecraft:max_stack_size": 16,
+      "minecraft:food": {
+        "nutrition": 8,
+        "saturation_modifier": 0.9,
+        "can_always_eat": false
+      },
+      "minecraft:use_modifiers": {
+        "use_duration": 1.2,
+        "movement_modifier": 0.5
+      },
+      "hakkai:use": {}
+    }
+  }
+}

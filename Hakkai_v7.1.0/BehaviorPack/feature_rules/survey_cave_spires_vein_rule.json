@@ -1,0 +1,45 @@
+{
+  "format_version": "1.13.0",
+  "minecraft:feature_rules": {
+    "description": {
+      "identifier": "hakkai:survey_cave_spires_vein_rule",
+      "places_feature": "hakkai:survey_cave_spires_vein"
+    },
+    "conditions": {
+      "placement_pass": "underground_pass",
+      "minecraft:biome_filter": {
+        "test": "has_biome_tag",
+        "operator": "==",
+        "value": "dripstone_caves"
+      }
+    },
+    "distribution": {
+      "iterations": 1,
+      "scatter_chance": {
+        "numerator": 1,
+        "denominator": 4
+      },
+      "x": {
+        "distribution": "uniform",
+        "extent": [
+          1,
+          14
+        ]
+      },
+      "y": {
+        "distribution": "uniform",
+        "extent": [
+          -42,
+          42
+        ]
+      },
+      "z": {
+        "distribution": "uniform",
+        "extent": [
+          1,
+          14
+        ]
+      }
+    }
+  }
+}

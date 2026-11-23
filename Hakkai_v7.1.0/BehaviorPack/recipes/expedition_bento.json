@@ -1,0 +1,29 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "hakkai:expedition_bento"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "hakkai:dried_sweet_berries"
+      },
+      {
+        "item": "hakkai:smoked_fish_strip"
+      },
+      {
+        "item": "minecraft:baked_potato"
+      },
+      {
+        "item": "minecraft:bread"
+      }
+    ],
+    "result": {
+      "item": "hakkai:expedition_bento",
+      "count": 1
+    }
+  }
+}

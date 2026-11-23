@@ -1,0 +1,28 @@
+{
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "item",
+          "name": "hakkai:shard_7",
+          "conditions": [
+            {
+              "condition": "random_chance",
+              "chance": 0.28
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "item",
+          "name": "hakkai:drop_foe_7_5"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "format_version": "1.26.60",
+  "minecraft:block": {
+    "description": {
+      "identifier": "hakkai:kiln",
+      "menu_category": {
+        "category": "construction"
+      }
+    },
+    "components": {
+      "minecraft:display_name": "tile.hakkai:kiln.name",
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "hakkai_kiln",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:map_color": "#d29658",
+      "minecraft:sound": {
+        "sound": "wood"
+      },
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 1
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 3
+      },
+      "minecraft:loot": "loot_tables/hakkai/blocks/kiln.json",
+      "minecraft:tick": {
+        "interval_range": [
+          32,
+          42
+        ],
+        "looping": true
+      },
+      "hakkai:factory": {}
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "hakkai:realm_gallery_dune"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "ABA",
+      "BCB",
+      "ABA"
+    ],
+    "key": {
+      "A": {
+        "item": "hakkai:brasswork"
+      },
+      "B": {
+        "item": "hakkai:chronicle_fragment"
+      },
+      "C": {
+        "item": "hakkai:relic_statue"
+      }
+    },
+    "result": {
+      "item": "hakkai:realm_gallery_dune",
+      "count": 2
+    }
+  }
+}

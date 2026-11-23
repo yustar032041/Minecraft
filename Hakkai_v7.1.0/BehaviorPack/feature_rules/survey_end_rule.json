@@ -1,0 +1,40 @@
+{
+  "format_version": "1.21.60",
+  "minecraft:feature_rules": {
+    "description": {
+      "identifier": "hakkai:survey_end_rule",
+      "places_feature": "hakkai:survey_end_feature"
+    },
+    "conditions": {
+      "placement_pass": "after_surface_pass",
+      "minecraft:biome_filter": {
+        "test": "has_biome_tag",
+        "operator": "==",
+        "value": "the_end"
+      }
+    },
+    "distribution": {
+      "iterations": 1,
+      "scatter_chance": {
+        "numerator": 1,
+        "denominator": 100
+      },
+      "coordinate_eval_order": "xzy",
+      "x": {
+        "distribution": "uniform",
+        "extent": [
+          4,
+          11
+        ]
+      },
+      "z": {
+        "distribution": "uniform",
+        "extent": [
+          4,
+          11
+        ]
+      },
+      "y": "query.heightmap(variable.worldx, variable.worldz)"
+    }
+  }
+}

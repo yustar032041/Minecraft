@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "gear_109",
+    "metalness_emissive_roughness": "gear_109_mer",
+    "normal": "gear_109_n"
+  }
+}

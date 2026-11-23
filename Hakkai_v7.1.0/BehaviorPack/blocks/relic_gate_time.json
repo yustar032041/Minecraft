@@ -1,0 +1,47 @@
+{
+  "format_version": "1.26.60",
+  "minecraft:block": {
+    "description": {
+      "identifier": "hakkai:relic_gate_time",
+      "menu_category": {
+        "category": "construction"
+      }
+    },
+    "components": {
+      "minecraft:display_name": "tile.hakkai:relic_gate_time.name",
+      "minecraft:geometry": "geometry.hakkai.relic_gate_time",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "hakkai_relic_gate_time",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:map_color": "#bbb0df",
+      "minecraft:sound": {
+        "sound": "wood"
+      },
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 1
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 3
+      },
+      "minecraft:loot": "loot_tables/hakkai/blocks/chronicle.json",
+      "minecraft:light_emission": 8,
+      "minecraft:collision_box": false,
+      "minecraft:selection_box": {
+        "origin": [
+          -7,
+          0,
+          -7
+        ],
+        "size": [
+          14,
+          16,
+          14
+        ]
+      },
+      "hakkai:physical_relic": {}
+    }
+  }
+}

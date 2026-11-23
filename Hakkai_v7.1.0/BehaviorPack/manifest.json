@@ -1,0 +1,58 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "8界風記｜ビヘイビア",
+    "description": "8界風記 v7.1.0。96種のシード連動バイオームと無限探索、120種の追加MOB固有技・専用素材、巨大レイドボス「終焉の八界王」を収録。",
+    "uuid": "3bf93d37-1da0-4832-acf2-051c3a37898a",
+    "version": [
+      7,
+      1,
+      0
+    ],
+    "min_engine_version": [
+      1,
+      26,
+      60
+    ]
+  },
+  "modules": [
+    {
+      "type": "data",
+      "uuid": "a9a5e09a-87e6-494e-9277-e475ebb24d01",
+      "version": [
+        7,
+        1,
+        0
+      ]
+    },
+    {
+      "type": "script",
+      "language": "javascript",
+      "uuid": "240e74f2-345c-44ba-a38b-fd5f78d5c242",
+      "version": [
+        7,
+        1,
+        0
+      ],
+      "entry": "scripts/main.js"
+    }
+  ],
+  "dependencies": [
+    {
+      "uuid": "264d2bb6-d9e8-4ed4-9e39-96c2307a7a04",
+      "version": [
+        7,
+        1,
+        0
+      ]
+    },
+    {
+      "module_name": "@minecraft/server",
+      "version": "2.11.0"
+    },
+    {
+      "module_name": "@minecraft/server-ui",
+      "version": "2.3.0"
+    }
+  ]
+}

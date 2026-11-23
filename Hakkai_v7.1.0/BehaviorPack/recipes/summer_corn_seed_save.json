@@ -1,0 +1,20 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "hakkai:summer_corn_seed_save"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "hakkai:summer_corn_produce"
+      }
+    ],
+    "result": {
+      "item": "hakkai:summer_corn_seed",
+      "count": 1
+    }
+  }
+}

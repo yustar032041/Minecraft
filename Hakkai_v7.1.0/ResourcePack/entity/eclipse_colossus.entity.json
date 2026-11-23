@@ -1,0 +1,34 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "hakkai:eclipse_colossus",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/eclipse_colossus"
+      },
+      "geometry": {
+        "default": "geometry.hakkai.eclipse_colossus"
+      },
+      "render_controllers": [
+        "controller.render.hakkai.beast"
+      ],
+      "animations": {
+        "idle": "animation.hakkai.eclipse_colossus.idle",
+        "walk": "animation.hakkai.eclipse_colossus.walk"
+      },
+      "scripts": {
+        "animate": [
+          {
+            "idle": "query.modified_move_speed <= 0.01"
+          },
+          {
+            "walk": "query.modified_move_speed > 0.01"
+          }
+        ]
+      }
+    }
+  }
+}

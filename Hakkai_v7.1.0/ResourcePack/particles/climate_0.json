@@ -1,0 +1,88 @@
+{
+  "format_version": "1.10.0",
+  "particle_effect": {
+    "description": {
+      "identifier": "hakkai:climate_0",
+      "basic_render_parameters": {
+        "material": "particles_alpha",
+        "texture": "textures/particle/hakkai_mote"
+      }
+    },
+    "components": {
+      "minecraft:emitter_rate_instant": {
+        "num_particles": 5
+      },
+      "minecraft:emitter_lifetime_once": {
+        "active_time": 0.08
+      },
+      "minecraft:emitter_shape_box": {
+        "half_dimensions": [
+          3.3,
+          1.35,
+          3.3
+        ],
+        "direction": [
+          1,
+          0.17,
+          0.23
+        ]
+      },
+      "minecraft:particle_lifetime_expression": {
+        "max_lifetime": 1.55
+      },
+      "minecraft:particle_initial_speed": 0.28,
+      "minecraft:particle_motion_dynamic": {
+        "linear_acceleration": [
+          0.42,
+          0.13,
+          0.15
+        ],
+        "linear_drag_coefficient": 1.1
+      },
+      "minecraft:particle_appearance_billboard": {
+        "size": [
+          0.1,
+          0.08
+        ],
+        "facing_camera_mode": "lookat_xyz",
+        "uv": {
+          "texture_width": 16,
+          "texture_height": 16,
+          "uv": [
+            0,
+            0
+          ],
+          "uv_size": [
+            16,
+            16
+          ]
+        }
+      },
+      "minecraft:particle_appearance_tinting": {
+        "color": {
+          "interpolant": "variable.particle_age / variable.particle_lifetime",
+          "gradient": {
+            "0.0": [
+              0.8431372549019608,
+              0.8666666666666667,
+              0.6509803921568628,
+              0.86
+            ],
+            "0.42": [
+              0.8862745098039215,
+              0.9098039215686274,
+              0.7843137254901961,
+              0.65
+            ],
+            "1.0": [
+              0.8862745098039215,
+              0.9098039215686274,
+              0.7843137254901961,
+              0
+            ]
+          }
+        }
+      }
+    }
+  }
+}

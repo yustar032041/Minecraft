@@ -1,0 +1,33 @@
+{
+  "format_version": "1.26.60",
+  "minecraft:block": {
+    "description": {
+      "identifier": "hakkai:mirror_ice",
+      "menu_category": {
+        "category": "construction"
+      }
+    },
+    "components": {
+      "minecraft:display_name": "tile.hakkai:mirror_ice.name",
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "hakkai_mirror_ice",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:map_color": "#a9dff1",
+      "minecraft:sound": {
+        "sound": "glass"
+      },
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 0.8
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 3
+      },
+      "minecraft:light_dampening": 1,
+      "minecraft:light_emission": 0
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "format_version": "1.26.60",
+  "minecraft:block": {
+    "description": {
+      "identifier": "hakkai:display_column",
+      "menu_category": {
+        "category": "construction"
+      }
+    },
+    "components": {
+      "minecraft:display_name": "tile.hakkai:display_column.name",
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "hakkai_brasswork",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:map_color": "#9b86bd",
+      "minecraft:sound": {
+        "sound": "stone"
+      },
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 2.0
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 4
+      },
+      "minecraft:light_emission": 0,
+      "minecraft:loot": "loot_tables/hakkai/blocks/display_column.json"
+    }
+  }
+}

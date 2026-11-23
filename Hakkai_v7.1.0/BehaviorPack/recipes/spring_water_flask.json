@@ -1,0 +1,26 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "hakkai:spring_water_flask"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:glass_bottle"
+      },
+      {
+        "item": "minecraft:ice"
+      },
+      {
+        "item": "minecraft:sugar_cane"
+      }
+    ],
+    "result": {
+      "item": "hakkai:spring_water_flask",
+      "count": 1
+    }
+  }
+}

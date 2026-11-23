@@ -1,0 +1,38 @@
+{
+  "format_version": "1.8.0",
+  "animations": {
+    "animation.hakkai.beast.walk": {
+      "loop": true,
+      "bones": {
+        "leg_0": {
+          "rotation": [
+            "math.cos(query.anim_time * 420 + 0) * 25",
+            0,
+            0
+          ]
+        },
+        "leg_1": {
+          "rotation": [
+            "math.cos(query.anim_time * 420 + 180) * 25",
+            0,
+            0
+          ]
+        },
+        "leg_2": {
+          "rotation": [
+            "math.cos(query.anim_time * 420 + 180) * 25",
+            0,
+            0
+          ]
+        },
+        "leg_3": {
+          "rotation": [
+            "math.cos(query.anim_time * 420 + 0) * 25",
+            0,
+            0
+          ]
+        }
+      }
+    }
+  }
+}

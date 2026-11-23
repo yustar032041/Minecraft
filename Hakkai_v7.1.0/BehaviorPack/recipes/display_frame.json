@@ -1,0 +1,28 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "hakkai:display_frame"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "BBB",
+      "B R",
+      "BBB"
+    ],
+    "key": {
+      "B": {
+        "item": "hakkai:brasswork"
+      },
+      "R": {
+        "item": "hakkai:relic_statue"
+      }
+    },
+    "result": {
+      "item": "hakkai:display_frame",
+      "count": 1
+    }
+  }
+}

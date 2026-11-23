@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "shore_ferry",
+    "metalness_emissive_roughness": "shore_ferry_mer",
+    "normal": "shore_ferry_n"
+  }
+}

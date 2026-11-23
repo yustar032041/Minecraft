@@ -1,0 +1,34 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "hakkai:guardian_2",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/guardian_2"
+      },
+      "geometry": {
+        "default": "geometry.hakkai.guardian_2"
+      },
+      "render_controllers": [
+        "controller.render.hakkai.beast"
+      ],
+      "animations": {
+        "walk": "animation.hakkai.beast.walk"
+      },
+      "scripts": {
+        "animate": [
+          {
+            "walk": "query.modified_move_speed > 0.01"
+          }
+        ]
+      },
+      "spawn_egg": {
+        "base_color": "#b45c42",
+        "overlay_color": "#bb9666"
+      }
+    }
+  }
+}

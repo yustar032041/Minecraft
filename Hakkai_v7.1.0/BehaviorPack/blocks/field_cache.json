@@ -1,0 +1,58 @@
+{
+  "format_version": "1.26.60",
+  "minecraft:block": {
+    "description": {
+      "identifier": "hakkai:field_cache",
+      "menu_category": {
+        "category": "construction"
+      }
+    },
+    "components": {
+      "minecraft:display_name": "tile.hakkai:field_cache.name",
+      "minecraft:geometry": "geometry.hakkai.field_cache",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "hakkai_field_cache",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:map_color": "#c19a64",
+      "minecraft:sound": {
+        "sound": "wood"
+      },
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 1
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 3
+      },
+      "minecraft:loot": "loot_tables/hakkai/blocks/chronicle.json",
+      "minecraft:light_emission": 3,
+      "minecraft:collision_box": {
+        "origin": [
+          -6,
+          0,
+          -6
+        ],
+        "size": [
+          12,
+          10,
+          12
+        ]
+      },
+      "minecraft:selection_box": {
+        "origin": [
+          -7,
+          0,
+          -7
+        ],
+        "size": [
+          14,
+          11,
+          14
+        ]
+      },
+      "hakkai:physical_relic": {}
+    }
+  }
+}

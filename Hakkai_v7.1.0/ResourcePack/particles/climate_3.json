@@ -1,0 +1,88 @@
+{
+  "format_version": "1.10.0",
+  "particle_effect": {
+    "description": {
+      "identifier": "hakkai:climate_3",
+      "basic_render_parameters": {
+        "material": "particles_alpha",
+        "texture": "textures/particle/hakkai_mote"
+      }
+    },
+    "components": {
+      "minecraft:emitter_rate_instant": {
+        "num_particles": 10
+      },
+      "minecraft:emitter_lifetime_once": {
+        "active_time": 0.08
+      },
+      "minecraft:emitter_shape_box": {
+        "half_dimensions": [
+          3.3,
+          1.35,
+          3.3
+        ],
+        "direction": [
+          1,
+          0.17,
+          0.23
+        ]
+      },
+      "minecraft:particle_lifetime_expression": {
+        "max_lifetime": 1.55
+      },
+      "minecraft:particle_initial_speed": 0.28,
+      "minecraft:particle_motion_dynamic": {
+        "linear_acceleration": [
+          0.31,
+          -0.72,
+          -0.13
+        ],
+        "linear_drag_coefficient": 1.1
+      },
+      "minecraft:particle_appearance_billboard": {
+        "size": [
+          0.1,
+          0.08
+        ],
+        "facing_camera_mode": "lookat_xyz",
+        "uv": {
+          "texture_width": 16,
+          "texture_height": 16,
+          "uv": [
+            0,
+            0
+          ],
+          "uv_size": [
+            16,
+            16
+          ]
+        }
+      },
+      "minecraft:particle_appearance_tinting": {
+        "color": {
+          "interpolant": "variable.particle_age / variable.particle_lifetime",
+          "gradient": {
+            "0.0": [
+              0.8980392156862745,
+              0.9647058823529412,
+              0.9882352941176471,
+              0.86
+            ],
+            "0.42": [
+              0.6862745098039216,
+              0.8235294117647058,
+              0.8745098039215686,
+              0.65
+            ],
+            "1.0": [
+              0.6862745098039216,
+              0.8235294117647058,
+              0.8745098039215686,
+              0
+            ]
+          }
+        }
+      }
+    }
+  }
+}

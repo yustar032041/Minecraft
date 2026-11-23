@@ -1,0 +1,28 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:item": {
+    "description": {
+      "identifier": "hakkai:gathered_herb_bundle",
+      "menu_category": {
+        "category": "items"
+      }
+    },
+    "components": {
+      "minecraft:display_name": {
+        "value": "item.hakkai:gathered_herb_bundle.name"
+      },
+      "minecraft:icon": "hakkai_gathered_herb_bundle",
+      "minecraft:max_stack_size": 16,
+      "minecraft:food": {
+        "nutrition": 3,
+        "saturation_modifier": 0.5,
+        "can_always_eat": false
+      },
+      "minecraft:use_modifiers": {
+        "use_duration": 1.2,
+        "movement_modifier": 0.5
+      },
+      "hakkai:use": {}
+    }
+  }
+}

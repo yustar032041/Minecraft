@@ -1,0 +1,26 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "hakkai:element_tome"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:book"
+      },
+      {
+        "item": "hakkai:crystal_0"
+      },
+      {
+        "item": "hakkai:crystal_1"
+      }
+    ],
+    "result": {
+      "item": "hakkai:element_tome",
+      "count": 1
+    }
+  }
+}

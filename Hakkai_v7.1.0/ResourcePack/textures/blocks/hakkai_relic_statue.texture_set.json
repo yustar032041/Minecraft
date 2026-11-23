@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "hakkai_relic_statue",
+    "metalness_emissive_roughness": "hakkai_relic_statue_mer",
+    "normal": "hakkai_relic_statue_n"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "hakkai:time_train",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/time_train"
+      },
+      "geometry": {
+        "default": "geometry.hakkai.time_train"
+      },
+      "render_controllers": [
+        "controller.render.hakkai.beast"
+      ]
+    }
+  }
+}

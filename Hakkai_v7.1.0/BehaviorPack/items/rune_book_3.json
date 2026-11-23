@@ -1,0 +1,20 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:item": {
+    "description": {
+      "identifier": "hakkai:rune_book_3",
+      "menu_category": {
+        "category": "items"
+      }
+    },
+    "components": {
+      "minecraft:display_name": {
+        "value": "item.hakkai:rune_book_3.name"
+      },
+      "minecraft:icon": "hakkai_rune_book_3",
+      "minecraft:max_stack_size": 1,
+      "hakkai:use": {},
+      "minecraft:interact_button": "action.interact.hakkai.use"
+    }
+  }
+}

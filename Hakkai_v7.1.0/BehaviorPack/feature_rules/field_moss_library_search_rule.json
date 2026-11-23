@@ -1,0 +1,46 @@
+{
+  "format_version": "1.13.0",
+  "minecraft:feature_rules": {
+    "description": {
+      "identifier": "hakkai:field_moss_library_search_rule"
+    },
+    "places_feature": "hakkai:field_moss_library_search",
+    "conditions": {
+      "placement_pass": "underground_pass",
+      "minecraft:biome_filter": {
+        "test": "has_biome_tag",
+        "operator": "==",
+        "value": "lush_caves"
+      }
+    },
+    "distribution": {
+      "iterations": 1,
+      "scatter_chance": {
+        "numerator": 1,
+        "denominator": 74
+      },
+      "coordinate_eval_order": "xzy",
+      "x": {
+        "distribution": "uniform",
+        "extent": [
+          5,
+          9
+        ]
+      },
+      "z": {
+        "distribution": "uniform",
+        "extent": [
+          5,
+          9
+        ]
+      },
+      "y": {
+        "distribution": "uniform",
+        "extent": [
+          -25,
+          33
+        ]
+      }
+    }
+  }
+}

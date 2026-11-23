@@ -1,0 +1,26 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "hakkai:spring_garden_soup"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "hakkai:spring_tulip_produce"
+      },
+      {
+        "item": "minecraft:beetroot_soup"
+      },
+      {
+        "item": "minecraft:bowl"
+      }
+    ],
+    "result": {
+      "item": "hakkai:spring_garden_soup",
+      "count": 1
+    }
+  }
+}

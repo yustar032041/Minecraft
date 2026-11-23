@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "village_archer",
+    "metalness_emissive_roughness": "village_archer_mer",
+    "normal": "village_archer_n"
+  }
+}

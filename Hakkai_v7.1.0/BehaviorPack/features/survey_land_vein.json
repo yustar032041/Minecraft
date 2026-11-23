@@ -1,0 +1,14 @@
+{
+  "format_version": "1.13.0",
+  "minecraft:ore_feature": {
+    "description": {
+      "identifier": "hakkai:survey_land_vein"
+    },
+    "count": 5,
+    "places_block": "hakkai:ore_3",
+    "may_replace": [
+      "minecraft:stone",
+      "minecraft:deepslate"
+    ]
+  }
+}

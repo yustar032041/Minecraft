@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "hakkai_cloudstone",
+    "metalness_emissive_roughness": "hakkai_cloudstone_mer",
+    "normal": "hakkai_cloudstone_n"
+  }
+}

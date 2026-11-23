@@ -1,0 +1,35 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "hakkai:gear_088"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:paper"
+      },
+      {
+        "item": "minecraft:paper"
+      },
+      {
+        "item": "minecraft:iron_ingot"
+      },
+      {
+        "item": "hakkai:crystal_8"
+      },
+      {
+        "item": "hakkai:shard_4"
+      },
+      {
+        "item": "hakkai:gear_008"
+      }
+    ],
+    "result": {
+      "item": "hakkai:gear_088",
+      "count": 1
+    }
+  }
+}

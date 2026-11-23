@@ -1,0 +1,15 @@
+{
+  "format_version": "1.13.0",
+  "minecraft:ore_feature": {
+    "description": {
+      "identifier": "hakkai:survey_nether_soul_vein"
+    },
+    "count": 5,
+    "places_block": "hakkai:ore_6",
+    "may_replace": [
+      "minecraft:soul_sand",
+      "minecraft:soul_soil",
+      "minecraft:netherrack"
+    ]
+  }
+}

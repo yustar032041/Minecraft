@@ -1,0 +1,29 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "hakkai:dodge_scroll"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "hakkai:toki_crystal"
+      },
+      {
+        "item": "hakkai:toki_crystal"
+      },
+      {
+        "item": "minecraft:paper"
+      },
+      {
+        "item": "minecraft:feather"
+      }
+    ],
+    "result": {
+      "item": "hakkai:dodge_scroll",
+      "count": 2
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:item": {
+    "description": {
+      "identifier": "hakkai:drop_foe_6_0",
+      "menu_category": {
+        "category": "items"
+      }
+    },
+    "components": {
+      "minecraft:display_name": {
+        "value": "item.hakkai:drop_foe_6_0.name"
+      },
+      "minecraft:icon": "hakkai_drop_foe_6_0",
+      "minecraft:max_stack_size": 64
+    }
+  }
+}

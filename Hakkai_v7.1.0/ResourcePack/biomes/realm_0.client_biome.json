@@ -1,0 +1,13 @@
+{
+  "format_version": "1.21.40",
+  "minecraft:client_biome": {
+    "description": {
+      "identifier": "hakkai:realm_meadow"
+    },
+    "components": {
+      "minecraft:sky_color": {
+        "sky_color": "#83B7F0"
+      }
+    }
+  }
+}

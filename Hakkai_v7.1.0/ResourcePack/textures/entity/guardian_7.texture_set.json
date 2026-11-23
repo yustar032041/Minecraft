@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "guardian_7",
+    "metalness_emissive_roughness": "guardian_7_mer",
+    "normal": "guardian_7_n"
+  }
+}

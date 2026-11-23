@@ -1,0 +1,13 @@
+{
+  "format_version": "1.13.0",
+  "minecraft:ore_feature": {
+    "description": {
+      "identifier": "hakkai:survey_nether_wastes_vein"
+    },
+    "count": 5,
+    "places_block": "hakkai:ore_2",
+    "may_replace": [
+      "minecraft:netherrack"
+    ]
+  }
+}

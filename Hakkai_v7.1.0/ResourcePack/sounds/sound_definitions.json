@@ -1,0 +1,645 @@
+{
+  "format_version": "1.14.0",
+  "sound_definitions": {
+    "hakkai.air_0": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_0",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_1": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_1",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_2": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_2",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_3": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_3",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_4": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_4",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_5": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_5",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_6": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_6",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_7": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_7",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_8": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_8",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_9": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_9",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_10": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_10",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_11": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_11",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_12": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_12",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_13": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_13",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_14": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_14",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_15": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_15",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_16": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_16",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_17": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_17",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_18": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_18",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_19": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_19",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_20": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_20",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_21": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_21",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_22": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_22",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_23": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_23",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_24": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_24",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_25": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_25",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_26": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_26",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_27": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_27",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_28": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_28",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_29": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_29",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_30": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_30",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_31": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_31",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_32": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_32",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_33": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_33",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_34": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_34",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_35": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_35",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_36": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_36",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_37": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_37",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_38": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_38",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_39": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_39",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_40": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_40",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_41": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_41",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_42": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_42",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_43": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_43",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_44": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_44",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_45": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_45",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_46": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_46",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_47": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_47",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_48": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_48",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_49": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_49",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_50": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_50",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_51": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_51",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_52": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_52",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_53": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_53",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_54": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_54",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_55": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_55",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_56": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_56",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_57": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_57",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.air_58": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/air_58",
+          "volume": 0.55,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.workshop": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/workshop",
+          "volume": 0.48,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.village": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/village",
+          "volume": 0.48,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.festival": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/festival",
+          "volume": 0.48,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.combat": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/combat",
+          "volume": 0.48,
+          "stream": true
+        }
+      ]
+    },
+    "hakkai.atlas": {
+      "category": "ambient",
+      "sounds": [
+        {
+          "name": "sounds/hakkai/atlas",
+          "volume": 0.48,
+          "stream": true
+        }
+      ]
+    }
+  }
+}

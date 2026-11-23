@@ -1,0 +1,18 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:item": {
+    "description": {
+      "identifier": "hakkai:shard_11",
+      "menu_category": {
+        "category": "items"
+      }
+    },
+    "components": {
+      "minecraft:display_name": {
+        "value": "item.hakkai:shard_11.name"
+      },
+      "minecraft:icon": "hakkai_shard_11",
+      "minecraft:max_stack_size": 64
+    }
+  }
+}

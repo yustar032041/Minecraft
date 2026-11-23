@@ -1,0 +1,14 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:biome": {
+    "description": {
+      "identifier": "hakkai:realm_time"
+    },
+    "components": {
+      "minecraft:climate": {
+        "temperature": 0.6,
+        "downfall": 0.35
+      }
+    }
+  }
+}

@@ -1,0 +1,311 @@
+{
+  "format_version": "1.8.0",
+  "animations": {
+    "animation.hakkai.deer.stride": {
+      "loop": true,
+      "bones": {
+        "leg_0": {
+          "rotation": [
+            "math.cos(query.anim_time * 430 + 0) * 23",
+            0,
+            0
+          ]
+        },
+        "leg_1": {
+          "rotation": [
+            "math.cos(query.anim_time * 430 + 180) * 23",
+            0,
+            0
+          ]
+        },
+        "leg_2": {
+          "rotation": [
+            "math.cos(query.anim_time * 430 + 0) * 23",
+            0,
+            0
+          ]
+        },
+        "leg_3": {
+          "rotation": [
+            "math.cos(query.anim_time * 430 + 180) * 23",
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.hakkai.fox.stride": {
+      "loop": true,
+      "bones": {
+        "leg_0": {
+          "rotation": [
+            "math.cos(query.anim_time * 430 + 0) * 23",
+            0,
+            0
+          ]
+        },
+        "leg_1": {
+          "rotation": [
+            "math.cos(query.anim_time * 430 + 180) * 23",
+            0,
+            0
+          ]
+        },
+        "leg_2": {
+          "rotation": [
+            "math.cos(query.anim_time * 430 + 0) * 23",
+            0,
+            0
+          ]
+        },
+        "leg_3": {
+          "rotation": [
+            "math.cos(query.anim_time * 430 + 180) * 23",
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.hakkai.brute.stride": {
+      "loop": true,
+      "bones": {
+        "arm_l": {
+          "rotation": [
+            "math.cos(query.anim_time * 430 + 0) * 23",
+            0,
+            0
+          ]
+        },
+        "arm_r": {
+          "rotation": [
+            "math.cos(query.anim_time * 430 + 180) * 23",
+            0,
+            0
+          ]
+        },
+        "leg_0": {
+          "rotation": [
+            "math.cos(query.anim_time * 430 + 0) * 23",
+            0,
+            0
+          ]
+        },
+        "leg_1": {
+          "rotation": [
+            "math.cos(query.anim_time * 430 + 180) * 23",
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.hakkai.bird.stride": {
+      "loop": true,
+      "bones": {
+        "wing_l": {
+          "rotation": [
+            0,
+            0,
+            "math.cos(query.anim_time * 580 + 0) * 32"
+          ]
+        },
+        "wing_r": {
+          "rotation": [
+            0,
+            0,
+            "math.cos(query.anim_time * 580 + 180) * 32"
+          ]
+        },
+        "leg_0": {
+          "rotation": [
+            "math.cos(query.anim_time * 580 + 0) * 32",
+            0,
+            0
+          ]
+        },
+        "leg_1": {
+          "rotation": [
+            "math.cos(query.anim_time * 580 + 180) * 32",
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.hakkai.bug.stride": {
+      "loop": true,
+      "bones": {
+        "leg_0": {
+          "rotation": [
+            "math.cos(query.anim_time * 430 + 0) * 23",
+            0,
+            0
+          ]
+        },
+        "leg_1": {
+          "rotation": [
+            "math.cos(query.anim_time * 430 + 180) * 23",
+            0,
+            0
+          ]
+        },
+        "leg_2": {
+          "rotation": [
+            "math.cos(query.anim_time * 430 + 0) * 23",
+            0,
+            0
+          ]
+        },
+        "leg_3": {
+          "rotation": [
+            "math.cos(query.anim_time * 430 + 180) * 23",
+            0,
+            0
+          ]
+        },
+        "leg_4": {
+          "rotation": [
+            "math.cos(query.anim_time * 430 + 0) * 23",
+            0,
+            0
+          ]
+        },
+        "leg_5": {
+          "rotation": [
+            "math.cos(query.anim_time * 430 + 180) * 23",
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.hakkai.hare.stride": {
+      "loop": true,
+      "bones": {
+        "leg_0": {
+          "rotation": [
+            "math.cos(query.anim_time * 430 + 0) * 23",
+            0,
+            0
+          ]
+        },
+        "leg_1": {
+          "rotation": [
+            "math.cos(query.anim_time * 430 + 180) * 23",
+            0,
+            0
+          ]
+        },
+        "leg_2": {
+          "rotation": [
+            "math.cos(query.anim_time * 430 + 0) * 23",
+            0,
+            0
+          ]
+        },
+        "leg_3": {
+          "rotation": [
+            "math.cos(query.anim_time * 430 + 180) * 23",
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.hakkai.frog.stride": {
+      "loop": true,
+      "bones": {
+        "leg_0": {
+          "rotation": [
+            "math.cos(query.anim_time * 430 + 0) * 23",
+            0,
+            0
+          ]
+        },
+        "leg_1": {
+          "rotation": [
+            "math.cos(query.anim_time * 430 + 180) * 23",
+            0,
+            0
+          ]
+        },
+        "leg_2": {
+          "rotation": [
+            "math.cos(query.anim_time * 430 + 0) * 23",
+            0,
+            0
+          ]
+        },
+        "leg_3": {
+          "rotation": [
+            "math.cos(query.anim_time * 430 + 180) * 23",
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.hakkai.spider.stride": {
+      "loop": true,
+      "bones": {
+        "leg_0": {
+          "rotation": [
+            "math.cos(query.anim_time * 430 + 0) * 23",
+            0,
+            0
+          ]
+        },
+        "leg_1": {
+          "rotation": [
+            "math.cos(query.anim_time * 430 + 180) * 23",
+            0,
+            0
+          ]
+        },
+        "leg_2": {
+          "rotation": [
+            "math.cos(query.anim_time * 430 + 0) * 23",
+            0,
+            0
+          ]
+        },
+        "leg_3": {
+          "rotation": [
+            "math.cos(query.anim_time * 430 + 180) * 23",
+            0,
+            0
+          ]
+        },
+        "leg_4": {
+          "rotation": [
+            "math.cos(query.anim_time * 430 + 0) * 23",
+            0,
+            0
+          ]
+        },
+        "leg_5": {
+          "rotation": [
+            "math.cos(query.anim_time * 430 + 180) * 23",
+            0,
+            0
+          ]
+        },
+        "leg_6": {
+          "rotation": [
+            "math.cos(query.anim_time * 430 + 0) * 23",
+            0,
+            0
+          ]
+        },
+        "leg_7": {
+          "rotation": [
+            "math.cos(query.anim_time * 430 + 180) * 23",
+            0,
+            0
+          ]
+        }
+      }
+    }
+  }
+}

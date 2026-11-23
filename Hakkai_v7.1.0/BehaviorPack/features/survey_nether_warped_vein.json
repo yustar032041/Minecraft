@@ -1,0 +1,14 @@
+{
+  "format_version": "1.13.0",
+  "minecraft:ore_feature": {
+    "description": {
+      "identifier": "hakkai:survey_nether_warped_vein"
+    },
+    "count": 5,
+    "places_block": "hakkai:ore_10",
+    "may_replace": [
+      "minecraft:netherrack",
+      "minecraft:warped_nylium"
+    ]
+  }
+}

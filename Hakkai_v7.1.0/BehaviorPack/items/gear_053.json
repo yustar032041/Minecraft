@@ -1,0 +1,29 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:item": {
+    "description": {
+      "identifier": "hakkai:gear_053",
+      "menu_category": {
+        "category": "items"
+      }
+    },
+    "components": {
+      "minecraft:display_name": {
+        "value": "item.hakkai:gear_053.name"
+      },
+      "minecraft:icon": "hakkai_gear_053",
+      "minecraft:max_stack_size": 1,
+      "minecraft:damage": 8,
+      "minecraft:hand_equipped": true,
+      "minecraft:durability": {
+        "max_durability": 296
+      },
+      "minecraft:use_modifiers": {
+        "use_duration": 1.2,
+        "movement_modifier": 0.85
+      },
+      "hakkai:use": {},
+      "minecraft:interact_button": "action.interact.hakkai.use"
+    }
+  }
+}

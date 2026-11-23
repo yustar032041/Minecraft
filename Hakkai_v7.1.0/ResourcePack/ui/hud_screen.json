@@ -1,0 +1,549 @@
+{
+  "namespace": "hud",
+  "hud_actionbar_text": {
+    "$hakkai_msg": "$actionbar_text",
+    "visible": "(not (not ($hakkai_msg = ($hakkai_msg - '§r§r§r§r'))))"
+  },
+  "hakkai_overlay": {
+    "type": "panel",
+    "size": [
+      "100%",
+      "100%"
+    ],
+    "$hakkai_msg": "$actionbar_text",
+    "visible": "(not ($hakkai_msg = ($hakkai_msg - '§r§r§r§r')))",
+    "alpha": "@hud.anim_actionbar_text_alpha_out",
+    "propagate_alpha": true,
+    "controls": [
+      {
+        "hakkai_frame_00": {
+          "type": "panel",
+          "anchor_from": "top_left",
+          "anchor_to": "top_left",
+          "offset": [
+            10,
+            12
+          ],
+          "size": [
+            205,
+            43
+          ],
+          "layer": 31,
+          "visible": "(not (not ($hakkai_msg = ($hakkai_msg - '§r§f§r§f'))) and not (not ($hakkai_msg = ($hakkai_msg - '§r§7§r§7'))))",
+          "controls": [
+            {
+              "heart_idle": {
+                "type": "image",
+                "texture": "textures/ui/hakkai_heart",
+                "anchor_from": "top_left",
+                "anchor_to": "center",
+                "offset": [
+                  8,
+                  6
+                ],
+                "size": [
+                  12,
+                  12
+                ],
+                "bilinear": true,
+                "visible": "(not (not ($hakkai_msg = ($hakkai_msg - '§r§a§r§a'))))"
+              }
+            },
+            {
+              "heart_pulse": {
+                "type": "image",
+                "texture": "textures/ui/hakkai_heart",
+                "anchor_from": "top_left",
+                "anchor_to": "center",
+                "offset": [
+                  8,
+                  6
+                ],
+                "size": [
+                  16,
+                  16
+                ],
+                "bilinear": true,
+                "visible": "(not ($hakkai_msg = ($hakkai_msg - '§r§a§r§a')))"
+              }
+            },
+            {
+              "drop_full": {
+                "type": "image",
+                "texture": "textures/ui/hakkai_drop",
+                "anchor_from": "top_left",
+                "anchor_to": "center",
+                "offset": [
+                  8,
+                  17
+                ],
+                "size": [
+                  12,
+                  12
+                ],
+                "bilinear": true,
+                "visible": "(not (not ($hakkai_msg = ($hakkai_msg - '§r§b§r§b'))) and not (not ($hakkai_msg = ($hakkai_msg - '§r§8§r§8'))))"
+              }
+            },
+            {
+              "drop_mid": {
+                "type": "image",
+                "texture": "textures/ui/hakkai_drop",
+                "anchor_from": "top_left",
+                "anchor_to": "center",
+                "offset": [
+                  8,
+                  17
+                ],
+                "size": [
+                  10,
+                  10
+                ],
+                "bilinear": true,
+                "visible": "((not ($hakkai_msg = ($hakkai_msg - '§r§b§r§b'))) and not (not ($hakkai_msg = ($hakkai_msg - '§r§8§r§8'))))"
+              }
+            },
+            {
+              "drop_low": {
+                "type": "image",
+                "texture": "textures/ui/hakkai_drop",
+                "anchor_from": "top_left",
+                "anchor_to": "center",
+                "offset": [
+                  8,
+                  17
+                ],
+                "size": [
+                  7,
+                  7
+                ],
+                "bilinear": true,
+                "visible": "(not ($hakkai_msg = ($hakkai_msg - '§r§8§r§8')))"
+              }
+            },
+            {
+              "hakkai_readout": {
+                "type": "label",
+                "anchor_from": "top_left",
+                "anchor_to": "top_left",
+                "offset": [
+                  17,
+                  1
+                ],
+                "text": "(((((((($hakkai_msg - '§r§r§r§r') - '§r§f§r§f') - '§r§7§r§7') - '§r§c§r§c') - '§r§a§r§a') - '§r§b§r§b') - '§r§8§r§8') + '§r')",
+                "text_alignment": "left",
+                "localize": false,
+                "shadow": true,
+                "font_scale_factor": 1,
+                "line_padding": 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        "hakkai_frame_01": {
+          "type": "panel",
+          "anchor_from": "top_left",
+          "anchor_to": "top_left",
+          "offset": [
+            10,
+            12
+          ],
+          "size": [
+            256.25,
+            53.75
+          ],
+          "layer": 31,
+          "visible": "(not (not ($hakkai_msg = ($hakkai_msg - '§r§f§r§f'))) and (not ($hakkai_msg = ($hakkai_msg - '§r§7§r§7'))))",
+          "controls": [
+            {
+              "heart_idle": {
+                "type": "image",
+                "texture": "textures/ui/hakkai_heart",
+                "anchor_from": "top_left",
+                "anchor_to": "center",
+                "offset": [
+                  10,
+                  7.5
+                ],
+                "size": [
+                  15,
+                  15
+                ],
+                "bilinear": true,
+                "visible": "(not (not ($hakkai_msg = ($hakkai_msg - '§r§a§r§a'))))"
+              }
+            },
+            {
+              "heart_pulse": {
+                "type": "image",
+                "texture": "textures/ui/hakkai_heart",
+                "anchor_from": "top_left",
+                "anchor_to": "center",
+                "offset": [
+                  10,
+                  7.5
+                ],
+                "size": [
+                  20,
+                  20
+                ],
+                "bilinear": true,
+                "visible": "(not ($hakkai_msg = ($hakkai_msg - '§r§a§r§a')))"
+              }
+            },
+            {
+              "drop_full": {
+                "type": "image",
+                "texture": "textures/ui/hakkai_drop",
+                "anchor_from": "top_left",
+                "anchor_to": "center",
+                "offset": [
+                  10,
+                  21.25
+                ],
+                "size": [
+                  15,
+                  15
+                ],
+                "bilinear": true,
+                "visible": "(not (not ($hakkai_msg = ($hakkai_msg - '§r§b§r§b'))) and not (not ($hakkai_msg = ($hakkai_msg - '§r§8§r§8'))))"
+              }
+            },
+            {
+              "drop_mid": {
+                "type": "image",
+                "texture": "textures/ui/hakkai_drop",
+                "anchor_from": "top_left",
+                "anchor_to": "center",
+                "offset": [
+                  10,
+                  21.25
+                ],
+                "size": [
+                  12.5,
+                  12.5
+                ],
+                "bilinear": true,
+                "visible": "((not ($hakkai_msg = ($hakkai_msg - '§r§b§r§b'))) and not (not ($hakkai_msg = ($hakkai_msg - '§r§8§r§8'))))"
+              }
+            },
+            {
+              "drop_low": {
+                "type": "image",
+                "texture": "textures/ui/hakkai_drop",
+                "anchor_from": "top_left",
+                "anchor_to": "center",
+                "offset": [
+                  10,
+                  21.25
+                ],
+                "size": [
+                  8.75,
+                  8.75
+                ],
+                "bilinear": true,
+                "visible": "(not ($hakkai_msg = ($hakkai_msg - '§r§8§r§8')))"
+              }
+            },
+            {
+              "hakkai_readout": {
+                "type": "label",
+                "anchor_from": "top_left",
+                "anchor_to": "top_left",
+                "offset": [
+                  21.25,
+                  1
+                ],
+                "text": "(((((((($hakkai_msg - '§r§r§r§r') - '§r§f§r§f') - '§r§7§r§7') - '§r§c§r§c') - '§r§a§r§a') - '§r§b§r§b') - '§r§8§r§8') + '§r')",
+                "text_alignment": "left",
+                "localize": false,
+                "shadow": true,
+                "font_scale_factor": 1.25,
+                "line_padding": 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        "hakkai_frame_10": {
+          "type": "panel",
+          "anchor_from": "top_right",
+          "anchor_to": "top_right",
+          "offset": [
+            -10,
+            12
+          ],
+          "size": [
+            205,
+            43
+          ],
+          "layer": 31,
+          "visible": "((not ($hakkai_msg = ($hakkai_msg - '§r§f§r§f'))) and not (not ($hakkai_msg = ($hakkai_msg - '§r§7§r§7'))))",
+          "controls": [
+            {
+              "heart_idle": {
+                "type": "image",
+                "texture": "textures/ui/hakkai_heart",
+                "anchor_from": "top_left",
+                "anchor_to": "center",
+                "offset": [
+                  8,
+                  6
+                ],
+                "size": [
+                  12,
+                  12
+                ],
+                "bilinear": true,
+                "visible": "(not (not ($hakkai_msg = ($hakkai_msg - '§r§a§r§a'))))"
+              }
+            },
+            {
+              "heart_pulse": {
+                "type": "image",
+                "texture": "textures/ui/hakkai_heart",
+                "anchor_from": "top_left",
+                "anchor_to": "center",
+                "offset": [
+                  8,
+                  6
+                ],
+                "size": [
+                  16,
+                  16
+                ],
+                "bilinear": true,
+                "visible": "(not ($hakkai_msg = ($hakkai_msg - '§r§a§r§a')))"
+              }
+            },
+            {
+              "drop_full": {
+                "type": "image",
+                "texture": "textures/ui/hakkai_drop",
+                "anchor_from": "top_left",
+                "anchor_to": "center",
+                "offset": [
+                  8,
+                  17
+                ],
+                "size": [
+                  12,
+                  12
+                ],
+                "bilinear": true,
+                "visible": "(not (not ($hakkai_msg = ($hakkai_msg - '§r§b§r§b'))) and not (not ($hakkai_msg = ($hakkai_msg - '§r§8§r§8'))))"
+              }
+            },
+            {
+              "drop_mid": {
+                "type": "image",
+                "texture": "textures/ui/hakkai_drop",
+                "anchor_from": "top_left",
+                "anchor_to": "center",
+                "offset": [
+                  8,
+                  17
+                ],
+                "size": [
+                  10,
+                  10
+                ],
+                "bilinear": true,
+                "visible": "((not ($hakkai_msg = ($hakkai_msg - '§r§b§r§b'))) and not (not ($hakkai_msg = ($hakkai_msg - '§r§8§r§8'))))"
+              }
+            },
+            {
+              "drop_low": {
+                "type": "image",
+                "texture": "textures/ui/hakkai_drop",
+                "anchor_from": "top_left",
+                "anchor_to": "center",
+                "offset": [
+                  8,
+                  17
+                ],
+                "size": [
+                  7,
+                  7
+                ],
+                "bilinear": true,
+                "visible": "(not ($hakkai_msg = ($hakkai_msg - '§r§8§r§8')))"
+              }
+            },
+            {
+              "hakkai_readout": {
+                "type": "label",
+                "anchor_from": "top_left",
+                "anchor_to": "top_left",
+                "offset": [
+                  17,
+                  1
+                ],
+                "text": "(((((((($hakkai_msg - '§r§r§r§r') - '§r§f§r§f') - '§r§7§r§7') - '§r§c§r§c') - '§r§a§r§a') - '§r§b§r§b') - '§r§8§r§8') + '§r')",
+                "text_alignment": "left",
+                "localize": false,
+                "shadow": true,
+                "font_scale_factor": 1,
+                "line_padding": 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        "hakkai_frame_11": {
+          "type": "panel",
+          "anchor_from": "top_right",
+          "anchor_to": "top_right",
+          "offset": [
+            -10,
+            12
+          ],
+          "size": [
+            256.25,
+            53.75
+          ],
+          "layer": 31,
+          "visible": "((not ($hakkai_msg = ($hakkai_msg - '§r§f§r§f'))) and (not ($hakkai_msg = ($hakkai_msg - '§r§7§r§7'))))",
+          "controls": [
+            {
+              "heart_idle": {
+                "type": "image",
+                "texture": "textures/ui/hakkai_heart",
+                "anchor_from": "top_left",
+                "anchor_to": "center",
+                "offset": [
+                  10,
+                  7.5
+                ],
+                "size": [
+                  15,
+                  15
+                ],
+                "bilinear": true,
+                "visible": "(not (not ($hakkai_msg = ($hakkai_msg - '§r§a§r§a'))))"
+              }
+            },
+            {
+              "heart_pulse": {
+                "type": "image",
+                "texture": "textures/ui/hakkai_heart",
+                "anchor_from": "top_left",
+                "anchor_to": "center",
+                "offset": [
+                  10,
+                  7.5
+                ],
+                "size": [
+                  20,
+                  20
+                ],
+                "bilinear": true,
+                "visible": "(not ($hakkai_msg = ($hakkai_msg - '§r§a§r§a')))"
+              }
+            },
+            {
+              "drop_full": {
+                "type": "image",
+                "texture": "textures/ui/hakkai_drop",
+                "anchor_from": "top_left",
+                "anchor_to": "center",
+                "offset": [
+                  10,
+                  21.25
+                ],
+                "size": [
+                  15,
+                  15
+                ],
+                "bilinear": true,
+                "visible": "(not (not ($hakkai_msg = ($hakkai_msg - '§r§b§r§b'))) and not (not ($hakkai_msg = ($hakkai_msg - '§r§8§r§8'))))"
+              }
+            },
+            {
+              "drop_mid": {
+                "type": "image",
+                "texture": "textures/ui/hakkai_drop",
+                "anchor_from": "top_left",
+                "anchor_to": "center",
+                "offset": [
+                  10,
+                  21.25
+                ],
+                "size": [
+                  12.5,
+                  12.5
+                ],
+                "bilinear": true,
+                "visible": "((not ($hakkai_msg = ($hakkai_msg - '§r§b§r§b'))) and not (not ($hakkai_msg = ($hakkai_msg - '§r§8§r§8'))))"
+              }
+            },
+            {
+              "drop_low": {
+                "type": "image",
+                "texture": "textures/ui/hakkai_drop",
+                "anchor_from": "top_left",
+                "anchor_to": "center",
+                "offset": [
+                  10,
+                  21.25
+                ],
+                "size": [
+                  8.75,
+                  8.75
+                ],
+                "bilinear": true,
+                "visible": "(not ($hakkai_msg = ($hakkai_msg - '§r§8§r§8')))"
+              }
+            },
+            {
+              "hakkai_readout": {
+                "type": "label",
+                "anchor_from": "top_left",
+                "anchor_to": "top_left",
+                "offset": [
+                  21.25,
+                  1
+                ],
+                "text": "(((((((($hakkai_msg - '§r§r§r§r') - '§r§f§r§f') - '§r§7§r§7') - '§r§c§r§c') - '§r§a§r§a') - '§r§b§r§b') - '§r§8§r§8') + '§r')",
+                "text_alignment": "left",
+                "localize": false,
+                "shadow": true,
+                "font_scale_factor": 1.25,
+                "line_padding": 1
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "root_panel": {
+    "modifications": [
+      {
+        "array_name": "controls",
+        "operation": "insert_front",
+        "value": [
+          {
+            "hakkai_overlay_area": {
+              "type": "panel",
+              "size": [
+                "100%",
+                "100%"
+              ],
+              "factory": {
+                "name": "hud_actionbar_text_factory",
+                "control_ids": {
+                  "hud_actionbar_text": "hud_actionbar_text@hud.hakkai_overlay"
+                }
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

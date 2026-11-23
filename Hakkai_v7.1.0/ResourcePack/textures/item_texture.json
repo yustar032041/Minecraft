@@ -1,0 +1,1341 @@
+{
+  "resource_pack_name": "hakkai",
+  "texture_name": "atlas.items",
+  "texture_data": {
+    "hakkai_autumn_squash_potage": {
+      "textures": "textures/items/hakkai_autumn_squash_potage"
+    },
+    "hakkai_autumn_squash_produce": {
+      "textures": "textures/items/hakkai_autumn_squash_produce"
+    },
+    "hakkai_autumn_squash_seed": {
+      "textures": "textures/items/hakkai_autumn_squash_seed"
+    },
+    "hakkai_awaken_book": {
+      "textures": "textures/items/hakkai_awaken_book"
+    },
+    "hakkai_bandage": {
+      "textures": "textures/items/hakkai_bandage"
+    },
+    "hakkai_barn_token": {
+      "textures": "textures/items/hakkai_barn_token"
+    },
+    "hakkai_camp_herbal_tea": {
+      "textures": "textures/items/hakkai_camp_herbal_tea"
+    },
+    "hakkai_camp_mushroom_wrap": {
+      "textures": "textures/items/hakkai_camp_mushroom_wrap"
+    },
+    "hakkai_camp_stew": {
+      "textures": "textures/items/hakkai_camp_stew"
+    },
+    "hakkai_camp_supply_pack": {
+      "textures": "textures/items/hakkai_camp_supply_pack"
+    },
+    "hakkai_chronicle_fragment": {
+      "textures": "textures/items/hakkai_chronicle_fragment"
+    },
+    "hakkai_cloth": {
+      "textures": "textures/items/hakkai_cloth"
+    },
+    "hakkai_crystal_0": {
+      "textures": "textures/items/hakkai_crystal_0"
+    },
+    "hakkai_crystal_1": {
+      "textures": "textures/items/hakkai_crystal_1"
+    },
+    "hakkai_crystal_10": {
+      "textures": "textures/items/hakkai_crystal_10"
+    },
+    "hakkai_crystal_11": {
+      "textures": "textures/items/hakkai_crystal_11"
+    },
+    "hakkai_crystal_12": {
+      "textures": "textures/items/hakkai_crystal_12"
+    },
+    "hakkai_crystal_13": {
+      "textures": "textures/items/hakkai_crystal_13"
+    },
+    "hakkai_crystal_14": {
+      "textures": "textures/items/hakkai_crystal_14"
+    },
+    "hakkai_crystal_15": {
+      "textures": "textures/items/hakkai_crystal_15"
+    },
+    "hakkai_crystal_16": {
+      "textures": "textures/items/hakkai_crystal_16"
+    },
+    "hakkai_crystal_17": {
+      "textures": "textures/items/hakkai_crystal_17"
+    },
+    "hakkai_crystal_18": {
+      "textures": "textures/items/hakkai_crystal_18"
+    },
+    "hakkai_crystal_19": {
+      "textures": "textures/items/hakkai_crystal_19"
+    },
+    "hakkai_crystal_2": {
+      "textures": "textures/items/hakkai_crystal_2"
+    },
+    "hakkai_crystal_3": {
+      "textures": "textures/items/hakkai_crystal_3"
+    },
+    "hakkai_crystal_4": {
+      "textures": "textures/items/hakkai_crystal_4"
+    },
+    "hakkai_crystal_5": {
+      "textures": "textures/items/hakkai_crystal_5"
+    },
+    "hakkai_crystal_6": {
+      "textures": "textures/items/hakkai_crystal_6"
+    },
+    "hakkai_crystal_7": {
+      "textures": "textures/items/hakkai_crystal_7"
+    },
+    "hakkai_crystal_8": {
+      "textures": "textures/items/hakkai_crystal_8"
+    },
+    "hakkai_crystal_9": {
+      "textures": "textures/items/hakkai_crystal_9"
+    },
+    "hakkai_dodge_scroll": {
+      "textures": "textures/items/hakkai_dodge_scroll"
+    },
+    "hakkai_dried_meat": {
+      "textures": "textures/items/hakkai_dried_meat"
+    },
+    "hakkai_dried_sweet_berries": {
+      "textures": "textures/items/hakkai_dried_sweet_berries"
+    },
+    "hakkai_drop_foe_0_0": {
+      "textures": "textures/items/hakkai_drop_foe_0_0"
+    },
+    "hakkai_drop_foe_0_1": {
+      "textures": "textures/items/hakkai_drop_foe_0_1"
+    },
+    "hakkai_drop_foe_0_10": {
+      "textures": "textures/items/hakkai_drop_foe_0_10"
+    },
+    "hakkai_drop_foe_0_11": {
+      "textures": "textures/items/hakkai_drop_foe_0_11"
+    },
+    "hakkai_drop_foe_0_2": {
+      "textures": "textures/items/hakkai_drop_foe_0_2"
+    },
+    "hakkai_drop_foe_0_3": {
+      "textures": "textures/items/hakkai_drop_foe_0_3"
+    },
+    "hakkai_drop_foe_0_4": {
+      "textures": "textures/items/hakkai_drop_foe_0_4"
+    },
+    "hakkai_drop_foe_0_5": {
+      "textures": "textures/items/hakkai_drop_foe_0_5"
+    },
+    "hakkai_drop_foe_0_6": {
+      "textures": "textures/items/hakkai_drop_foe_0_6"
+    },
+    "hakkai_drop_foe_0_7": {
+      "textures": "textures/items/hakkai_drop_foe_0_7"
+    },
+    "hakkai_drop_foe_0_8": {
+      "textures": "textures/items/hakkai_drop_foe_0_8"
+    },
+    "hakkai_drop_foe_0_9": {
+      "textures": "textures/items/hakkai_drop_foe_0_9"
+    },
+    "hakkai_drop_foe_1_0": {
+      "textures": "textures/items/hakkai_drop_foe_1_0"
+    },
+    "hakkai_drop_foe_1_1": {
+      "textures": "textures/items/hakkai_drop_foe_1_1"
+    },
+    "hakkai_drop_foe_1_10": {
+      "textures": "textures/items/hakkai_drop_foe_1_10"
+    },
+    "hakkai_drop_foe_1_11": {
+      "textures": "textures/items/hakkai_drop_foe_1_11"
+    },
+    "hakkai_drop_foe_1_2": {
+      "textures": "textures/items/hakkai_drop_foe_1_2"
+    },
+    "hakkai_drop_foe_1_3": {
+      "textures": "textures/items/hakkai_drop_foe_1_3"
+    },
+    "hakkai_drop_foe_1_4": {
+      "textures": "textures/items/hakkai_drop_foe_1_4"
+    },
+    "hakkai_drop_foe_1_5": {
+      "textures": "textures/items/hakkai_drop_foe_1_5"
+    },
+    "hakkai_drop_foe_1_6": {
+      "textures": "textures/items/hakkai_drop_foe_1_6"
+    },
+    "hakkai_drop_foe_1_7": {
+      "textures": "textures/items/hakkai_drop_foe_1_7"
+    },
+    "hakkai_drop_foe_1_8": {
+      "textures": "textures/items/hakkai_drop_foe_1_8"
+    },
+    "hakkai_drop_foe_1_9": {
+      "textures": "textures/items/hakkai_drop_foe_1_9"
+    },
+    "hakkai_drop_foe_2_0": {
+      "textures": "textures/items/hakkai_drop_foe_2_0"
+    },
+    "hakkai_drop_foe_2_1": {
+      "textures": "textures/items/hakkai_drop_foe_2_1"
+    },
+    "hakkai_drop_foe_2_10": {
+      "textures": "textures/items/hakkai_drop_foe_2_10"
+    },
+    "hakkai_drop_foe_2_11": {
+      "textures": "textures/items/hakkai_drop_foe_2_11"
+    },
+    "hakkai_drop_foe_2_2": {
+      "textures": "textures/items/hakkai_drop_foe_2_2"
+    },
+    "hakkai_drop_foe_2_3": {
+      "textures": "textures/items/hakkai_drop_foe_2_3"
+    },
+    "hakkai_drop_foe_2_4": {
+      "textures": "textures/items/hakkai_drop_foe_2_4"
+    },
+    "hakkai_drop_foe_2_5": {
+      "textures": "textures/items/hakkai_drop_foe_2_5"
+    },
+    "hakkai_drop_foe_2_6": {
+      "textures": "textures/items/hakkai_drop_foe_2_6"
+    },
+    "hakkai_drop_foe_2_7": {
+      "textures": "textures/items/hakkai_drop_foe_2_7"
+    },
+    "hakkai_drop_foe_2_8": {
+      "textures": "textures/items/hakkai_drop_foe_2_8"
+    },
+    "hakkai_drop_foe_2_9": {
+      "textures": "textures/items/hakkai_drop_foe_2_9"
+    },
+    "hakkai_drop_foe_3_0": {
+      "textures": "textures/items/hakkai_drop_foe_3_0"
+    },
+    "hakkai_drop_foe_3_1": {
+      "textures": "textures/items/hakkai_drop_foe_3_1"
+    },
+    "hakkai_drop_foe_3_10": {
+      "textures": "textures/items/hakkai_drop_foe_3_10"
+    },
+    "hakkai_drop_foe_3_11": {
+      "textures": "textures/items/hakkai_drop_foe_3_11"
+    },
+    "hakkai_drop_foe_3_2": {
+      "textures": "textures/items/hakkai_drop_foe_3_2"
+    },
+    "hakkai_drop_foe_3_3": {
+      "textures": "textures/items/hakkai_drop_foe_3_3"
+    },
+    "hakkai_drop_foe_3_4": {
+      "textures": "textures/items/hakkai_drop_foe_3_4"
+    },
+    "hakkai_drop_foe_3_5": {
+      "textures": "textures/items/hakkai_drop_foe_3_5"
+    },
+    "hakkai_drop_foe_3_6": {
+      "textures": "textures/items/hakkai_drop_foe_3_6"
+    },
+    "hakkai_drop_foe_3_7": {
+      "textures": "textures/items/hakkai_drop_foe_3_7"
+    },
+    "hakkai_drop_foe_3_8": {
+      "textures": "textures/items/hakkai_drop_foe_3_8"
+    },
+    "hakkai_drop_foe_3_9": {
+      "textures": "textures/items/hakkai_drop_foe_3_9"
+    },
+    "hakkai_drop_foe_4_0": {
+      "textures": "textures/items/hakkai_drop_foe_4_0"
+    },
+    "hakkai_drop_foe_4_1": {
+      "textures": "textures/items/hakkai_drop_foe_4_1"
+    },
+    "hakkai_drop_foe_4_10": {
+      "textures": "textures/items/hakkai_drop_foe_4_10"
+    },
+    "hakkai_drop_foe_4_11": {
+      "textures": "textures/items/hakkai_drop_foe_4_11"
+    },
+    "hakkai_drop_foe_4_2": {
+      "textures": "textures/items/hakkai_drop_foe_4_2"
+    },
+    "hakkai_drop_foe_4_3": {
+      "textures": "textures/items/hakkai_drop_foe_4_3"
+    },
+    "hakkai_drop_foe_4_4": {
+      "textures": "textures/items/hakkai_drop_foe_4_4"
+    },
+    "hakkai_drop_foe_4_5": {
+      "textures": "textures/items/hakkai_drop_foe_4_5"
+    },
+    "hakkai_drop_foe_4_6": {
+      "textures": "textures/items/hakkai_drop_foe_4_6"
+    },
+    "hakkai_drop_foe_4_7": {
+      "textures": "textures/items/hakkai_drop_foe_4_7"
+    },
+    "hakkai_drop_foe_4_8": {
+      "textures": "textures/items/hakkai_drop_foe_4_8"
+    },
+    "hakkai_drop_foe_4_9": {
+      "textures": "textures/items/hakkai_drop_foe_4_9"
+    },
+    "hakkai_drop_foe_5_0": {
+      "textures": "textures/items/hakkai_drop_foe_5_0"
+    },
+    "hakkai_drop_foe_5_1": {
+      "textures": "textures/items/hakkai_drop_foe_5_1"
+    },
+    "hakkai_drop_foe_5_10": {
+      "textures": "textures/items/hakkai_drop_foe_5_10"
+    },
+    "hakkai_drop_foe_5_11": {
+      "textures": "textures/items/hakkai_drop_foe_5_11"
+    },
+    "hakkai_drop_foe_5_2": {
+      "textures": "textures/items/hakkai_drop_foe_5_2"
+    },
+    "hakkai_drop_foe_5_3": {
+      "textures": "textures/items/hakkai_drop_foe_5_3"
+    },
+    "hakkai_drop_foe_5_4": {
+      "textures": "textures/items/hakkai_drop_foe_5_4"
+    },
+    "hakkai_drop_foe_5_5": {
+      "textures": "textures/items/hakkai_drop_foe_5_5"
+    },
+    "hakkai_drop_foe_5_6": {
+      "textures": "textures/items/hakkai_drop_foe_5_6"
+    },
+    "hakkai_drop_foe_5_7": {
+      "textures": "textures/items/hakkai_drop_foe_5_7"
+    },
+    "hakkai_drop_foe_5_8": {
+      "textures": "textures/items/hakkai_drop_foe_5_8"
+    },
+    "hakkai_drop_foe_5_9": {
+      "textures": "textures/items/hakkai_drop_foe_5_9"
+    },
+    "hakkai_drop_foe_6_0": {
+      "textures": "textures/items/hakkai_drop_foe_6_0"
+    },
+    "hakkai_drop_foe_6_1": {
+      "textures": "textures/items/hakkai_drop_foe_6_1"
+    },
+    "hakkai_drop_foe_6_10": {
+      "textures": "textures/items/hakkai_drop_foe_6_10"
+    },
+    "hakkai_drop_foe_6_11": {
+      "textures": "textures/items/hakkai_drop_foe_6_11"
+    },
+    "hakkai_drop_foe_6_2": {
+      "textures": "textures/items/hakkai_drop_foe_6_2"
+    },
+    "hakkai_drop_foe_6_3": {
+      "textures": "textures/items/hakkai_drop_foe_6_3"
+    },
+    "hakkai_drop_foe_6_4": {
+      "textures": "textures/items/hakkai_drop_foe_6_4"
+    },
+    "hakkai_drop_foe_6_5": {
+      "textures": "textures/items/hakkai_drop_foe_6_5"
+    },
+    "hakkai_drop_foe_6_6": {
+      "textures": "textures/items/hakkai_drop_foe_6_6"
+    },
+    "hakkai_drop_foe_6_7": {
+      "textures": "textures/items/hakkai_drop_foe_6_7"
+    },
+    "hakkai_drop_foe_6_8": {
+      "textures": "textures/items/hakkai_drop_foe_6_8"
+    },
+    "hakkai_drop_foe_6_9": {
+      "textures": "textures/items/hakkai_drop_foe_6_9"
+    },
+    "hakkai_drop_foe_7_0": {
+      "textures": "textures/items/hakkai_drop_foe_7_0"
+    },
+    "hakkai_drop_foe_7_1": {
+      "textures": "textures/items/hakkai_drop_foe_7_1"
+    },
+    "hakkai_drop_foe_7_10": {
+      "textures": "textures/items/hakkai_drop_foe_7_10"
+    },
+    "hakkai_drop_foe_7_11": {
+      "textures": "textures/items/hakkai_drop_foe_7_11"
+    },
+    "hakkai_drop_foe_7_2": {
+      "textures": "textures/items/hakkai_drop_foe_7_2"
+    },
+    "hakkai_drop_foe_7_3": {
+      "textures": "textures/items/hakkai_drop_foe_7_3"
+    },
+    "hakkai_drop_foe_7_4": {
+      "textures": "textures/items/hakkai_drop_foe_7_4"
+    },
+    "hakkai_drop_foe_7_5": {
+      "textures": "textures/items/hakkai_drop_foe_7_5"
+    },
+    "hakkai_drop_foe_7_6": {
+      "textures": "textures/items/hakkai_drop_foe_7_6"
+    },
+    "hakkai_drop_foe_7_7": {
+      "textures": "textures/items/hakkai_drop_foe_7_7"
+    },
+    "hakkai_drop_foe_7_8": {
+      "textures": "textures/items/hakkai_drop_foe_7_8"
+    },
+    "hakkai_drop_foe_7_9": {
+      "textures": "textures/items/hakkai_drop_foe_7_9"
+    },
+    "hakkai_drop_wild_0_0": {
+      "textures": "textures/items/hakkai_drop_wild_0_0"
+    },
+    "hakkai_drop_wild_0_1": {
+      "textures": "textures/items/hakkai_drop_wild_0_1"
+    },
+    "hakkai_drop_wild_0_2": {
+      "textures": "textures/items/hakkai_drop_wild_0_2"
+    },
+    "hakkai_drop_wild_1_0": {
+      "textures": "textures/items/hakkai_drop_wild_1_0"
+    },
+    "hakkai_drop_wild_1_1": {
+      "textures": "textures/items/hakkai_drop_wild_1_1"
+    },
+    "hakkai_drop_wild_1_2": {
+      "textures": "textures/items/hakkai_drop_wild_1_2"
+    },
+    "hakkai_drop_wild_2_0": {
+      "textures": "textures/items/hakkai_drop_wild_2_0"
+    },
+    "hakkai_drop_wild_2_1": {
+      "textures": "textures/items/hakkai_drop_wild_2_1"
+    },
+    "hakkai_drop_wild_2_2": {
+      "textures": "textures/items/hakkai_drop_wild_2_2"
+    },
+    "hakkai_drop_wild_3_0": {
+      "textures": "textures/items/hakkai_drop_wild_3_0"
+    },
+    "hakkai_drop_wild_3_1": {
+      "textures": "textures/items/hakkai_drop_wild_3_1"
+    },
+    "hakkai_drop_wild_3_2": {
+      "textures": "textures/items/hakkai_drop_wild_3_2"
+    },
+    "hakkai_drop_wild_4_0": {
+      "textures": "textures/items/hakkai_drop_wild_4_0"
+    },
+    "hakkai_drop_wild_4_1": {
+      "textures": "textures/items/hakkai_drop_wild_4_1"
+    },
+    "hakkai_drop_wild_4_2": {
+      "textures": "textures/items/hakkai_drop_wild_4_2"
+    },
+    "hakkai_drop_wild_5_0": {
+      "textures": "textures/items/hakkai_drop_wild_5_0"
+    },
+    "hakkai_drop_wild_5_1": {
+      "textures": "textures/items/hakkai_drop_wild_5_1"
+    },
+    "hakkai_drop_wild_5_2": {
+      "textures": "textures/items/hakkai_drop_wild_5_2"
+    },
+    "hakkai_drop_wild_6_0": {
+      "textures": "textures/items/hakkai_drop_wild_6_0"
+    },
+    "hakkai_drop_wild_6_1": {
+      "textures": "textures/items/hakkai_drop_wild_6_1"
+    },
+    "hakkai_drop_wild_6_2": {
+      "textures": "textures/items/hakkai_drop_wild_6_2"
+    },
+    "hakkai_drop_wild_7_0": {
+      "textures": "textures/items/hakkai_drop_wild_7_0"
+    },
+    "hakkai_drop_wild_7_1": {
+      "textures": "textures/items/hakkai_drop_wild_7_1"
+    },
+    "hakkai_drop_wild_7_2": {
+      "textures": "textures/items/hakkai_drop_wild_7_2"
+    },
+    "hakkai_eclipse_core": {
+      "textures": "textures/items/hakkai_eclipse_core"
+    },
+    "hakkai_element_tome": {
+      "textures": "textures/items/hakkai_element_tome"
+    },
+    "hakkai_expedition_bento": {
+      "textures": "textures/items/hakkai_expedition_bento"
+    },
+    "hakkai_farm_fiber": {
+      "textures": "textures/items/hakkai_farm_fiber"
+    },
+    "hakkai_festival_0": {
+      "textures": "textures/items/hakkai_festival_0"
+    },
+    "hakkai_festival_1": {
+      "textures": "textures/items/hakkai_festival_1"
+    },
+    "hakkai_festival_2": {
+      "textures": "textures/items/hakkai_festival_2"
+    },
+    "hakkai_festival_3": {
+      "textures": "textures/items/hakkai_festival_3"
+    },
+    "hakkai_festival_fish_0": {
+      "textures": "textures/items/hakkai_festival_fish_0"
+    },
+    "hakkai_festival_fish_1": {
+      "textures": "textures/items/hakkai_festival_fish_1"
+    },
+    "hakkai_festival_fish_2": {
+      "textures": "textures/items/hakkai_festival_fish_2"
+    },
+    "hakkai_festival_fish_3": {
+      "textures": "textures/items/hakkai_festival_fish_3"
+    },
+    "hakkai_fish_token": {
+      "textures": "textures/items/hakkai_fish_token"
+    },
+    "hakkai_forager_nut_mix": {
+      "textures": "textures/items/hakkai_forager_nut_mix"
+    },
+    "hakkai_forest_trail_meal": {
+      "textures": "textures/items/hakkai_forest_trail_meal"
+    },
+    "hakkai_frost_blossom_tea": {
+      "textures": "textures/items/hakkai_frost_blossom_tea"
+    },
+    "hakkai_gathered_herb_bundle": {
+      "textures": "textures/items/hakkai_gathered_herb_bundle"
+    },
+    "hakkai_gear_001": {
+      "textures": "textures/items/hakkai_gear_001"
+    },
+    "hakkai_gear_002": {
+      "textures": "textures/items/hakkai_gear_002"
+    },
+    "hakkai_gear_003": {
+      "textures": "textures/items/hakkai_gear_003"
+    },
+    "hakkai_gear_004": {
+      "textures": "textures/items/hakkai_gear_004"
+    },
+    "hakkai_gear_005": {
+      "textures": "textures/items/hakkai_gear_005"
+    },
+    "hakkai_gear_006": {
+      "textures": "textures/items/hakkai_gear_006"
+    },
+    "hakkai_gear_007": {
+      "textures": "textures/items/hakkai_gear_007"
+    },
+    "hakkai_gear_008": {
+      "textures": "textures/items/hakkai_gear_008"
+    },
+    "hakkai_gear_009": {
+      "textures": "textures/items/hakkai_gear_009"
+    },
+    "hakkai_gear_010": {
+      "textures": "textures/items/hakkai_gear_010"
+    },
+    "hakkai_gear_011": {
+      "textures": "textures/items/hakkai_gear_011"
+    },
+    "hakkai_gear_012": {
+      "textures": "textures/items/hakkai_gear_012"
+    },
+    "hakkai_gear_013": {
+      "textures": "textures/items/hakkai_gear_013"
+    },
+    "hakkai_gear_014": {
+      "textures": "textures/items/hakkai_gear_014"
+    },
+    "hakkai_gear_015": {
+      "textures": "textures/items/hakkai_gear_015"
+    },
+    "hakkai_gear_016": {
+      "textures": "textures/items/hakkai_gear_016"
+    },
+    "hakkai_gear_017": {
+      "textures": "textures/items/hakkai_gear_017"
+    },
+    "hakkai_gear_018": {
+      "textures": "textures/items/hakkai_gear_018"
+    },
+    "hakkai_gear_019": {
+      "textures": "textures/items/hakkai_gear_019"
+    },
+    "hakkai_gear_020": {
+      "textures": "textures/items/hakkai_gear_020"
+    },
+    "hakkai_gear_021": {
+      "textures": "textures/items/hakkai_gear_021"
+    },
+    "hakkai_gear_022": {
+      "textures": "textures/items/hakkai_gear_022"
+    },
+    "hakkai_gear_023": {
+      "textures": "textures/items/hakkai_gear_023"
+    },
+    "hakkai_gear_024": {
+      "textures": "textures/items/hakkai_gear_024"
+    },
+    "hakkai_gear_025": {
+      "textures": "textures/items/hakkai_gear_025"
+    },
+    "hakkai_gear_026": {
+      "textures": "textures/items/hakkai_gear_026"
+    },
+    "hakkai_gear_027": {
+      "textures": "textures/items/hakkai_gear_027"
+    },
+    "hakkai_gear_028": {
+      "textures": "textures/items/hakkai_gear_028"
+    },
+    "hakkai_gear_029": {
+      "textures": "textures/items/hakkai_gear_029"
+    },
+    "hakkai_gear_030": {
+      "textures": "textures/items/hakkai_gear_030"
+    },
+    "hakkai_gear_031": {
+      "textures": "textures/items/hakkai_gear_031"
+    },
+    "hakkai_gear_032": {
+      "textures": "textures/items/hakkai_gear_032"
+    },
+    "hakkai_gear_033": {
+      "textures": "textures/items/hakkai_gear_033"
+    },
+    "hakkai_gear_034": {
+      "textures": "textures/items/hakkai_gear_034"
+    },
+    "hakkai_gear_035": {
+      "textures": "textures/items/hakkai_gear_035"
+    },
+    "hakkai_gear_036": {
+      "textures": "textures/items/hakkai_gear_036"
+    },
+    "hakkai_gear_037": {
+      "textures": "textures/items/hakkai_gear_037"
+    },
+    "hakkai_gear_038": {
+      "textures": "textures/items/hakkai_gear_038"
+    },
+    "hakkai_gear_039": {
+      "textures": "textures/items/hakkai_gear_039"
+    },
+    "hakkai_gear_040": {
+      "textures": "textures/items/hakkai_gear_040"
+    },
+    "hakkai_gear_041": {
+      "textures": "textures/items/hakkai_gear_041"
+    },
+    "hakkai_gear_042": {
+      "textures": "textures/items/hakkai_gear_042"
+    },
+    "hakkai_gear_043": {
+      "textures": "textures/items/hakkai_gear_043"
+    },
+    "hakkai_gear_044": {
+      "textures": "textures/items/hakkai_gear_044"
+    },
+    "hakkai_gear_045": {
+      "textures": "textures/items/hakkai_gear_045"
+    },
+    "hakkai_gear_046": {
+      "textures": "textures/items/hakkai_gear_046"
+    },
+    "hakkai_gear_047": {
+      "textures": "textures/items/hakkai_gear_047"
+    },
+    "hakkai_gear_048": {
+      "textures": "textures/items/hakkai_gear_048"
+    },
+    "hakkai_gear_049": {
+      "textures": "textures/items/hakkai_gear_049"
+    },
+    "hakkai_gear_050": {
+      "textures": "textures/items/hakkai_gear_050"
+    },
+    "hakkai_gear_051": {
+      "textures": "textures/items/hakkai_gear_051"
+    },
+    "hakkai_gear_052": {
+      "textures": "textures/items/hakkai_gear_052"
+    },
+    "hakkai_gear_053": {
+      "textures": "textures/items/hakkai_gear_053"
+    },
+    "hakkai_gear_054": {
+      "textures": "textures/items/hakkai_gear_054"
+    },
+    "hakkai_gear_055": {
+      "textures": "textures/items/hakkai_gear_055"
+    },
+    "hakkai_gear_056": {
+      "textures": "textures/items/hakkai_gear_056"
+    },
+    "hakkai_gear_057": {
+      "textures": "textures/items/hakkai_gear_057"
+    },
+    "hakkai_gear_058": {
+      "textures": "textures/items/hakkai_gear_058"
+    },
+    "hakkai_gear_059": {
+      "textures": "textures/items/hakkai_gear_059"
+    },
+    "hakkai_gear_060": {
+      "textures": "textures/items/hakkai_gear_060"
+    },
+    "hakkai_gear_061": {
+      "textures": "textures/items/hakkai_gear_061"
+    },
+    "hakkai_gear_062": {
+      "textures": "textures/items/hakkai_gear_062"
+    },
+    "hakkai_gear_063": {
+      "textures": "textures/items/hakkai_gear_063"
+    },
+    "hakkai_gear_064": {
+      "textures": "textures/items/hakkai_gear_064"
+    },
+    "hakkai_gear_065": {
+      "textures": "textures/items/hakkai_gear_065"
+    },
+    "hakkai_gear_066": {
+      "textures": "textures/items/hakkai_gear_066"
+    },
+    "hakkai_gear_067": {
+      "textures": "textures/items/hakkai_gear_067"
+    },
+    "hakkai_gear_068": {
+      "textures": "textures/items/hakkai_gear_068"
+    },
+    "hakkai_gear_069": {
+      "textures": "textures/items/hakkai_gear_069"
+    },
+    "hakkai_gear_070": {
+      "textures": "textures/items/hakkai_gear_070"
+    },
+    "hakkai_gear_071": {
+      "textures": "textures/items/hakkai_gear_071"
+    },
+    "hakkai_gear_072": {
+      "textures": "textures/items/hakkai_gear_072"
+    },
+    "hakkai_gear_073": {
+      "textures": "textures/items/hakkai_gear_073"
+    },
+    "hakkai_gear_074": {
+      "textures": "textures/items/hakkai_gear_074"
+    },
+    "hakkai_gear_075": {
+      "textures": "textures/items/hakkai_gear_075"
+    },
+    "hakkai_gear_076": {
+      "textures": "textures/items/hakkai_gear_076"
+    },
+    "hakkai_gear_077": {
+      "textures": "textures/items/hakkai_gear_077"
+    },
+    "hakkai_gear_078": {
+      "textures": "textures/items/hakkai_gear_078"
+    },
+    "hakkai_gear_079": {
+      "textures": "textures/items/hakkai_gear_079"
+    },
+    "hakkai_gear_080": {
+      "textures": "textures/items/hakkai_gear_080"
+    },
+    "hakkai_gear_081": {
+      "textures": "textures/items/hakkai_gear_081"
+    },
+    "hakkai_gear_082": {
+      "textures": "textures/items/hakkai_gear_082"
+    },
+    "hakkai_gear_083": {
+      "textures": "textures/items/hakkai_gear_083"
+    },
+    "hakkai_gear_084": {
+      "textures": "textures/items/hakkai_gear_084"
+    },
+    "hakkai_gear_085": {
+      "textures": "textures/items/hakkai_gear_085"
+    },
+    "hakkai_gear_086": {
+      "textures": "textures/items/hakkai_gear_086"
+    },
+    "hakkai_gear_087": {
+      "textures": "textures/items/hakkai_gear_087"
+    },
+    "hakkai_gear_088": {
+      "textures": "textures/items/hakkai_gear_088"
+    },
+    "hakkai_gear_089": {
+      "textures": "textures/items/hakkai_gear_089"
+    },
+    "hakkai_gear_090": {
+      "textures": "textures/items/hakkai_gear_090"
+    },
+    "hakkai_gear_091": {
+      "textures": "textures/items/hakkai_gear_091"
+    },
+    "hakkai_gear_092": {
+      "textures": "textures/items/hakkai_gear_092"
+    },
+    "hakkai_gear_093": {
+      "textures": "textures/items/hakkai_gear_093"
+    },
+    "hakkai_gear_094": {
+      "textures": "textures/items/hakkai_gear_094"
+    },
+    "hakkai_gear_095": {
+      "textures": "textures/items/hakkai_gear_095"
+    },
+    "hakkai_gear_096": {
+      "textures": "textures/items/hakkai_gear_096"
+    },
+    "hakkai_gear_097": {
+      "textures": "textures/items/hakkai_gear_097"
+    },
+    "hakkai_gear_098": {
+      "textures": "textures/items/hakkai_gear_098"
+    },
+    "hakkai_gear_099": {
+      "textures": "textures/items/hakkai_gear_099"
+    },
+    "hakkai_gear_100": {
+      "textures": "textures/items/hakkai_gear_100"
+    },
+    "hakkai_gear_101": {
+      "textures": "textures/items/hakkai_gear_101"
+    },
+    "hakkai_gear_102": {
+      "textures": "textures/items/hakkai_gear_102"
+    },
+    "hakkai_gear_103": {
+      "textures": "textures/items/hakkai_gear_103"
+    },
+    "hakkai_gear_104": {
+      "textures": "textures/items/hakkai_gear_104"
+    },
+    "hakkai_gear_105": {
+      "textures": "textures/items/hakkai_gear_105"
+    },
+    "hakkai_gear_106": {
+      "textures": "textures/items/hakkai_gear_106"
+    },
+    "hakkai_gear_107": {
+      "textures": "textures/items/hakkai_gear_107"
+    },
+    "hakkai_gear_108": {
+      "textures": "textures/items/hakkai_gear_108"
+    },
+    "hakkai_gear_109": {
+      "textures": "textures/items/hakkai_gear_109"
+    },
+    "hakkai_gear_110": {
+      "textures": "textures/items/hakkai_gear_110"
+    },
+    "hakkai_gear_111": {
+      "textures": "textures/items/hakkai_gear_111"
+    },
+    "hakkai_gear_112": {
+      "textures": "textures/items/hakkai_gear_112"
+    },
+    "hakkai_gear_113": {
+      "textures": "textures/items/hakkai_gear_113"
+    },
+    "hakkai_gear_114": {
+      "textures": "textures/items/hakkai_gear_114"
+    },
+    "hakkai_gear_115": {
+      "textures": "textures/items/hakkai_gear_115"
+    },
+    "hakkai_gear_116": {
+      "textures": "textures/items/hakkai_gear_116"
+    },
+    "hakkai_gear_117": {
+      "textures": "textures/items/hakkai_gear_117"
+    },
+    "hakkai_gear_118": {
+      "textures": "textures/items/hakkai_gear_118"
+    },
+    "hakkai_gear_119": {
+      "textures": "textures/items/hakkai_gear_119"
+    },
+    "hakkai_gear_120": {
+      "textures": "textures/items/hakkai_gear_120"
+    },
+    "hakkai_gear_121": {
+      "textures": "textures/items/hakkai_gear_121"
+    },
+    "hakkai_gear_122": {
+      "textures": "textures/items/hakkai_gear_122"
+    },
+    "hakkai_gear_123": {
+      "textures": "textures/items/hakkai_gear_123"
+    },
+    "hakkai_gear_124": {
+      "textures": "textures/items/hakkai_gear_124"
+    },
+    "hakkai_gear_125": {
+      "textures": "textures/items/hakkai_gear_125"
+    },
+    "hakkai_gear_126": {
+      "textures": "textures/items/hakkai_gear_126"
+    },
+    "hakkai_gear_127": {
+      "textures": "textures/items/hakkai_gear_127"
+    },
+    "hakkai_gear_128": {
+      "textures": "textures/items/hakkai_gear_128"
+    },
+    "hakkai_gear_129": {
+      "textures": "textures/items/hakkai_gear_129"
+    },
+    "hakkai_gear_130": {
+      "textures": "textures/items/hakkai_gear_130"
+    },
+    "hakkai_gear_131": {
+      "textures": "textures/items/hakkai_gear_131"
+    },
+    "hakkai_gear_132": {
+      "textures": "textures/items/hakkai_gear_132"
+    },
+    "hakkai_gear_133": {
+      "textures": "textures/items/hakkai_gear_133"
+    },
+    "hakkai_gear_134": {
+      "textures": "textures/items/hakkai_gear_134"
+    },
+    "hakkai_gear_135": {
+      "textures": "textures/items/hakkai_gear_135"
+    },
+    "hakkai_gear_136": {
+      "textures": "textures/items/hakkai_gear_136"
+    },
+    "hakkai_gear_137": {
+      "textures": "textures/items/hakkai_gear_137"
+    },
+    "hakkai_gear_138": {
+      "textures": "textures/items/hakkai_gear_138"
+    },
+    "hakkai_gear_139": {
+      "textures": "textures/items/hakkai_gear_139"
+    },
+    "hakkai_gear_140": {
+      "textures": "textures/items/hakkai_gear_140"
+    },
+    "hakkai_gear_141": {
+      "textures": "textures/items/hakkai_gear_141"
+    },
+    "hakkai_gear_142": {
+      "textures": "textures/items/hakkai_gear_142"
+    },
+    "hakkai_gear_143": {
+      "textures": "textures/items/hakkai_gear_143"
+    },
+    "hakkai_gear_144": {
+      "textures": "textures/items/hakkai_gear_144"
+    },
+    "hakkai_gear_145": {
+      "textures": "textures/items/hakkai_gear_145"
+    },
+    "hakkai_gear_146": {
+      "textures": "textures/items/hakkai_gear_146"
+    },
+    "hakkai_gear_147": {
+      "textures": "textures/items/hakkai_gear_147"
+    },
+    "hakkai_gear_148": {
+      "textures": "textures/items/hakkai_gear_148"
+    },
+    "hakkai_gear_149": {
+      "textures": "textures/items/hakkai_gear_149"
+    },
+    "hakkai_gear_150": {
+      "textures": "textures/items/hakkai_gear_150"
+    },
+    "hakkai_gear_151": {
+      "textures": "textures/items/hakkai_gear_151"
+    },
+    "hakkai_gear_152": {
+      "textures": "textures/items/hakkai_gear_152"
+    },
+    "hakkai_gear_153": {
+      "textures": "textures/items/hakkai_gear_153"
+    },
+    "hakkai_gear_154": {
+      "textures": "textures/items/hakkai_gear_154"
+    },
+    "hakkai_gear_155": {
+      "textures": "textures/items/hakkai_gear_155"
+    },
+    "hakkai_gear_156": {
+      "textures": "textures/items/hakkai_gear_156"
+    },
+    "hakkai_gear_157": {
+      "textures": "textures/items/hakkai_gear_157"
+    },
+    "hakkai_gear_158": {
+      "textures": "textures/items/hakkai_gear_158"
+    },
+    "hakkai_gear_159": {
+      "textures": "textures/items/hakkai_gear_159"
+    },
+    "hakkai_gear_160": {
+      "textures": "textures/items/hakkai_gear_160"
+    },
+    "hakkai_gear_161": {
+      "textures": "textures/items/hakkai_gear_161"
+    },
+    "hakkai_gear_162": {
+      "textures": "textures/items/hakkai_gear_162"
+    },
+    "hakkai_gear_163": {
+      "textures": "textures/items/hakkai_gear_163"
+    },
+    "hakkai_gear_164": {
+      "textures": "textures/items/hakkai_gear_164"
+    },
+    "hakkai_gear_165": {
+      "textures": "textures/items/hakkai_gear_165"
+    },
+    "hakkai_gear_166": {
+      "textures": "textures/items/hakkai_gear_166"
+    },
+    "hakkai_gear_167": {
+      "textures": "textures/items/hakkai_gear_167"
+    },
+    "hakkai_gear_168": {
+      "textures": "textures/items/hakkai_gear_168"
+    },
+    "hakkai_gear_169": {
+      "textures": "textures/items/hakkai_gear_169"
+    },
+    "hakkai_gear_170": {
+      "textures": "textures/items/hakkai_gear_170"
+    },
+    "hakkai_gear_171": {
+      "textures": "textures/items/hakkai_gear_171"
+    },
+    "hakkai_gear_172": {
+      "textures": "textures/items/hakkai_gear_172"
+    },
+    "hakkai_gear_173": {
+      "textures": "textures/items/hakkai_gear_173"
+    },
+    "hakkai_gear_174": {
+      "textures": "textures/items/hakkai_gear_174"
+    },
+    "hakkai_gear_175": {
+      "textures": "textures/items/hakkai_gear_175"
+    },
+    "hakkai_gear_176": {
+      "textures": "textures/items/hakkai_gear_176"
+    },
+    "hakkai_gear_177": {
+      "textures": "textures/items/hakkai_gear_177"
+    },
+    "hakkai_gear_178": {
+      "textures": "textures/items/hakkai_gear_178"
+    },
+    "hakkai_gear_179": {
+      "textures": "textures/items/hakkai_gear_179"
+    },
+    "hakkai_gear_180": {
+      "textures": "textures/items/hakkai_gear_180"
+    },
+    "hakkai_gear_181": {
+      "textures": "textures/items/hakkai_gear_181"
+    },
+    "hakkai_gear_182": {
+      "textures": "textures/items/hakkai_gear_182"
+    },
+    "hakkai_gear_183": {
+      "textures": "textures/items/hakkai_gear_183"
+    },
+    "hakkai_gear_184": {
+      "textures": "textures/items/hakkai_gear_184"
+    },
+    "hakkai_gear_185": {
+      "textures": "textures/items/hakkai_gear_185"
+    },
+    "hakkai_gear_186": {
+      "textures": "textures/items/hakkai_gear_186"
+    },
+    "hakkai_gear_187": {
+      "textures": "textures/items/hakkai_gear_187"
+    },
+    "hakkai_gear_188": {
+      "textures": "textures/items/hakkai_gear_188"
+    },
+    "hakkai_gear_189": {
+      "textures": "textures/items/hakkai_gear_189"
+    },
+    "hakkai_gear_190": {
+      "textures": "textures/items/hakkai_gear_190"
+    },
+    "hakkai_gear_191": {
+      "textures": "textures/items/hakkai_gear_191"
+    },
+    "hakkai_gear_192": {
+      "textures": "textures/items/hakkai_gear_192"
+    },
+    "hakkai_gear_193": {
+      "textures": "textures/items/hakkai_gear_193"
+    },
+    "hakkai_gear_194": {
+      "textures": "textures/items/hakkai_gear_194"
+    },
+    "hakkai_gear_195": {
+      "textures": "textures/items/hakkai_gear_195"
+    },
+    "hakkai_gear_196": {
+      "textures": "textures/items/hakkai_gear_196"
+    },
+    "hakkai_gear_197": {
+      "textures": "textures/items/hakkai_gear_197"
+    },
+    "hakkai_gear_198": {
+      "textures": "textures/items/hakkai_gear_198"
+    },
+    "hakkai_gear_199": {
+      "textures": "textures/items/hakkai_gear_199"
+    },
+    "hakkai_gear_200": {
+      "textures": "textures/items/hakkai_gear_200"
+    },
+    "hakkai_gear_201": {
+      "textures": "textures/items/hakkai_gear_201"
+    },
+    "hakkai_gear_202": {
+      "textures": "textures/items/hakkai_gear_202"
+    },
+    "hakkai_gear_203": {
+      "textures": "textures/items/hakkai_gear_203"
+    },
+    "hakkai_gear_204": {
+      "textures": "textures/items/hakkai_gear_204"
+    },
+    "hakkai_gear_205": {
+      "textures": "textures/items/hakkai_gear_205"
+    },
+    "hakkai_gear_206": {
+      "textures": "textures/items/hakkai_gear_206"
+    },
+    "hakkai_gear_207": {
+      "textures": "textures/items/hakkai_gear_207"
+    },
+    "hakkai_gear_208": {
+      "textures": "textures/items/hakkai_gear_208"
+    },
+    "hakkai_gear_209": {
+      "textures": "textures/items/hakkai_gear_209"
+    },
+    "hakkai_gear_210": {
+      "textures": "textures/items/hakkai_gear_210"
+    },
+    "hakkai_gear_211": {
+      "textures": "textures/items/hakkai_gear_211"
+    },
+    "hakkai_gear_212": {
+      "textures": "textures/items/hakkai_gear_212"
+    },
+    "hakkai_gear_213": {
+      "textures": "textures/items/hakkai_gear_213"
+    },
+    "hakkai_guardian_core_0": {
+      "textures": "textures/items/hakkai_guardian_core_0"
+    },
+    "hakkai_guardian_core_1": {
+      "textures": "textures/items/hakkai_guardian_core_1"
+    },
+    "hakkai_guardian_core_2": {
+      "textures": "textures/items/hakkai_guardian_core_2"
+    },
+    "hakkai_guardian_core_3": {
+      "textures": "textures/items/hakkai_guardian_core_3"
+    },
+    "hakkai_guardian_core_4": {
+      "textures": "textures/items/hakkai_guardian_core_4"
+    },
+    "hakkai_guardian_core_5": {
+      "textures": "textures/items/hakkai_guardian_core_5"
+    },
+    "hakkai_guardian_core_6": {
+      "textures": "textures/items/hakkai_guardian_core_6"
+    },
+    "hakkai_guardian_core_7": {
+      "textures": "textures/items/hakkai_guardian_core_7"
+    },
+    "hakkai_guide": {
+      "textures": "textures/items/hakkai_guide"
+    },
+    "hakkai_ice_blossom_produce": {
+      "textures": "textures/items/hakkai_ice_blossom_produce"
+    },
+    "hakkai_ice_blossom_seed": {
+      "textures": "textures/items/hakkai_ice_blossom_seed"
+    },
+    "hakkai_island_stone": {
+      "textures": "textures/items/hakkai_island_stone"
+    },
+    "hakkai_mana_draught": {
+      "textures": "textures/items/hakkai_mana_draught"
+    },
+    "hakkai_mana_tonic": {
+      "textures": "textures/items/hakkai_mana_tonic"
+    },
+    "hakkai_preserved_ration": {
+      "textures": "textures/items/hakkai_preserved_ration"
+    },
+    "hakkai_relic_key": {
+      "textures": "textures/items/hakkai_relic_key"
+    },
+    "hakkai_return_stone": {
+      "textures": "textures/items/hakkai_return_stone"
+    },
+    "hakkai_roasted_root_plate": {
+      "textures": "textures/items/hakkai_roasted_root_plate"
+    },
+    "hakkai_rune_book_0": {
+      "textures": "textures/items/hakkai_rune_book_0"
+    },
+    "hakkai_rune_book_1": {
+      "textures": "textures/items/hakkai_rune_book_1"
+    },
+    "hakkai_rune_book_2": {
+      "textures": "textures/items/hakkai_rune_book_2"
+    },
+    "hakkai_rune_book_3": {
+      "textures": "textures/items/hakkai_rune_book_3"
+    },
+    "hakkai_shard_0": {
+      "textures": "textures/items/hakkai_shard_0"
+    },
+    "hakkai_shard_1": {
+      "textures": "textures/items/hakkai_shard_1"
+    },
+    "hakkai_shard_10": {
+      "textures": "textures/items/hakkai_shard_10"
+    },
+    "hakkai_shard_11": {
+      "textures": "textures/items/hakkai_shard_11"
+    },
+    "hakkai_shard_12": {
+      "textures": "textures/items/hakkai_shard_12"
+    },
+    "hakkai_shard_13": {
+      "textures": "textures/items/hakkai_shard_13"
+    },
+    "hakkai_shard_14": {
+      "textures": "textures/items/hakkai_shard_14"
+    },
+    "hakkai_shard_15": {
+      "textures": "textures/items/hakkai_shard_15"
+    },
+    "hakkai_shard_16": {
+      "textures": "textures/items/hakkai_shard_16"
+    },
+    "hakkai_shard_17": {
+      "textures": "textures/items/hakkai_shard_17"
+    },
+    "hakkai_shard_18": {
+      "textures": "textures/items/hakkai_shard_18"
+    },
+    "hakkai_shard_19": {
+      "textures": "textures/items/hakkai_shard_19"
+    },
+    "hakkai_shard_2": {
+      "textures": "textures/items/hakkai_shard_2"
+    },
+    "hakkai_shard_3": {
+      "textures": "textures/items/hakkai_shard_3"
+    },
+    "hakkai_shard_4": {
+      "textures": "textures/items/hakkai_shard_4"
+    },
+    "hakkai_shard_5": {
+      "textures": "textures/items/hakkai_shard_5"
+    },
+    "hakkai_shard_6": {
+      "textures": "textures/items/hakkai_shard_6"
+    },
+    "hakkai_shard_7": {
+      "textures": "textures/items/hakkai_shard_7"
+    },
+    "hakkai_shard_8": {
+      "textures": "textures/items/hakkai_shard_8"
+    },
+    "hakkai_shard_9": {
+      "textures": "textures/items/hakkai_shard_9"
+    },
+    "hakkai_smoked_fish_strip": {
+      "textures": "textures/items/hakkai_smoked_fish_strip"
+    },
+    "hakkai_spring_garden_soup": {
+      "textures": "textures/items/hakkai_spring_garden_soup"
+    },
+    "hakkai_spring_tulip_produce": {
+      "textures": "textures/items/hakkai_spring_tulip_produce"
+    },
+    "hakkai_spring_tulip_seed": {
+      "textures": "textures/items/hakkai_spring_tulip_seed"
+    },
+    "hakkai_spring_water_flask": {
+      "textures": "textures/items/hakkai_spring_water_flask"
+    },
+    "hakkai_summer_corn_produce": {
+      "textures": "textures/items/hakkai_summer_corn_produce"
+    },
+    "hakkai_summer_corn_seed": {
+      "textures": "textures/items/hakkai_summer_corn_seed"
+    },
+    "hakkai_summer_corn_stew": {
+      "textures": "textures/items/hakkai_summer_corn_stew"
+    },
+    "hakkai_summer_sunflower_produce": {
+      "textures": "textures/items/hakkai_summer_sunflower_produce"
+    },
+    "hakkai_summer_sunflower_seed": {
+      "textures": "textures/items/hakkai_summer_sunflower_seed"
+    },
+    "hakkai_sunflower_trail_bowl": {
+      "textures": "textures/items/hakkai_sunflower_trail_bowl"
+    },
+    "hakkai_taunt_scroll": {
+      "textures": "textures/items/hakkai_taunt_scroll"
+    },
+    "hakkai_toki_crystal": {
+      "textures": "textures/items/hakkai_toki_crystal"
+    },
+    "hakkai_trail_ration": {
+      "textures": "textures/items/hakkai_trail_ration"
+    },
+    "hakkai_travel_pass": {
+      "textures": "textures/items/hakkai_travel_pass"
+    },
+    "hakkai_village_badge": {
+      "textures": "textures/items/hakkai_village_badge"
+    },
+    "hakkai_war_horn": {
+      "textures": "textures/items/hakkai_war_horn"
+    },
+    "hakkai_wind_legacy_memorial": {
+      "textures": "textures/items/hakkai_wind_legacy_memorial"
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "format_version": "1.26.60",
+  "minecraft:block": {
+    "description": {
+      "identifier": "hakkai:sky_crystal",
+      "menu_category": {
+        "category": "construction"
+      }
+    },
+    "components": {
+      "minecraft:display_name": "tile.hakkai:sky_crystal.name",
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "hakkai_sky_crystal",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:map_color": "#75d8e8",
+      "minecraft:sound": {
+        "sound": "amethyst"
+      },
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 0.7
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 4
+      },
+      "minecraft:light_dampening": 1,
+      "minecraft:light_emission": 9
+    }
+  }
+}

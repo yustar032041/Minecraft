@@ -1,0 +1,26 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "hakkai:watch_post"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:oak_fence"
+      },
+      {
+        "item": "minecraft:lantern"
+      },
+      {
+        "item": "minecraft:ladder"
+      }
+    ],
+    "result": {
+      "item": "hakkai:watch_post",
+      "count": 1
+    }
+  }
+}

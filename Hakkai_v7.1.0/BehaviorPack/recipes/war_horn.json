@@ -1,0 +1,32 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "hakkai:war_horn"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "hakkai:toki_crystal"
+      },
+      {
+        "item": "hakkai:toki_crystal"
+      },
+      {
+        "item": "hakkai:toki_crystal"
+      },
+      {
+        "item": "hakkai:toki_crystal"
+      },
+      {
+        "item": "minecraft:goat_horn"
+      }
+    ],
+    "result": {
+      "item": "hakkai:war_horn",
+      "count": 1
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "format_version": "1.13.0",
+  "minecraft:ore_feature": {
+    "description": {
+      "identifier": "hakkai:survey_seabed_vein"
+    },
+    "count": 5,
+    "places_block": "hakkai:ore_14",
+    "may_replace": [
+      "minecraft:gravel",
+      "minecraft:sand",
+      "minecraft:stone"
+    ]
+  }
+}

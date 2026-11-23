@@ -1,0 +1,26 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "hakkai:relic_key"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:compass"
+      },
+      {
+        "item": "hakkai:chronicle_fragment"
+      },
+      {
+        "item": "hakkai:crystal_7"
+      }
+    ],
+    "result": {
+      "item": "hakkai:relic_key",
+      "count": 1
+    }
+  }
+}

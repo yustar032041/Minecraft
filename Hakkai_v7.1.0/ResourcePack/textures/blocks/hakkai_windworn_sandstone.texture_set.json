@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "hakkai_windworn_sandstone",
+    "metalness_emissive_roughness": "hakkai_windworn_sandstone_mer",
+    "normal": "hakkai_windworn_sandstone_n"
+  }
+}

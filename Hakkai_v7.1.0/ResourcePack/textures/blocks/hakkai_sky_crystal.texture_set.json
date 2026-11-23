@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "hakkai_sky_crystal",
+    "metalness_emissive_roughness": "hakkai_sky_crystal_mer",
+    "normal": "hakkai_sky_crystal_n"
+  }
+}

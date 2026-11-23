@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "hakkai_conveyor",
+    "metalness_emissive_roughness": "hakkai_conveyor_mer",
+    "normal": "hakkai_conveyor_n"
+  }
+}

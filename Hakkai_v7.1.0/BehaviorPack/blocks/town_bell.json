@@ -1,0 +1,40 @@
+{
+  "format_version": "1.26.60",
+  "minecraft:block": {
+    "description": {
+      "identifier": "hakkai:town_bell",
+      "menu_category": {
+        "category": "construction"
+      }
+    },
+    "components": {
+      "minecraft:display_name": "tile.hakkai:town_bell.name",
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "hakkai_town_bell",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:map_color": "#e0c990",
+      "minecraft:sound": {
+        "sound": "wood"
+      },
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 1
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 3
+      },
+      "minecraft:loot": "loot_tables/hakkai/blocks/town_bell.json",
+      "hakkai:town": {},
+      "minecraft:tick": {
+        "interval_range": [
+          28,
+          36
+        ],
+        "looping": true
+      }
+    }
+  }
+}

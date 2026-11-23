@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "hakkai_summer_corn",
+    "metalness_emissive_roughness": "hakkai_summer_corn_mer",
+    "normal": "hakkai_summer_corn_n"
+  }
+}

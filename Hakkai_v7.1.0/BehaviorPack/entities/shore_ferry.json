@@ -1,0 +1,75 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "hakkai:shore_ferry",
+      "is_summonable": true,
+      "is_spawnable": false
+    },
+    "components": {
+      "minecraft:type_family": {
+        "family": [
+          "hakkai_ferry"
+        ]
+      },
+      "minecraft:health": {
+        "value": 14,
+        "max": 14
+      },
+      "minecraft:transient": {},
+      "minecraft:collision_box": {
+        "width": 1.6,
+        "height": 0.7
+      },
+      "minecraft:physics": {
+        "has_gravity": false,
+        "has_collision": false
+      },
+      "minecraft:pushable": {
+        "is_pushable": false,
+        "is_pushable_by_piston": false
+      },
+      "minecraft:rideable": {
+        "seat_count": 1,
+        "family_types": [
+          "player"
+        ],
+        "interact_text": "action.interact.ride.hakkai_ferry",
+        "seats": [
+          {
+            "position": [
+              0,
+              0.34,
+              0
+            ]
+          }
+        ]
+      },
+      "minecraft:timer": {
+        "looping": false,
+        "time": {
+          "min": 30,
+          "max": 30
+        },
+        "time_down_event": {
+          "event": "hakkai:retire",
+          "target": "self"
+        }
+      }
+    },
+    "component_groups": {
+      "hakkai:expired": {
+        "minecraft:instant_despawn": {}
+      }
+    },
+    "events": {
+      "hakkai:retire": {
+        "add": {
+          "component_groups": [
+            "hakkai:expired"
+          ]
+        }
+      }
+    }
+  }
+}

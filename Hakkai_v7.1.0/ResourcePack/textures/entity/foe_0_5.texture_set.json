@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "foe_0_5",
+    "metalness_emissive_roughness": "foe_0_5_mer",
+    "normal": "foe_0_5_n"
+  }
+}

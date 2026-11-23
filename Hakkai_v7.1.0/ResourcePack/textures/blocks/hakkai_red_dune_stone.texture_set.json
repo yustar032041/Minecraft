@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "hakkai_red_dune_stone",
+    "metalness_emissive_roughness": "hakkai_red_dune_stone_mer",
+    "normal": "hakkai_red_dune_stone_n"
+  }
+}

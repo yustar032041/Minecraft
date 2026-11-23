@@ -1,0 +1,23 @@
+{
+  "format_version": "1.13.0",
+  "minecraft:search_feature": {
+    "description": {
+      "identifier": "hakkai:field_ember_library_search"
+    },
+    "places_feature": "hakkai:field_ember_library_feature",
+    "search_volume": {
+      "min": [
+        0,
+        -10,
+        0
+      ],
+      "max": [
+        0,
+        8,
+        0
+      ]
+    },
+    "search_axis": "-y",
+    "required_successes": 1
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "format_version": "1.13.0",
+  "minecraft:ore_feature": {
+    "description": {
+      "identifier": "hakkai:survey_end_stone_vein"
+    },
+    "count": 5,
+    "places_block": "hakkai:ore_7",
+    "may_replace": [
+      "minecraft:end_stone"
+    ]
+  }
+}

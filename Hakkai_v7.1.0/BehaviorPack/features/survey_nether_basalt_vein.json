@@ -1,0 +1,15 @@
+{
+  "format_version": "1.13.0",
+  "minecraft:ore_feature": {
+    "description": {
+      "identifier": "hakkai:survey_nether_basalt_vein"
+    },
+    "count": 5,
+    "places_block": "hakkai:ore_4",
+    "may_replace": [
+      "minecraft:basalt",
+      "minecraft:blackstone",
+      "minecraft:netherrack"
+    ]
+  }
+}

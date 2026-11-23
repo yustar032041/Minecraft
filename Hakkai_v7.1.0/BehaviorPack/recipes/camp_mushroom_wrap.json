@@ -1,0 +1,26 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "hakkai:camp_mushroom_wrap"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:bread"
+      },
+      {
+        "item": "minecraft:brown_mushroom"
+      },
+      {
+        "item": "minecraft:baked_potato"
+      }
+    ],
+    "result": {
+      "item": "hakkai:camp_mushroom_wrap",
+      "count": 1
+    }
+  }
+}

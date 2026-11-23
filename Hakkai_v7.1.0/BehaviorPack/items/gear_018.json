@@ -1,0 +1,46 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:item": {
+    "description": {
+      "identifier": "hakkai:gear_018",
+      "menu_category": {
+        "category": "items"
+      }
+    },
+    "components": {
+      "minecraft:display_name": {
+        "value": "item.hakkai:gear_018.name"
+      },
+      "minecraft:icon": "hakkai_gear_018",
+      "minecraft:max_stack_size": 1,
+      "minecraft:damage": 23,
+      "minecraft:hand_equipped": true,
+      "minecraft:durability": {
+        "max_durability": 401
+      },
+      "minecraft:use_animation": "bow",
+      "minecraft:use_modifiers": {
+        "use_duration": 72000,
+        "movement_modifier": 0.35
+      },
+      "minecraft:shooter": {
+        "ammunition": [
+          {
+            "item": "minecraft:arrow",
+            "search_inventory": true,
+            "use_in_creative": true,
+            "use_offhand": true
+          }
+        ],
+        "max_draw_duration": 1.1,
+        "scale_power_by_draw_duration": true
+      },
+      "hakkai:use": {},
+      "minecraft:interact_button": "action.interact.hakkai.use",
+      "minecraft:enchantable": {
+        "slot": "bow",
+        "value": 12
+      }
+    }
+  }
+}
