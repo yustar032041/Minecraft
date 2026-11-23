@@ -15,11 +15,17 @@
         "default": "geometry.hakkai.armor_leggings"
       },
       "scripts": {
-        "parent_setup": "variable.leg_layer_visible = 0.0;"
+        "parent_setup": "variable.leg_layer_visible = 0.0;",
+        "animate": [
+          "offset"
+        ]
       },
       "render_controllers": [
         "controller.render.armor"
-      ]
+      ],
+      "animations": {
+        "offset": "animation.armor.leggings.offset"
+      }
     }
   }
 }

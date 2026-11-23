@@ -38,7 +38,7 @@ function fixture(){
 {
  const {p,enemy,g,s,guard}=fixture();guard.tick(p,g,s,0);const source={cause:EntityDamageCause.entityAttack,damagingEntity:enemy};
  p.isSwimming=true;assert.equal(guard.blocks(p,g,source,1),false);p.isSwimming=false;
- p.getGameMode=()=>GameMode.Creative;assert.equal(guard.blocks(p,g,source,1),false);assert.equal(guard.tick(p,g,s,10),false);
+ p.getGameMode=()=>GameMode.Spectator;assert.equal(guard.blocks(p,g,source,1),false);assert.equal(guard.tick(p,g,s,10),false);
 }
 {
  const {p,enemy,g,s,guard}=fixture();guard.tick(p,g,s,0);const other={...p,id:'other'},otherState={s:10};
@@ -50,5 +50,9 @@ for(const kind of ['剣','斧','槍','盾']){
 }
 {
  const {p,g,s,guard}=fixture();g.kind='杖';assert.equal(guard.tick(p,g,s,0),false);assert.equal(s.s,12);
+}
+{
+ const {p,g,s,animations,guard}=fixture();p.getGameMode=()=>GameMode.Creative;s.s=0;
+ assert.equal(guard.tick(p,g,s,0),true);assert.equal(s.s,0);assert.equal(animations.length,1,'creative previews guard without stamina');
 }
 console.log('Guard: stamina billing, exhaustion, direction, projectile, causes and multiplayer isolation OK (mocked)');

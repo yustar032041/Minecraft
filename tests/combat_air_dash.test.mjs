@@ -32,7 +32,7 @@ function tap(f,t=2){f.set(0,1);f.ctrl.tick(f.p,f.s,t);f.set(0,0);f.ctrl.tick(f.p
 for(const change of [f=>f.s.s=14,f=>f.d.isChunkLoaded=()=>false,f=>f.d.getBlock=()=>({isAir:false}),f=>f.d.getBlock=()=>undefined,f=>f.d.getBlock=()=>{throw Error('unloaded')},f=>f.p.applyImpulse=()=>{throw Error('rejected')},f=>f.p.getVelocity=()=>({x:.6,y:0,z:0}),f=>f.p.getViewDirection=()=>({x:0,z:0})]){
  const f=fixture();arm(f);change(f);const before=f.s.s;tap(f);assert.equal(f.s.s,before);assert.equal(f.impulses.length,0,'failed dash never consumes');
 }
-for(const change of [f=>f.p.isSneaking=true,f=>f.p.isSwimming=true,f=>f.p.isGliding=true,f=>f.p.isFlying=true,f=>f.p.getComponent=()=>({}),f=>f.p.getGameMode=()=>GameMode.Creative,f=>f.s.menu=true,f=>f.s.busy=true,f=>f.p.inputPermissions.isPermissionCategoryEnabled=()=>false,f=>f.p.inputInfo.getMovementVector=()=>{throw Error()}]){
+for(const change of [f=>f.p.isSneaking=true,f=>f.p.isSwimming=true,f=>f.p.isGliding=true,f=>f.p.isFlying=true,f=>f.p.getComponent=()=>({}),f=>f.p.getGameMode=()=>GameMode.Spectator,f=>f.s.menu=true,f=>f.s.busy=true,f=>f.p.inputPermissions.isPermissionCategoryEnabled=()=>false,f=>f.p.inputInfo.getMovementVector=()=>{throw Error()}]){
  const f=fixture();arm(f);change(f);tap(f);assert.equal(f.impulses.length,0);assert.equal(f.s.s,50);
 }
 {
@@ -48,5 +48,9 @@ for(const change of [f=>f.p.isSneaking=true,f=>f.p.isSwimming=true,f=>f.p.isGlid
  // Air dash and roll share neither activation nor invulnerability.
  const f=fixture();arm(f);const roll=setupCombatRoll({notice:()=>{},safe:()=>true});tap(f);roll.tick(f.p,f.s,4);
  assert.equal(roll.evading(f.p,4),false);assert.equal(f.impulses.length,1);
+}
+{
+ const f=fixture();f.p.getGameMode=()=>GameMode.Creative;f.s.s=0;arm(f);tap(f);
+ assert.equal(f.impulses.length,1,'creative can preview air dash');assert.equal(f.s.s,0);
 }
 console.log('Air dash: gesture, rearming, safe path, costs, permissions, isolation and roll separation OK (mocked)');

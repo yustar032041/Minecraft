@@ -23,10 +23,14 @@ for(const order of ['hurt-first','hit-first']){
  const {p,s,g,target,air}=fixture(),e=target();s.s=11;
  assert.equal(air.onHurt(p,e,s,g,5,2),false);assert.equal(s.s,11);air.chargeMelee(p,e,s,g,2);assert.equal(s.s,8);
 }
-for(const change of [f=>f.p.isSneaking=true,f=>f.p.getVelocity=()=>({y:.1}),f=>f.p.isSwimming=true,f=>f.p.getComponent=()=>({}),f=>f.s.busy=true,f=>f.g.kind='盾',f=>f.p.getGameMode=()=> 'creative',f=>f.d.getEntities=()=>{throw Error()}]){
+for(const change of [f=>f.p.isSneaking=true,f=>f.p.getVelocity=()=>({y:.1}),f=>f.p.isSwimming=true,f=>f.p.getComponent=()=>({}),f=>f.s.busy=true,f=>f.g.kind='盾',f=>f.p.getGameMode=()=> 'spectator',f=>f.d.getEntities=()=>{throw Error()}]){
  const f=fixture(),e=f.target();change(f);assert.equal(f.air.onHurt(f.p,e,f.s,f.g,5,3),false);assert.equal(f.s.s,50);
 }
 {
  const f=fixture(),e=f.target();f.air.clear(f.p.id);assert.equal(f.air.onHurt(f.p,e,f.s,f.g,5,3),false,'airborne join requires landing');
+}
+{
+ const f=fixture(),e=f.target();f.p.getGameMode=()=> 'creative';f.s.s=0;
+ assert.equal(f.air.onHurt(f.p,e,f.s,f.g,5,3),true);assert.equal(f.s.s,0);assert.equal(f.dmg.length,1);
 }
 console.log('Air strike: hit ordering, cost, landing, targeting, safety (mocked)');

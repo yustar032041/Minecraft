@@ -73,10 +73,13 @@ for(let realm=0;realm<8;realm++){
  const f=spawnFixture();f.d.id='minecraft:overworld';const {ctx}=makeCtx(f);ctx.wildlifeTick(f.p,undefined,undefined);
  assert.equal(f.spawned.length,0,'no fallback alters vanilla worlds');
 }
-// Hostile mobs cannot appear near arrival centres or on constructed floors.
+// Near arrival, prefer a non-hostile encounter instead of wasting a hostile
+// draw on positions that the protection rules necessarily reject.
 {
- const f=spawnFixture(),{ctx}=makeCtx(f);ctx.pickRealmWildlife=(entries,realm)=>entries.find(m=>m.dim===realm&&m.temper==='hostile');
- ctx.wildlifeTick(f.p,undefined,undefined);assert.equal(f.spawned.length,0,'arrival centre remains protected');
+ const f=spawnFixture(),{ctx}=makeCtx(f);
+ ctx.pickRealmWildlife=(entries,realm,seen,peaceful)=>entries.find(m=>m.dim===realm&&(peaceful?m.temper!=='hostile':m.temper==='hostile'));
+ ctx.wildlifeTick(f.p,undefined,undefined);assert.equal(f.spawned.length,1);
+ const species=wildlife.find(m=>'hakkai:'+m.id===f.spawned[0][0]);assert.notEqual(species.temper,'hostile');
 }
 {
  const f=spawnFixture();f.p.location={x:500,y:90,z:500};f.d.getBlock=()=>({typeId:'minecraft:oak_planks'});
@@ -89,5 +92,6 @@ for(let realm=0;realm<8;realm++){
  const {ctx}=makeCtx(f,{peaceful:true});ctx.pickRealmWildlife=(entries,realm,seen,peaceful)=>entries.find(m=>m.dim===realm&&(!peaceful||m.temper!=='hostile'));
  ctx.wildlifeTick(f.p,undefined,undefined);assert.equal(f.spawned.length,1);assert.notEqual(f.spawned[0][0],'hakkai:'+mob.id,'choose another species if nearby duplicate');
 }
-assert.match(main,/try\{profile=survey\(p\);\}catch\{\}\s*if\(!isCreative\(p\)\)try\{wildlifeTick\(p,profile,site\);\}/,'survey error does not suppress realm spawning');
-console.log('Wildlife: 8 realms, reserved/no-biome sites, peaceful, existing creative exclusion, multiplayer cap, slopes, biome fallback and safe refusal (mocked/static)');
+assert.match(main,/if\(!isCreative\(p\)\|\|\/\^hakkai:realm_\[0-7\]\$\/.test\(p.dimension.id\)\)try\{wildlifeTick\(p,profile,site\);\}/,'creative may observe wildlife in the eight realms');
+assert.match(main,/try\{profile=survey\(p\);\}catch\{\}/,'survey errors are isolated');
+console.log('Wildlife: 8 realms, reserved/no-biome sites, peaceful, realm creative inclusion, multiplayer cap, slopes, biome fallback and safe refusal (mocked/static)');

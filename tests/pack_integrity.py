@@ -33,11 +33,11 @@ for manifest in manifests:
         if value in seen:
             errors.append(f'duplicate manifest UUID: {value}')
         seen.add(value)
-        if part.get('version') != [7, 1, 0]:
+        if part.get('version') != [7, 1, 1]:
             errors.append(f'incorrect pack version: {part}')
-if not any(d.get('uuid') == manifests[1].get('header', {}).get('uuid') and d.get('version') == [7,1,0]
+if not any(d.get('uuid') == manifests[1].get('header', {}).get('uuid') and d.get('version') == [7,1,1]
            for d in manifests[0].get('dependencies', [])):
-    errors.append('BP does not reference RP at 7.1.0')
+    errors.append('BP does not reference RP at 7.1.1')
 
 declared_content = set()
 for directory in ('items', 'blocks', 'entities', 'recipes', 'features', 'feature_rules'):

@@ -73,3 +73,13 @@ for(const [index,kind,cap,push] of [[0,'剣',3,.65*1.5],[1,'斧',6,1.5*1.5],[2,'
  assert.ok(strikes.every(v=>v[2]===11&&v[5]===push),`${kind} damage and knockback`);
 }
 console.log('Combat integration: real cast resource/cooldown checks, charge spend, multiplier and impact effects OK (mocked)');
+
+// A rejected optional player effect must not hide the skill animation,
+// particle or notification after damage and stamina have been applied.
+{
+ g.kind='剣';g.defense=5;system.currentTick=900;s.cd.clear();s.s=100;s.m=100;
+ context.enemies=()=>[target];context.visibleFrom=()=>true;p.isSneaking=false;
+ const hits=damage.length, visual=particles.length, notes=notices.length;let animations=0;
+ p.addEffect=()=>{throw Error('effect rejected');};p.playAnimation=()=>animations++;
+ context.cast(p,g);assert.equal(damage.length,hits+1);assert.ok(particles.length>visual);assert.ok(notices.length>notes);assert.equal(animations,1);
+}

@@ -14,6 +14,7 @@ export function setupAirStrike({notice,visibleFrom}){
  }
  function chargeMelee(p,target,s,g,t){
   if(!g||!WEAPONS.has(g.kind))return false;
+  if(p.getGameMode()===GameMode.Creative)return true;
   const e=entry(p);
   if(e.skip&&e.skip.id===target.id&&Math.abs(t-e.skip.t)<=1){e.skip=undefined;return true;}
   const amount=Math.min(Math.max(0,s.s),3);s.s-=amount;
@@ -21,12 +22,12 @@ export function setupAirStrike({notice,visibleFrom}){
  }
  function onHurt(p,target,s,g,damage,t){
   try{
-   if(!p?.isValid||p.typeId!=='minecraft:player'||p.getGameMode()!==GameMode.Survival||p.isOnGround||p.isSneaking||p.isSwimming||p.isFlying||p.isGliding||p.getComponent('minecraft:riding')||s.busy||s.menu||!g||!WEAPONS.has(g.kind)||!(damage>0)||!target?.isValid||!isCombatTarget(target)||p.dimension.id!==target.dimension.id)return false;
+   if(!p?.isValid||p.typeId!=='minecraft:player'||![GameMode.Survival,GameMode.Creative].includes(p.getGameMode())||p.isOnGround||p.isSneaking||p.isSwimming||p.isFlying||p.isGliding||p.getComponent('minecraft:riding')||s.busy||s.menu||!g||!WEAPONS.has(g.kind)||!(damage>0)||!target?.isValid||!isCombatTarget(target)||p.dimension.id!==target.dimension.id)return false;
    const e=entry(p);if(e.spent||e.dim!==p.dimension.id||p.getVelocity().y>=-.08)return false;
    const a=p.location,b=target.location;if(Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z)>5)return false;
    const hadBasic=e.basic?.id===target.id&&Math.abs(t-e.basic.t)<=1;
    const paid=hadBasic?e.basic.amount:0;
-   const due=TOTAL_COST-paid;if(s.s<due)return false;
+   const due=p.getGameMode()===GameMode.Creative?0:TOTAL_COST-paid;if(s.s<due)return false;
    const opts={location:b,maxDistance:RADIUS,closest:8,excludeTypes:['minecraft:player']};
    const all=p.dimension.getEntities({...opts,families:['monster']});
    all.push(...p.dimension.getEntities({...opts,type:'hakkai:time_warden'}));

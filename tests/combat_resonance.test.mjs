@@ -38,7 +38,7 @@ for(const [change,selectedGear] of [[p=>p.selectedSlotIndex++,gear],[p=>p.dimens
  const f=fixture(),{ctrl,player:p,target:e}=f;
  assert.equal(ctrl.onHurt(p,e,staff,2),0);assert.equal(ctrl.onHurt(p,e,gear,0),0);
  p.isSneaking=true;assert.equal(ctrl.onHurt(p,e,gear,2),0);p.isSneaking=false;
- p.getGameMode=()=>GameMode.Creative;assert.equal(ctrl.onHurt(p,e,gear,2),0);
+ p.getGameMode=()=>GameMode.Creative;assert.equal(ctrl.onHurt(p,e,gear,2),1);assert.equal(f.animations.length,1,'creative hit previews the attack animation');
  p.getGameMode=()=>GameMode.Spectator;assert.equal(ctrl.onHurt(p,e,gear,2),0);
  p.getGameMode=()=>GameMode.Survival;
  for(const typeId of ['minecraft:player','minecraft:villager','hakkai:fushi']){

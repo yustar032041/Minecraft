@@ -13,14 +13,14 @@ export function setupCombatGuard({notice}){
   if(!p.isSneaking){guards.delete(p.id);return false;}
   if(prior?.exhausted)return true;
   const holding=p.isValid&&p.isSneaking&&!p.isSwimming&&!s.busy&&!s.menu&&
-    p.getGameMode()!==GameMode.Creative&&p.getGameMode()!==GameMode.Spectator&&g&&KINDS.has(g.kind);
+    p.getGameMode()!==GameMode.Spectator&&g&&KINDS.has(g.kind);
   if(!holding){guards.delete(p.id);return false;}
   const identity=id(p,g);let guard=guards.get(p.id);
   if(!guard||guard.identity!==identity){guard={identity,until:0,exhausted:false};guards.set(p.id,guard);}
   if(guard.exhausted)return true; // release crouch before stamina regenerates
   if(t>=guard.until){
-   if(s.s<COST){guard.exhausted=true;notice(p,'§eスタミナ不足：しゃがみを解除して回復',40);return true;}
-   s.s-=COST;const start=guard.until===0;guard.until=t+INTERVAL;
+   if(p.getGameMode()!==GameMode.Creative&&s.s<COST){guard.exhausted=true;notice(p,'§eスタミナ不足：しゃがみを解除して回復',40);return true;}
+   if(p.getGameMode()!==GameMode.Creative)s.s-=COST;const start=guard.until===0;guard.until=t+INTERVAL;
    if(start){
     try{p.playAnimation('animation.hakkai.guard_enter',{blendOutTime:.1,stopExpression:'query.any_animation_finished'});}catch{}
     try{p.playSound('random.orb',{volume:.18,pitch:.7});}catch{}
@@ -32,7 +32,7 @@ export function setupCombatGuard({notice}){
  // Shared paid-state check; no text/UI coupling and no world mutation.
  function isActive(p,g,t){
   const guard=guards.get(p.id);
-  return !!(guard&&!guard.exhausted&&p.isValid&&p.isSneaking&&!p.isSwimming&&![GameMode.Creative,GameMode.Spectator].includes(p.getGameMode())&&g&&KINDS.has(g.kind)&&guard.identity===id(p,g)&&t<guard.until);
+  return !!(guard&&!guard.exhausted&&p.isValid&&p.isSneaking&&!p.isSwimming&&p.getGameMode()!==GameMode.Spectator&&g&&KINDS.has(g.kind)&&guard.identity===id(p,g)&&t<guard.until);
  }
  // No mutations, inventory changes, sounds or messages in the restricted event.
  function blocks(p,g,source,t){

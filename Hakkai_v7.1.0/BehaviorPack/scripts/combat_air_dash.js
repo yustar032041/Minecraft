@@ -10,7 +10,7 @@ export function setupAirDash({notice}){
   if(e.dim!==p.dimension.id){entries.delete(p.id);return;}
   try{
    if(p.isOnGround){e.used=false;e.neutral=false;e.down=false;e.first=undefined;return;}
-   if(!p.isValid||p.typeId!=='minecraft:player'||p.getGameMode()!==GameMode.Survival||p.isSwimming||p.isGliding||p.isFlying||p.isSneaking||s.busy||s.menu||p.getComponent('minecraft:riding')||
+   if(!p.isValid||p.typeId!=='minecraft:player'||![GameMode.Survival,GameMode.Creative].includes(p.getGameMode())||p.isSwimming||p.isGliding||p.isFlying||p.isSneaking||s.busy||s.menu||p.getComponent('minecraft:riding')||
       !p.inputPermissions.isPermissionCategoryEnabled(InputPermissionCategory.LateralMovement)||!p.inputPermissions.isPermissionCategoryEnabled(InputPermissionCategory.MoveForward)){
     e.neutral=false;e.down=false;e.first=undefined;return;
    }
@@ -23,7 +23,7 @@ export function setupAirDash({notice}){
    if(e.first===undefined||t-e.first>DOUBLE_TAP){e.first=t;return;}
    e.first=undefined;
    if(e.used)return;
-   if(s.s<COST){notice(p,'§e空中ダッシュにはスタミナ15が必要',35);return;}
+   if(p.getGameMode()!==GameMode.Creative&&s.s<COST){notice(p,'§e空中ダッシュにはスタミナ15が必要',35);return;}
    const v=p.getVelocity(),look=p.getViewDirection(),n=Math.hypot(look.x,look.z),at=p.location,d=p.dimension;
    if(![v.x,v.y,v.z,n,at.x,at.y,at.z].every(Number.isFinite)||n<.01||Math.hypot(v.x,v.z)>.4){notice(p,'§e安全にダッシュできない速度です',35);return;}
    const x=look.x/n,z=look.z/n;
@@ -32,7 +32,7 @@ export function setupAirDash({notice}){
     if(!d.isChunkLoaded(pos)||!d.getBlock(pos)?.isAir){notice(p,'§e前方に十分な空間が必要です',35);return;}
    }
    p.applyImpulse({x:x*IMPULSE,y:0,z:z*IMPULSE});
-   s.s-=COST;e.used=true;
+   if(p.getGameMode()!==GameMode.Creative)s.s-=COST;e.used=true;
    try{p.playAnimation('animation.hakkai.air_dash',{blendOutTime:.12,stopExpression:'query.any_animation_finished'});}catch{}
    try{p.playSound('random.orb',{volume:.24,pitch:1.4});}catch{}
    for(let i=0;i<10;i++)try{const u=i/10;d.spawnParticle('hakkai:wind_trace',{x:at.x-x*u,y:at.y+.5+u*.4,z:at.z-z*u});}catch{}

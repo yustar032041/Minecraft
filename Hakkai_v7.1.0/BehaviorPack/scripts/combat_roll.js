@@ -13,7 +13,7 @@ export function setupCombatRoll({notice,safe}){
   if(e.dimension!==p.dimension.id){entries.delete(p.id);return;}
   let forward;
   try{
-   if(!p.isValid||!p.isSneaking||s.menu||s.busy||p.getGameMode()!==GameMode.Survival||
+   if(!p.isValid||!p.isSneaking||s.menu||s.busy||![GameMode.Survival,GameMode.Creative].includes(p.getGameMode())||
       p.isSwimming||p.isGliding||p.isFlying||!p.isOnGround||p.getComponent('minecraft:riding')){
     e.down=false;e.first=undefined;return;
    }
@@ -32,7 +32,7 @@ export function setupCombatRoll({notice,safe}){
   if(e.first===undefined||t-e.first>DOUBLE_TAP){e.first=t;return;}
   e.first=undefined;
   if(t<e.cooldown)return;
-  if(s.s<COST){notice(p,'§e回避に必要なスタミナが足りない',35);return;}
+  if(p.getGameMode()!==GameMode.Creative&&s.s<COST){notice(p,'§e回避に必要なスタミナが足りない',35);return;}
   try{
    const view=p.getViewDirection(),n=Math.hypot(view.x,view.z),v=p.getVelocity();
    if(n<.01||![n,v.x,v.z].every(Number.isFinite)||Math.hypot(v.x,v.z)>.24){notice(p,'§e安全に回避できる場所で使ってね',35);return;}
@@ -44,7 +44,7 @@ export function setupCombatRoll({notice,safe}){
     if(!d.isChunkLoaded(point)||!safe(d,point)){notice(p,'§e前方に安全な平地が必要です',35);return;}
    }
    p.applyImpulse({x:x*.38,y:0,z:z*.38});
-   s.s-=COST;e.until=t+INVULNERABLE;e.cooldown=t+COOLDOWN;
+   if(p.getGameMode()!==GameMode.Creative)s.s-=COST;e.until=t+INVULNERABLE;e.cooldown=t+COOLDOWN;
    try{p.playAnimation('animation.hakkai.dodge_roll',{blendOutTime:.12,stopExpression:'query.any_animation_finished'});}catch{}
    try{p.playSound('random.orb',{volume:.22,pitch:1.25});}catch{}
    for(let i=0;i<8;i++)try{const a=i*Math.PI/4;d.spawnParticle('hakkai:wind_trace',{x:at.x+Math.cos(a)*.5,y:at.y+.3,z:at.z+Math.sin(a)*.5});}catch{}
@@ -52,7 +52,7 @@ export function setupCombatRoll({notice,safe}){
  }
  function evading(p,t){
   const e=entries.get(p?.id);
-  return !!(e&&p?.isValid&&p.typeId==='minecraft:player'&&p.dimension.id===e.dimension&&p.getGameMode()===GameMode.Survival&&t<e.until);
+  return !!(e&&p?.isValid&&p.typeId==='minecraft:player'&&p.dimension.id===e.dimension&&[GameMode.Survival,GameMode.Creative].includes(p.getGameMode())&&t<e.until);
  }
  function blocks(p,source,t){return ATTACKS.has(source?.cause)&&evading(p,t);}
  function status(p,t){

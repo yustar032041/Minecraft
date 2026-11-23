@@ -14,10 +14,14 @@ function fixture(){
  assert.equal(f.ctrl.active(f.p,120),false);f.s.s=10;assert.equal(f.ctrl.cast(f.p,f.s),false,'cooldown');f.ctrl.invalidate(f.p.id);assert.equal(f.ctrl.cast(f.p,f.s),false,'dimension change preserves cooldown');
  f.system.currentTick=700;assert.equal(f.ctrl.cast(f.p,f.s),true);
 }
-for(const change of [f=>f.s.m=21,f=>f.s.s=21,f=>f.s.s=0,f=>f.s.menu=true,f=>f.p.getGameMode=()=> 'creative']){
+for(const change of [f=>f.s.m=21,f=>f.s.s=21,f=>f.s.s=0,f=>f.s.menu=true,f=>f.p.getGameMode=()=> 'spectator']){
  const f=fixture();f.d.getEntities=()=>[f.enemy('z')];change(f);const s=f.s.s;assert.equal(f.ctrl.cast(f.p,f.s),false);assert.equal(f.s.s,s);
 }
 {
  const f=fixture();assert.equal(f.ctrl.cast(f.p,f.s),false,'no target, no cost');assert.equal(f.s.s,20);
+}
+{
+ const f=fixture();f.d.getEntities=()=>[f.enemy('z')];f.p.getGameMode=()=> 'creative';f.s.s=100;f.s.m=100;
+ assert.equal(f.ctrl.cast(f.p,f.s),true);assert.equal(f.s.s,100);assert.equal(f.s.m,100);assert.equal(f.dmg.length,1);
 }
 console.log('Ultimate: resource threshold, targets, boss anchoring, immunity and cooldown (mocked)');

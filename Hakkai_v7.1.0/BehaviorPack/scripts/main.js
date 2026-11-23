@@ -2709,11 +2709,13 @@ function cast(p,g,charged=false){
    if(resonance&&e.isValid)for(let i=0;i<4;i++){const a=i*Math.PI/2;try{e.dimension.spawnParticle('hakkai:wind_burst',{x:e.location.x+Math.cos(a)*.5,y:e.location.y+1,z:e.location.z+Math.sin(a)*.5});}catch{}}
  }
  if(!beam&&g.kind==='槍'&&candidates.length&&view)try{along(p,view.x,view.z,.42,.08);}catch{}
- if(g.kind==='靴'||g.kind==='マント')p.addEffect(g.kind==='靴'?'speed':'slow_falling',95,{showParticles:false});
- if(g.kind==='盾')for(const ally of p.dimension.getPlayers({location:p.location,maxDistance:charged?7:5,closest:4}))ally.addEffect('resistance',charged?105:60,{showParticles:false});
- p.addEffect(effects[g.a],75+lv*16,{showParticles:false});
- if(g.kind==='盾'||g.defense>=5)p.addEffect('resistance',55+g.defense*6,{showParticles:false});
- if(g.a===6)p.addEffect('regeneration',35,{showParticles:false});
+ // Optional status APIs must not abort the visual and animation portion of
+ // a skill after its damage and cost have already been applied.
+ if(g.kind==='靴'||g.kind==='マント')try{p.addEffect(g.kind==='靴'?'speed':'slow_falling',95,{showParticles:false});}catch{}
+ if(g.kind==='盾')try{for(const ally of p.dimension.getPlayers({location:p.location,maxDistance:charged?7:5,closest:4}))try{ally.addEffect('resistance',charged?105:60,{showParticles:false});}catch{}}catch{}
+ try{p.addEffect(effects[g.a],75+lv*16,{showParticles:false});}catch{}
+ if(g.kind==='盾'||g.defense>=5)try{p.addEffect('resistance',55+g.defense*6,{showParticles:false});}catch{}
+ if(g.a===6)try{p.addEffect('regeneration',35,{showParticles:false});}catch{}
  notice(p,`§b${beam?'風紋閃・':resonance?'風紋解放・':combo?'二連終撃・':''}${charged?(g.kind==='弓'?'溜め撃ち・':'溜め技・'):''}${g.skill} §7Lv.${lv}`);
  const v=p.getViewDirection(), l=p.location,n=Number(g.number),visualId=g.visualId??g.id;
  const where={x:l.x+v.x*(directional?1.4:.3),y:l.y+(g.kind==='ハンマー'?.13:g.kind==='弓'?2.1:1),z:l.z+v.z*(directional?1.4:.3)};
@@ -5141,6 +5143,12 @@ function wildlifeTick(p,b,site){
    const available=wildlife.filter(entry=>!around.some(e=>e.typeId===ns+entry.id&&dist(e.location,p.location)<28));
    m=pickRealmWildlife(available,realmId,entry=>marked(p,'sight',wildlifeIndex.get(entry.id))||marked(p,'wild_spawn_seen',wildlifeIndex.get(entry.id)),peaceful);
  }
+ // Near protected arrival centres a hostile draw cannot spawn at most candidate
+ // sites. Prefer an available peaceful species instead of repeatedly failing.
+ if(inRealm&&m?.temper==='hostile'&&places.slice(0,9).some(s=>s.dim===realmId&&Math.hypot(p.location.x-s.x,p.location.z-s.z)<20)){
+   const available=wildlife.filter(entry=>!around.some(e=>e.typeId===ns+entry.id&&dist(e.location,p.location)<28));
+   m=pickRealmWildlife(available,realmId,entry=>marked(p,'sight',wildlifeIndex.get(entry.id))||marked(p,'wild_spawn_seen',wildlifeIndex.get(entry.id)),true);
+ }
  if(!m||m.temper==='hostile'&&peaceful)return;
  if(around.some(e=>e.typeId===ns+m.id&&dist(e.location,p.location)<28))return;
  const spawned=spawnWildlife({
@@ -5166,9 +5174,12 @@ function wildlifeTick(p,b,site){
 
 }
 safeSub('world','after','entityHurt',({hurtEntity:e,damageSource:source,damage})=>{
- if(source.cause===EntityDamageCause.entityAttack&&source.damagingEntity?.typeId==='minecraft:player'&&!isCreative(source.damagingEntity))try{
-   const p=source.damagingEntity,g=gear.get(selected(p)?.typeId);combatResonance?.onHurt(p,e,g,damage);
-   airStrike?.onHurt(p,e,state(p),g,damage,system.currentTick);
+ if(source.cause===EntityDamageCause.entityAttack&&source.damagingEntity?.typeId==='minecraft:player')try{
+   const p=source.damagingEntity;
+   if(p.getGameMode()!==GameMode.Spectator){
+    const g=gear.get(selected(p)?.typeId);combatResonance?.onHurt(p,e,g,damage);
+    airStrike?.onHurt(p,e,state(p),g,damage,system.currentTick);
+   }
  }catch(err){report('風紋連撃',err);}
  mobSystem?.onHurt({hurtEntity:e,damageSource:source});
  realmEnders?.onHurt({hurtEntity:e,damageSource:source});
@@ -5340,7 +5351,14 @@ safeSub('world','after','playerInteractWithEntity',({player,target,beforeItemSta
  }
 });
 safeSub('world','after','entityHitEntity',({damagingEntity:p,hitEntity})=>{
- if(p.typeId!=='minecraft:player'||!p.isValid||isCreative(p))return;
+ if(p.typeId!=='minecraft:player'||!p.isValid||p.getGameMode()===GameMode.Spectator)return;
+ // Creative can preview the crouching weapon skill without spending stamina
+ // or advancing survival-only affinity and boss-parry progression.
+ if(isCreative(p)){
+  const g=gear.get(selected(p)?.typeId),s=state(p);
+  if(g&&p.isSneaking&&hitEntity.typeId!=='minecraft:player'&&system.currentTick-s.useTick>=7){s.useTick=system.currentTick;cast(p,g);}
+  return;
+ }
  let parried=false;try{parried=wardenBoss?.onMeleeParry({damagingEntity:p,hitEntity})??false;}catch(err){report('管理者へのパリィ',err);}
  if(parried)ultimateParryHeal(p);
  const s=state(p),g=gear.get(selected(p)?.typeId);
@@ -5514,7 +5532,8 @@ system.runInterval(()=>{
      if(t>=(s.natureAt??0)){
        s.natureAt=t+40;
        let profile;try{profile=survey(p);}catch{}
-       if(!isCreative(p))try{wildlifeTick(p,profile,site);}catch(err){if(t%200===0)report('生き物の出現',err);}
+       // Allow observing realm wildlife in creative too; keep vanilla-world behavior unchanged.
+       if(!isCreative(p)||/^hakkai:realm_[0-7]$/.test(p.dimension.id))try{wildlifeTick(p,profile,site);}catch(err){if(t%200===0)report('生き物の出現',err);}
      try{mobSystem?.tick(p,t);realmEnders?.tick(p,t);fushiSystem?.tick(p,t);}catch{}
      }
      const hud=hudLine(p,s,t);

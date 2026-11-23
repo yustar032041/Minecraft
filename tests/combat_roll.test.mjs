@@ -32,7 +32,7 @@ function tap(f,t){f.set(0,1);f.ctrl.tick(f.p,f.s,t);f.set(0,0);f.ctrl.tick(f.p,f
 for(const prepare of [f=>f.s.s=9,f=>f.d.isChunkLoaded=()=>false,f=>f.p.applyImpulse=()=>{throw Error()},f=>f.p.getVelocity=()=>({x:1,z:0}),f=>f.p.getViewDirection=()=>({x:0,z:0})]){
  const f=fixture();prepare(f);const before=f.s.s;tap(f,0);assert.equal(f.s.s,before);assert.equal(f.ctrl.evading(f.p,2),false,'unsafe roll grants no immunity');
 }
-for(const prepare of [f=>f.p.isSneaking=false,f=>f.p.isSwimming=true,f=>f.p.isGliding=true,f=>f.p.isFlying=true,f=>f.p.isOnGround=false,f=>f.p.getComponent=()=>({}),f=>f.p.getGameMode=()=>GameMode.Creative,f=>f.s.menu=true,f=>f.s.busy=true,f=>f.p.inputInfo.getMovementVector=()=>{throw Error()},f=>f.p.inputPermissions.isPermissionCategoryEnabled=()=>false,f=>f.p.inputPermissions.isPermissionCategoryEnabled=()=>{throw Error()}]){
+for(const prepare of [f=>f.p.isSneaking=false,f=>f.p.isSwimming=true,f=>f.p.isGliding=true,f=>f.p.isFlying=true,f=>f.p.isOnGround=false,f=>f.p.getComponent=()=>({}),f=>f.p.getGameMode=()=>GameMode.Spectator,f=>f.s.menu=true,f=>f.s.busy=true,f=>f.p.inputInfo.getMovementVector=()=>{throw Error()},f=>f.p.inputPermissions.isPermissionCategoryEnabled=()=>false,f=>f.p.inputPermissions.isPermissionCategoryEnabled=()=>{throw Error()}]){
  const f=fixture();prepare(f);tap(f,0);assert.equal(f.impulses.length,0);assert.equal(f.s.s,50);
 }
 {
@@ -46,5 +46,9 @@ for(const prepare of [f=>f.p.isSneaking=false,f=>f.p.isSwimming=true,f=>f.p.isGl
 {
  const f=fixture(),ctrl=setupCombatRoll({notice:()=>{},safe:()=>false});f.set(0,1);ctrl.tick(f.p,f.s,0);f.set(0,0);ctrl.tick(f.p,f.s,1);f.set(0,1);ctrl.tick(f.p,f.s,2);
  assert.equal(f.impulses.length,0,'ledge or blocked path cancels');assert.equal(f.s.s,50);
+}
+{
+ const f=fixture();f.p.getGameMode=()=>GameMode.Creative;f.s.s=0;tap(f,0);
+ assert.equal(f.impulses.length,1,'creative can preview roll');assert.equal(f.s.s,0);assert.equal(f.ctrl.evading(f.p,2),true);
 }
 console.log('Roll: double tap, safety, stamina, attack-only immunity, expiration, modes and isolation OK (mocked)');

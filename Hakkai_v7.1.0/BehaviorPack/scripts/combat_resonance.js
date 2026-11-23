@@ -18,7 +18,7 @@ export function setupCombatResonance({system,notice}){
   return e;
  }
  function onHurt(p,target,g,damage){
-  if(!p?.isValid||[GameMode.Creative,GameMode.Spectator].includes(p.getGameMode())||!target?.isValid||!g||!WEAPONS.has(g.kind)||p.isSneaking||!(damage>0)||!isCombatTarget(target)||p.dimension.id!==target.dimension.id)return 0;
+  if(!p?.isValid||p.getGameMode()===GameMode.Spectator||!target?.isValid||!g||!WEAPONS.has(g.kind)||p.isSneaking||!(damage>0)||!isCombatTarget(target)||p.dimension.id!==target.dimension.id)return 0;
   const t=system.currentTick,old=current(p,g,t);
   if(old&&t-old.last<MIN_INTERVAL)return old.count;
   const count=Math.min(MAX,(old?.count??0)+1);
