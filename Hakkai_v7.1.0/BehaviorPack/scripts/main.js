@@ -1,3 +1,4 @@
+import { kineticPower, hasAdjacentWater, factoryRecipe, animateKinetic } from './factory_network.js';
 import { factoryTransaction } from './factory_transaction.js';
 import { setupShieldWear } from './shield_wear.js';
 import { deferShieldArrow } from './shield_reflect.js';
@@ -2794,7 +2795,7 @@ const chapters=[
  ['野営とサバイバル','焚き火か魂の焚き火の近くで、しゃがんで静止すると野営休息になり、スタミナと魔力が速く回復します。野営のきのこ包み・根菜の焚き火焼き・森歩きの滋養食は採集や料理で作れます。乾燥肉・乾燥ベリー・燻製魚の切り身・乾燥昆布を作業台で合わせると野営の補給袋を2個作れます。畑・季節の菜園・釣り・牧場・かまどを組み合わせ、遠征前に食料を準備しましょう。'],
  ['戦闘とスタミナ','走る・泳ぐ・攻撃するとスタミナを使い、止まると回復。装備スキルや属性魔法を使えます。ガイド本の「八界の幻影闘技場」では、体力・魔力・相手の予告を見ながら行動を選ぶターン制ミニゲームに挑戦できます。記念館の達成度と記念品の収集が進むと、特別な第4戦が解放されます。闘技場はゲーム内の幻影戦で、実際のプレイヤーや建築物にはダメージを与えません。'],
  ['八属性と魔導書','本＋風の結晶＋水の結晶で魔導書を作れます。風・水・火・土・雷・光・闇・時の8属性を使え、一度訪れた場所の属性が解放されます。霧・溶岩・嵐・虹・疾風は両方の属性が必要です。光の矢は光を訪問後、魔力5で視線上の敵へ放ちます。絆の灯は風と水を訪問後、近くにもう一人いる時に魔力20で参加者を回復し敵を攻撃します。風・水・炎の専用魔法も選べます。FUSHIのトーテムから月のまどろみを使用すると確認後に消費します。魔法の再使用時間は共通6秒です。'],
- ['工場の組み方','加工機の西（X−）に入力樽、東（X＋）に出力樽を置きます。風力加工機は原鉄・原金・原銅を精錬。8界の高い屋外の風か、樽内の燃料（木・木炭・石炭・対応する結晶など）で動きます。採り機は燃料を使って真下6ブロックまでの対応鉱石を採ります。圧縮機は同じ欠片2個＋アメジストの欠片1個を結晶に変換。選別機は風記の素材を移し、コンベアは落ちた物を東へ。時間と天気によって効率が変わります。'],
+ ['工場の組み方','加工機の西（X−）に入力樽、東（X＋）に出力樽を置きます。風力加工機は原鉄・原金・原銅を精錬。8界の高い屋外の風か、樽内の燃料（木・木炭・石炭・対応する結晶など）で動きます。採り機は燃料を使って真下6ブロックまでの対応鉱石を採ります。圧縮機は同じ欠片2個＋アメジストの欠片1個を結晶に変換。選別機は風記の素材を移し、コンベアは落ちた物を東へ。風車（高さ64以上・上空32ブロックに障害なし）か、隣に水がある水車を軸で機械に接続すると燃料不要。軸は最大32個まで探索。破砕は丸石→砂利→砂、骨→骨粉。洗浄は水を隣に置き砂利→火打石、砂→粘土玉。プレスは粘土玉4→粘土、砂4→砂岩、金属→ナゲット。製材は原木→板材4。搬送管は西の樽から東の樽へ1個ずつ運ぶ。各機械は西入力・東出力。時間と天気によって効率が変わります。'],
  ['村の暮らし','風記の集落鐘を置くか、村人の近くで普通の鐘をしゃがんで使うと台帳が開きます。壁の数、高い見張り台、足止め罠、工場が守りを強くします。工場が出荷した備蓄は交易・村の成長・祭りに役立ちます。村人には朝・昼・夕の行き先があります。'],
  ['季節と釣り','季節は約3ゲーム日ごとに変わります。花壇を置くと季節の花に変わり、集落鐘の周りでは作物の成長も変化します。釣り竿を持ち物に入れてガイド本の「水辺の釣り」へ。釣果は季節や天気、水辺の種類で変わります。'],
  ['時の列車','第8界の時の終着駅に着いたら、ガイド本の「時の列車」へ。操車場で過去か未来を選ぶと乗車します。しゃがんで降りると、旅を中止できます。各時代の駅から現在へ戻れます。'],
@@ -4313,7 +4314,7 @@ async function recipeIndex(p){
   ['結晶と通行札','同属性の欠片2個＋アメジストの欠片で結晶。離島の通行札：紙＋風の結晶＋風の欠片。'],
   ['生き物の素材と欠片','生き物の専用素材1個を作業台で加工すると、その界に対応する属性の欠片を2個入手できます。生き物ごとの属性は「生き物・素材・技図鑑」で確認できます。欠片2個＋アメジストの欠片1個から結晶を作り、装備や魔法に利用できます。'],
   ['牧場と遺跡','季節の花壇：牧場繊維＋育てのしるし＋土でも製作。時渡りの羅針盤：コンパス＋風記の断片＋時の結晶。'],
-  ['装備・設備','装備の全レシピは「装備とレシピ図鑑」へ。土組み自動炉：かまど＋レンガ2個＋火の結晶。西に原料・燃料の樽、東に出力の樽。肉・ジャガイモ・砂などを加工します。集落鐘、圧縮機、鉱脈採り機などは作業台の検索でも探せます。'],
+  ['装備・設備','装備の全レシピは「装備とレシピ図鑑」へ。土組み自動炉：かまど＋レンガ2個＋火の結晶。西に原料・燃料の樽、東に出力の樽。肉・ジャガイモ・砂などを加工します。集落鐘、圧縮機、鉱脈採り機などは作業台の検索でも探せます。軸で風車か水車をつなぐと、破砕機・洗浄機・プレス機・製材機も燃料なしで動きます。'],
   ['旅人の携帯食','作業台で焼き牛肉1個＋ベイクドポテト1個＋パン1個＋ニンジン1個から2個作れます。食べると満腹度を回復し、スタミナも35回復します。焚き火か魂の焚き火の近くでしゃがんで静止すると、スタミナ回復が速くなります。']
  ];
  const i=await form(p,'追加レシピ一覧','開きたい種類を選んでください。',entries.map(([title])=>[title]));
@@ -4418,6 +4419,10 @@ function townFestival(t){return seasonDay()%3===1&&townScore(t)>=4&&townRecord(t
 function production(b,count){
  if(!b.dimension.id)return;
  const l={x:b.x+.5,y:b.y+.5,z:b.z+.5}, town=townNear(b.dimension,l);
+ // Visuals are best-effort and only happen after a successful transaction.
+ try{const frame=b.permutation.getState('hakkai:spin');if(Number.isInteger(frame))b.setPermutation(b.permutation.withState('hakkai:spin',(frame+1)%4));}catch{}
+ try{b.dimension.spawnParticle(b.typeId===ns+'kiln'?'hakkai:climate_2':b.typeId===ns+'washer'?'hakkai:climate_3':'hakkai:wind_burst',{x:l.x,y:l.y+.7,z:l.z});}catch{}
+ try{b.dimension.playSound('random.anvil_use',l,{volume:.18,pitch:1.4});}catch{}
  if(town){
    const d=townRecord(town);
    townSave(town,{...d,goods:Math.min(200,d.goods+count),work:world.getAbsoluteTime()});
@@ -4898,6 +4903,7 @@ function transfer(b){
  const d=b.dimension,x=b.x,y=b.y,z=b.z;
  const t=world.getTimeOfDay(), night=t>=13000&&t<23000, evening=t>=12000&&t<13000;
  const weather=currentWeather.get(d.id?.replace(/^minecraft:/,'')),thunder=weather===WeatherType.Thunder, wet=thunder||weather===WeatherType.Rain;
+ if(['shaft','wind_rotor','water_wheel'].some(id=>b.typeId===ns+id)){animateKinetic(b);return;}
  if(b.typeId===ns+'conveyor'){
    try{
      const thrust=night?.23:thunder?.36:wet?.28:evening?.25:.31;
@@ -4913,6 +4919,18 @@ function transfer(b){
  if(west?.typeId!=='minecraft:barrel'||east?.typeId!=='minecraft:barrel')return;
  const from=west.getComponent('minecraft:inventory')?.container,to=east.getComponent('minecraft:inventory')?.container;
  if(!from||!to)return;
+ if(b.typeId===ns+'factory_pipe'){
+   // Clone the actual stack so enchantments, names and other metadata survive.
+   for(let i=0;i<from.size;i++){
+     const item=from.getItem(i);if(!item)continue;
+     const product=item.clone();product.amount=1;
+     // The transaction's type-only debit is safe only if this is the first
+     // stack of its type: selecting the first nonempty slot guarantees that.
+     factoryTransaction({input:from,output:to,costs:[{id:item.typeId,count:1}],product,report});
+     return;
+   }
+   return;
+ }
  const mill={'minecraft:raw_iron':'minecraft:iron_ingot','minecraft:raw_gold':'minecraft:gold_ingot','minecraft:raw_copper':'minecraft:copper_ingot'};
  const kiln={'minecraft:sand':'minecraft:glass','minecraft:red_sand':'minecraft:glass','minecraft:potato':'minecraft:baked_potato',
    'minecraft:beef':'minecraft:cooked_beef','minecraft:porkchop':'minecraft:cooked_porkchop','minecraft:chicken':'minecraft:cooked_chicken',
@@ -4921,10 +4939,10 @@ function transfer(b){
    b.typeId===ns+'sorter'?(wet||night?4:evening?3:2):2;
  if(cycle>2&&Math.floor(system.currentTick/27)%cycle>=2)return;
  let power='',limit=1;
- if(b.typeId===ns+'mill'||b.typeId===ns+'miner'||b.typeId===ns+'kiln'){
+ if(['mill','miner','kiln','crusher','washer','press','saw'].some(id=>b.typeId===ns+id)){
    const l={x:x+.5,y:y+1.01,z:z+.5};
-   let wind=false;
-   try{wind=d.id.startsWith(ns)&&y>=84&&b.typeId===ns+'mill'&&!d.getBlockFromRay(l,{x:0,y:1,z:0},{maxDistance:22});}catch{}
+   let wind=kineticPower(d,{x,y,z});
+   try{wind=wind||d.id.startsWith(ns)&&y>=84&&b.typeId===ns+'mill'&&!d.getBlockFromRay(l,{x:0,y:1,z:0},{maxDistance:22});}catch{}
    if(!wind){
      for(let i=0;i<from.size;i++){
        const f=from.getItem(i)?.typeId;
@@ -4948,9 +4966,9 @@ function transfer(b){
      const result=special?ns+`crystal_${special[1]}`:normal?`minecraft:raw_${normal[1]}`:undefined;
      if(!result)return;
      const output=new ItemStack(result,1);
-     if(!room(to,output)||!power||total(from,power)<1)return;
+     if(!room(to,output)||power&&total(from,power)<1)return;
      const old=stone.permutation;
-     if(factoryTransaction({input:from,output:to,costs:[{id:power,count:1}],product:output,
+     if(factoryTransaction({input:from,output:to,costs:power?[{id:power,count:1}]:[],product:output,
        commitExternal:()=>stone.setType('minecraft:air'),rollbackExternal:()=>stone.setPermutation(old),report}))production(b,2);
      return;
    }
@@ -4958,7 +4976,9 @@ function transfer(b){
  }
  for(let i=0;i<from.size;i++){
    const item=from.getItem(i);if(!item)continue;
-   let out,need=1,aux='';
+   let out,need=1,aux='',outputCount=1;
+   const kind=b.typeId.slice(ns.length),recipe=factoryRecipe(kind,item.typeId);
+   if(recipe){[out,need,outputCount]=recipe;if(kind==='washer'&&!hasAdjacentWater(d,{x,y,z}))return;}
    if(b.typeId===ns+'mill')out=mill[item.typeId];
    if(b.typeId===ns+'kiln')out=kiln[item.typeId];
    if(b.typeId===ns+'sorter'&&(item.typeId.startsWith(ns+'shard_')||item.typeId.startsWith(ns+'crystal_')))out=item.typeId;
@@ -4974,9 +4994,9 @@ function transfer(b){
      if(factoryTransaction({input:from,output:to,costs,product:new ItemStack(out,n),report}))production(b,n);
      return;
    }
-   const product=new ItemStack(out,1);if(!room(to,product))return;
-   const costs=[{id:item.typeId,count:need}];if(aux)costs.push({id:aux,count:1});
-   if(factoryTransaction({input:from,output:to,costs,product,report}))production(b,1);return;
+   const product=new ItemStack(out,outputCount);if(!room(to,product))return;
+   const costs=[{id:item.typeId,count:need}];if(aux)costs.push({id:aux,count:1});if(power)costs.push({id:power,count:1});
+   if(factoryTransaction({input:from,output:to,costs,product,report}))production(b,outputCount);return;
  }
 }
 safeSub('system','before','startup',({itemComponentRegistry,blockComponentRegistry})=>{

@@ -1,0 +1,83 @@
+{
+  "format_version": "1.26.60",
+  "minecraft:block": {
+    "description": {
+      "identifier": "hakkai:washer",
+      "menu_category": {
+        "category": "construction"
+      },
+      "states": {
+        "hakkai:spin": [
+          0,
+          1,
+          2,
+          3
+        ]
+      }
+    },
+    "components": {
+      "minecraft:display_name": "tile.hakkai:washer.name",
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "hakkai_washer_0",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:map_color": "#ad8d60",
+      "minecraft:sound": {
+        "sound": "wood"
+      },
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 1
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 3
+      },
+      "minecraft:loot": "loot_tables/hakkai/blocks/washer.json",
+      "minecraft:tick": {
+        "interval_range": [
+          32,
+          42
+        ],
+        "looping": true
+      },
+      "hakkai:factory": {}
+    },
+    "permutations": [
+      {
+        "condition": "q.block_state('hakkai:spin') == 1",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "hakkai_washer_1",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('hakkai:spin') == 2",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "hakkai_washer_2",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('hakkai:spin') == 3",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "hakkai_washer_3",
+              "render_method": "opaque"
+            }
+          }
+        }
+      }
+    ]
+  }
+}

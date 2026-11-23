@@ -1,0 +1,23 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "hakkai:shaft"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:iron_ingot"
+      },
+      {
+        "item": "minecraft:stick"
+      }
+    ],
+    "result": {
+      "item": "hakkai:shaft",
+      "count": 4
+    }
+  }
+}

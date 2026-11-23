@@ -201,6 +201,105 @@
     },
     "hakkai_memory_pedestal": {
       "textures": "textures/blocks/hakkai_chronicle"
+    },
+    "hakkai_shaft_0": {
+      "textures": "textures/blocks/hakkai_shaft_0"
+    },
+    "hakkai_shaft_1": {
+      "textures": "textures/blocks/hakkai_shaft_1"
+    },
+    "hakkai_shaft_2": {
+      "textures": "textures/blocks/hakkai_shaft_2"
+    },
+    "hakkai_shaft_3": {
+      "textures": "textures/blocks/hakkai_shaft_3"
+    },
+    "hakkai_wind_rotor_0": {
+      "textures": "textures/blocks/hakkai_wind_rotor_0"
+    },
+    "hakkai_wind_rotor_1": {
+      "textures": "textures/blocks/hakkai_wind_rotor_1"
+    },
+    "hakkai_wind_rotor_2": {
+      "textures": "textures/blocks/hakkai_wind_rotor_2"
+    },
+    "hakkai_wind_rotor_3": {
+      "textures": "textures/blocks/hakkai_wind_rotor_3"
+    },
+    "hakkai_water_wheel_0": {
+      "textures": "textures/blocks/hakkai_water_wheel_0"
+    },
+    "hakkai_water_wheel_1": {
+      "textures": "textures/blocks/hakkai_water_wheel_1"
+    },
+    "hakkai_water_wheel_2": {
+      "textures": "textures/blocks/hakkai_water_wheel_2"
+    },
+    "hakkai_water_wheel_3": {
+      "textures": "textures/blocks/hakkai_water_wheel_3"
+    },
+    "hakkai_crusher": {
+      "textures": "textures/blocks/hakkai_crusher"
+    },
+    "hakkai_washer": {
+      "textures": "textures/blocks/hakkai_washer"
+    },
+    "hakkai_press": {
+      "textures": "textures/blocks/hakkai_press"
+    },
+    "hakkai_saw": {
+      "textures": "textures/blocks/hakkai_saw"
+    },
+    "hakkai_factory_pipe": {
+      "textures": "textures/blocks/hakkai_factory_pipe"
+    },
+    "hakkai_crusher_0": {
+      "textures": "textures/blocks/hakkai_crusher_0"
+    },
+    "hakkai_crusher_1": {
+      "textures": "textures/blocks/hakkai_crusher_1"
+    },
+    "hakkai_crusher_2": {
+      "textures": "textures/blocks/hakkai_crusher_2"
+    },
+    "hakkai_crusher_3": {
+      "textures": "textures/blocks/hakkai_crusher_3"
+    },
+    "hakkai_washer_0": {
+      "textures": "textures/blocks/hakkai_washer_0"
+    },
+    "hakkai_washer_1": {
+      "textures": "textures/blocks/hakkai_washer_1"
+    },
+    "hakkai_washer_2": {
+      "textures": "textures/blocks/hakkai_washer_2"
+    },
+    "hakkai_washer_3": {
+      "textures": "textures/blocks/hakkai_washer_3"
+    },
+    "hakkai_press_0": {
+      "textures": "textures/blocks/hakkai_press_0"
+    },
+    "hakkai_press_1": {
+      "textures": "textures/blocks/hakkai_press_1"
+    },
+    "hakkai_press_2": {
+      "textures": "textures/blocks/hakkai_press_2"
+    },
+    "hakkai_press_3": {
+      "textures": "textures/blocks/hakkai_press_3"
+    },
+    "hakkai_saw_0": {
+      "textures": "textures/blocks/hakkai_saw_0"
+    },
+    "hakkai_saw_1": {
+      "textures": "textures/blocks/hakkai_saw_1"
+    },
+    "hakkai_saw_2": {
+      "textures": "textures/blocks/hakkai_saw_2"
+    },
+    "hakkai_saw_3": {
+      "textures": "textures/blocks/hakkai_saw_3"
     }
   }
 }

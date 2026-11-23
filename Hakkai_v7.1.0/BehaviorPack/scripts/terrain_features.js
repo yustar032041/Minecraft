@@ -102,7 +102,7 @@ export function scenicPlan(realm,cx,cz,y,hash){
   ['hakkai:clockstone','hakkai:timeglass']
  ];
  const [stone,accent]=palettes[realm],out=[],occupied=new Set();
- const variant=Math.min(9,Math.floor(hash(cx,cz,realm,733)*10));
+ const variant=Math.min(13,Math.floor(hash(cx,cz,realm,733)*14));
  const rotation=Math.min(3,Math.floor(hash(cx,cz,realm,739)*4));
  const add=(dx,dy,dz,type,cache=false)=>{
   for(let i=0;i<rotation;i++)[dx,dz]=[-dz,dx];
@@ -155,12 +155,26 @@ export function scenicPlan(realm,cx,cz,y,hash){
   for(let dx=-3;dx<=3;dx++)for(let dz=-2;dz<=2;dz++)add(dx,5,dz,stone);
   for(let dx=-2;dx<=2;dx++)add(dx,6,0,accent);
   add(-2,1,1,'minecraft:barrel',true);add(1,1,1,accent);
- }else{ // stepped pavilion / abandoned workshop
+ }else if(variant===9){ // stepped pavilion / abandoned workshop
   for(const dx of [-3,3])for(const dz of [-3,3])pillar(dx,dz,4,false);
   for(let dx=-3;dx<=3;dx++)for(let dz=-3;dz<=3;dz++)if(Math.abs(dx)===3||Math.abs(dz)===3)add(dx,5,dz,stone);
   for(let dx=-2;dx<=2;dx++)for(let dz=-2;dz<=2;dz++)add(dx,6,dz,stone);
   for(let dx=-1;dx<=1;dx++)for(let dz=-1;dz<=1;dz++)add(dx,7,dz,stone);
   add(0,8,0,accent);add(-2,1,0,'minecraft:barrel',true);add(2,1,0,accent);
+ }else if(variant===10){ // twin spires, fractured skyward
+  pillar(-2,0,6);pillar(2,0,4);pillar(0,2,2,false);
+  for(let dx=-1;dx<=1;dx++)add(dx,3,0,stone);
+  add(0,4,0,accent);add(0,1,-2,'minecraft:barrel',true);
+ }else if(variant===11){ // open crossroads and waymarkers
+  for(let i=-3;i<=3;i++){if(i!==0){add(i,1,0,stone);add(0,1,i,stone);}}
+  pillar(-3,-3,3);pillar(3,3,3);add(0,2,0,accent);
+ }else if(variant===12){ // broken arched viaduct
+  for(const dx of [-3,0,3])pillar(dx,-1,4,false);
+  for(let dx=-2;dx<=2;dx++)if(dx!==1)add(dx,5,-1,stone);
+  add(-3,5,-1,accent);add(3,5,-1,accent);add(0,1,2,'minecraft:barrel',true);
+ }else{ // radial mineral cluster / ancient ring
+  for(const [dx,dz,h] of [[-2,-2,2],[2,-2,4],[2,2,2],[-2,2,4],[0,0,6]])pillar(dx,dz,h);
+  add(-3,1,0,stone);add(3,1,0,stone);add(0,1,3,stone);
  }
  return out;
 }

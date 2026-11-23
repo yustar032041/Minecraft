@@ -179,13 +179,13 @@ console.log('Simulated terrain jobs: 8 realms, pre-existing/mid-job protection, 
 // A real seeded grove candidate can produce the shrine without allowing bamboo
 // in its 9x9 footprint. This checks integration, not engine block physics.
 {
- const f=fixture(7,105,107);f.generator.tick(f.player,20);f.run();
- assert.equal(f.props.get('seed_land_7_105_107_v1'),1);
+ const f=fixture(7,91,121);f.generator.tick(f.player,20);f.run();
+ assert.equal(f.props.get('seed_land_7_91_121_v1'),1);
  assert.equal(f.dimension.spawned.filter(e=>e.type==='hakkai:fushi_chief').length,1);
  const centre=f.dimension.spawned[0].at;
  assert.equal(f.generator.isMoonGrove(centre),true);
  assert.ok(f.dimension.writes.some(w=>w.type==='hakkai:timeglass'&&Math.abs(w.x-centre.x)<5));
- assert.ok(f.dimension.writes.filter(w=>w.type==='minecraft:bamboo').every(w=>Math.abs(w.x-(105*16+8))>4||Math.abs(w.z-(107*16+8))>4));
+ assert.ok(f.dimension.writes.filter(w=>w.type==='minecraft:bamboo').every(w=>Math.abs(w.x-(91*16+8))>4||Math.abs(w.z-(121*16+8))>4));
  assert.equal(f.reports.length,0);
 }
 console.log('Seeded moon shrine: real seed candidate, chief, grove flag and bamboo exclusion (mocked)');

@@ -133,7 +133,7 @@ console.log('Moon grove: continuous field, deterministic chunk-safe bamboo candi
 for(let realm=0;realm<8;realm++)for(let rotation=0;rotation<4;rotation++){
  const shapes=[];
  for(let variant=6;variant<10;variant++){
-  const h=(x,z,r,salt)=>salt===701?0:salt===733?(variant+.1)/10:salt===739?(rotation+.1)/4:.5;
+  const h=(x,z,r,salt)=>salt===701?0:salt===733?(variant+.1)/14:salt===739?(rotation+.1)/4:.5;
   const plan=scenicPlan(realm,-3,4,90,h);
   assert.ok(plan.length>=60,`building ${variant}`);
   assert.equal(plan.filter(p=>p.cache).length,1);
@@ -142,4 +142,13 @@ for(let realm=0;realm<8;realm++)for(let rotation=0;rotation<4;rotation++){
   shapes.push(JSON.stringify(plan));
  }
  assert.equal(new Set(shapes).size,4);
+}
+
+// Every added structure stays within its fresh chunk for all rotations.
+for(let realm=0;realm<8;realm++)for(let rotation=0;rotation<4;rotation++)for(let variant=10;variant<14;variant++){
+ const h=(x,z,r,salt)=>salt===701?0:salt===733?(variant+.1)/14:salt===739?(rotation+.1)/4:.5;
+ const plan=scenicPlan(realm,-3,4,90,h);
+ assert.ok(plan.length>=15);
+ assert.equal(new Set(plan.map(p=>`${p.x},${p.y},${p.z}`)).size,plan.length);
+ assert.ok(plan.every(p=>p.x>=-48&&p.x< -32&&p.z>=64&&p.z<80&&p.y>=91&&p.y<=99));
 }

@@ -1,0 +1,29 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "hakkai:washer"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:bucket"
+      },
+      {
+        "item": "minecraft:iron_ingot"
+      },
+      {
+        "item": "minecraft:barrel"
+      },
+      {
+        "item": "hakkai:crystal_3"
+      }
+    ],
+    "result": {
+      "item": "hakkai:washer",
+      "count": 1
+    }
+  }
+}

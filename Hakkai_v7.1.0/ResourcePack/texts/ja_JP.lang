@@ -894,3 +894,13 @@ item.hakkai:series_leggings_09.name=天空の白翼装のレギンス
 item.hakkai:series_leggings_10.name=時環の覇者装のレギンス
 item.hakkai:ult_sword.name=終刻の剣
 item.hakkai:ult_axe.name=終刻の斧
+
+tile.hakkai:shaft.name=動力軸
+tile.hakkai:wind_rotor.name=風力回転機
+tile.hakkai:water_wheel.name=水力回転機
+tile.hakkai:crusher.name=破砕機
+tile.hakkai:washer.name=洗浄機
+tile.hakkai:press.name=プレス機
+tile.hakkai:saw.name=製材機
+
+tile.hakkai:factory_pipe.name=搬送管

@@ -1,7 +1,8 @@
 // Runs the actual transfer function with simulated Minecraft objects.
 import assert from 'node:assert/strict';import fs from 'node:fs';import vm from 'node:vm';
+import {kineticPower,hasAdjacentWater,factoryRecipe,animateKinetic} from '../Hakkai_v7.1.0/BehaviorPack/scripts/factory_network.js';
 import {factoryTransaction} from '../Hakkai_v7.1.0/BehaviorPack/scripts/factory_transaction.js';
-class ItemStack {constructor(typeId,amount=1){Object.assign(this,{typeId,amount,maxAmount:64});}clone(){return new ItemStack(this.typeId,this.amount);}isStackableWith(x){return this.typeId===x.typeId;}}
+class ItemStack {constructor(typeId,amount=1){Object.assign(this,{typeId,amount,maxAmount:64});}clone(){const c=new ItemStack(this.typeId,this.amount);c.nameTag=this.nameTag;return c;}isStackableWith(x){return this.typeId===x.typeId&&this.nameTag===x.nameTag;}}
 class Container {constructor(items){this.items=items;this.size=items.length;this.failOnce=false;}getItem(i){return this.items[i]?.clone();}setItem(i,v){this.items[i]=v?.clone();if(this.failOnce){this.failOnce=false;throw Error('write failed');}}}
 const src=fs.readFileSync('Hakkai_v7.1.0/BehaviorPack/scripts/main.js','utf8');const start=src.indexOf('function transfer(b){'),end=src.indexOf("safeSub('system','before','startup'",start);assert.ok(start>=0&&end>start);
 function fixture(kind,inputs,outputs=[undefined,undefined]){
@@ -12,7 +13,7 @@ function fixture(kind,inputs,outputs=[undefined,undefined]){
  const b={typeId:'hakkai:'+kind,dimension:d,x:0,y:80,z:0};
  const total=(c,id)=>c.items.reduce((a,v)=>a+(v?.typeId===id?v.amount:0),0);
  const room=(c,s)=>c.items.reduce((a,v)=>a+(!v?s.maxAmount:v.isStackableWith(s)?v.maxAmount-v.amount:0),0)>=s.amount;
- const ctx={ns:'hakkai:',world:{getTimeOfDay:()=>6000},currentWeather:new Map(),WeatherType:{Thunder:'thunder',Rain:'rain'},system:{currentTick:0},ItemStack,total,room,factoryTransaction,production:(_,n)=>produced.push(n),report:(...x)=>reports.push(x)};
+ const ctx={ns:'hakkai:',world:{getTimeOfDay:()=>6000},currentWeather:new Map(),WeatherType:{Thunder:'thunder',Rain:'rain'},system:{currentTick:0},ItemStack,total,room,factoryTransaction,kineticPower,hasAdjacentWater,factoryRecipe,animateKinetic,production:(_,n)=>produced.push(n),report:(...x)=>reports.push(x)};
  vm.createContext(ctx);vm.runInContext(src.slice(start,end),ctx);
  return {from,to,ore,b,ctx,reports,produced,run:()=>ctx.transfer(b)};
 }
@@ -34,3 +35,41 @@ for(const fail of ['inventory','block']){
  f.run();assert.equal(f.ore.typeId,'hakkai:ore_3');assert.deepEqual(snap(f.from),[['minecraft:coal',1]]);assert.deepEqual(snap(f.to),[undefined,undefined]);assert.equal(f.produced.length,0);assert.ok(f.reports.length,fail);
 }
 console.log('Actual machine transfer: mill, kiln, compressor, sorter and miner with failure rollback OK (simulated)');
+// Exercise the real transfer function for every new production branch.
+for(const [kind,raw,count,out,amount] of [
+ ['crusher','minecraft:cobblestone',1,'minecraft:gravel',1],
+ ['crusher','minecraft:bone',1,'minecraft:bone_meal',3],
+ ['press','minecraft:clay_ball',4,'minecraft:clay',1],
+ ['saw','minecraft:oak_log',1,'minecraft:oak_planks',4],
+]){
+ const f=fixture(kind,[item('minecraft:coal'),item(raw,count)]);f.run();
+ assert.deepEqual(snap(f.to),[[out,amount],undefined],kind);assert.deepEqual(snap(f.from),[undefined,undefined]);
+}
+{
+ const f=fixture('washer',[item('minecraft:coal'),item('minecraft:gravel')]);f.run();
+ assert.deepEqual(snap(f.to),[undefined,undefined]);assert.deepEqual(snap(f.from),[['minecraft:coal',1],['minecraft:gravel',1]]);
+ const get=f.b.dimension.getBlock;f.b.dimension.getBlock=p=>p.z===1?{typeId:'minecraft:water'}:get(p);f.run();
+ assert.deepEqual(snap(f.to),[['minecraft:flint',1],undefined]);
+}
+{
+ const f=fixture('crusher',[item('minecraft:cobblestone')]);
+ const get=f.b.dimension.getBlock;f.b.dimension.getBlock=p=>p.z===1?{typeId:'hakkai:wind_rotor',x:0,y:80,z:1,location:p}:get(p);
+ f.b.dimension.getBlockFromRay=()=>undefined;f.run();assert.deepEqual(snap(f.to),[['minecraft:gravel',1],undefined]);
+}
+{
+ const f=fixture('factory_pipe',[item('minecraft:diamond',2)]);f.run();
+ assert.deepEqual(snap(f.from),[['minecraft:diamond',1]]);assert.deepEqual(snap(f.to),[['minecraft:diamond',1],undefined]);
+ const blocked=fixture('factory_pipe',[item('minecraft:diamond',2)],[item('minecraft:stone',64)]);blocked.run();
+ assert.deepEqual(snap(blocked.from),[['minecraft:diamond',2]]);assert.deepEqual(snap(blocked.to),[['minecraft:stone',64]]);
+}
+console.log('Crusher, washer, press, saw and pipe transactions OK (simulated)');
+
+{
+ const a=item('minecraft:diamond',2),b=item('minecraft:diamond',2);a.nameTag='first';b.nameTag='second';
+ const f=fixture('factory_pipe',[a,b],[undefined,undefined]);f.run();
+ assert.equal(f.to.getItem(0).nameTag,'first');assert.equal(f.from.getItem(0).amount,1);assert.equal(f.from.getItem(1).nameTag,'second');
+}
+for(const kind of ['factory_pipe','crusher']){
+ const f=fixture(kind,kind==='crusher'?[item('minecraft:coal'),item('minecraft:cobblestone')]:[item('minecraft:diamond',2)]);
+ const before=snap(f.from);f.to.failOnce=true;f.run();assert.deepEqual(snap(f.from),before);assert.deepEqual(snap(f.to),[undefined,undefined]);assert.ok(f.reports.length);
+}
