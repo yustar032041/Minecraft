@@ -19,15 +19,15 @@ def make_geometry(part):
  bones=[{'name':'waist','pivot':[0,12,0]}, {'name':'body','parent':'waist','pivot':[0,24,0]}, {'name':'head','parent':'body','pivot':[0,24,0]}, {'name':'rightArm','parent':'body','pivot':[-5,22,0]}, {'name':'leftArm','parent':'body','pivot':[5,22,0],'mirror':True}, {'name':'rightLeg','parent':'body','pivot':[-1.9,12,0]}, {'name':'leftLeg','parent':'body','pivot':[1.9,12,0],'mirror':True}]
  b={v['name']:v for v in bones}
  if part=='helmet':
-  b['head']['cubes']=[cube([-4,24,-4],[8,8,8],[0,0],1),cube([-3,29,-5.25],[6,2,1],[8,8]),cube([-4.7,25,-1],[1,5,2],[0,0]),cube([3.7,25,-1],[1,5,2],[0,0])]
+  b['head']['cubes']=[cube([-4,24,-4],[8,8,8],[0,0],1),cube([-3,29,-6],[6,2,1],[8,8]),cube([-5.7,25,-1],[1,5,2],[0,0]),cube([4.7,25,-1],[1,5,2],[0,0])]
  if part=='chest':
-  b['body']['cubes']=[cube([-4,12,-2],[8,12,4],[16,16],1),cube([-2.5,16,-3.3],[5,5,1],[20,19]),cube([-3.3,12,-3.15],[6.6,2,1],[20,19])]
-  for name,x in [('rightArm',-8),('leftArm',4)]:b[name]['cubes']=[cube([x,12,-2],[4,12,4],[40,16],1),cube([x-.4,20,-2.8],[4.8,3,5.6],[40,16])]
+  b['body']['cubes']=[cube([-4,12,-2],[8,12,4],[16,16],1),cube([-2.5,16,-4],[5,5,1],[20,19]),cube([-3,12,-3.8],[6,2,1],[20,19])]
+  for name,x in [('rightArm',-8),('leftArm',4)]:b[name]['cubes']=[cube([x,12,-2],[4,12,4],[40,16],1),cube([x-.5,20,-4],[5,3,8],[36,16])]
  if part=='leggings':
   b['body']['cubes']=[cube([-4,12,-2],[8,4,4],[16,16],.5)]
-  for name,x in [('rightLeg',-3.9),('leftLeg',-.1)]:b[name]['cubes']=[cube([x,0,-2],[4,12,4],[0,16],.49),cube([x+.4,6.5,-2.7],[3.2,3,1],[4,20])]
+  for name,x in [('rightLeg',-3.9),('leftLeg',-.1)]:b[name]['cubes']=[cube([x,0,-2],[4,12,4],[0,16],.49),cube([x+.5,6.5,-3.5],[3,3,1],[4,20])]
  if part=='boots':
-  for name,x in [('rightLeg',-3.9),('leftLeg',-.1)]:b[name]['cubes']=[cube([x,0,-2],[4,5,4],[0,16],1),cube([x-.5,-.4,-3.4],[5,2,2],[4,20])]
+  for name,x in [('rightLeg',-3.9),('leftLeg',-.1)]:b[name]['cubes']=[cube([x,0,-2],[4,5,4],[0,16],1),cube([x-.5,-.4,-4],[5,2,2],[4,20])]
  return {'description':{'identifier':'geometry.hakkai.armor_'+part,'texture_width':64,'texture_height':32,'visible_bounds_width':3,'visible_bounds_height':3,'visible_bounds_offset':[0,1,0]},'bones':bones}
 def normals(im):
  # Bounded height-gradient approximation; no fabricated claim of real PBR.

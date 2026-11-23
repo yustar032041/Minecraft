@@ -5492,7 +5492,6 @@ system.runInterval(()=>{
      }
      realmDiscoveryTick(p,site);
      naturalSiteTick(p,site,t);
-     seededWorlds?.tick(p,t);
      shrineChiefs.tick(p,t);
      frontierWorlds?.tick(p,t);
      expeditionRecords?.tick(p,t);
@@ -5541,6 +5540,13 @@ system.runInterval(()=>{
    }catch(err){if(p.isValid&&t%200===0)report('定期処理',err);}
  }
 },10);
+
+// Terrain queue pump: scans remain throttled to once a second per player,
+// while the next single adaptive job can start as soon as the previous ends.
+system.runInterval(()=>{
+ const t=system.currentTick;
+ for(const p of world.getAllPlayers())try{seededWorlds?.tick(p,t);}catch(err){if(t%200===0)report('シード地形',err);}
+},1);
 
 // Fast input sampling is isolated from the heavier half-second world loop.
 system.runInterval(()=>{

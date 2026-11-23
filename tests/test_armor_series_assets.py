@@ -34,3 +34,10 @@ for part in ('helmet','chest','leggings','boots'):
  a=json.loads((rp/'attachables'/f'ult_{part}.json').read_text())['minecraft:attachable']['description'];assert a['geometry']['default']==f'geometry.hakkai.armor_{part}'
  assert len(set(Image.open(rp/f'textures/hakkai/equipment/ult_{part}_n.png').convert('RGBA').getdata()))>5
 print('11 new leggings, 44 raised set models, final armor, recipes and nonflat normals (static only)')
+# Relief must protrude visibly beyond the inflated base, not merely intersect it.
+for geom in model:
+ part=geom['description']['identifier'].removeprefix('geometry.hakkai.armor_')
+ target={'helmet':'head','chest':'body','leggings':'rightLeg','boots':'rightLeg'}[part]
+ cubes=next(b for b in geom['bones'] if b['name']==target)['cubes']
+ base,plate=cubes[:2]
+ assert plate['origin'][2] <= base['origin'][2]-base.get('inflate',0)-0.9, part

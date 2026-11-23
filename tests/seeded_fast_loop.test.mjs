@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
+const source=fs.readFileSync('Hakkai_v7.1.0/BehaviorPack/scripts/main.js','utf8');
+const start=source.indexOf('// Terrain queue pump:'), end=source.indexOf('// Fast input sampling',start);
+assert.ok(start>=0&&end>start);
+let interval;const calls=[], errors=[];const p1={id:'1'},p2={id:'2'};
+const ctx={system:{currentTick:200,runInterval(fn,rate){assert.equal(rate,1);interval=fn;}},world:{getAllPlayers:()=>[p1,p2]},seededWorlds:{tick(p,t){calls.push([p.id,t]);if(p===p1)throw Error('test');}},report:(...a)=>errors.push(a)};
+vm.runInNewContext(source.slice(start,end),ctx);interval();
+assert.deepEqual(calls,[['1',200],['2',200]]);assert.equal(errors.length,1);
+ctx.seededWorlds=undefined;interval();assert.equal(calls.length,2);
+console.log('Terrain pump runs each tick and isolates player errors (mocked)');
