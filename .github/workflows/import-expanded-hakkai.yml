@@ -19,7 +19,7 @@ jobs:
         with:
           ref: main
 
-      - name: Expand package files without inspecting their contents
+      - name: Expand the packs without inspecting their contents
         shell: bash
         run: |
           set -euo pipefail
@@ -56,14 +56,16 @@ jobs:
                       or name.startswith("Hakkai_v7.1.0/ResourcePack/")
                   ):
                       raise SystemExit(f"Unexpected archive entry: {name}")
+
               if not any(m.filename == "8界風記完成設計書.md" for m in files):
                   raise SystemExit("Design document missing.")
 
               zf.extractall(staging)
 
           doc = staging / "8界風記完成設計書.md"
-          bp_root = staging / "Hakkai_v7.1.0" / "BehaviorPack"
-          rp_root = staging / "Hakkai_v7.1.0" / "ResourcePack"
+          source_root = staging / "Hakkai_v7.1.0"
+          bp_root = source_root / "BehaviorPack"
+          rp_root = source_root / "ResourcePack"
           if not doc.is_file() or not bp_root.is_dir() or not rp_root.is_dir():
               raise SystemExit("Expected folder structure was not created.")
 
@@ -71,7 +73,7 @@ jobs:
           destination = Path("Hakkai_v7.1.0")
           destination.mkdir(exist_ok=True)
           for pack in ("BehaviorPack", "ResourcePack"):
-              source = staging / "Hakkai_v7.1.0" / pack
+              source = source_root / pack
               target = destination / pack
               if target.exists():
                   shutil.rmtree(target)
