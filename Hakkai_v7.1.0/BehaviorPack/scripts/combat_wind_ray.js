@@ -27,7 +27,7 @@ export function prepareCombatRay(p,range,accept=isCombatTarget,from,aim){
   return {origin,direction,distance:first?first.distance:limit,target,blocked:!!first||!!wall};
  }catch{return undefined;}
 }
-export function prepareWindRay(p,g){return prepareCombatRay(p,RANGE[g?.kind]);}
+export function prepareWindRay(p,g){return prepareCombatRay(p,RANGE[g?.kind],e=>isCombatTarget(e,p));}
 export function renderWindRay(p,beam){
  const count=Math.min(24,Math.ceil(beam.distance/.55));
  for(let i=0;i<=count;i++){

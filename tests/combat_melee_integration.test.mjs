@@ -1,3 +1,4 @@
+import {protectsPlayer} from '../Hakkai_v7.1.0/BehaviorPack/scripts/friendly_fire.js';
 // Exercises the registered melee event handler with fake Bedrock entities.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -9,7 +10,7 @@ const g={id:'gear_001',kind:'剣'},s={s:50,useTick:0,cd:new Map()},casts=[];
 const p={typeId:'minecraft:player',id:'p',isValid:true,isSneaking:false,getGameMode:()=> 'survival',addEffect:()=>{}},target={typeId:'minecraft:zombie',isValid:true};
 let healing=0;
 let selectedItem={typeId:'hakkai:gear_001'},parry=false,handler;
-const context={weaponTrace:undefined,isTraceWeapon:()=>true,GameMode:{Spectator:'spectator'},ultimateParryHeal:()=>healing++,airStrike:undefined,safeSub:(scope,when,event,fn)=>handler=fn,isCreative:()=>false,wardenBoss:{onMeleeParry:()=>{if(parry){s.s-=15;return true;}return false;}},report:()=>assert.fail(),state:()=>s,gear:new Map([[selectedItem.typeId,g]]),selected:()=>selectedItem,system:{currentTick:100},_melee:/_(sword|axe)$/,num:()=>0,growAffinity:()=>{},cast:(...args)=>casts.push(args),ns:'hakkai:'};
+const context={protectsPlayer,weaponTrace:undefined,isTraceWeapon:()=>true,GameMode:{Spectator:'spectator'},ultimateParryHeal:()=>healing++,airStrike:undefined,safeSub:(scope,when,event,fn)=>handler=fn,isCreative:()=>false,wardenBoss:{onMeleeParry:()=>{if(parry){s.s-=15;return true;}return false;}},report:()=>assert.fail(),state:()=>s,gear:new Map([[selectedItem.typeId,g]]),selected:()=>selectedItem,system:{currentTick:100},_melee:/_(sword|axe)$/,num:()=>0,growAffinity:()=>{},cast:(...args)=>casts.push(args),ns:'hakkai:'};
 vm.createContext(context);vm.runInContext(code,context);assert.equal(typeof handler,'function');
 handler({damagingEntity:p,hitEntity:target});assert.equal(s.s,47,'supported weak attack costs three');assert.equal(casts.length,0);
 p.isSneaking=true;parry=true;s.s=30;handler({damagingEntity:p,hitEntity:target});

@@ -20,7 +20,7 @@ export function setupCombatUltimate({system,notice,visibleFrom}){
    const spec=weapon?({剣:[8,.15],斧:[7,-1],弓:[14,.75],杖:[15,.7],ハンマー:[7,-1],槍:[12,.8],盾:[5,.35],扇:[9,.05]})[weapon.kind]:[8,-1];
    const view=spec[1]>-1?p.getViewDirection():undefined,vl=view?Math.hypot(view.x,view.z):1;
    if(view&&(!Number.isFinite(vl)||vl<.01))return false;
-   const pool=weapon?p.dimension.getEntities({location:p.location,maxDistance:spec[0],closest:48}).filter(x=>x?.isValid&&x.id!==p.id&&isCombatTarget(x)):combatEnemies(p,8,8);
+   const pool=weapon?p.dimension.getEntities({location:p.location,maxDistance:spec[0],closest:48}).filter(x=>x?.isValid&&x.id!==p.id&&isCombatTarget(x,p)):combatEnemies(p,8,8);
    const targets=pool.filter(x=>{
     try{
      if(!visibleFrom(p,x.getHeadLocation()))return false;
@@ -28,7 +28,7 @@ export function setupCombatUltimate({system,notice,visibleFrom}){
       const a=p.getHeadLocation(),b=x.getHeadLocation(),dx=b.x-a.x,dy=b.y-a.y,dz=b.z-a.z,n=Math.hypot(dx,dy,dz);if(n<.01)return false;
       const dir={x:dx/n,y:dy/n,z:dz/n},d=p.dimension;
       for(let i=0;i<=Math.ceil(n);i++){const k=Math.min(n,i);if(!d.isChunkLoaded({x:a.x+dir.x*k,y:a.y+dir.y*k,z:a.z+dir.z*k}))return false;}
-      if(d.getEntitiesFromRay(a,dir,{maxDistance:n,ignoreBlockCollision:false}).some(h=>h.entity?.isValid&&h.entity.id!==p.id&&h.entity.id!==x.id&&h.distance<n&&!isCombatTarget(h.entity)))return false;
+      if(d.getEntitiesFromRay(a,dir,{maxDistance:n,ignoreBlockCollision:false}).some(h=>h.entity?.isValid&&h.entity.id!==p.id&&h.entity.id!==x.id&&h.distance<n&&!isCombatTarget(h.entity,p)))return false;
      }
      if(view){const dx=x.location.x-p.location.x,dz=x.location.z-p.location.z,n=Math.hypot(dx,dz);if(n>.01&&(dx*view.x+dz*view.z)/(n*vl)<spec[1])return false;}
      return true;

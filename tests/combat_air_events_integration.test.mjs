@@ -1,3 +1,4 @@
+import {protectsPlayer} from '../Hakkai_v7.1.0/BehaviorPack/scripts/friendly_fire.js';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
@@ -13,7 +14,7 @@ for(const order of ['hurt-first','hit-first']){
  const p={id:'p',typeId:'minecraft:player',isValid:true,isOnGround:true,isSneaking:false,dimension,location:{x:0,y:0,z:0},getGameMode:()=> 'survival',getComponent:()=>undefined,getVelocity:()=>({y:-.2}),playAnimation:()=>{},playSound:()=>{}};
  const e={id:'z',typeId:'minecraft:zombie',isValid:true,dimension,location:{x:1,y:0,z:0},getComponent:()=>({hasTypeFamily:()=>true}),getHeadLocation:()=>({x:1,y:1,z:0}),applyDamage:n=>hits.push(n),applyKnockback:()=>{},addEffect:()=>{}};
  const s={s:50,cd:new Map()},g={kind:'剣',a:0},system={currentTick:5},airStrike=setupAirStrike({notice:()=>{},visibleFrom:()=>true});airStrike.tick(p,4);p.isOnGround=false;
- const context={weaponTrace:undefined,isTraceWeapon:()=>true,safeSub:(_,__,name,fn)=>handlers[name]=fn,airStrike,combatResonance:{onHurt:()=>{}},mobSystem:undefined,realmEnders:undefined,fushiSystem:undefined,system,EntityDamageCause:Cause,GameMode,gear:new Map([['hakkai:g',g]]),selected:()=>({typeId:'hakkai:g'}),state:()=>s,isCreative:()=>false,wardenBoss:undefined,report:(...x)=>assert.fail(String(x)),_melee:/_sword$/,ns:'hakkai:',permit:()=>false};
+ const context={protectsPlayer,weaponTrace:undefined,isTraceWeapon:()=>true,safeSub:(_,__,name,fn)=>handlers[name]=fn,airStrike,combatResonance:{onHurt:()=>{}},mobSystem:undefined,realmEnders:undefined,fushiSystem:undefined,system,EntityDamageCause:Cause,GameMode,gear:new Map([['hakkai:g',g]]),selected:()=>({typeId:'hakkai:g'}),state:()=>s,isCreative:()=>false,wardenBoss:undefined,report:(...x)=>assert.fail(String(x)),_melee:/_sword$/,ns:'hakkai:',permit:()=>false};
  vm.createContext(context);vm.runInContext(hurt.slice(0,end+4),context);vm.runInContext(hit,context);
  const a=()=>handlers.entityHurt({hurtEntity:e,damage:7,damageSource:{cause:Cause.entityAttack,damagingEntity:p}}),b=()=>handlers.entityHitEntity({damagingEntity:p,hitEntity:e});
  if(order==='hurt-first'){a();b();}else{b();a();}

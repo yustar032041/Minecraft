@@ -36,7 +36,7 @@ export function setupAirStrike({notice,visibleFrom}){
  }
  function onHurt(p,target,s,g,damage,t){
   try{
-   if(!p?.isValid||p.typeId!=='minecraft:player'||![GameMode.Survival,GameMode.Creative].includes(p.getGameMode())||p.isOnGround||p.isSneaking||p.isSwimming||p.isFlying||p.isGliding||p.getComponent('minecraft:riding')||s.busy||s.menu||!g||!WEAPONS.has(g.kind)||!(damage>0)||!target?.isValid||!isCombatTarget(target)||p.dimension.id!==target.dimension.id)return false;
+   if(!p?.isValid||p.typeId!=='minecraft:player'||![GameMode.Survival,GameMode.Creative].includes(p.getGameMode())||p.isOnGround||p.isSneaking||p.isSwimming||p.isFlying||p.isGliding||p.getComponent('minecraft:riding')||s.busy||s.menu||!g||!WEAPONS.has(g.kind)||!(damage>0)||!target?.isValid||!isCombatTarget(target,p)||p.dimension.id!==target.dimension.id)return false;
    const e=entry(p);if(e.spent||e.dim!==p.dimension.id||p.getVelocity().y>=-.08)return false;
    const a=p.location,b=target.location;if(Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z)>5)return false;
    const hadBasic=e.basic?.id===target.id&&Math.abs(t-e.basic.t)<=1;
@@ -45,9 +45,10 @@ export function setupAirStrike({notice,visibleFrom}){
    const opts={location:b,maxDistance:RADIUS,closest:8,excludeTypes:['minecraft:player']};
    const all=p.dimension.getEntities({...opts,families:['monster']});
    all.push(...p.dimension.getEntities({...opts,type:'hakkai:time_warden'}));
+   try{all.push(...p.dimension.getPlayers({location:b,maxDistance:RADIUS,closest:8}));}catch{}
    const extra=new Map();
    for(const other of all){
-    if(!other?.isValid||other.id===target.id||other.id===p.id||other.typeId==='minecraft:player'||other.dimension.id!==p.dimension.id||!isCombatTarget(other))continue;
+    if(!other?.isValid||other.id===target.id||other.id===p.id||other.dimension.id!==p.dimension.id||!isCombatTarget(other,p))continue;
     const l=other.location;if(Math.hypot(l.x-b.x,l.y-b.y,l.z-b.z)>RADIUS)continue;
     try{if(!visibleFrom(p,other.getHeadLocation()))continue;}catch{continue;}
     extra.set(other.id,other);

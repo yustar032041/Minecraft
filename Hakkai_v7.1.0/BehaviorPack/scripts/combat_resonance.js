@@ -1,11 +1,13 @@
 import { EntityDamageCause, GameMode } from '@minecraft/server';
+import { friendlyFireEnabled,isPlayerOpponent } from './friendly_fire.js';
 // An original Hakkai combat prototype: confirmed melee hits gather wind marks;
 // the player's next successful weapon skill may spend a full mark. No target
 // selection, damage, timers or visual assets from the reference addon are used.
 const MAX=3, GAP=80, READY_GAP=120, MIN_INTERVAL=8;
 const WEAPONS=new Set(['剣','斧','槍']);
-export function isCombatTarget(entity){
- if(!entity||entity.typeId==='minecraft:player')return false;
+export function isCombatTarget(entity,attacker){
+ if(!entity)return false;
+ if(entity.typeId==='minecraft:player')return isPlayerOpponent(attacker,entity);
  if(entity.typeId==='hakkai:time_warden'||entity.typeId==='hakkai:fushi_chief'||/^hakkai:ender_[0-7]$/.test(entity.typeId??''))return true;
  try{return !!entity.getComponent('minecraft:type_family')?.hasTypeFamily('monster');}catch{return false;}
 }
@@ -18,7 +20,7 @@ export function setupCombatResonance({system,notice}){
   return e;
  }
  function onHurt(p,target,g,damage){
-  if(!p?.isValid||p.getGameMode()===GameMode.Spectator||!target?.isValid||!g||!WEAPONS.has(g.kind)||p.isSneaking||!(damage>0)||!isCombatTarget(target)||p.dimension.id!==target.dimension.id)return 0;
+  if(!p?.isValid||p.getGameMode()===GameMode.Spectator||!target?.isValid||!g||!WEAPONS.has(g.kind)||p.isSneaking||!(damage>0)||!isCombatTarget(target,p)||p.dimension.id!==target.dimension.id)return 0;
   const t=system.currentTick,old=current(p,g,t);
   if(old&&t-old.last<MIN_INTERVAL)return old.count;
   const count=Math.min(MAX,(old?.count??0)+1);
@@ -57,12 +59,13 @@ export function setupCombatResonance({system,notice}){
 
 // Keep neutral creatures out of ambient area attacks. The trial warden is
 // deliberately targetable even though it does not belong to 'monster'.
-export function combatEnemies(p,r,cap=6){
+export function combatEnemies(p,r,cap=6,{players=true}={}){
  const opts={location:p.location,maxDistance:r,closest:cap+3,excludeTypes:['minecraft:player']};
  const all=p.dimension.getEntities({...opts,families:['monster']});
  try{all.push(...p.dimension.getEntities({...opts,type:'hakkai:time_warden'}));}catch{}
  const unique=new Map();
  for(const e of all)if(e.isValid&&e.typeId!=='minecraft:player')unique.set(e.id,e);
+ if(players&&friendlyFireEnabled())try{for(const e of p.dimension.getPlayers({location:p.location,maxDistance:r,closest:cap+3}))if(isPlayerOpponent(p,e))unique.set(e.id,e);}catch{}
  return [...unique.values()].sort((a,b)=>{
   const d=x=>Math.hypot(x.location.x-p.location.x,x.location.y-p.location.y,x.location.z-p.location.z);
   return d(a)-d(b);
@@ -72,7 +75,7 @@ export function combatEnemies(p,r,cap=6){
 // Each optional status/knockback operation may be rejected independently by a
 // boss. A failed visual or knockback must not silently suppress its damage.
 export function applyCombatHit(p,e,str,a,mod,push){
- if(!e.isValid)return;
+ if(!e.isValid||e.typeId==='minecraft:player'&&!isPlayerOpponent(p,e))return;
  try{if(a===2||mod===2)e.setOnFire(3,true);}catch{}
  try{if([7,10,11,16].includes(a)||[7,10,11,16].includes(mod))e.addEffect('slowness',65,{amplifier:a===7?3:1,showParticles:false});}catch{}
  const anchored=e.typeId==='hakkai:time_warden'||e.typeId==='hakkai:eclipse_colossus'||e.typeId==='hakkai:fushi_chief'||/^hakkai:guardian_[0-7]$/.test(e.typeId??'');

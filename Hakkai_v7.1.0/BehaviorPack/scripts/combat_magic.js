@@ -18,7 +18,7 @@ function lightProjectile(p,system,initial,stagger){
  function advance(){
   try{
    if(!p.isValid||p.dimension.id!==dimId||remaining<=0)return;
-   const step=Math.min(2,remaining),segment=prepareCombatRay(p,step,isCombatTarget,from,direction);
+   const step=Math.min(2,remaining),segment=prepareCombatRay(p,step,e=>isCombatTarget(e,p),from,direction);
    if(!segment)return; // Chunk/raycast failure: never hit through it.
    for(let i=0;i<=4;i++){const n=segment.distance*i/4;try{dimension.spawnParticle('hakkai:wind_burst',{x:from.x+direction.x*n,y:from.y+direction.y*n,z:from.z+direction.z*n});}catch{}}
    if(segment.target){
@@ -43,7 +43,7 @@ export function castNewMagic({p,s,system,kind,notice,mark,visibleFrom,stagger,co
   let beam,participants=[],targets=[],health;
   if(kind==='light'){
    // Check the launch segment before spending. The rest is checked each tick.
-   beam=prepareCombatRay(p,2,isCombatTarget);
+   beam=prepareCombatRay(p,2,e=>isCombatTarget(e,p));
    if(!beam){notice(p,'§e光の進路を確認できません');return false;}
   }else if(kind==='bond'){
    const found=[p,...p.dimension.getPlayers({location:p.location,maxDistance:8})],unique=new Map();
@@ -60,7 +60,7 @@ export function castNewMagic({p,s,system,kind,notice,mark,visibleFrom,stagger,co
   }
   if(kind!=='light'){
    const range=kind==='bond'?8:kind==='moon'?6:5;
-   targets=combatEnemies(p,range,8).filter(e=>{try{return visibleFrom(p,e.getHeadLocation());}catch{return false;}}).slice(0,kind==='bond'?4:6);
+   targets=combatEnemies(p,range,8,{players:kind!=='bond'}).filter(e=>{try{return visibleFrom(p,e.getHeadLocation());}catch{return false;}}).slice(0,kind==='bond'?4:6);
   }
   // Totem is consumed only after all validation. No revival is implied.
   if(kind==='moon'&&!creative&&(!consumeTotem||!consumeTotem())){notice(p,'§eFUSHIのトーテムが必要です');return false;}

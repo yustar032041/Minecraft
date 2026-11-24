@@ -1,3 +1,4 @@
+import { configureFriendlyFire,friendlyFireEnabled,setFriendlyFire,protectsPlayer } from './friendly_fire.js';
 import { setupBowTrail } from './combat_bow_trail.js';
 import { setupWeaponTrace, isTraceWeapon } from './combat_weapon_trace.js';
 import { tomeSpells, tomeUnlocked, tomeCurrent, tomeNext, tomeCrouchTick } from './spell_tome.js';
@@ -56,6 +57,7 @@ import { spawnWildlife } from './wildlife_spawn.js';
 import { setupExpeditionRecords } from './expedition_records.js';
 import { GUIDE_ENTRIES, GUIDE_ICONS, GUIDE_SECTIONS, selectGuidePage, creatureEntriesByRealm, gearKinds, filterGear } from './guide_navigation.js';
 
+configureFriendlyFire(world);
 const ns='hakkai:', dimID=(id)=>ns+'realm_'+id;
 let frontierWorlds, expeditionRecords, seededWorlds, mobSystem, realmEnders, fushiSystem, wardenArena, wardenBoss, combatResonance, combatGuard, combatRoll, combatParry, airDash, airStrike, fushiTotem, combatUltimate, combatCharge, weaponTrace, bowTrail;
 const shieldWear=setupShieldWear({system});
@@ -3147,13 +3149,14 @@ async function quest(p){
  }
 }
 async function settings(p){
- const ix=await form(p,'風記の設定','表示と効果音をプレイヤーごとに切り替えます。',[
+ const ix=await form(p,'風記の設定','表示と効果音は個人設定。プレイヤー同士の攻撃は全員共通のワールド設定です。',[
    [`HUD：${num(p,'hide_hud')?'非表示':'表示'}`],[`HUDテーマ：${num(p,'hud_color')?'淡色':'標準'}`],
    [`追加の環境音：${num(p,'mute')?'無効':'有効'}`],['今の足場を帰還地点に登録'],
    [`HUD位置：${['左上','右上','通常のアクションバー'][num(p,'hud_pos')]??'左上'}`],[`HUDの大きさ：${num(p,'hud_size')?'大きい':'標準'}`],
    [`追加モブの出現：${num(p,'quiet_wildlife')?'控えめ':'有効'}`],
    [`各界の霧と天候演出：${num(p,'quiet_climate')?'無効':'有効'}`],
-   [`バニラ村の自動検出：${num(p,'no_bell_search')?'無効':'有効'}`]
+   [`バニラ村の自動検出：${num(p,'no_bell_search')?'無効':'有効'}`],
+   [`プレイヤー同士の攻撃：${friendlyFireEnabled()?'ON（当たる）':'OFF（当たらない）'}｜全員共通`]
  ]);
  if(ix===undefined)return;
  if(ix<3){const k=['hide_hud','hud_color','mute'][ix];property(p,k,1-num(p,k));return;}
@@ -3162,6 +3165,14 @@ async function settings(p){
  if(ix===6){property(p,'quiet_wildlife',1-num(p,'quiet_wildlife'));return;}
  if(ix===7){property(p,'quiet_climate',1-num(p,'quiet_climate'));return;}
  if(ix===8){property(p,'no_bell_search',1-num(p,'no_bell_search'));return;}
+ if(ix===9){
+  const desired=!friendlyFireEnabled();
+  const yes=await form(p,'プレイヤー同士の攻撃',`ワールド全員に適用されます。${desired?'ONにすると攻撃技もプレイヤーを狙います。本体のPvP設定も影響します。':'OFFにすると直接攻撃や技から保護します。攻撃元不明の間接被害は防げない場合があります。'}\n他の人に確認してから変更してください。`,[[desired?'ONにする':'OFFにする'],['変更しない']]);
+  if(yes!==0||!p.isValid)return;
+  if(!setFriendlyFire(desired))return notice(p,'§e設定を確認できません。もう一度設定画面を確認してください');
+  for(const player of world.getAllPlayers())try{player.sendMessage(`§e${p.name}がプレイヤー同士の攻撃を${desired?'ON（当たる）':'OFF（当たらない）'}にしました。`);}catch{}
+  return;
+ }
  const l=point(p);if(!safe(p.dimension,l)){notice(p,'§e動かず安全な床に立って登録してね');return;}
  property(p,'home_point',JSON.stringify(l));notice(p,'§a帰還地点を登録した');
 }
@@ -5798,6 +5809,7 @@ safeSub('world','before','playerInteractWithEntity',e=>{
  });
 });
 safeSub('world','before','entityHurt',e=>{
+ try{if(protectsPlayer(e.hurtEntity,e.damageSource)){e.cancel=true;return;}}catch{}
  if(e.cancel)return;
  const victim=/** @type {import('@minecraft/server').Player} */ (e.hurtEntity);
  try{if(fushiTotem?.isReplaying(victim))return;}catch{}
@@ -5879,6 +5891,7 @@ safeSub('world','after','playerInteractWithEntity',({player,target,beforeItemSta
 safeSub('world','after','entityHitEntity',({damagingEntity:p,hitEntity})=>{
  try{weaponTrace?.record(p,hitEntity);}catch{}
  if(p.typeId!=='minecraft:player'||!p.isValid||p.getGameMode()===GameMode.Spectator)return;
+ if(protectsPlayer(hitEntity,{damagingEntity:p}))return;
  // Creative can preview the crouching weapon skill without spending stamina
  // or advancing survival-only affinity and boss-parry progression.
  if(isCreative(p)){

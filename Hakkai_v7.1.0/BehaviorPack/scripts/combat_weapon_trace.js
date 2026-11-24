@@ -15,7 +15,7 @@ export function setupWeaponTrace({system,gear,selected,state,visibleFrom,airAtta
   try{
    if(!enabled||!p?.id||!target?.id)return;
    const t=system.currentTick,list=(recent.get(p.id)??[]).filter(v=>t-v.t<=8);
-   list.push({id:target.id,t,damage:Number.isFinite(damage)&&damage>0?damage:undefined,friendly:!isCombatTarget(target)});
+   list.push({id:target.id,t,damage:Number.isFinite(damage)&&damage>0?damage:undefined,friendly:!isCombatTarget(target,p)});
    recent.set(p.id,list.slice(-24));
   }catch{}
  }
@@ -28,7 +28,7 @@ export function setupWeaponTrace({system,gear,selected,state,visibleFrom,airAtta
    // A friendly entity between player and enemy blocks this beam. Unknown or
    // failed raycasts suppress damage rather than piercing an obstacle.
    const hits=d.getEntitiesFromRay(from,dir,{maxDistance:n,ignoreBlockCollision:false});
-   return !hits.some(h=>h.entity?.isValid&&h.entity.id!==p.id&&h.entity.id!==target.id&&Number.isFinite(h.distance)&&h.distance<n&&!isCombatTarget(h.entity));
+   return !hits.some(h=>h.entity?.isValid&&h.entity.id!==p.id&&h.entity.id!==target.id&&Number.isFinite(h.distance)&&h.distance<n&&!isCombatTarget(h.entity,p));
   }catch{return false;}
  }
  function swing(e){
@@ -71,7 +71,7 @@ export function setupWeaponTrace({system,gear,selected,state,visibleFrom,airAtta
       const step=()=>{
        try{
         if(tokens.get(p.id)!==token||!p.isValid||p.dimension.id!==dim||remaining<=0)return;
-        const length=Math.min(2,remaining),beam=prepareCombatRay(p,length,isCombatTarget,pos,aim);if(!beam)return;
+        const length=Math.min(2,remaining),beam=prepareCombatRay(p,length,e=>isCombatTarget(e,p),pos,aim);if(!beam)return;
         const travel=beam.distance;
         for(let k=.25;k<=travel+.01;k+=.5)try{p.dimension.spawnParticle('hakkai:wind_trace',{x:pos.x+aim.x*k,y:pos.y+aim.y*k,z:pos.z+aim.z*k});}catch{}
         const end={x:pos.x+aim.x*travel,y:pos.y+aim.y*travel,z:pos.z+aim.z*travel};
@@ -84,7 +84,7 @@ export function setupWeaponTrace({system,gear,selected,state,visibleFrom,airAtta
       step();return;
      }
      const candidates=p.dimension.getEntities({location:origin,maxDistance:range+1,closest:48}).filter(target=>{
-      if(!target?.isValid||target.id===p.id||target.dimension.id!==dim||!isCombatTarget(target)||direct.some(x=>x.id===target.id))return false;
+      if(!target?.isValid||target.id===p.id||target.dimension.id!==dim||!isCombatTarget(target,p)||direct.some(x=>x.id===target.id))return false;
       const dx=target.location.x-origin.x,dz=target.location.z-origin.z,r=Math.hypot(dx,dz);
       if(r<.25||r>range||Math.abs(target.location.y-origin.y)>2.25||(dx*f.x+dz*f.z)/r<cone)return false;
       return lineClear(p,target);
