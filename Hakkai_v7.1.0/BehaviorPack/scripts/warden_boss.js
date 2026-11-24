@@ -49,6 +49,12 @@ export const WARDEN_EXTRA=[
   {attack:'真・時間の三連撃',shape:'circle',radius:3.5,damage:11,effect:'slowness',strikes:3}
  ]
 ];
+// Two deliberately distinct, telegraphed additions per form: a delayed
+// triple strike and a moving, reverse inward cross. Uses existing safe engines.
+export const WARDEN_NEW=WARDEN_PHASES.map((phase,i)=>[
+ {attack:`${['時刻','蒼空','地殻','雷鳴','終刻'][i]}・連鎖衝撃`,shape:'circle',radius:4+i*.35,damage:8+i*2,effect:phase.effect,strikes:3},
+ {attack:`${['時刻','蒼空','地殻','雷鳴','終刻'][i]}・収束十字`,motion:'cross',shape:'cross',radius:6+i*.5,width:.85+i*.1,damage:9+i*2,effect:phase.effect,reverse:true}
+]);
 export function inWardenWarning(player,aim,attack){
  const x=player.x-aim.x,z=player.z-aim.z;
  if(Math.abs(player.y-aim.y)>3)return false;
@@ -71,15 +77,15 @@ export function wardenPhase(hp,max=5000){
 }
 export const WARDEN_HEAL_PER_SECOND=12;
 // Increase all scripted patterns without changing their warning geometry.
-export const WARDEN_DAMAGE_MULTIPLIER=2.4;
-export const WARDEN_RECOVERY_TICKS=40;
+export const WARDEN_DAMAGE_MULTIPLIER=16.8;
+export const WARDEN_RECOVERY_TICKS=20;
 // Every fifth selection belongs to the same source form. Final starts with its
 // own attack, then alternates through forms 1–4 before repeating that order.
 export function wardenPatterns(phase){
- const form=i=>[WARDEN_PHASES[i],WARDEN_ALTERNATES[i],...WARDEN_EXTRA[i],...WARDEN_MOVING[i],...WARDEN_ADVANCED[i],...WARDEN_EXTRA_PATTERNS[i]];
+ const form=i=>[WARDEN_PHASES[i],WARDEN_ALTERNATES[i],...WARDEN_EXTRA[i],...WARDEN_MOVING[i],...WARDEN_NEW[i],...WARDEN_ADVANCED[i],...WARDEN_EXTRA_PATTERNS[i]];
  if(phase!==4)return form(phase);
  const groups=[4,0,1,2,3].map(form),all=[];
- for(let i=0;i<40;i++)for(const group of groups)all.push(group[i]);
+ for(let i=0;i<groups[0].length;i++)for(const group of groups)all.push(group[i]);
  return all;
 }
 const MUSIC_TICKS=[937,1372,613,1325,747];
@@ -145,7 +151,7 @@ export function setupWardenBoss({world,system,property,report,isEvading=()=>fals
   if(!warned.length||!telegraph(e.dimension,pending.aim,pending.attack))return false;
   slot.pending={...pending,warned,at:t+20,remaining:pending.remaining-1};return true;
  }
- function clearAttacks(s){s.pending=undefined;s.active=undefined;s.extra=undefined;s.hadAttack=false;}
+ function clearAttacks(s){s.attackSerial=(s.attackSerial??0)+1;s.pending=undefined;s.active=undefined;s.extra=undefined;s.hadAttack=false;}
  function busy(s){return !!(s.pending||s.active||s.extra?.pending||s.extra?.active);}
  function tickEntity(e,t){
   let s=states.get(e.id);
@@ -189,6 +195,7 @@ export function setupWardenBoss({world,system,property,report,isEvading=()=>fals
   // Two independently telegraphed slots; a player takes at most one hit
   // per tick even when both fronts overlap. Parry/stagger clears both.
   const hitThisTick=new Set();
+  const attackSerial=s.attackSerial??0;
   for(const slot of [s,s.extra].filter(Boolean)){
    if(slot.active){
     const m=slot.active;
@@ -198,7 +205,7 @@ export function setupWardenBoss({world,system,property,report,isEvading=()=>fals
      m.hit.add(p.id);
      if(hitThisTick.has(p.id))continue;
      hitThisTick.add(p.id);
-     if(tryParry(p,e)){if(t<s.stopHealUntil)break;continue;}
+     if(tryParry(p,e)){if((s.attackSerial??0)!==attackSerial)break;continue;}
      let hit=false;try{hit=Boolean(p.applyDamage(m.attack.damage*WARDEN_DAMAGE_MULTIPLIER,{cause:EntityDamageCause.entityAttack,damagingEntity:e}));}catch{}
      if(hit)try{p.addEffect(m.attack.effect,60,{amplifier:0,showParticles:false});}catch{}
     }
@@ -217,19 +224,19 @@ export function setupWardenBoss({world,system,property,report,isEvading=()=>fals
       for(const p of world.getAllPlayers())if(warned.includes(p.id)&&valid(p)&&p.dimension.id===WARDEN_DIMENSION)try{p.playSound('random.explode',{volume:.4,pitch:.9+pending.phase*.1});}catch{}
       for(const p of world.getAllPlayers())if(warned.includes(p.id)&&valid(p)&&p.dimension.id===WARDEN_DIMENSION&&inWardenWarning(p.location,aim,attack)&&!isEvading(p)&&!hitThisTick.has(p.id)){
        hitThisTick.add(p.id);
-       if(tryParry(p,e)){if(t<s.stopHealUntil)break;continue;}
+       if(tryParry(p,e)){if((s.attackSerial??0)!==attackSerial)break;continue;}
        const warded=attack.totemWard&&hasFushiTotem(p);
        let hit=false;try{hit=Boolean(p.applyDamage((warded?attack.damage/2:attack.damage)*WARDEN_DAMAGE_MULTIPLIER,{cause:EntityDamageCause.entityAttack,damagingEntity:e}));}catch{}
        if(hit&&warded)try{p.sendMessage('§dFUSHIのトーテムが月光の審判を和らげた！');}catch{}
        if(hit)try{p.addEffect(attack.effect,60,{amplifier:0,showParticles:false});}catch{}
       }
-      if(t>=s.stopHealUntil)followUp(e,slot,pending,t);
+      if((s.attackSerial??0)===attackSerial)followUp(e,slot,pending,t);
      }
     }
    }else if(slot.pending&&(t===slot.pending.at-20||t===slot.pending.at-10))wardenCharge(e,slot.pending.phase,t===slot.pending.at-20?1:2);
    // A successful scripted parry calls stagger synchronously, so never run
    // another detached slot or resurrect a follow-up after it.
-   if(t<s.stopHealUntil)break;
+   if((s.attackSerial??0)!==attackSerial)break;
   }
   if(!busy(s)&&s.hadAttack){s.hadAttack=false;s.extra=undefined;s.nextAt=t+WARDEN_RECOVERY_TICKS;}
   if(!busy(s)&&!flightBusy&&t>=s.nextAt){

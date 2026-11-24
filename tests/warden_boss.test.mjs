@@ -157,9 +157,9 @@ for(const fail of [()=>false,()=>{throw Error('not available');}]){
  const f=fixture();f.p.applyDamage=fail;f.ctrl.tick(f.p,0);f.ctrl.tick(f.p,80);f.ctrl.tick(f.p,120);assert.deepEqual(f.effects,[]);
 }
 
-// Successful attacks retain a full two-second warning but recover in 40 ticks.
+// Successful attacks retain a full two-second warning but recover in 20 ticks.
 {
  const f=fixture();for(let t=0;t<=200;t++)f.ctrl.tick(f.p,t);
  assert.ok(f.messages.some(m=>m.includes(WARDEN_ALTERNATES[0].attack)), 'second warning by tick 160');
- assert.deepEqual(f.damage,[9*WARDEN_DAMAGE_MULTIPLIER,6*WARDEN_DAMAGE_MULTIPLIER]);
+ assert.deepEqual(f.damage,[9*WARDEN_DAMAGE_MULTIPLIER,6*WARDEN_DAMAGE_MULTIPLIER,6*WARDEN_DAMAGE_MULTIPLIER]);
 }

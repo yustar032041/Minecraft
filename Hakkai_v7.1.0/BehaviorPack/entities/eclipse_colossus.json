@@ -70,14 +70,15 @@
         "value": 1.0
       },
       "minecraft:attack": {
-        "damage": 26
+        "damage": 52
       },
       "minecraft:behavior.hurt_by_target": {
         "priority": 1
       },
       "minecraft:behavior.melee_attack": {
         "priority": 3,
-        "speed_multiplier": 1.08,
+        "speed_multiplier": 1.2,
+        "cooldown_time": 0.7,
         "track_target": true
       },
       "minecraft:scale": {

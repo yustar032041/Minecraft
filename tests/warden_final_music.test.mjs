@@ -32,8 +32,8 @@ hp.currentValue=4000;tick(1400);assert.equal(hp.currentValue,4000+2*WARDEN_HEAL_
 // Run the actual selector through all 100 warnings without fighting private state.
 props.clear();visual.clear();sounds.length=0;messages.length=0;hp.currentValue=900;players=[p];muted.add('p');ctrl=controller();
 for(let t=2000;t<=20000;t++)tick(t);
-const all=wardenPatterns(4);assert.equal(all.length,200);assert.equal(new Set(all.map(x=>x.attack)).size,200);
+const all=wardenPatterns(4);assert.equal(all.length,210);assert.equal(new Set(all.map(x=>x.attack)).size,210);
 const warned=messages.filter(([,m])=>m.includes('（約2秒）')).map(([,m])=>m);
 for(const a of all)assert.ok(warned.some(m=>m.includes(`§c${a.attack}：`)),`not scheduled: ${a.attack}`);
-for(let i=0;i<200;i++)assert.ok(warned[i]?.includes(`§c${all[i].attack}：`),`out of order ${i}`);
-console.log('Warden final: all 200 attacks scheduled, irreversible phases, healing, per-player music lifecycle (mocked)');
+for(let i=0;i<all.length;i++)assert.ok(warned[i]?.includes(`§c${all[i].attack}：`),`out of order ${i}`);
+console.log('Warden final: all 210 attacks scheduled, irreversible phases, healing, per-player music lifecycle (mocked)');

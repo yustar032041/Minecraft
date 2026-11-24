@@ -5,7 +5,7 @@ import {steerWarden} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_movement
 import {Difficulty,GameMode} from '@minecraft/server';
 for(let phase=0;phase<5;phase++){
  assert.equal(WARDEN_EXTRA_PATTERNS[phase].length,20);
- assert.equal(wardenPatterns(phase).length,phase===4?200:40);
+ assert.equal(wardenPatterns(phase).length,phase===4?210:42);
 }
 function fixture(phase=0){
  const messages=[],hits=[],parts=[];let players=[];

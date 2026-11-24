@@ -77,7 +77,7 @@ for(const [type,setup] of [['hakkai:ender_0',setupRealmEnders],['hakkai:fushi_ch
  const f=fixture(type),calls=[],ctrl=setup({...f,report:()=>{},tryParry:(p,e)=>{calls.push([p.id,e.id]);return true;}});
  ctrl.onHurt({hurtEntity:f.mob,damageSource:{damagingEntity:f.p}});f.system.currentTick=40;ctrl.tick(f.p,40);f.system.currentTick=80;ctrl.tick(f.p,80);
  assert.deepEqual(calls,[['p','mob']]);assert.deepEqual(f.damage,[]);assert.deepEqual(f.effects,[]);
- ctrl.stagger(f.mob,80);f.system.currentTick=120;ctrl.tick(f.p,120);assert.equal(f.messages.length,1,'stagger does not start a premature attack');
+ ctrl.stagger(f.mob,80);f.system.currentTick=110;ctrl.tick(f.p,110);assert.equal(f.messages.length,1,'stagger does not start a premature attack');
 }
 assert.equal(enderRealm('minecraft:enderman'),-1);assert.equal(enderRealm('hakkai:ender_8'),-1);
 assert.equal(inEnderWarning({x:0,y:4,z:0},{x:0,y:0,z:0},3),false);

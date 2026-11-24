@@ -4260,7 +4260,7 @@ async function colossusGuide(p){
   ['§6攻略情報を読む',itemTexture('eclipse_core')],['§c八界王を召喚する',itemTexture('guardian_core_7')],['§8閉じる']
  ]);
  if(choice===1)return mobSystem?.summonColossus(p);
- if(choice===0)return simple(p,'§4終焉の八界王｜攻略帳','三段階の巨大ボス。八界断ち、星骸落とし、時環封じ、蝕光爆ぜ、影兵招来、時空裂波、終焉咆哮、逆刻再編を使う。\n\n赤い予告輪の外へ退避し、最終形態では回復行動を止めるため攻撃を続けよう。討伐すると時蝕核を獲得できる。');
+ if(choice===0)return simple(p,'§4終焉の八界王｜攻略帳','三段階の巨大ボス。八界断ち、星骸落とし、時環封じ、蝕光爆ぜ、影兵招来、時空裂波、終焉咆哮、逆刻再編、星蝕の収束を使う。\n\n赤い予告輪の外へ退避し、最終形態では回復行動を止めるため攻撃を続けよう。討伐すると時蝕核を獲得できる。');
 }
 async function villageGuide(p){
  while(p.isValid){

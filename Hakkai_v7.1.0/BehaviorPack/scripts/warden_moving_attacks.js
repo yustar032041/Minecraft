@@ -112,15 +112,19 @@ export function advanceMoving(d,m,t,players){
   }
   collision=pos=>Math.hypot(pos.x-origin.x,pos.z-origin.z)<=attack.radius?origin:undefined;
  }else return {done:true,targets:[]}; // Unknown movement is never damaging.
- // Check the whole frame first, so partial blocked/failed visuals never hit.
- for(let i=0;i<points.length;i++)if(!clearRay(d,origins[i],points[i],cache))return {done:true,targets:[]};
- try{for(const point of points)d.spawnParticle(IDS[phase],point);}catch{return {done:true,targets:[]};}
+ // Clip individual rays, not the entire front: a single wall or unloaded
+ // edge used to erase every moving attack, even on the unobstructed side.
+ // No visible rays or a particle/API failure still cancels safely.
+ const visible=[];
+ for(let i=0;i<points.length;i++)if(clearRay(d,origins[i],points[i],cache))visible.push(points[i]);
+ if(!visible.length)return {done:true,targets:[]};
+ try{for(const point of visible)d.spawnParticle(IDS[phase],point);}catch{return {done:true,targets:[]};}
  const targets=[];
  for(const p of players){
   if(m.hit.has(p.id))continue;
   const pos=p.location;if(Math.abs(pos.y-aim.y)>HEIGHT_LIMIT)continue;
   const origin=collision(pos);
-  if(origin&&clearRay(d,origin,{x:pos.x,y,z:pos.z},cache))targets.push(p);
+  if(origin&&visible.some(point=>Math.hypot(point.x-pos.x,point.z-pos.z)<=1.5)&&clearRay(d,origin,{x:pos.x,y,z:pos.z},cache))targets.push(p);
  }
  m.frame++;m.next=t+1;
  return {done:m.frame>=FRAMES,targets};

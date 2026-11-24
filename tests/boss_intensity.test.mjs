@@ -13,17 +13,17 @@ function fixture(type){
 {
  const f=fixture('hakkai:eclipse_colossus');const c=setupMobSystem({...f,ns:'hakkai:',num:()=>0,property:()=>{},report:(_,e)=>{throw e;}});
  for(let t=0;t<=260;t+=10){f.step(t);c.tickBosses(f.p,t);c.tickBosses(f.q,t);}
- assert.deepEqual(f.hits.map(v=>[v[0],v[1],v[2]]),[[140,'p',26],[140,'q',26],[260,'p',24],[260,'q',24]],'enhanced damage and phase 1 cadence once per warned hit');
+ assert.deepEqual(f.hits.map(v=>[v[0],v[1],v[2]]),[[140,'p',52],[140,'q',52],[230,'p',48],[230,'q',48]],'enhanced damage and phase 1 cadence once per warned hit');
  const warnings=f.messages.filter(([t,id,m])=>id==='p'&&m.includes('秒後')).map(([t])=>t);
- assert.deepEqual(warnings,[100,220]); // 40-tick warning, 80-tick recovery
+ assert.deepEqual(warnings,[100,190]); // 40-tick warning, 50-tick recovery
 }
 {
  const f=fixture('hakkai:fushi_chief'),c=setupFushiSystem({...f,report:(_,e)=>{throw e;}});
  c.onHurt({hurtEntity:f.entity,damageSource:{damagingEntity:f.p}});
  for(let t=0;t<=280;t+=10){f.step(t);c.tickChiefs(f.p,t);c.tickChiefs(f.q,t);}
- assert.deepEqual(f.hits.map(v=>v[0]),[60,170,280]);
+ assert.deepEqual(f.hits.map(v=>v[0]),[60,140,220]);
  assert.deepEqual(f.hits.map(v=>v[2]),CHIEF_ATTACKS.map(a=>a.damage));
- assert.deepEqual(f.messages.map(v=>v[0]),[20,130,240]);
+ assert.deepEqual(f.messages.map(v=>v[0]),[20,100,180,260]);
 }
 console.log('Boss cadence and strengthened damage with two players (mocked, no Bedrock combat test)');
 // A player entering after the warning cannot be damaged by the enlarged attack.

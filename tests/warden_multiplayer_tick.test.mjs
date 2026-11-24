@@ -14,5 +14,5 @@ warden.tick(a,0);warden.tick(a,80);b.isSneaking=true;guard.tick(b,g,states.get('
 const src=fs.readFileSync('Hakkai_v7.1.0/BehaviorPack/scripts/main.js','utf8'),start=src.indexOf('// Fast input sampling is isolated'),end=src.indexOf('// v5.2.0:',start);
 const ctx={system,world,GameMode,ns:'hakkai:',state:p=>states.get(p.id),gear:new Map([['s',g]]),selected:()=>({typeId:'s'}),combatRoll:undefined,airDash:undefined,airStrike:undefined,combatParry:parry,wardenArena:undefined,wardenBoss:warden,report:()=>assert.fail()};
 vm.createContext(ctx);vm.runInContext(src.slice(start,end),ctx);system.currentTick=120;fastLoop();
-assert.deepEqual(hits,[['a',9*2.4]],'later-listed player parries while first player is hit');assert.deepEqual(effects,['a']);assert.equal(states.get('b').s,20);
+assert.deepEqual(hits,[['a',9*16.8]],'later-listed player parries while first player is hit');assert.deepEqual(effects,['a']);assert.equal(states.get('b').s,20);
 console.log('Real fast loop: all players get a same-tick release parry against the shared warden attack (mocked)');

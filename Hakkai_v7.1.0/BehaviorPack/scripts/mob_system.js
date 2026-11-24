@@ -1,3 +1,4 @@
+import { setupGuardianBoss } from './guardian_boss.js';
 import { EntityDamageCause, GameMode, Difficulty } from '@minecraft/server';
 import { mobContent, mobContentList } from './mob_content.js';
 import { insideWarning } from './attack_warning.js';
@@ -11,6 +12,7 @@ const PHASES=['§b第一相・星喰い','§d第二相・時蝕','§c第三相�
 export function setupMobSystem(ctx){
  const {ns,world,system,num,property,report,isEvading=()=>false,tryParry=()=>false}=ctx;
  const mobStates=new Map(), bossStates=new Map(), lastBossTick=new Map();
+ const guardians=setupGuardianBoss({world,isEvading,tryParry,report});
  const players=()=>world.getAllPlayers();
  const validPlayer=p=>p?.isValid&&p.getGameMode()!==GameMode.Creative&&p.getGameMode()!==GameMode.Spectator;
  const dist=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
@@ -155,22 +157,22 @@ export function setupMobSystem(ctx){
   return list[0];
  }
  function startBossAttack(entity,state,t,target,phase){
-  const attacks=phase===0?['cleave','starfall','time_snare','eclipse_burst','summon']:
-   phase===1?['cleave','starfall','time_snare','eclipse_burst','summon','rift_wave']:
-   ['cleave','starfall','time_snare','eclipse_burst','summon','rift_wave','roar','rewind'];
+  const attacks=phase===0?['cleave','starfall','time_snare','eclipse_burst','star_collapse','summon']:
+   phase===1?['cleave','starfall','time_snare','eclipse_burst','star_collapse','summon','rift_wave']:
+   ['cleave','starfall','time_snare','eclipse_burst','star_collapse','summon','rift_wave','roar','rewind'];
   const kind=attacks[state.attackIndex++%attacks.length];
   const windup=40;
   const bossCenter=['summon','eclipse_burst','rift_wave','roar','rewind'].includes(kind);
   const mark=bossCenter?entity.location:target.location;
-  const labels={cleave:'八界断ち',starfall:'星骸落とし',time_snare:'時環封じ',eclipse_burst:'蝕光爆ぜ',summon:'影兵招来',rift_wave:'時空裂波',roar:'終焉咆哮',rewind:'逆刻再編'};
+  const labels={cleave:'八界断ち',starfall:'星骸落とし',time_snare:'時環封じ',eclipse_burst:'蝕光爆ぜ',summon:'影兵招来',rift_wave:'時空裂波',roar:'終焉咆哮',rewind:'逆刻再編',star_collapse:'星蝕の収束'};
   const warnedPlayers=entity.dimension.getPlayers({location:entity.location,maxDistance:84}).filter(validPlayer).map(p=>p.id);
   const warned=announce(entity.dimension,entity.location,`§c§l${labels[kind]}§r §7— ${windup/20}秒後に発動`);
-  const radius={cleave:3.5,starfall:4,time_snare:6,eclipse_burst:9,summon:7,rift_wave:18,roar:18,rewind:16}[kind]??3;
+  const radius={cleave:3.5,starfall:4,time_snare:6,eclipse_burst:9,summon:7,rift_wave:18,roar:18,rewind:16,star_collapse:7}[kind]??3;
   if(!warned||!warnedPlayers.includes(target.id)||!warningRing(entity.dimension,mark,radius)){state.nextAt=t+120;return;}
   state.pending={kind,at:t+windup,targetId:target.id,aim:{...mark},warnedPlayers};
   for(let i=0;i<6;i++)particle(entity.dimension,'minecraft:basic_smoke_particle',{x:mark.x+(Math.random()-.5)*2,y:mark.y+.3+i*.35,z:mark.z+(Math.random()-.5)*2});
  }
- function bossHit(entity,target,damage){return hit(entity,target,damage*2);}
+ function bossHit(entity,target,damage){return hit(entity,target,damage*4);}
  function resolveBossAttack(entity,state,phase){
   const attack=state.pending;if(!attack)return;
   state.pending=undefined;
@@ -187,6 +189,13 @@ export function setupMobSystem(ctx){
   if(attack.kind==='rewind'){
    heal(entity,95+phase*25);addEffect(entity,'resistance',90,1);ring(d,attack.aim,16,7);
    for(const p of d.getPlayers({location:attack.aim,maxDistance:16}).filter(p=>validPlayer(p)&&attack.warnedPlayers.includes(p.id)&&!isEvading(p)&&!tryParry(p,entity))){if(dist(p.location,attack.aim)>=9||bossHit(entity,p,7+phase*2))addEffect(p,'weakness',80,1);}
+   return;
+  }
+  if(attack.kind==='star_collapse'){
+   ring(d,attack.aim,7,7);
+   for(const p of d.getPlayers({location:attack.aim,maxDistance:7}).filter(p=>validPlayer(p)&&attack.warnedPlayers.includes(p.id)&&!isEvading(p)&&!tryParry(p,entity))){
+    if(bossHit(entity,p,10+phase*3)){push(entity,p,1.1,.45);addEffect(p,'slowness',65,1);}
+   }
    return;
   }
   if(attack.kind==='starfall'){
@@ -232,7 +241,7 @@ export function setupMobSystem(ctx){
    addEffect(entity,'resistance',110,phase===2?2:1);addEffect(entity,'speed',120,phase);
    for(const p of d.getPlayers({location:entity.location,maxDistance:50}))particle(d,'hakkai:climate_7',{x:p.location.x,y:p.location.y+1,z:p.location.z});
   }
-  if(s.pending&&t>=s.pending.at){if(t===s.pending.at)resolveBossAttack(entity,s,s.phase);else s.pending=undefined;s.nextAt=t+(s.phase===2?60:s.phase===1?70:80);}
+  if(s.pending&&t>=s.pending.at){if(t===s.pending.at)resolveBossAttack(entity,s,s.phase);else s.pending=undefined;s.nextAt=t+(s.phase===2?30:s.phase===1?40:50);}
   if(!s.pending&&t>=s.nextAt){const target=bossTarget(entity);if(target)startBossAttack(entity,s,t,target,s.phase);else s.nextAt=t+40;}
   if(t%20===0)particle(entity.dimension,'hakkai:climate_7',{x:entity.location.x,y:entity.location.y+2.2,z:entity.location.z});
  }
@@ -280,12 +289,14 @@ export function setupMobSystem(ctx){
  }
  function stagger(entity,t){
   if(!entity?.isValid)return;
+  guardians.stagger(entity,t);
   for(const map of [bossStates,mobStates]){
    const s=map.get(entity.id);if(!s)continue;
    s.pending=undefined;s.nextAt=Math.max(s.nextAt,t+40);
   }
  }
  function onDeath({deadEntity,damageSource}){
+  guardians.onDeath(deadEntity);
   if(deadEntity.typeId!==BOSS)return;
   const killer=damageSource?.damagingEntity;
   if(killer?.typeId==='minecraft:player'&&killer.isValid){
@@ -313,6 +324,7 @@ export function setupMobSystem(ctx){
  // see the boss; lastBossTick prevents duplicate resolution in multiplayer.
  function tickBosses(player,t){
   if(!player?.isValid)return;
+  guardians.tick(player,t);
   try{
    const peaceful=world.getDifficulty()===Difficulty.Peaceful;
    for(const entity of player.dimension.getEntities({type:BOSS,location:player.location,maxDistance:25,closest:4})){

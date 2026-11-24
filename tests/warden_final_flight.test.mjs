@@ -20,12 +20,12 @@ function fixture(){
  }
  assert.ok(f.effects.some(([t,id,duration])=>t===121&&id==='levitation'&&duration===28));
  assert.ok(f.props.some(([t,k,v])=>t===122&&k==='hakkai:flying'&&v===true));
- assert.ok(f.messages.some(([t,m])=>t===141&&m.includes('空の弾幕')),'warning starts while visibly flying');
+ assert.ok(f.messages.some(([t,m])=>t===140&&m.includes('空の弾幕')),'warning starts while visibly flying');
  assert.ok(f.particles.some(([t,id])=>t>121&&id==='hakkai:warden_moon'),'flight has a bounded cosmetic aura');
- f.sys.currentTick=173;assert.equal(f.ctrl.onMeleeParry({damagingEntity:f.p,hitEntity:f.e}),true);
- assert.ok(f.removed.some(([t,id])=>t===173&&id==='levitation'));
- f.hits.length=0;for(let t=174;t<=181;t++)f.tick(t);assert.deepEqual(f.hits,[],'airborne warning cancelled by parry');
- f.e.isOnGround=true;f.e.location.y=80;f.tick(182);assert.deepEqual(f.props.at(-1).slice(1),['hakkai:flying',false]);
+ f.sys.currentTick=172;assert.equal(f.ctrl.onMeleeParry({damagingEntity:f.p,hitEntity:f.e}),true);
+ assert.ok(f.removed.some(([t,id])=>t===172&&id==='levitation'));
+ f.hits.length=0;for(let t=173;t<=180;t++)f.tick(t);assert.deepEqual(f.hits,[],'airborne warning cancelled by parry');
+ f.e.isOnGround=true;f.e.location.y=80;f.tick(181);assert.deepEqual(f.props.at(-1).slice(1),['hakkai:flying',false]);
 }
 // If unpredictable physics carries the boss too high, cancel a warning that
 // started in flight rather than hit while the close counter is unreachable.
