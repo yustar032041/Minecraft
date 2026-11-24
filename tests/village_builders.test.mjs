@@ -57,7 +57,7 @@ for(let r=0;r<8;r++){
  assert.equal(foundBuilder(args),true);assert.equal(foundBuilder(args),false);assert.equal(spawns[0].id,BUILDER_IDS[r]);
 }
 const main=fs.readFileSync('Hakkai_v7.1.0/BehaviorPack/scripts/main.js','utf8');
-assert.ok(main.includes('foundBuilder({site,world,dimension:p.dimension'));assert.ok(main.includes('builderWorkTick(p,t)'));assert.ok(main.includes('autoBuilderPlan(worker,{sites:places,world,num,property})'));
+assert.ok(main.includes('foundBuilder({site,world,dimension:p.dimension'));assert.ok(main.includes('builderWorkTick(p,t)'));assert.ok(main.includes('autoBuilderPlan(worker,{sites:site?.repeatKey?[...places,site]:places,world,num,property})'));
 console.log('Five real autonomous construction plans, obstruction/water checks, restart recovery and one-time builder founding (mocked)');
 
 {
@@ -91,7 +91,7 @@ console.log('Five real autonomous construction plans, obstruction/water checks, 
  f.builder.location.y=88;f.builder.setDynamicProperty('hakkai:builder_home_v1',61);
  f.dim.getEntities=q=>q.families?.includes('hakkai_builder')?[f.builder]:[];f.dim.getPlayers=()=>[];
  const props=new Map([['built_61',1]]),town={l:{x:40,y:88,z:40},d:f.dim,data:{goods:0}},site={id:61,kind:'culture',dim:0,x:0,z:0,size:65};
- const ctx={BUILDER_IDS,BLUEPRINTS,blueprint,readBuilderProject,stepBuilderProject,clearBuilderProject,builderHome,builderPaused,autoBuilderPlan,constructionCredit,places:[site],world:{},num:(_,k)=>props.get(k)??0,property:(_,k,v)=>props.set(k,v),permit:()=>true,along:()=>{},townNear:()=>town,townRecord:t=>t.data,townSave:(t,v)=>t.data=v,ns:'hakkai:',BlockPermutation:{resolve},report:()=>{},cultureTownForSite:()=>town,saveVillageLife:(t,v)=>t.data=v,addVillageMemory,seasonDay:()=>0};
+ const ctx={villageSiteByHome:id=>site.id===id?site:undefined,villageBuilt:(s,w,num)=>num(w,`built_${s.id}`)===1,BUILDER_IDS,BLUEPRINTS,blueprint,readBuilderProject,stepBuilderProject,clearBuilderProject,builderHome,builderPaused,autoBuilderPlan,constructionCredit,places:[site],world:{},num:(_,k)=>props.get(k)??0,property:(_,k,v)=>props.set(k,v),permit:()=>true,along:()=>{},townNear:()=>town,townRecord:t=>t.data,townSave:(t,v)=>t.data=v,ns:'hakkai:',BlockPermutation:{resolve},report:()=>{},cultureTownForSite:()=>town,saveVillageLife:(t,v)=>t.data=v,addVillageMemory,seasonDay:()=>0};
  // The test bell exists only for the completion credit check.
  const get2=f.dim.getBlock;f.dim.getBlock=p=>p.x===40&&p.y===88&&p.z===40?{typeId:'hakkai:town_bell'}:get2(p);
  vm.createContext(ctx);vm.runInContext(main.slice(main.indexOf('function builderWorkTick('),main.indexOf('function visibleFrom(')),ctx);

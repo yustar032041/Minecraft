@@ -25,7 +25,7 @@ function fixture(){
  return {marks,placed,world,dim,num,property,loaded,run:()=>placeRepeatSite({site:sample,world,dimension:dim,num,property,loaded,BlockVolume})};
 }
 {
- const f=fixture();assert.equal(await f.run(),'built');assert.equal(f.placed.length,1);assert.equal(f.placed[0][0],`hakkai:site_${sample.templateId}`);assert.equal(f.marks.get(sample.repeatKey),1);assert.equal(await f.run(),'finished');assert.equal(f.placed.length,1);
+ const f=fixture();assert.equal(await f.run(),'built');assert.equal(f.placed.length,1);assert.equal(f.placed[0][0],sample.templateId===59?`hakkai:site_59_village_${sample.factoryVariant}`:`hakkai:site_${sample.templateId}`);assert.equal(f.marks.get(sample.repeatKey),1);assert.equal(await f.run(),'finished');assert.equal(f.placed.length,1);
 }
 for(const reason of ['generated','skipped','block','player','entity','load-failure','placement-failure']){
  const f=fixture(),b=siteBounds(sample),cx=Math.floor(b.x0/16),cz=Math.floor(b.z0/16);

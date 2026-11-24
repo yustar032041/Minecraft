@@ -1,5 +1,5 @@
 import { BlockVolume, BlockPermutation, ItemStack } from '@minecraft/server';
-import { repeatSitePlan } from './seeded_repeat_sites.js';
+import { repeatSitePlan, factoryVariant } from './seeded_repeat_sites.js';
 import { oreColumn } from './ore_distribution.js';
 import { placeMoonShrine } from './moon_shrine.js';
 import { nearestQueuedDistance } from './terrain_queue.js';
@@ -630,5 +630,9 @@ export function setupSeededWorlds(ctx){
   const cx=Math.floor(l.x/CHUNK),cz=Math.floor(l.z/CHUNK);
   return Boolean(num(world,propKey(realm,cx,cz)));
  }
- return {tick,biomeAt,isGenerated,isMoonGrove:l=>Boolean(l&&num(world,`seed_moon_grove_${Math.floor(l.x/CHUNK)}_${Math.floor(l.z/CHUNK)}_v1`)&&moonGroveAt(Math.floor(l.x),Math.floor(l.z),noise))};
+ const repeatSiteAt=(r,x,z)=>{const site=repeatAt(r,x,z);return site&&num(world,site.repeatKey)===1&&inSite(site,x,z)?site:undefined;};
+ const repeatSiteByKey=key=>{const m=/^seed_repeat_([0-7])_(-?\d+)_(-?\d+)_v1$/.exec(key??'');if(!m)return undefined;
+  const r=Number(m[1]),gx=Number(m[2]),gz=Number(m[3]);if(!Number.isSafeInteger(gx)||!Number.isSafeInteger(gz)||Math.abs(gx)>120000||Math.abs(gz)>120000)return undefined;
+  const site=repeatAt(r,gx*256+128,gz*256+128);return site?.repeatKey===key&&num(world,key)===1?site:undefined;};
+ return {tick,biomeAt,isGenerated,repeatSiteAt,repeatSiteByKey,factoryVariant:(x,z)=>factoryVariant(x,z,hash),isMoonGrove:l=>Boolean(l&&num(world,`seed_moon_grove_${Math.floor(l.x/CHUNK)}_${Math.floor(l.z/CHUNK)}_v1`)&&moonGroveAt(Math.floor(l.x),Math.floor(l.z),noise))};
 }

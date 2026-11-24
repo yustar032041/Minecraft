@@ -1,3 +1,4 @@
+import { residentSpot,villageIdentity,villageBuilt } from './resident_spawn.js';
 // Autonomous, bounded construction on vacant village plots. It never clears blocks.
 export const BUILDER_IDS=Array.from({length:8},(_,r)=>`hakkai:builder_${r}`);
 export const BLUEPRINTS=[
@@ -9,7 +10,7 @@ export const BLUEPRINTS=[
 ];
 const KEY='hakkai:builder_project_v1';
 const HOME='hakkai:builder_home_v1',PAUSED='hakkai:builder_paused_v1';
-export function builderHome(builder){try{const id=builder.getDynamicProperty(HOME);return Number.isInteger(id)?id:undefined;}catch{return undefined;}}
+export function builderHome(builder){try{const id=builder.getDynamicProperty(HOME);return Number.isInteger(id)||typeof id==='string'&&/^seed_repeat_[0-7]_-?\d+_-?\d+_v1$/.test(id)?id:undefined;}catch{return undefined;}}
 export function builderPaused(builder){try{return builder.getDynamicProperty(PAUSED)===1;}catch{return true;}}
 export function setBuilderPaused(builder,paused){builder.setDynamicProperty(PAUSED,paused?1:0);}
 // A town receives each type's prosperity credit once, even after a restart.
@@ -128,12 +129,12 @@ export function stepBuilderProject(builder,{resolve,report=()=>{},completed=()=>
 }
 export function clearBuilderProject(builder){try{builder.setDynamicProperty(KEY,undefined);return true;}catch{return false;}}
 export function foundBuilder({site,world,dimension,num,property,findFloor,report}){
- if(!(site?.kind==='culture'||site?.id===59)||!world.gameRules.doMobSpawning||!num(world,`built_${site.id}`)||dimension.id!==`hakkai:realm_${site.dim}`)return false;
- const key=`builder_founded_${site.id}_v1`;if(num(world,key))return false;
+ if(!(site?.kind==='culture'||site?.id===59)||!world.gameRules.doMobSpawning||!villageBuilt(site,world,num)||dimension.id!==`hakkai:realm_${site.dim}`)return false;
+ const key=`builder_founded_${villageIdentity(site)}_v1`;if(num(world,key))return false;
  try{
-  const at=findFloor(dimension,{x:site.x+12.5,y:88,z:site.z+8.5},4);
-  if(!at||dimension.getPlayers({location:at,maxDistance:2,closest:1}).length||dimension.getEntities({location:at,maxDistance:1.5,closest:1}).length)return false;
-  property(world,key,1);const e=dimension.spawnEntity(BUILDER_IDS[site.dim],at);e.setDynamicProperty(HOME,site.id);return true;
+  const at=residentSpot(dimension,{x:site.x+12.5,y:88,z:site.z+8.5},findFloor);
+  if(!at)return false;
+  property(world,key,1);const e=dimension.spawnEntity(BUILDER_IDS[site.dim],at,{initialPersistence:true});e.setDynamicProperty(HOME,villageIdentity(site));return true;
  }catch(err){report('建築係の生成',err);return false;}
 }
 
@@ -141,8 +142,8 @@ export function foundBuilder({site,world,dimension,num,property,findFloor,report
 // build automatically. Search a small number of candidate plots per call.
 export function autoBuilderPlan(builder,{sites,world,num,property}){
  if(!builder?.isValid||builderPaused(builder)||readBuilderProject(builder)!==undefined)return 'idle';
- const id=builderHome(builder),site=sites.find(s=>s.id===id&&(s.id===59||s.kind==='culture'));
- if(!site||!num(world,`built_${id}`)||builder.dimension.id!==`hakkai:realm_${site.dim}`||builder.typeId!==BUILDER_IDS[site.dim])return 'no_home';
+ const id=builderHome(builder),site=sites.find(s=>villageIdentity(s)===id&&(s.id===59||s.kind==='culture'));
+ if(!site||!villageBuilt(site,world,num)||builder.dimension.id!==`hakkai:realm_${site.dim}`||builder.typeId!==BUILDER_IDS[site.dim])return 'no_home';
  const stage=num(world,`builder_stage_${id}_v1`);if(!Number.isInteger(stage)||stage<0||stage>=BLUEPRINTS.length)return 'finished';
  const limit=Math.floor(((site.size??45)-1)/2)-4,points=[];
  for(let x=-limit;x<=limit;x+=10)for(let z=-limit;z<=limit;z+=10)points.push({x:site.x+x,y:88,z:site.z+z});

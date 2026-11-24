@@ -5,7 +5,7 @@ import {foundFactoryResident,FACTORY_RESIDENTS} from '../Hakkai_v7.1.0/BehaviorP
 import {places,biomes,families} from '../Hakkai_v7.1.0/BehaviorPack/scripts/data.js';
 import {NEW_BIOMES,newerBiomeAt,extraBiomeAt} from '../Hakkai_v7.1.0/BehaviorPack/scripts/extra_biomes.js';
 import {seedFunctions} from './seed_terrain_helpers.mjs';
-const props=new Map(),spawned=[],world={gameRules:{doMobSpawning:true}},d={id:'hakkai:realm_0',spawnEntity:(id,at)=>{const e={id,at};spawned.push(e);return e;}};
+const props=new Map(),spawned=[],world={gameRules:{doMobSpawning:true}},d={id:'hakkai:realm_0',getPlayers:()=>[],getEntities:()=>[],spawnEntity:(id,at)=>{const e={id,at};spawned.push(e);return e;}};
 const town={factoryVillage:true,d,l:{x:0,y:88,z:0}};
 const num=(_,k)=>props.get(k)??0,property=(_,k,v)=>props.set(k,v),findFloor=(_d,at)=>at,report=()=>{};
 const step=()=>foundFactoryResident({town,world,num,property,findFloor,report});

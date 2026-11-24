@@ -72,7 +72,7 @@ console.log('Barrel, machine, crops, full water enclosure and real guide-book na
  const src=fs.readFileSync('Hakkai_v7.1.0/BehaviorPack/scripts/main.js','utf8');
  const code=src.slice(src.indexOf('async function villageRepairMenu('),src.indexOf('async function villageSharedRequest('));
  const props=new Map([['builder_repair_enabled_61_v1',1]]),world={},seen=[],site={id:61};
- const ctx={villageSite:()=>site,num:(_,k)=>props.get(k)??0,property:(_,k,v)=>props.set(k,v),BLUEPRINTS:[{},{},{},{},{}],readVillagePlot:()=>undefined,form:async(_p,_t,body,rows)=>{seen.push({body,rows});return 0;},lifeNear:()=>true,notice:()=>{},world};
+ const ctx={villageSite:()=>site,villageIdentity:s=>s.repeatKey??s.id,num:(_,k)=>props.get(k)??0,property:(_,k,v)=>props.set(k,v),BLUEPRINTS:[{},{},{},{},{}],readVillagePlot:()=>undefined,form:async(_p,_t,body,rows)=>{seen.push({body,rows});return 0;},lifeNear:()=>true,notice:()=>{},world};
  vm.createContext(ctx);vm.runInContext(code,ctx);await ctx.villageRepairMenu({},{});
  assert.ok(seen[0].body.includes('停止'));assert.ok(seen[0].rows[0][0].includes('許可'));assert.equal(props.get('builder_repair_enabled_61_v2'),1);
  await ctx.villageRepairMenu({},{});assert.equal(props.get('builder_repair_enabled_61_v2'),0);

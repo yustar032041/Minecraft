@@ -57,7 +57,7 @@ export function foundCultureResident({site,world,dimension,num,property,findFloo
   if(!at||dimension.getPlayers({location:at,maxDistance:2,closest:1}).length||dimension.getEntities({location:at,maxDistance:1.5,closest:1}).length)return false;
   // Reserve first: an interrupted/uncertain spawn is never silently duplicated.
   property(world,key,i+1);
-  const person=CULTURE_PEOPLE[site.dim][i],e=dimension.spawnEntity('minecraft:villager_v2',at);
+  const person=CULTURE_PEOPLE[site.dim][i],e=dimension.spawnEntity('minecraft:villager_v2',at,{initialPersistence:true});
   e.nameTag=`風記の語り手｜${site.dim}｜${i}｜${person.name}`;
   return true;
  }catch(err){report('文化の語り手',err);return false;}

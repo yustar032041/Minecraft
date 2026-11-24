@@ -10,6 +10,7 @@ import { BUILDER_IDS, BLUEPRINTS, blueprint, readBuilderProject, stepBuilderProj
 import { friendlyResidentById, foundFriendlyResident, friendlySupportTick, friendlyTrade } from './friendly_residents.js';
 import { CULTURE_SITES, CULTURE_PEOPLE, cultureResidentIdentity, foundCultureResident, factoryResidentRole, factoryResidentBonus } from './realm_culture.js';
 import { FACTORY_VILLAGE_ID, foundFactoryResident } from './factory_village.js';
+import { villageIdentity, villageBuilt } from './resident_spawn.js';
 import { farmStep } from './factory_farm.js';
 import { itemDuctStep } from './factory_ducts.js';
 import { bearingState, setBearingMode, bearingStep, bearingAutoTick, armBearing } from './factory_bearing.js';
@@ -1496,7 +1497,8 @@ async function build(site,onlyIfVacant=false){
      // 初回配置でも、既存ワールドの建築や以前の生成物を上書きしない。
      if(d.containsBlock(new BlockVolume(from,to),{excludeTypes:['minecraft:air']}))
        throw Error(`未生成の ${site.name} の予定地にブロックがあるため、上書きを中止: ${site.id}`);
-     world.structureManager.place(`${ns}${special?site.kind:'site'}_${site.id}`,d,from,{includeEntities:false});
+     const structure=site.id===59?`site_59_village_${seededWorlds?.factoryVariant(site.x,site.z)??0}`:`${special?site.kind:'site'}_${site.id}`;
+     world.structureManager.place(`${ns}${structure}`,d,from,{includeEntities:false});
      await timed(()=>{},2);
      if(!safeNear(d,coords(site),4))throw Error(`風記の到着床を確認できない: ${site.id}`);
      property(world,`built_${site.id}`,1);
@@ -4447,7 +4449,9 @@ function townGet(d,l,seen=false){
  }
  if(seen)t.last=system.currentTick;
  const village=travelSites.get(FACTORY_VILLAGE_ID);
- t.factoryVillage=Boolean(village&&num(world,`built_${village.id}`)&&d.id===dimID(village.dim)&&t.l.x===village.x&&t.l.y===expandedY&&t.l.z===village.z);
+ const repeated=d.id===dimID(0)?seededWorlds?.repeatSiteAt(0,t.l.x,t.l.z):undefined;
+ t.repeatSiteKey=repeated?.id===59&&t.l.x===repeated.x&&t.l.z===repeated.z&&t.l.y===expandedY?repeated.repeatKey:undefined;
+ t.factoryVillage=Boolean(t.repeatSiteKey||village&&num(world,`built_${village.id}`)&&d.id===dimID(village.dim)&&t.l.x===village.x&&t.l.y===expandedY&&t.l.z===village.z);
  return t;
 }
 function discoverTown(p,s){
@@ -4673,13 +4677,14 @@ function lifeNear(p,t){
 }
 function lifeRealm(t){const m=/^hakkai:realm_([0-7])$/.exec(t.d.id);return m?Number(m[1]):0;}
 function readVillagePlot(site,stage){
- try{const v=JSON.parse(String(world.getDynamicProperty(ns+`builder_plot_${site.id}_${stage}_v1`)??''));
+ try{const v=JSON.parse(String(world.getDynamicProperty(ns+`builder_plot_${villageIdentity(site)}_${stage}_v1`)??''));
   return v.stage===stage&&BLUEPRINTS[stage]?.id===v.kind&&validPlot(v,site,blueprint)?v:undefined;
  }catch{return;}
 }
-function villageSite(t){const id=t.lifeSiteId??(t.factoryVillage?59:undefined);return places.find(s=>s.id===id);}
+function villageSite(t){const id=t.lifeSiteId??t.repeatSiteKey??(t.factoryVillage?59:undefined);return villageSiteByHome(id);}
+function villageSiteByHome(id){return typeof id==='string'?seededWorlds?.repeatSiteByKey(id):places.find(s=>s.id===id&&(s.id===59||s.kind==='culture'));}
 function lifeBuildings(t){
- const id=t.lifeSiteId??(t.factoryVillage?59:undefined);return id===undefined?0:num(world,`builder_stage_${id}_v1`);
+ const id=t.lifeSiteId??t.repeatSiteKey??(t.factoryVillage?59:undefined);return id===undefined?0:num(world,`builder_stage_${id}_v1`);
 }
 function saveVillageLife(t,data){property(world,t.key,JSON.stringify(data));t.data=data;const current=townGet(t.d,t.l,true);if(current){current.data=data;if(t.lifeSiteId)current.lifeSiteId=t.lifeSiteId;}}
 function lifeSignals(t){
@@ -4727,13 +4732,13 @@ ${fest.title}：${fest.open?'今日開催':'季節の2日目に開催'}　｜　
 }
 async function villageRepairMenu(p,t){
  const site=villageSite(t);if(!site)return simple(p,'自動修理','自動建築係が所属する村で利用できます。');
- const enabled=!!num(world,`builder_repair_enabled_${site.id}_v2`),plots=BLUEPRINTS.map((_,i)=>readVillagePlot(site,i)).filter(Boolean).length;
+ const enabled=!!num(world,`builder_repair_enabled_${villageIdentity(site)}_v2`),plots=BLUEPRINTS.map((_,i)=>readVillagePlot(site,i)).filter(Boolean).length;
  const ix=await form(p,'建築係の自動修理',`現在：${enabled?'有効':'停止'}｜記録済み建物 ${plots}/5
 
 許可すると、建築係は完成記録のある自分たちの建物を無料で補修します。木材・ガラスのほか、壊れた樽・機械・照明・耕地・水・小麦も設計図に従って空気の場所に再設置。既存ブロックは壊しません。
 樽は空の新品で、中身は復元できません。機械の状態も初期状態です。再設置で機械が動き始めることがあります。水は囲いと床が揃い、人や生物が範囲にいない時だけ復旧。小麦は成長0からです。
 改造された建物、支え不足、人の近く、未読込は待機。意図的に撤去した部分も戻すため改装前に停止してください。古い完成建物は位置記録がなく対象外。水・機械・保護は実機未検証、先にバックアップしてください。`,[[enabled?'自動修理を停止':'自動修理を許可'],['閉じる']]);
- if(ix!==0||!lifeNear(p,t))return;property(world,`builder_repair_enabled_${site.id}_v2`,enabled?0:1);notice(p,enabled?'§e自動修理を停止しました':'§a自動修理を許可しました');
+ if(ix!==0||!lifeNear(p,t))return;property(world,`builder_repair_enabled_${villageIdentity(site)}_v2`,enabled?0:1);notice(p,enabled?'§e自動修理を停止しました':'§a自動修理を許可しました');
 }
 async function villageSharedRequest(p,t){
  const day=seasonDay(),r=lifeRealm(t),q=requestStatus(townRecord(t),day,r);
@@ -5532,8 +5537,8 @@ function builderWorkTick(p,t){
    if(!worker.isValid||!permit(worker,40,'builder_work')||builderPaused(worker))continue;
    let job=readBuilderProject(worker);
    if(job===undefined){
-     const home=builderHome(worker),site=places.find(s=>s.id===home&&(s.id===59||s.kind==='culture'));
-     if(site&&num(world,`built_${home}`)&&num(world,`builder_stage_${home}_v1`)>0&&num(world,`builder_repair_enabled_${home}_v2`)){
+     const home=builderHome(worker),site=villageSiteByHome(home);
+     if(site&&villageBuilt(site,world,num)&&num(world,`builder_stage_${home}_v1`)>0&&num(world,`builder_repair_enabled_${home}_v2`)){
        const i=(Number(worker.getDynamicProperty(ns+'repair_cursor_v1'))||0)%BLUEPRINTS.length,plot=readVillagePlot(site,i);
        if(plot){
          const delta=dist(worker.location,plot.at);
@@ -5546,11 +5551,11 @@ function builderWorkTick(p,t){
        }
        worker.setDynamicProperty(ns+'repair_cursor_v1',(i+1)%BLUEPRINTS.length);
      }
-     autoBuilderPlan(worker,{sites:places,world,num,property});job=readBuilderProject(worker);
+     autoBuilderPlan(worker,{sites:site?.repeatKey?[...places,site]:places,world,num,property});job=readBuilderProject(worker);
    }
    if(!job)continue;
    const finish=(e,j)=>{
-     const home=builderHome(e),site=places.find(s=>s.id===home&&(s.id===59||s.kind==='culture'));
+     const home=builderHome(e),site=villageSiteByHome(home);
      if(!site||j.homeId!==home||!Number.isInteger(j.stage)||BLUEPRINTS[j.stage]?.id!==j.kind)return;
      const stageKey=`builder_stage_${home}_v1`,current=num(world,stageKey);
      // Record only verified completed plots. Older unrecorded plots are never guessed.
@@ -6077,6 +6082,14 @@ system.runInterval(()=>{
      if(t>=(s.natureAt??0)){
        s.natureAt=t+40;
        if(/^hakkai:realm_[0-7]$/.test(p.dimension.id)){
+         const repeatFactory=seededWorlds?.repeatSiteAt(Number(p.dimension.id.slice((ns+'realm_').length)),p.location.x,p.location.z);
+         const factorySite=repeatFactory?.id===59?repeatFactory:site?.id===59?site:undefined;
+         if(factorySite){
+           const town={factoryVillage:true,d:p.dimension,l:{x:factorySite.x,y:expandedY,z:factorySite.z},repeatSiteKey:factorySite.repeatKey};
+           foundFactoryResident({town,world,num,property,findFloor:safeNear,report});
+           foundFriendlyResident({site:factorySite,world,dimension:p.dimension,num,property,findFloor:safeNear,report});
+           foundBuilder({site:factorySite,world,dimension:p.dimension,num,property,findFloor:safeNear,report});
+         }
          if(site?.kind==='culture')foundFriendlyResident({site,world,dimension:p.dimension,num,property,findFloor:safeNear,report});
          if(site?.kind==='culture'||site?.id===59)foundBuilder({site,world,dimension:p.dimension,num,property,findFloor:safeNear,report});
          builderWorkTick(p,t);

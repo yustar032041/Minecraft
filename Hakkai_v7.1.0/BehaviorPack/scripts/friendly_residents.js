@@ -1,3 +1,4 @@
+import { residentSpot,villageIdentity,villageBuilt } from './resident_spawn.js';
 // Separate custom mobs: never replace or re-texture existing vanilla villagers.
 // Catalog order and IDs are stable; each realm has four different professions.
 const REALMS=[
@@ -23,14 +24,14 @@ export const friendlyResidentById=new Map(FRIENDLY_RESIDENTS.map(x=>[x.id,x]));
 // Independent marker: upgrades add new residents without changing previous
 // residents, buildings, trade data, or mob-spawning gamerules.
 export function foundFriendlyResident({site,world,dimension,num,property,findFloor,report}){
- if(site?.kind!=='culture'||!world.gameRules.doMobSpawning||!num(world,`built_${site.id}`)||dimension.id!==`hakkai:realm_${site.dim}`)return false;
- const key=`friendly_residents_${site.id}_v1`,i=num(world,key);
+ if(!(site?.kind==='culture'||site?.id===59)||!world.gameRules.doMobSpawning||!villageBuilt(site,world,num)||dimension.id!==`hakkai:realm_${site.dim}`)return false;
+ const key=site.id===59?`friendly_factory_${villageIdentity(site)}_v1`:`friendly_residents_${site.id}_v1`,i=num(world,key);
  if(!Number.isInteger(i)||i<0||i>=4)return false;
  try{
-  const at=findFloor(dimension,{x:site.x+[-8,-4,4,8][i]+.5,y:88,z:site.z+8.5},4);
-  if(!at||dimension.getPlayers({location:at,maxDistance:2,closest:1}).length||dimension.getEntities({location:at,maxDistance:1.5,closest:1}).length)return false;
+  const at=residentSpot(dimension,{x:site.x+[-8,-4,4,8][i]+.5,y:88,z:site.z+8.5},findFloor);
+  if(!at)return false;
   property(world,key,i+1); // reserve before spawn: uncertain failure never duplicates
-  dimension.spawnEntity(FRIENDLY_RESIDENTS[site.dim*4+i].id,at);
+  dimension.spawnEntity(FRIENDLY_RESIDENTS[site.dim*4+i].id,at,{initialPersistence:true});
   return true;
  }catch(err){report('八界の友好住人',err);return false;}
 }
