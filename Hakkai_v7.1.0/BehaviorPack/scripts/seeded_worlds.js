@@ -449,7 +449,7 @@ export function setupSeededWorlds(ctx){
      d.setBlockType({x,y:top-1,z},mat.sub);
      d.setBlockType({x,y:top,z},mat.top);
     }else{
-     const depth=realm===5?68+Math.floor(hash(x,z,realm,257)*9):20+Math.floor(hash(x,z,realm,257)*9);
+     const depth=realm===5?78+Math.floor(hash(x,z,realm,257)*9):30+Math.floor(hash(x,z,realm,257)*9);
      bottom=Math.max(sectorMin+2,top-depth);
      const cave=nearPond?undefined:caveInterval(realm,x,z,top,bottom,hash);
      for(const [lower,upper] of solidIntervals(bottom,top-2,cave))

@@ -82,15 +82,17 @@ for(let realm=0;realm<8;realm++){
  ctx.wildlifeTick(f.p,undefined,undefined);assert.equal(f.spawned.length,1);
  const species=wildlife.find(m=>'hakkai:'+m.id===f.spawned[0][0]);assert.notEqual(species.temper,'hostile');
 }
-// Production candidate search: bright positions and factory copies are refused
-// for hostile draws, while peaceful wildlife remains eligible.
+// Direct sun / sky brightness must not suppress addon hostile candidates.
 {
- const f=spawnFixture();f.p.location={x:500,y:90,z:500};f.d.getLightLevel=()=>1;
+ const f=spawnFixture();f.p.location={x:500,y:90,z:500};f.d.getLightLevel=()=>15;
  const {ctx}=makeCtx(f);ctx.pickRealmWildlife=(entries,realm)=>entries.find(m=>m.dim===realm&&m.temper==='hostile');
- ctx.wildlifeTick(f.p,undefined,undefined);assert.equal(f.spawned.length,0,'hostile rejected at light 1');
- const g=spawnFixture();g.p.location={x:500,y:90,z:500};g.d.getLightLevel=()=>1;
- const h=makeCtx(g,{peaceful:true});h.ctx.pickRealmWildlife=(entries,realm)=>entries.find(m=>m.dim===realm&&m.temper==='passive');
- h.ctx.wildlifeTick(g.p,undefined,undefined);assert.equal(g.spawned.length,1,'peaceful animals are not restricted by light');
+ ctx.wildlifeTick(f.p,undefined,undefined);assert.equal(f.spawned.length,1,'sunlight alone is not a lamp');
+}
+{
+ const f=spawnFixture();f.p.location={x:500,y:90,z:500};f.d.getBlocks=(volume)=>({getBlockLocationIterator:()=>[{x:volume.from.x+7,y:volume.from.y+7,z:volume.from.z+7}][Symbol.iterator]()});
+ f.d.getBlock=()=>({typeId:'minecraft:torch'});f.d.getBlockFromRay=()=>undefined;
+ const {ctx}=makeCtx(f);ctx.pickRealmWildlife=(entries,realm)=>entries.find(m=>m.dim===realm&&m.temper==='hostile');
+ ctx.wildlifeTick(f.p,undefined,undefined);assert.equal(f.spawned.length,0,'hostile rejected near torches');
 }
 {
  const f=spawnFixture();f.p.location={x:500,y:90,z:500};

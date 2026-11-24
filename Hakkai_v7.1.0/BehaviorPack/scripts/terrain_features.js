@@ -11,20 +11,22 @@ export function caveInterval(realm,x,z,top,bottom,hash){
  const zwarp=z+Math.sin(x/90-realm*.8-phase)*27;
  const first=Math.abs(Math.sin(xwarp/61+realm*.81+phase)+.30*Math.sin(zwarp/92));
  const second=Math.abs(Math.sin(zwarp/74-realm*.68-phase)+.25*Math.sin(xwarp/82));
- // A substantially larger and deeper cavern is used only when the caller
- // reserved a deep, empty sector. Old shallow callers retain the old plan.
+ // Deep cavern sectors in realm 5 have their own preflighted lower
+ // envelope; other realms keep the existing sector boundary. Enlarge both
+ // passages and junction rooms using the same continuous global fields.
  const deep=realm===5&&top-bottom>=48;
- const width=deep?.34:realm===5?.18:.095, distance=Math.hypot(first,second);
+ const oldWidth=deep?.34:realm===5?.18:.095;
+ const width=deep?.48:realm===5?.28:.16, distance=Math.hypot(first,second);
+ const originalPassage=first<=oldWidth||second<=oldWidth;
  const inPassage=first<=width||second<=width;
- // Round out junctions into larger chambers, still connected to both bands.
- // Their extra area keeps a roof; only the original passage can reach daylight.
- const chamber=Math.max(0,1-distance/(deep?.72:realm===5?.36:.27));
+ const chamber=Math.max(0,1-distance/(deep?1.02:realm===5?.52:.43));
  if(!inPassage&&chamber===0)return undefined;
- // At tunnel intersections the floor gently climbs to the surface. The
- // radius is deliberately broad so an entrance is not a sudden deep shaft.
- const entrance=Math.max(0,1-distance/(deep?.90:.28));
- const floor=Math.max(bottom+2,Math.round(top-(deep?48:realm===5?11:10)+entrance*(deep?47:9)));
- const lower=floor+1,upper=Math.min(inPassage?top:top-1,floor+(deep?22:4)+Math.round(chamber*(deep?10:2)));
+ // Broad ramps, rather than abrupt pits. Only the original tunnel bands can
+ // open to the surface; the expanded outer perimeter retains its roof.
+ const entrance=Math.max(0,1-distance/(deep?1.18:realm===5?.57:.50));
+ const floor=Math.max(bottom+2,Math.round(top-(deep?56:realm===5?16:17)+entrance*(deep?55:realm===5?15:16)));
+ const opens=originalPassage&&distance<(deep?.18:.13);
+ const lower=floor+1,upper=Math.min(opens?top:top-1,floor+(deep?28:7)+Math.round(chamber*(deep?14:4)));
  return lower<=upper?{lower,upper}:undefined;
 }
 

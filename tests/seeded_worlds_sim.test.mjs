@@ -58,7 +58,9 @@ for(let realm=0;realm<8;realm++){
  const f=fixture(realm,100,100);f.generator.tick(f.player,20);assert.ok(f.job());f.run();
  assert.equal(f.props.get(`seed_land_${realm}_100_100_v1`),1);
  assert.equal(f.reports.length,0);
- if(realm!==6)assert.ok(f.dimension.writes.length>3000,`not enough ground in realm ${realm}`);
+ // Expanded cave voids intentionally reduce rock writes, especially in a
+ // chunk intersecting a junction; still require substantial solid terrain.
+ if(realm!==6)assert.ok(f.dimension.writes.length>2000,`not enough ground in realm ${realm}`);
  const prev=f.dimension.writes.length;f.system.currentTick=41;f.generator.tick(f.player,41);
  assert.equal(f.job(),undefined);assert.equal(f.dimension.writes.length,prev);
 }
