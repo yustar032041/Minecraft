@@ -1,3 +1,4 @@
+import { seasonAt, festivalAt, villageTier, requestStatus, contributeRequest, festivalJoin, donation, workDay, detectCrisis, recoverCrisis, addVillageMemory, depositToVillage, validWorkshop, workshopStep } from './village_life.js';
 import { BUILDER_IDS, BLUEPRINTS, blueprint, readBuilderProject, stepBuilderProject, clearBuilderProject, foundBuilder, builderHome, builderPaused, setBuilderPaused, autoBuilderPlan, constructionCredit } from './village_builders.js';
 import { friendlyResidentById, foundFriendlyResident, friendlySupportTick, friendlyTrade } from './friendly_residents.js';
 import { CULTURE_SITES, CULTURE_PEOPLE, cultureResidentIdentity, foundCultureResident, factoryResidentRole, factoryResidentBonus } from './realm_culture.js';
@@ -2804,6 +2805,7 @@ const chapters=[
  ['はじめに','ガイド本は持ち物から「使う」で開きます。迷ったらこの本の章を順に読んでね。風見の帰還石を使うと、風見台・ベッド・登録地点・元の世界に帰れます。風見台で旅の地図を使い、まずは始まりの草原へ。'],
  ['世界の生成とシード','8つの界はそれぞれ別の空間です。到着すると、今いる場所を中心に周囲4チャンク分（最大9×9チャンク）の地形を先に準備します。地形の高さ・山脈・谷・島・地表素材はワールドシードと界ごとの計算で決まり、同じワールドの同じ座標なら同じ地形になります。各界には旧12種に加えて新5種ずつ、合計136種のスクリプト式シード地形帯があり、歩き続けるほど新しい地形帯が続きます。拠点・街道・既存建築のある区画は上書きしません。'],
  ['新しい地形帯と川','各界に5種類ずつ新しい地形帯を追加。界の土や植生、岩・結晶の景観が現れ、自然調査ノートにも記録されます。これはスクリプトで分類した地形帯で、エンジン本来のバイオーム変更ではありません。6界の谷では、地形条件が合えば短い川区画に水が入ります。氷の界は表面が凍ります。土手と床を確認して水を置くため川は区画ごとに途切れ、湖や海への連結はまだありません。生成済み区画は変更しません。'],
+ ['四季と村の暮らし','四季は約3ゲーム日ごとに巡ります。文化名所の友好住人や八界の集落鐘から村の暮らしを開き、皆で季節の品を持ち寄れます。祭りは季節の2日目。寄付された小麦や板材は近くの住人が台帳上の備蓄に整理し、危機と復興や思い出も記録します。建物の自動修理・現物運搬ではありません。'],
  ['建築係と村の発展','文化名所と風車工場村に建築係が一度だけ現れ、村の空き地を自分で探して小さな家・加工場・農場・交流施設を順に建てます。必要な平地・空間がなければ待機し、既存ブロックは壊しません。人や生物が工事範囲にいる間も作業を止めます。建築係に話しかけると進捗を見たり停止したりできます。材料不要の試作で、保護プラグインには対応せず、空地がなければ発展しません。'],
  ['特別な友好住人','八界それぞれの名所に道案内・手当て係・物資係・見守り兵の4種類、合計32種類が現れます。通常村人とは別の友好モブで、姿と帽子は界と役割ごとに違います。近くの道案内は移動支援、手当て係は傷の手当て、物資係はエメラルドと品の交換、見守り兵は近くの敵対モブと戦います。直接話しかけると説明を読めます。自然生成はモブ生成が有効なとき、各名所で各役割1人だけ一度限りです。死亡・失敗時の補充や通常の村人交易・繁殖・就職はありません。動きや描画は実機未確認です。'],
  ['八界の暮らしと名所','八界の人々が残した風車・文庫・隊商の迷路・氷宮・鍛冶場・地下庭・空の観測庭・待合駅があります。名所にある記録石を使うと、その土地の約束と歴史を読み、旅の記録にも残せます。名所ではモブ生成が有効なら語り手が各2人まで一度だけ現れます。しゃがんで話しかけると土地の話、立って話しかけると通常の取引です。予定地は新規の空き区画に限られます。'],
@@ -4397,7 +4399,7 @@ const townKey=(d,l)=>`town:${d.id}:${Math.floor(l.x)}:${Math.floor(l.y)}:${Math.
 function townNear(d,l){
  let best,range=Infinity;
  for(const town of townCache.values()){
-   if(town.d.id!==d.id||system.currentTick-town.last>240)continue;
+   if(town.lifeSiteId||town.d.id!==d.id||system.currentTick-town.last>240)continue;
    const n=dist(l,town.l);
    if(n<(town.factoryVillage?60:24)&&n<range){range=n;best=town;}
  }
@@ -4611,13 +4613,131 @@ async function townDevelopment(p,t){
  const plan=townDevelopmentPlans[level],c=space(p),creative=isCreative(p);
  const ix=await form(p,'集落の発展計画',`現在：${level}/4段階\n次の計画：${plan.name}\n必要素材：${plan.item.replace('minecraft:','').replaceAll('_',' ')} × ${plan.count}\n\n${plan.desc}\n\n発展すると村の守り評価・住民活動・集落記録が強化されます。`,[['素材を寄付して発展させる'],['閉じる']]);
  if(ix!==0||!near())return;
+ // Another player may have changed this shared village while the form was open.
+ const latest=townRecord(t);if(Math.max(0,Math.min(4,latest.level??0))!==level)return notice(p,'§e集落の計画が更新されました。開き直してください');
  if(!creative&&total(c,plan.item)<plan.count)return notice(p,`§e必要素材が足りません：${plan.count}個`);
  if(!creative&&!debit(c,plan.item,plan.count))return notice(p,'§e素材を確認できませんでした');
- townSave(t,{...data,level:level+1,goods:Math.min(200,data.goods+8),work:world.getAbsoluteTime()});
+ townSave(t,{...latest,level:level+1,goods:Math.min(200,latest.goods+8),work:world.getAbsoluteTime()});
  property(p,'town_development_count',num(p,'town_development_count')+1);
  notice(p,`§a集落が発展！ ${plan.name}（${level+1}/4）`,90);
  try{t.d.spawnParticle('hakkai:climate_5',{x:t.l.x+.5,y:t.l.y+1,z:t.l.z+.5});}catch{}
  try{p.playSound('random.levelup',{volume:.7,pitch:1.1});}catch{}
+}
+// Shared seasonal village life: existing bell ledgers or a culture site's
+// chronicle serve as the meeting point. No signs or old buildings are edited.
+function cultureTownForSite(d,site){
+ if(site?.kind!=='culture'||d.id!==dimID(site.dim)||!num(world,`built_${site.id}`))return;
+ try{if(d.getBlock({x:site.x+2,y:expandedY,z:site.z+11})?.typeId!==ns+'chronicle')return;}catch{return;}
+ const t=townGet(d,{x:site.x,y:expandedY,z:site.z},true);if(t)t.lifeSiteId=site.id;return t;
+}
+function lifeTownForPlayer(p,site=currentPlace(p)){
+ if(!/^hakkai:realm_[0-7]$/.test(p.dimension.id))return;
+ if(site?.kind==='culture')return cultureTownForSite(p.dimension,site);
+ const t=townNear(p.dimension,p.location);
+ return t&&lifeNear(p,t)?t:undefined;
+}
+function lifeNear(p,t){
+ if(!p.isValid||p.dimension.id!==t.d.id||![GameMode.Survival,GameMode.Adventure,GameMode.Creative].includes(p.getGameMode())||dist(p.location,t.l)>(t.lifeSiteId?40:24))return false;
+ try{
+  const valid=t.lifeSiteId?(()=>{const site=places.find(s=>s.id===t.lifeSiteId);return Boolean(site&&num(world,`built_${site.id}`)&&t.d.getBlock({x:site.x+2,y:expandedY,z:site.z+11})?.typeId===ns+'chronicle');})():['minecraft:bell',ns+'town_bell'].includes(t.d.getBlock(t.l)?.typeId);
+  if(!valid)return false;
+  const current=townGet(t.d,t.l,true);if(!current)return false;
+  if(current!==t){t.data=current.data;if(t.lifeSiteId)current.lifeSiteId=t.lifeSiteId;}
+  return true;
+ }catch{return false;}
+}
+function lifeRealm(t){const m=/^hakkai:realm_([0-7])$/.exec(t.d.id);return m?Number(m[1]):0;}
+function lifeBuildings(t){
+ const id=t.lifeSiteId??(t.factoryVillage?59:undefined);return id===undefined?0:num(world,`builder_stage_${id}_v1`);
+}
+function saveVillageLife(t,data){property(world,t.key,JSON.stringify(data));t.data=data;const current=townGet(t.d,t.l,true);if(current){current.data=data;if(t.lifeSiteId)current.lifeSiteId=t.lifeSiteId;}}
+function lifeSignals(t){
+ const monsters=t.d.getEntities({families:['monster'],location:t.l,maxDistance:18,closest:6}).length;
+ return {monsters,rain:raining(t.d)};
+}
+function lifeWorkers(t){
+ const people=t.d.getEntities({location:t.l,maxDistance:t.factoryVillage?60:32,closest:48}).filter(e=>e.isValid);
+ return {farmer:people.some(e=>t.factoryVillage&&e.typeId==='minecraft:villager_v2'&&factoryResidentRole(e)==='grower'&&!e.getComponent('minecraft:is_baby')),artisan:people.some(e=>friendlyResidentById.get(e.typeId)?.role==='artisan'),builder:people.some(e=>BUILDER_IDS.includes(e.typeId))};
+}
+function lifeTick(p,site,tick){
+ const s=state(p);if(tick<(s.villageLifeAt??0))return;s.villageLifeAt=tick+200;
+ const t=lifeTownForPlayer(p,site);if(!t||!lifeNear(p,t)||tick<(t.lifeTickAt??0))return;t.lifeTickAt=tick+200;
+ try{
+  const day=seasonDay(),data=townRecord(t),signals=lifeSignals(t),alert=detectCrisis(data,day,signals);
+  const next=workDay(alert??data,day,lifeWorkers(t));if(next||alert)saveVillageLife(t,next??alert);
+  const live=townRecord(t),now=world.getAbsoluteTime();
+  if(live.lifeWorkshop&&now>=(live.lifeCraftAt??-1200)+1200){
+   workshopStep(t,live.lifeWorkshop,{ItemStack,factoryTransaction,factoryResidentRole,friendlyResidentById,report,
+    onCraft:result=>saveVillageLife(t,addVillageMemory({...townRecord(t),lifeCraftAt:now},day,result))});
+  }
+  const f=festivalAt(day,lifeRealm(t)),tier=villageTier(townRecord(t),lifeBuildings(t));
+  if(f.open||tier.index>=1){try{t.d.spawnParticle(`hakkai:climate_${f.open?lifeRealm(t):seasonAt(day).index}`,{x:t.l.x+.5,y:t.l.y+2,z:t.l.z+.5});}catch{}}
+ }catch(err){report('村の暮らし',err);}
+}
+async function villageLifeMenu(p,t){
+ if(!t||!lifeNear(p,t))return simple(p,'八界の村の暮らし','文化名所の記録石か、八界にある有効な集落鐘の近くで開いてください。');
+ const day=seasonDay(),realm=lifeRealm(t),data=townRecord(t),tier=villageTier(data,lifeBuildings(t)),season=seasonAt(day),fest=festivalAt(day,realm),q=requestStatus(data,day,realm);
+ const crisis=data.lifeCrisis?.active?(data.lifeCrisis.type==='monster'?'魔物を警戒中':'嵐への備え'):'なし';
+ const ix=await form(p,`${tier.name}｜八界の暮らし`,`${season.year}年目 ${season.name} ${season.dayInSeason}/3日目｜建築 ${tier.structures}/4
+村の備蓄 ${data.goods}/200｜共同小麦 ${data.lifeFood??0}/64｜共同板材 ${data.lifeWood??0}/64
+${fest.title}：${fest.open?'今日開催':'季節の2日目に開催'}　｜　警戒：${crisis}
+
+村の発展度 ${tier.points}。建物・持ち寄り・祭り・復興の実績で変わります。自然な見た目や住人の行動は実機未検証です。`,[
+  ['みんなの季節のお願い'],['界の四季祭り'],['住人の仕事と共同備蓄'],['危機と復興'],['村の思い出掲示板'],['閉じる']
+ ]);
+ if(ix===undefined||!lifeNear(p,t))return;
+ if(ix===0)return villageSharedRequest(p,t);
+ if(ix===1)return villageSeasonFestival(p,t);
+ if(ix===2)return villageSupplyMenu(p,t);
+ if(ix===3)return villageCrisisMenu(p,t);
+ if(ix===4){const entries=Array.isArray(townRecord(t).lifeHistory)?townRecord(t).lifeHistory.slice(-20).reverse():[];
+  return simple(p,'村の思い出掲示板',entries.length?entries.map(x=>`第${x.day+1}日｜${x.who?x.who+'：':''}${x.text}`).join('\n'):'まだ記録はありません。みんなで村を助けたり、祭りに参加したりしてみましょう。');}
+}
+async function villageSharedRequest(p,t){
+ const day=seasonDay(),r=lifeRealm(t),q=requestStatus(townRecord(t),day,r);
+ const ix=await form(p,q.name,`みんなで ${q.label} ${q.goal}個を持ち寄ります。進捗 ${q.count}/${q.goal}。1回につき${q.amount}個ずつ、複数人で協力できます。完成で村の抽象備蓄+6。翌日には新しい依頼へ変わります。`,[['2個を持ち寄る'],['閉じる']]);
+ if(ix!==0||!lifeNear(p,t)||seasonDay()!==day)return;
+ const plan=contributeRequest(townRecord(t),day,r,p.name);if(!plan)return notice(p,'§eこの依頼は達成済みです');
+ if(!depositToVillage(space(p),plan.item,plan.count,()=>saveVillageLife(t,plan.next),report))return notice(p,'§e必要な品が足りないか、寄付に失敗しました。持ち物も確認してください');
+ notice(p,plan.done?'§aみんなのお願い達成！ 村の備蓄+6':'§a品物を持ち寄りました');
+}
+async function villageSeasonFestival(p,t){
+ const day=seasonDay(),f=festivalAt(day,lifeRealm(t));
+ const ix=await form(p,f.title,`${f.name}の2日目に開かれる村の祭りです。今は${f.name} ${f.dayInSeason}/3日目。祭りの日は参加者の名前が村の思い出に残り、最初の参加で村の備蓄+2。1人につき村ごとに季節1回です。演出は粒子と音の試作です。`,[['祭りに参加する'],['閉じる']]);
+ if(ix!==0||!lifeNear(p,t)||seasonDay()!==day)return;
+ const next=festivalJoin(townRecord(t),day,lifeRealm(t),p.id,p.name);
+ if(!next)return notice(p,'§e開催日ではないか、参加済み／参加人数の上限です');
+ saveVillageLife(t,next);
+ try{t.d.spawnParticle(`hakkai:climate_${lifeRealm(t)}`,{x:t.l.x+.5,y:t.l.y+2,z:t.l.z+.5});p.playSound('random.levelup',{volume:.6,pitch:1.1});}catch{}
+ notice(p,`§d${f.title}に参加しました`);
+}
+async function villageSupplyMenu(p,t){
+ const d=townRecord(t),workers=lifeWorkers(t);
+ const ix=await form(p,'住人の仕事と共同備蓄',`共同小麦 ${d.lifeFood??0}/64｜共同板材 ${d.lifeWood??0}/64
+畑守：${workers.farmer?'近くにいる':'不在'}／物資係：${workers.artisan?'近くにいる':'不在'}／建築係：${workers.builder?'近くにいる':'不在'}
+
+寄付した品は抽象備蓄になります。畑守か物資係が近くにいる日、小麦2→村の備蓄3。建築係が近くにいる日、板材2→備蓄2。それぞれ1日1回。寄付備蓄の処理は現物の収穫・運搬や建築資材への消費ではありません。
+
+共同工房：登録した2つの樽だけを使い、近くの物資係は小麦3→パン1、工場村の製材係はオーク原木1→板材4を現物で加工します。入出力樽から6ブロック以内に住人が必要、成功後60秒待機。`,[['小麦4個を寄付'],['オークの板材4個を寄付'],['共同工房の樽を登録'],['工房の登録を解除'],['閉じる']]);
+ if(!lifeNear(p,t))return;
+ if(ix===2){state(p).villageBarrelPick={town:t,phase:0,expires:system.currentTick+600};return notice(p,'§b30秒以内に入力樽、次に出力樽をしゃがんで使ってください',120);}
+ if(ix===3){const data=townRecord(t);delete data.lifeWorkshop;saveVillageLife(t,data);return notice(p,'§e共同工房の樽登録を解除しました');}
+ if(ix!==0&&ix!==1)return;
+ const plan=donation(townRecord(t),ix===0?'food':'wood',seasonDay(),p.name);
+ if(!plan)return notice(p,'§e共同備蓄に空きがありません');
+ if(!depositToVillage(space(p),plan.item,plan.count,()=>saveVillageLife(t,plan.next),report))return notice(p,'§e品物が足りないか、寄付に失敗しました。持ち物も確認してください');
+ notice(p,'§a共同備蓄に品物を寄付しました');
+}
+async function villageCrisisMenu(p,t){
+ const day=seasonDay();let data=townRecord(t),signals;try{signals=lifeSignals(t);}catch{return notice(p,'§e周囲を確認できません');}
+ const alert=detectCrisis(data,day,signals);if(alert){saveVillageLife(t,alert);data=alert;}
+ const c=data.lifeCrisis,info=!c?.active?'現在警戒はありません。周囲の魔物や季節3日目の雨を観測すると、警戒記録が生まれます。':c.type==='monster'?`魔物への警戒：近くに ${signals.monsters} 体。いなくなったら板材4個で復興を支援できます。`:`嵐への備え：${signals.rain?'雨が続いています。':'雨はやみました。'} 雨がやんだら板材4個で復興を支援できます。`;
+ const ix=await form(p,'危機と復興',`${info}\n\nこの仕組みは敵を新たに出現させたり建築物を破壊したりしません。復興は台帳上の備蓄回復で、壊れた建物の自動修理ではありません。`,[['板材4個で復興を支援'],['閉じる']]);
+ if(ix!==0||!lifeNear(p,t))return;
+ try{signals=lifeSignals(t);}catch{return;}
+ const plan=recoverCrisis(townRecord(t),seasonDay(),signals,p.name);if(!plan)return notice(p,'§e危険が去っていないか、復興は完了済みです');
+ if(!depositToVillage(space(p),plan.item,plan.count,()=>saveVillageLife(t,plan.next),report))return notice(p,'§e板材が足りないか、寄付に失敗しました。持ち物も確認してください');
+ notice(p,'§a復興を支援！ 村の備蓄+6');
 }
 async function townMenu(p,ref){
  const t=ref??townNear(p.dimension,p.location);
@@ -4628,13 +4748,14 @@ async function townMenu(p,ref){
 守り ${score}/12　備蓄 ${info.goods}/200
 ${info.work+2400>world.getAbsoluteTime()?'工場出荷あり':'工場出荷が途絶えている'}　${festival?`${era()}の祭り開催中`:'祭りは守り4・備蓄6以上の季節2日目'}
 壁4個ごとに加点。鐘より3〜5ブロック高い標、足止め罠、加工機と出荷も加点されます。村人は日ごとに備蓄を消費します。`,[
-   ['季節の収穫市'],['備蓄から品物を交換する'],['祭りの記念章を受け取る'],['見回りを頼む'],['日替わりの納品依頼'],['集落の発展計画'],...(t.factoryVillage?[['風車村の暮らしと約束']]:[])
+   ['季節の収穫市'],['備蓄から品物を交換する'],['祭りの記念章を受け取る'],['見回りを頼む'],['日替わりの納品依頼'],['集落の発展計画'],...(t.factoryVillage?[['風車村の暮らしと約束']]:[]),...(/^hakkai:realm_[0-7]$/.test(t.d.id)?[['八界の村の暮らし']]:[])
  ]);
  if(ix===undefined||!near())return;
  if(ix===0)return harvestMarket(p);
  if(ix===3)return villageWatch(p);
  if(ix===4)return townOrder(p,t);
  if(ix===5)return townDevelopment(p,t);
+ if(ix===(t.factoryVillage?7:6)&&/^hakkai:realm_[0-7]$/.test(t.d.id))return villageLifeMenu(p,t);
  if(ix===6&&t.factoryVillage)return simple(p,'風車村の暮らしと約束','風は皆で分けるもの。粉砕係と製材係は朝から工房へ向かい、畑守は作物へ、灯守は鐘の周りへ向かいます。\n\n朝〜昼の作業時間に、担当の大人が対応する機械から6ブロック以内にいて、実際の加工が成功すると、通常の生産分に加えて備蓄が1増えます。機械の材料は村人が運ぶわけではありません。備蓄は日々の暮らしや発展・祭りを支えます。');
  const data=townRecord(t);
  if(ix===1){
@@ -4851,6 +4972,23 @@ async function brewWork(p,at){
 }
 safeSub('world','before','playerInteractWithBlock',e=>{
  const p=e.player,b=e.block;
+ const pick=state(p).villageBarrelPick;
+ if(pick&&e.isFirstEvent&&p.isSneaking){
+   if(system.currentTick>pick.expires){state(p).villageBarrelPick=undefined;notice(p,'§e樽の登録は時間切れです');return;}
+   e.cancel=true;const at={x:b.x,y:b.y,z:b.z},dimension=b.dimension.id,type=b.typeId;
+   system.run(()=>{try{
+     if(state(p).villageBarrelPick!==pick)return;
+     if(type!=='minecraft:barrel'||!p.isValid||p.dimension.id!==dimension||dimension!==pick.town.d.id||dist(p.location,at)>7){state(p).villageBarrelPick=undefined;return notice(p,'§e樽を選んでください。登録を中止しました');}
+     const t=townGet(p.dimension,pick.town.l,true);if(t&&pick.town.lifeSiteId)t.lifeSiteId=pick.town.lifeSiteId;
+     if(!t||!lifeNear(p,t)||p.dimension.getBlock(at)?.typeId!=='minecraft:barrel'){state(p).villageBarrelPick=undefined;return notice(p,'§e村か樽を確認できません');}
+     if(pick.phase===0){pick.phase=1;pick.input=at;pick.town=t;return notice(p,'§b次に4ブロック以内の出力樽をしゃがんで使ってください',100);}
+     state(p).villageBarrelPick=undefined;const setup={input:pick.input,output:at};
+     if(!validWorkshop(t,setup)||!p.dimension.isChunkLoaded(setup.input)||p.dimension.getBlock(setup.input)?.typeId!=='minecraft:barrel')return notice(p,'§e異なる樽を4ブロック以内で指定してください');
+     saveVillageLife(t,{...townRecord(t),lifeWorkshop:setup});notice(p,'§a共同工房の樽を登録しました。登録樽の中身は住人が加工します',120);
+   }catch(err){state(p).villageBarrelPick=undefined;report('共同工房の樽登録',err);}});
+   return;
+ }
+
  if(!e.isFirstEvent||!p.isSneaking||p.getGameMode()===GameMode.Spectator)return;
  const type=b.typeId, at={...b.location,dim:b.dimension.id};
  if(type==='minecraft:brewing_stand'){e.cancel=true;menu(p,p=>brewWork(p,at));}
@@ -5245,6 +5383,11 @@ safeSub('system','before','startup',({itemComponentRegistry,blockComponentRegist
    mark(player,'stories',site.id);
    if(first&&site.id>0&&site.kind!=='atlas'&&site.kind!=='linked'&&give(player,ns+`shard_${home[aspect(site)][0]}`))notice(player,'§a風の記録と、欠片を見つけた');
    menu(player,async p=>{
+     if(site.kind==='culture'){
+       const ix=await form(p,site.name,tale(site),[['村の暮らしと掲示板'],['閉じる']]);
+       if(ix===0&&p.isValid&&currentPlace(p)?.id===site.id)return villageLifeMenu(p,cultureTownForSite(p.dimension,site));
+       return;
+     }
      if(site.id===10&&!num(p,'library_tome')){
        const i=await form(p,site.name,`${tale(site)}\n\n書架の奥に、八属性の魔導書が残されています。`,[['魔導書を受け取る'],['閉じる']]);
        if(i===0&&p.isValid&&currentPlace(p)?.id===site.id&&!num(p,'library_tome')){
@@ -5307,9 +5450,9 @@ function builderWorkTick(p,t){
      if(!site||j.homeId!==home||!Number.isInteger(j.stage)||BLUEPRINTS[j.stage]?.id!==j.kind)return;
      const stageKey=`builder_stage_${home}_v1`,current=num(world,stageKey);
      if(current<=j.stage)property(world,stageKey,j.stage+1);
-     const town=townNear(e.dimension,j.at);
-     if(town&&['minecraft:bell',ns+'town_bell'].includes(town.d.getBlock(town.l)?.typeId)){
-       const next=constructionCredit(townRecord(town),j.kind);if(next)townSave(town,next);
+     const town=site.kind==='culture'?cultureTownForSite(e.dimension,site):townNear(e.dimension,j.at);
+     if(town&&(town.lifeSiteId||['minecraft:bell',ns+'town_bell'].includes(town.d.getBlock(town.l)?.typeId))){
+       const next=constructionCredit(townRecord(town),j.kind);if(next)saveVillageLife(town,addVillageMemory(next,seasonDay(),`建築係が${BLUEPRINTS[j.stage].name}を完成（備蓄+8）`));
      }
      if(current<=j.stage)for(const player of e.dimension.getPlayers({location:j.at,maxDistance:24,closest:8}))player.sendMessage(`§a建築係が${BLUEPRINTS[j.stage].name}を完成させました。`);
      clearBuilderProject(e);
@@ -5494,10 +5637,13 @@ safeSub('world','before','playerInteractWithEntity',e=>{
    menu(p,async()=>{
      const near=()=>p.isValid&&target.isValid&&p.dimension.id===target.dimension.id&&dist(p.location,target.location)<6&&[GameMode.Survival,GameMode.Adventure,GameMode.Creative].includes(p.getGameMode());
      if(!near())return;
-     const body=`${resident.lore}\n\n${resident.description}\n\nこの住人はバニラ村人ではなく、繁殖・通常交易・就職はしません。`;
-     if(resident.role!=='artisan')return simple(p,resident.name,body);
-     const ix=await form(p,resident.name,`${body}\n\nエメラルド1個 → ${resident.itemName} ${resident.count}個`,[['交換する'],['閉じる']]);
-     if(ix!==0||!near())return;
+     const village=lifeTownForPlayer(p),season=seasonAt(seasonDay());
+     const mood=village?`\n今は${season.name}。ここは${villageTier(townRecord(village),lifeBuildings(village)).name}。${festivalAt(season.day,lifeRealm(village)).open?'今日は祭りの日です。':'みんなで暮らしを支えています。'}`:'';
+     const body=`${resident.lore}\n\n${resident.description}${mood}\n\nこの住人はバニラ村人ではなく、繁殖・通常交易・就職はしません。`;
+     const ix=await form(p,resident.name,`${body}${resident.role==='artisan'?`\n\nエメラルド1個 → ${resident.itemName} ${resident.count}個`:''}`, [...(resident.role==='artisan'?[['交換する']]:[]),...(village?[['村の暮らしと掲示板']]:[]),['閉じる']]);
+     if(!near())return;
+     if(village&&ix===(resident.role==='artisan'?1:0))return villageLifeMenu(p,village);
+     if(resident.role!=='artisan'||ix!==0)return;
      if(friendlyTrade(space(p),new ItemStack(resident.item,resident.count),report))notice(p,`§a${resident.itemName}を受け取りました`);
      else notice(p,'§eエメラルド・空き容量を確認してください。処理失敗時は持ち物も確認してください');
    });
@@ -5544,7 +5690,8 @@ safeSub('world','before','playerInteractWithEntity',e=>{
  menu(p,async(p)=>{
    const trust=num(p,'trust');
    const villageLine=({crusher:'「石を砕くのは、橋を直す人たちのため。工房に着いたら一緒に働こう。」',saw:'「板は家だけでなく、旅人のための道標にも使うんだ。」',grower:'「畑の実りは、収穫の少ない家にも分けるんだよ。」',keeper:'「灯りは最後に帰る人のために、夜まで残しておくの。」'})[factoryResidentRole(e.target)];
-   const line=villageLine??({'若き駅長ハル':'「いつか風車の力で、町中の工房を回してみせるよ。」','工房見習いミナ':'「選別が終わるまで、いつも手が粉だらけ。機械があれば早く帰れるのに。」','駅村の子':'「線路のむこうって、どんな町なの？」'})[name]??(elder?`「${era()}のような日は、はじめてこの村に灯りがともった日のことを思い出すよ。」`:undefined);
+   const seasonalVillageLine=villageLine?`${villageLine} ${era()}の暮らしも皆で支えよう。`:undefined;
+   const line=seasonalVillageLine??({'若き駅長ハル':'「いつか風車の力で、町中の工房を回してみせるよ。」','工房見習いミナ':'「選別が終わるまで、いつも手が粉だらけ。機械があれば早く帰れるのに。」','駅村の子':'「線路のむこうって、どんな町なの？」'})[name]??(elder?`「${era()}のような日は、はじめてこの村に灯りがともった日のことを思い出すよ。」`:undefined);
    const ix=await form(p,name||'村人との会話',`${line?line+'\n\n':''}村の信頼度：${trust}\n村人の近くで敵を倒すと信頼度が上がります。立ったまま会話すると通常の交易を使えます。`,[
      [trust>=3?'金のインゴット1個 ↔ 風の欠片2個':'信頼度3で風記の交易を解放'],['剣への属性刻印'],['見回りを頼む'],['村の集落台帳'],['閉じる']
    ]);
@@ -5820,6 +5967,7 @@ system.runInterval(()=>{
          if(site?.kind==='culture')foundFriendlyResident({site,world,dimension:p.dimension,num,property,findFloor:safeNear,report});
          if(site?.kind==='culture'||site?.id===59)foundBuilder({site,world,dimension:p.dimension,num,property,findFloor:safeNear,report});
          builderWorkTick(p,t);
+         lifeTick(p,site,t);
          if([GameMode.Survival,GameMode.Adventure].includes(p.getGameMode()))friendlySupportTick(p,s,t);
        }
        let profile;try{profile=survey(p);}catch{}
