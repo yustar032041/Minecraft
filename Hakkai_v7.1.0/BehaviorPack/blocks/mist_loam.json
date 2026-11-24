@@ -1,0 +1,33 @@
+{
+  "format_version": "1.26.60",
+  "minecraft:block": {
+    "description": {
+      "identifier": "hakkai:mist_loam",
+      "menu_category": {
+        "category": "construction"
+      }
+    },
+    "components": {
+      "minecraft:display_name": "tile.hakkai:mist_loam.name",
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "hakkai_mist_loam",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:map_color": "#3f6350",
+      "minecraft:sound": {
+        "sound": "stone"
+      },
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 1.5
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 4
+      },
+      "minecraft:light_dampening": 15,
+      "minecraft:loot": "loot_tables/hakkai/blocks/mist_loam.json"
+    }
+  }
+}

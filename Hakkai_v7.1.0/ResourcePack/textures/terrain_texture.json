@@ -522,6 +522,30 @@
     },
     "hakkai_gantry_harvester": {
       "textures": "textures/blocks/hakkai_gantry_harvester"
+    },
+    "hakkai_wind_soil": {
+      "textures": "textures/blocks/hakkai_wind_soil"
+    },
+    "hakkai_mist_loam": {
+      "textures": "textures/blocks/hakkai_mist_loam"
+    },
+    "hakkai_sun_silt": {
+      "textures": "textures/blocks/hakkai_sun_silt"
+    },
+    "hakkai_rime_soil": {
+      "textures": "textures/blocks/hakkai_rime_soil"
+    },
+    "hakkai_storm_grit": {
+      "textures": "textures/blocks/hakkai_storm_grit"
+    },
+    "hakkai_deep_loam": {
+      "textures": "textures/blocks/hakkai_deep_loam"
+    },
+    "hakkai_cloud_loam": {
+      "textures": "textures/blocks/hakkai_cloud_loam"
+    },
+    "hakkai_epoch_soil": {
+      "textures": "textures/blocks/hakkai_epoch_soil"
     }
   }
 }

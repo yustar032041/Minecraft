@@ -1,0 +1,33 @@
+{
+  "format_version": "1.26.60",
+  "minecraft:block": {
+    "description": {
+      "identifier": "hakkai:deep_loam",
+      "menu_category": {
+        "category": "construction"
+      }
+    },
+    "components": {
+      "minecraft:display_name": "tile.hakkai:deep_loam.name",
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "hakkai_deep_loam",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:map_color": "#33484a",
+      "minecraft:sound": {
+        "sound": "stone"
+      },
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 1.5
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 4
+      },
+      "minecraft:light_dampening": 15,
+      "minecraft:loot": "loot_tables/hakkai/blocks/deep_loam.json"
+    }
+  }
+}

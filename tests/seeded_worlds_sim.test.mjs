@@ -1,6 +1,10 @@
 // Run with: node --experimental-loader ./tests/minecraft_stub_loader.mjs --experimental-default-type=module tests/seeded_worlds_sim.test.mjs
 // This simulates the minimal block API, not Bedrock import, rendering or physics.
 import assert from 'node:assert/strict';
+import {seedFunctions} from './seed_terrain_helpers.mjs';
+import {extraBiomeAt} from '../Hakkai_v7.1.0/BehaviorPack/scripts/extra_biomes.js';
+import {streamPlan} from '../Hakkai_v7.1.0/BehaviorPack/scripts/terrain_streams.js';
+import {biomes,families} from '../Hakkai_v7.1.0/BehaviorPack/scripts/data.js';
 import { setupSeededWorlds } from '../Hakkai_v7.1.0/BehaviorPack/scripts/seeded_worlds.js';
 const key=(x,y,z)=>`${x},${y},${z}`;
 class FakeDimension{
@@ -37,7 +41,7 @@ class FakeDimension{
   for(let x=v.from.x;x<=v.to.x;x++)for(let y=v.from.y;y<=v.to.y;y++)for(let z=v.from.z;z<=v.to.z;z++)this.setBlockType({x,y,z},type);
  }
 }
-function fixture(realm,cx,cz,places=[],buildSite){
+function fixture(realm,cx,cz,places=[],buildSite,catalog){
  const dimension=new FakeDimension(realm,cx,cz),props=new Map();
  const player={id:'player',dimension,location:{x:cx*16+8,y:210,z:cz*16+8},sendMessage(){}};
  const world={seed:731,gameRules:{doMobSpawning:true},getAllPlayers:()=>[player],getDynamicProperty:k=>props.get(k.replace(/^hakkai:/,''))};let job;
@@ -45,7 +49,7 @@ function fixture(realm,cx,cz,places=[],buildSite){
  const num=(entity,key,or=0)=>props.get(key)??or;
  const property=(entity,key,value)=>props.set(key,value);
  const reports=[];
- const generator=setupSeededWorlds({ns:'hakkai:',world,system,num,property,report:(...x)=>reports.push(x),places,biomes:{},families:{},buildSite});
+ const generator=setupSeededWorlds({ns:'hakkai:',world,system,num,property,report:(...x)=>reports.push(x),places,biomes:catalog?.biomes??{},families:catalog?.families??{},buildSite});
  const run=()=>{while(job&&!job.next().done){}job=undefined;};
  const step=n=>{for(let i=0;i<n;i++){assert.ok(job);assert.equal(job.next().done,false);}};
  return {dimension,props,player,world,system,generator,reports,run,step,job:()=>job};
@@ -297,4 +301,43 @@ console.log('New seeded building placement and late player block protection (moc
  for(let xx=1600;xx<1616;xx++)for(let zz=cz*16;zz<cz*16+16;zz++)if(valleyProfile(2,xx,zz,noise).top){expected++;if(f.dimension.writes.some(w=>w.x===xx&&w.z===zz&&w.type==='minecraft:red_sandstone'))found++;}
  assert.ok(expected>50);assert.equal(found,expected);assert.equal(f.props.get(`seed_land_2_100_${cz}_v1`),1);
  console.log('Actual seeded desert job produces continuous dry valley bed (mocked)');
+}
+{
+ // Find a fresh chunk with a real, fully contained water stream.
+ const {hash,noise,height}=seedFunctions('731');let candidate;
+ for(let cx=95;cx<125&&!candidate;cx++)for(let cz=95;cz<125;cz++){const p=streamPlan(0,cx,cz,hash,height,noise);if(p){candidate={cx,cz,p};break;}}
+ assert.ok(candidate);const {cx,cz,p}=candidate,f=fixture(0,cx,cz,[],undefined,{biomes,families});f.generator.tick(f.player,20);f.run();assert.equal(f.reports.length,0);
+ for(const cell of p.cells){assert.equal(f.dimension.getBlock({...cell,y:p.floor}).isSolid,true);for(let y=p.floor+1;y<=p.level;y++)assert.equal(f.dimension.getBlock({...cell,y}).typeId,'minecraft:water');}
+ for(const cell of p.rim)for(let y=p.floor+1;y<=p.level;y++){const b=f.dimension.getBlock({...cell,y});assert.ok(b.isSolid&&!b.isLiquid,'intact rim');}
+ assert.equal(f.props.get(`seed_extra_0_${cx}_${cz}_v1`),1);
+ console.log('Actual generated stream contains real water within verified solid banks (mocked)');
+}
+{
+ const {noise}=seedFunctions('731');let candidate;
+ for(let cx=100;cx<140&&!candidate;cx++)for(let cz=100;cz<140;cz++){
+  const x=cx*16+8,z=cz*16+8,extra=extraBiomeAt(0,x,z,noise);if(extra){candidate={cx,cz,x,z,extra};break;}
+ }
+ assert.ok(candidate);const {cx,cz,x,z,extra}=candidate,old=fixture(0,cx,cz,[],undefined,{biomes,families});old.props.set(`seed_land_0_${cx}_${cz}_v1`,1);
+ assert.notEqual(old.generator.biomeAt(0,{x,z}).id,extra.profile.id,'existing chunks retain old survey identity');
+ const fresh=fixture(0,cx,cz,[],undefined,{biomes,families});fresh.generator.tick(fresh.player,20);fresh.run();assert.equal(fresh.generator.biomeAt(0,{x,z}).id,extra.profile.id);assert.equal(fresh.generator.biomeAt(0,{x,z}).profile.name,extra.profile.name);
+ assert.equal(fresh.props.get(`seed_land_0_${cx}_${cz}_v1`),1);assert.equal(fresh.props.get(`seed_extra_0_${cx}_${cz}_v1`),1);
+ console.log('New biome survey identity only on freshly finished chunks (mocked)');
+}
+{
+ const {hash,noise,height}=seedFunctions('731');let c;
+ for(let cx=95;cx<125&&!c;cx++)for(let cz=95;cz<125;cz++){const p=streamPlan(0,cx,cz,hash,height,noise);if(p){c={cx,cz,p};break;}}
+ const f=fixture(0,c.cx,c.cz);f.generator.tick(f.player,20);f.step(256);
+ const rim=c.p.rim[0],broken=key(rim.x,c.p.level,rim.z);f.dimension.blocks.set(broken,'minecraft:air');f.run();
+ assert.equal(f.dimension.writes.filter(w=>w.type==='minecraft:water').length,0,'broken rim prevents water placement');assert.equal(f.dimension.blocks.get(broken),'minecraft:air');
+ console.log('Stream skips water when a bank changes during terrain job (mocked)');
+}
+{
+ const {hash,noise,height}=seedFunctions('731');let c;
+ for(let cx=95;cx<125&&!c;cx++)for(let cz=95;cz<125;cz++){const p=streamPlan(0,cx,cz,hash,height,noise);if(p){c={cx,cz,p};break;}}
+ const f=fixture(0,c.cx,c.cz),original=f.dimension.setBlockType.bind(f.dimension);let failed=false;
+ f.dimension.setBlockType=(p,id)=>{original(p,id);if(id==='minecraft:water'&&!failed){failed=true;throw Error('fluid write failed after mutation');}};
+ f.generator.tick(f.player,20);f.run();assert.ok(failed);assert.equal(f.reports.length,1);assert.equal(f.props.has(`seed_land_0_${c.cx}_${c.cz}_v1`),false);
+ for(const q of c.p.rim)for(let y=c.p.floor+1;y<=c.p.level;y++)assert.ok(f.dimension.getBlock({...q,y}).isSolid,'partial water stays contained');
+ f.system.currentTick=300;f.generator.tick(f.player,300);f.run();assert.equal(f.props.get(`seed_land_0_${c.cx}_${c.cz}_skip_v1`),1,'partial chunks are preserved, not overwritten');
+ console.log('Interrupted stream write remains within banks and partial chunk is preserved (mocked)');
 }

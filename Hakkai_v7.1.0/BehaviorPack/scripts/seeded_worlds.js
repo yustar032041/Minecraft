@@ -5,6 +5,8 @@ import { nearestQueuedDistance } from './terrain_queue.js';
 import { isNaturalSite, inSite, siteIntersects, siteBounds, blendSiteHeight, FRONTIER_SITES, SKY_FRONTIER_SITES } from './natural_sites.js';
 import { createLandscapeField } from './landscape_regions.js';
 import { valleyProfile } from './terrain_valleys.js';
+import { extraBiomeAt } from './extra_biomes.js';
+import { streamPlan } from './terrain_streams.js';
 import { caveInterval, solidIntervals, treeCandidates, scenicPlan, realmRelief, skyRoute, skySiteRoute, pondPlan, moonGroveAt, bambooCandidates } from './terrain_features.js';
 
 // 8界の現在地を中心に、4チャンク先までの見える範囲を先行生成する。
@@ -73,8 +75,14 @@ export function setupSeededWorlds(ctx){
    const half=(Number(site.size)||45)/2+5;
    if(Math.abs(site.x-x)<=half&&Math.abs(site.z-z)<=half)return undefined;
   }
-  const id=`hakkai:seed_${r}_${String(biomeIndexAt(r,x,z)).padStart(2,'0')}`,key=biomes[id],profile=families[key];
+  const cx=Math.floor(x/CHUNK),cz=Math.floor(z/CHUNK);
+  const extra=num(world,propKey(r,cx,cz))&&num(world,`seed_extra_${r}_${cx}_${cz}_v1`)?newBiomeAt(r,x,z):undefined;
+  const id=extra?.profile.id??`hakkai:seed_${r}_${String(biomeIndexAt(r,x,z)).padStart(2,'0')}`,key=biomes[id],profile=families[key];
   return key&&profile?{id,key,profile}:undefined;
+ }
+ function newBiomeAt(r,x,z){
+  // Preserve the established moon-bamboo grove and its recognition semantics.
+  return r===7&&moonGroveAt(x,z,noise)?undefined:extraBiomeAt(r,x,z,noise);
  }
  function heightAt(r,x,z,style=biomeIndexAt(r,x,z)){
   const base=[88,87,85,91,88,76,94,84][r];
@@ -85,6 +93,7 @@ export function setupSeededWorlds(ctx){
   let relief=continental+broad+middle+fine;
   relief+=realmRelief(r,x,z,noise)+landscape.sample(r,x,z);
   relief-=valleyProfile(r,x,z,noise).depth;
+  const extra=newBiomeAt(r,x,z);if(extra)relief+=extra.weight*(1.5+noise(x,z,120,r,1637)*2);
   if(r===5)relief=relief*.62+noise(x,z,33,r,47)*7;
   if(r===6){const shape=noise(x+41,z-27,26,r,151)*.82+noise(x-9,z+63,11,r,157)*.38;if(shape<.22)return -1;relief=relief*.38+Math.max(0,shape-.22)*11;}
   return Math.round(Math.max(48,Math.min(145,base+relief)));
@@ -94,8 +103,8 @@ export function setupSeededWorlds(ctx){
   const wetTop=style===3&&grain>.55?'minecraft:mud':style===4?'minecraft:gravel':top;
   const layered=style===1&&grain>.65?TOPS[r][(style+2)%12]:style===8&&grain>.72?TOPS[r][7]:wetTop;
   const grove=r===7&&moonGroveAt(x,z,noise);
-  const valley=valleyProfile(r,x,z,noise);
-  return {top:grove?'minecraft:grass_block':valley.top??layered,sub:grove?'minecraft:dirt':style===4||style===6?'minecraft:sand':style===3?'minecraft:clay':style===7?'hakkai:moonstone':SUBS[r],rock:style===11?TOPS[r][11]:ROCKS[r],patch};
+  const valley=valleyProfile(r,x,z,noise),extra=newBiomeAt(r,x,z);
+  return {top:grove?'minecraft:grass_block':valley.top??extra?.profile.top??layered,sub:grove?'minecraft:dirt':style===4||style===6?'minecraft:sand':style===3?'minecraft:clay':style===7?'hakkai:moonstone':SUBS[r],rock:style===11?TOPS[r][11]:ROCKS[r],patch};
  }
  function isReserved(r,x0,z0,x1,z1){
   // 元の接続地形と遠征地形の予約範囲は、生成順序に関係なく保護する。
@@ -198,6 +207,15 @@ export function setupSeededWorlds(ctx){
   if(style===11||style===7)for(const dx of [-1,1]){
    const at={x:x+dx,y:y+1,z};
    try{if(d.getBlock(at)?.isAir)d.setBlockType(at,style===11?TOPS[r][11]:block);}catch{}
+  }
+ }
+ function placeExtraBiomeFeatures(d,r,cx,cz){
+  for(let i=0;i<4;i++){
+   const x=cx*16+2+Math.floor(hash(cx*19+i,cz*13,r,1621)*12),z=cz*16+2+Math.floor(hash(cx*17,cz*23+i,r,1627)*12);
+   const extra=newBiomeAt(r,x,z),y=heightFor(r,x,z);if(!extra||y<0||y+2>MAX_Y||playersNear(d,{x:x+.5,y:y+1,z:z+.5},4))continue;
+   const ground=d.getBlock({x,y,z}),above=d.getBlock({x,y:y+1,z});
+   if(!ground||ground.typeId!==surfaceFor(r,x,z,y).top||!above?.isAir)continue;
+   d.setBlockType({x,y:y+1,z},extra.profile.accent);
   }
  }
  function placeMoonBamboo(d,cx,cz,shrine){
@@ -315,7 +333,7 @@ export function setupSeededWorlds(ctx){
    property(world,skipKey(realm,cx,cz),1);return;
   }
   // Decorations are disabled in boundary chunks to avoid touching a site.
-  const pond=sites.length?undefined:pondPlan(realm,cx,cz,hash,heightFor);
+  const pond=sites.length?undefined:(streamPlan(realm,cx,cz,hash,heightFor,noise)??pondPlan(realm,cx,cz,hash,heightFor));
   const pondCells=new Set(pond?.cells.map(({x,z})=>`${x},${z}`)??[]);
   const pondRim=new Set(pond?.rim.map(({x,z})=>`${x},${z}`)??[]);
   let wroteTerrain=false,hasSkyRoad=false;
@@ -393,7 +411,7 @@ export function setupSeededWorlds(ctx){
   const planted=realm===7&&placeMoonBamboo(d,cx,cz,shrine);
   const moonGrove=realm===7&&Boolean(shrine||planted);
   if(!hasSkyRoad)placeTree(d,realm,cx,cz);
-  if(!shrine&&!hasSkyRoad)placeBiomeFeature(d,realm,cx,cz);
+  if(!shrine&&!hasSkyRoad){placeBiomeFeature(d,realm,cx,cz);placeExtraBiomeFeatures(d,realm,cx,cz);}
   for(let i=0;i<3;i++){
    for(const coords of [DEEP_SITES[realm][i],(realm===6?SKY_FRONTIER_SITES:FRONTIER_SITES)[i]]){
     const [sx,sz]=coords;
@@ -414,6 +432,7 @@ export function setupSeededWorlds(ctx){
     try{d.setBlockType({x,y:y+1,z},type);}catch{}
    }
   }
+  property(world,`seed_extra_${realm}_${cx}_${cz}_v1`,1);
   property(world,key,1);
   if(moonGrove)property(world,`seed_moon_grove_${cx}_${cz}_v1`,1);
  }
