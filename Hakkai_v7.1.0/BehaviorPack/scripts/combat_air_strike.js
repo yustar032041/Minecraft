@@ -1,5 +1,6 @@
 import {GameMode} from '@minecraft/server';
 import {isCombatTarget,applyCombatHit} from './combat_resonance.js';
+import {isTraceWeapon} from './combat_weapon_trace.js';
 const WEAPONS=new Set(['剣','斧','槍']),TOTAL_COST=12,RADIUS=2.5;
 // One confirmed falling melee hit per airtime. Both native event orders are
 // accounted for: a successful strike costs 12 total including its melee hit.
@@ -11,6 +12,19 @@ export function setupAirStrike({notice,visibleFrom}){
   if(p.isOnGround)e.spent=false;
   if(e.basic&&t-e.basic.t>1)e.basic=undefined;
   if(e.skip&&t-e.skip.t>1)e.skip=undefined;
+ }
+ // New all-weapon aerial attack replaces the corresponding trace, rather
+ // than applying additional damage to the native target. Nine stamina is
+ // charged on the swing; native melee stamina remains a separate cost.
+ function beginSwing(p,s,g){
+  try{
+   if(!p?.isValid||p.typeId!=='minecraft:player'||![GameMode.Survival,GameMode.Creative].includes(p.getGameMode())||p.isOnGround||p.isSneaking||p.isSwimming||p.isFlying||p.isGliding||p.getComponent('minecraft:riding')||s.busy||s.menu||!isTraceWeapon(g))return false;
+   const e=entry(p);if(e.spent||e.dim!==p.dimension.id||p.getVelocity().y>=-.08)return false;
+   if(p.getGameMode()!==GameMode.Creative&&s.s<9)return false;
+   if(p.getGameMode()!==GameMode.Creative)s.s-=9;e.spent=true;
+   try{p.playAnimation('animation.hakkai.air_strike',{blendOutTime:.1,stopExpression:'query.any_animation_finished'});}catch{}
+   try{notice(p,'§b空中攻撃！',35);}catch{}return true;
+  }catch{return false;}
  }
  function chargeMelee(p,target,s,g,t){
   if(!g||!WEAPONS.has(g.kind))return false;
@@ -49,5 +63,5 @@ export function setupAirStrike({notice,visibleFrom}){
   }catch{return false;}
  }
  function clear(id){entries.delete(id);}
- return {tick,chargeMelee,onHurt,clear};
+ return {tick,beginSwing,chargeMelee,onHurt,clear};
 }

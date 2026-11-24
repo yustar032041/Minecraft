@@ -10,13 +10,13 @@ for(const g of weapons){
 }
 function fixture(g=weapons[0]){
  const hits=[],particles=[],jobs=[],s={s:50},system={currentTick:100,runTimeout:(fn,delay)=>jobs.push([fn,delay])};let held='hakkai:'+g.id;
- const d={id:'d',spawnParticle:(...x)=>particles.push(x),getEntities:()=>[],getEntitiesFromRay:()=>[],isChunkLoaded:()=>true};
+ const d={id:'d',spawnParticle:(...x)=>particles.push(x),getEntities:()=>[],getEntitiesFromRay:()=>[],getBlockFromRay:()=>undefined,isChunkLoaded:()=>true};
  const p={id:'p',typeId:'minecraft:player',isValid:true,isSneaking:false,dimension:d,location:{x:0,y:0,z:0},selectedSlotIndex:0,getViewDirection:()=>({x:1,y:0,z:0}),getHeadLocation:()=>({x:0,y:1,z:0}),getGameMode:()=> 'survival'};
  const target=(id,x,z=0,type='minecraft:zombie')=>({id,typeId:type,isValid:true,dimension:d,location:{x,y:0,z},getHeadLocation:()=>({x,y:1,z}),getComponent:()=>({hasTypeFamily:()=>type==='minecraft:zombie'}),applyDamage:(n,source)=>hits.push([id,n,source])});
  const trace=setupWeaponTrace({system,gear:new Map([[held,g]]),selected:()=>({typeId:held}),state:()=>s,visibleFrom:(_,loc)=>loc.x!==3,report:(...x)=>assert.fail(String(x))});
  return {p,d,s,system,target,trace,hits,particles,jobs,swing:()=>trace.swing({player:p,heldItemStack:{typeId:held},swingSource:'Attack'}),run:()=>jobs.shift()?.[0](),setHeld:v=>held=v};
 }
-for(const g of weapons){const f=fixture(g),enemy=f.target('enemy',2);f.d.getEntities=()=>[enemy];assert.equal(f.swing(),true,g.id);f.run();assert.equal(f.hits[0][1],g.damage,g.id);assert.ok(f.particles.some(([id])=>id===`hakkai:${g.visualId??g.id}`));}
+for(const g of weapons){const f=fixture(g),enemy=f.target('enemy',2);f.d.getEntities=()=>[enemy];if(g.kind==='杖')f.d.getEntitiesFromRay=()=>[{entity:enemy,distance:1}];assert.equal(f.swing(),true,g.id);f.run();assert.equal(f.hits[0][1],g.damage,g.id);assert.ok(f.particles.some(([id])=>id===`hakkai:${g.visualId??g.id}`));}
 {
  const f=fixture(),direct=f.target('direct',1),side=f.target('side',2),hidden=f.target('hidden',3),friend=f.target('friend',2,.1,'minecraft:cow');f.d.getEntities=()=>[direct,side,side,hidden,friend];
  assert.equal(f.swing(),true);f.trace.record(f.p,direct);f.trace.record(f.p,direct,99);f.run();assert.deepEqual(f.hits.map(x=>x[0]),['side']);assert.equal(f.hits[0][1],weapons[0].damage);assert.equal(f.hits[0][2].cause,'magic');

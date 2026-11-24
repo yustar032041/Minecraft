@@ -6,7 +6,7 @@ import {setupCombatCharge} from '../Hakkai_v7.1.0/BehaviorPack/scripts/combat_ch
 import {setupCombatResonance} from '../Hakkai_v7.1.0/BehaviorPack/scripts/combat_resonance.js';
 const main=fs.readFileSync('Hakkai_v7.1.0/BehaviorPack/scripts/main.js','utf8');
 assert.ok(main.includes('[...catalog,...ULTIMATE_WEAPONS].map'));
-assert.ok(main.includes('const g=gear.get(id);if(g)cast(p,g);'));
+assert.ok(main.includes('const g=gear.get(id);if(g){'));assert.ok(main.includes('cast(p,g);'));assert.ok(main.includes('combatUltimate?.cast(p,s,g)'));
 const code=main.slice(main.indexOf('function cast(p,g,charged=false){'),main.indexOf('function castElement('));
 const system={currentTick:0,runTimeout:()=>{},run:()=>{}};const particles=[],damage=[],animations=[],notices=[],s={m:100,s:100,cd:new Map(),useTick:-100};
 const dimension={id:'realm',spawnParticle:(id)=>particles.push(id)};

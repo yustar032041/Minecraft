@@ -1,3 +1,4 @@
+import { setupBowTrail } from './combat_bow_trail.js';
 import { setupWeaponTrace, isTraceWeapon } from './combat_weapon_trace.js';
 import { tomeSpells, tomeUnlocked, tomeCurrent, tomeNext, tomeCrouchTick } from './spell_tome.js';
 import { VILLAGE_GUIDE_CHAPTERS } from './village_guide.js';
@@ -56,7 +57,7 @@ import { setupExpeditionRecords } from './expedition_records.js';
 import { GUIDE_ENTRIES, GUIDE_ICONS, GUIDE_SECTIONS, selectGuidePage, creatureEntriesByRealm, gearKinds, filterGear } from './guide_navigation.js';
 
 const ns='hakkai:', dimID=(id)=>ns+'realm_'+id;
-let frontierWorlds, expeditionRecords, seededWorlds, mobSystem, realmEnders, fushiSystem, wardenArena, wardenBoss, combatResonance, combatGuard, combatRoll, combatParry, airDash, airStrike, fushiTotem, combatUltimate, combatCharge, weaponTrace;
+let frontierWorlds, expeditionRecords, seededWorlds, mobSystem, realmEnders, fushiSystem, wardenArena, wardenBoss, combatResonance, combatGuard, combatRoll, combatParry, airDash, airStrike, fushiTotem, combatUltimate, combatCharge, weaponTrace, bowTrail;
 const shieldWear=setupShieldWear({system});
 const customShield=setupCustomShield({catalog,prepare:shieldWear.prepare});
 const gear=new Map([...catalog,...ULTIMATE_WEAPONS].map(g=>[ns+g.id,g]));
@@ -4198,7 +4199,7 @@ async function survivalGuide(p){
  if(i===8)return help(p);
  if(i===9)return openCreatureGuide(p);
  if(i===10)return wardenArena?.open(p);
- if(i===11)return simple(p,'風紋・防御・回避・パリィ（試作）','§b風記の剣・斧・槍で立ったまま敵に命中すると風紋がたまります。4秒以内の命中を3回、間隔は0.4秒以上。最大で6秒間維持します。\n\n§e2つたまったら、しゃがみながら武器の使用を約1.2秒長押しして離すと二連終撃。剣は前方3体、槍は前方2体、斧は周囲6体まで。威力と吹き飛ばしが上がります。3つたまってからの溜め技は代わりに風紋閃。壁や味方で止まります。どちらも外しても消費します。通常の近接命中はスタミナ3、溜め技は8と魔力が必要です。\n\n§b風記の剣・斧・槍を持ってしゃがむと、前方からの近接・飛び道具を70%軽減します。スタミナを毎秒5消費し、なくなったらしゃがみを解除して回復。構えの開始には最大約0.5秒かかります。\n\n§b風記の盾は両手どちらでも持て、しゃがむと試作の正面防御。斧を防ぐと約5秒無効。耐久と矢の跳ね返りは試作で、完全再現ではありません。実機確認まで頼らないでね。\n\n§a回避ロール：地上でしゃがみながら前進を素早く2回入力。スタミナ10、約0.5秒の攻撃回避。前方に安全な平地が必要です。\n\n§b空中ダッシュ：空中でしゃがまずに前進を一度離し、素早く2回入力。スタミナ15、着地まで1回。無敵や落下防止はありません。\n\n§b武器の軌跡：風記の武器97種で攻撃すると前方に当たり判定付きの軌跡が出ます。同じ一振りで本体が当たった相手には重ねて当たりません。軌跡は壁や味方を越えず、プレイヤーや友好生物を攻撃しません。基礎威力は武器と同じですが防具やエンチャント等で実際の損傷は変わります。空中衝撃としゃがみ近接の自動スキルは二重ヒット防止のため停止し、武器の使用ボタンからスキルを使います。\n\n§6必殺：不屈の護符を持ち、スタミナ1〜20・魔力0〜20で使うと、見通せる近くの敵に攻撃。スタミナを全消費し1秒間通常ダメージを防ぎます。奈落や直接体力変更は防げず、30秒待機します。\n\n§eパリィ：盾を持たない剣・斧・槍の防御中にしゃがみを解除し、約0.3秒以内に正面から敵の近接か飛び道具を受けるとスタミナ15で防ぎます。近い敵の近接と一部の技を約2秒止めます。全攻撃・全行動が止まるわけではありません。管理者へのしゃがみ近接パリィも使えます。\n\n§7マナ・再使用時間は通常通り必要。操作・演出・バランスは試作で、統合版の検証が必要です。');
+ if(i===11)return simple(p,'風紋・防御・回避・パリィ（試作）','§b風記の剣・斧・槍で立ったまま敵に命中すると風紋がたまります。4秒以内の命中を3回、間隔は0.4秒以上。最大で6秒間維持します。\n\n§e2つたまったら、しゃがみながら武器の使用を約1.2秒長押しして離すと二連終撃。剣は前方3体、槍は前方2体、斧は周囲6体まで。威力と吹き飛ばしが上がります。3つたまってからの溜め技は代わりに風紋閃。壁や味方で止まります。どちらも外しても消費します。通常の近接命中はスタミナ3、溜め技は8と魔力が必要です。\n\n§b風記の剣・斧・槍を持ってしゃがむと、前方からの近接・飛び道具を70%軽減します。スタミナを毎秒5消費し、なくなったらしゃがみを解除して回復。構えの開始には最大約0.5秒かかります。\n\n§b風記の盾は両手どちらでも持て、しゃがむと試作の正面防御。斧を防ぐと約5秒無効。耐久と矢の跳ね返りは試作で、完全再現ではありません。実機確認まで頼らないでね。\n\n§a回避ロール：地上でしゃがみながら前進を素早く2回入力。スタミナ10、約0.5秒の攻撃回避。前方に安全な平地が必要です。\n\n§b空中ダッシュ：空中でしゃがまずに前進を一度離し、素早く2回入力。スタミナ15、着地まで1回。無敵や落下防止はありません。\n\n§b武器の軌跡：風記の武器97種で攻撃すると前方に当たり判定付きの軌跡が出ます。同じ一振りで本体が当たった相手には重ねて当たりません。軌跡は壁や味方を越えず、プレイヤーや友好生物を攻撃しません。基礎威力は武器と同じですが防具やエンチャント等で実際の損傷は変わります。落下中に攻撃すると着地まで1回空中攻撃に変化。スタミナ9を消費し、通常命中の費用は別。直接命中への重複ダメージはありません。杖は最大16ブロックへ飛ぶ弾を放ち、弓の矢には光跡が付きます。剣・斧・槍・盾・扇・ハンマーは種類ごとの形。しゃがみ近接の自動スキルは停止し、武器の使用ボタンからスキルを使います。\n\n§6必殺：スタミナ1〜20・魔力0〜20で不屈の護符か風記の武器を持ち、立って使うと、見通せる敵に攻撃。武器の種類で範囲が変わり、この条件中は通常技の代わりに発動を試みます。スタミナを全消費し1秒間通常ダメージを防ぎます。奈落や直接体力変更は防げず、30秒待機します。\n\n§eパリィ：盾を持たない剣・斧・槍の防御中にしゃがみを解除し、約0.3秒以内に正面から敵の近接か飛び道具を受けるとスタミナ15で防ぎます。近い敵の近接と一部の技を約2秒止めます。全攻撃・全行動が止まるわけではありません。管理者へのしゃがみ近接パリィも使えます。\n\n§7マナ・再使用時間は通常通り必要。操作・演出・バランスは試作で、統合版の検証が必要です。');
  if(i===12)return guide(p);
 }
 
@@ -5138,7 +5139,10 @@ function use(e){
  if(id===ns+'relic_key')return menu(p,openRelic);
  const book=id.match(/^hakkai:rune_book_([0-3])$/);
  if(book)return notice(p,'§eエンチャント台で、刻印書を持ってしゃがみながら使ってね');
- const g=gear.get(id);if(g)cast(p,g);
+ const g=gear.get(id);if(g){
+  if(isTraceWeapon(g)&&s.s>0&&s.s<=20&&s.m>=0&&s.m<=20&&selected(p)?.typeId===id)return combatUltimate?.cast(p,s,g);
+  cast(p,g);
+ }
 }
 system.runInterval(()=>{
  for(const id of ['minecraft:overworld','minecraft:nether','minecraft:the_end',...Array.from({length:8},(_,i)=>`hakkai:realm_${i}`)])try{cleanKineticVisuals(world.getDimension(id));}catch{}
@@ -5690,8 +5694,8 @@ safeSub('world','after','entityDie',e=>{combatParry?.clearAttacker(e.deadEntity.
 // Optional events clear a stored wind mark promptly; the identity/expiry
 // check in the controller still protects older API versions.
 try{world.afterEvents.playerHotbarSelectedSlotChange?.subscribe(({player})=>{combatResonance?.clear(player.id);combatGuard?.invalidate(player.id);combatParry?.clear(player.id);combatCharge?.clear(player.id);weaponTrace?.clear(player.id);});}catch{}
-try{world.afterEvents.playerDimensionChange?.subscribe(({player})=>{combatResonance?.clear(player.id);combatGuard?.invalidate(player.id);combatRoll?.clear(player.id);combatParry?.clear(player.id);airDash?.clear(player.id);airStrike?.clear(player.id);combatUltimate?.invalidate(player.id);combatCharge?.clear(player.id);weaponTrace?.clear(player.id);});}catch{}
-safeSub('world','after','entityDie',({deadEntity})=>{if(deadEntity?.typeId==='minecraft:player'){customShield.clear(deadEntity.id);wardenBoss?.clearMusic(deadEntity.id);combatResonance?.clear(deadEntity.id);combatGuard?.clear(deadEntity.id);combatRoll?.clear(deadEntity.id);combatParry?.clear(deadEntity.id);airDash?.clear(deadEntity.id);airStrike?.clear(deadEntity.id);combatUltimate?.clear(deadEntity.id);combatCharge?.clear(deadEntity.id);weaponTrace?.clear(deadEntity.id);}});
+try{world.afterEvents.playerDimensionChange?.subscribe(({player})=>{combatResonance?.clear(player.id);combatGuard?.invalidate(player.id);combatRoll?.clear(player.id);combatParry?.clear(player.id);airDash?.clear(player.id);airStrike?.clear(player.id);combatUltimate?.invalidate(player.id);combatCharge?.clear(player.id);weaponTrace?.clear(player.id);bowTrail?.clear(player.id);});}catch{}
+safeSub('world','after','entityDie',({deadEntity})=>{if(deadEntity?.typeId==='minecraft:player'){customShield.clear(deadEntity.id);wardenBoss?.clearMusic(deadEntity.id);combatResonance?.clear(deadEntity.id);combatGuard?.clear(deadEntity.id);combatRoll?.clear(deadEntity.id);combatParry?.clear(deadEntity.id);airDash?.clear(deadEntity.id);airStrike?.clear(deadEntity.id);combatUltimate?.clear(deadEntity.id);combatCharge?.clear(deadEntity.id);weaponTrace?.clear(deadEntity.id);bowTrail?.clear(deadEntity.id);}});
 safeSub('world','before','playerInteractWithEntity',e=>{
  const p=e.player;
  if(['minecraft:villager','minecraft:villager_v2'].includes(e.target.typeId)&&typeof e.target.nameTag==='string'&&e.target.nameTag.startsWith('§d風記の案内人§r｜')){
@@ -5911,7 +5915,7 @@ safeSub('world','after','playerSpawn',({player:p,initialSpawn})=>{
    }
  },12);
 });
-safeSub('world','after','playerLeave',({playerId})=>{sessions.delete(playerId);customShield.clear(playerId);shrineChiefs.clearPlayer(playerId);expeditionRecords?.clear(playerId);wardenArena?.clearPlayer(playerId);wardenBoss?.clearMusic(playerId);combatCharge?.clear(playerId);weaponTrace?.clear(playerId);combatResonance?.clear(playerId);combatGuard?.clear(playerId);combatRoll?.clear(playerId);combatParry?.clear(playerId);airDash?.clear(playerId);airStrike?.clear(playerId);combatUltimate?.clear(playerId);});
+safeSub('world','after','playerLeave',({playerId})=>{sessions.delete(playerId);customShield.clear(playerId);shrineChiefs.clearPlayer(playerId);expeditionRecords?.clear(playerId);wardenArena?.clearPlayer(playerId);wardenBoss?.clearMusic(playerId);combatCharge?.clear(playerId);weaponTrace?.clear(playerId);bowTrail?.clear(playerId);combatResonance?.clear(playerId);combatGuard?.clear(playerId);combatRoll?.clear(playerId);combatParry?.clear(playerId);airDash?.clear(playerId);airStrike?.clear(playerId);combatUltimate?.clear(playerId);});
 const bar=n=>'■'.repeat(Math.floor(n/20))+'□'.repeat(5-Math.floor(n/20));
 function hudLine(p,s,t){
  const pale=num(p,'hud_color'),st=Math.floor(s.s),mana=Math.floor(s.m),show=t<s.until,mode=num(p,'hud_pos');
@@ -6121,7 +6125,9 @@ combatUltimate=setupCombatUltimate({system,notice,visibleFrom});
 combatCharge=setupCombatCharge({system,gear,selected,state,cast});
 let weaponSwingAvailable=false;
 try{const signal=world.afterEvents.playerSwingStart;if(signal){signal.subscribe(e=>weaponTrace?.swing(e));weaponSwingAvailable=true;}}catch(err){report('武器の振りイベント',err);}
-weaponTrace=setupWeaponTrace({system,gear,selected,state,visibleFrom,enabled:weaponSwingAvailable,report});
+weaponTrace=setupWeaponTrace({system,gear,selected,state,visibleFrom,airAttack:(p,s,g,t)=>airStrike?.beginSwing(p,s,g,t)??false,enabled:weaponSwingAvailable,report});
+bowTrail=setupBowTrail({system,gear,selected,state,airAttack:(p,s,g,t)=>airStrike?.beginSwing(p,s,g,t)??false});
+safeSub('world','after','entitySpawn',({entity})=>bowTrail?.spawned(entity));
 combatGuard=setupCombatGuard({notice});
 combatParry=setupCombatParry({guard:combatGuard,onSuccess:({p,attacker,near,at})=>{
  ultimateParryHeal(p);
