@@ -24,10 +24,10 @@ function fixture(height=()=>79){
  const f=fixture(x=>x>=3?80:79);f.tap();f.run();assert.equal(f.p.location.y,81,'climbs one-block uphill');assert.ok(f.p.location.x>20);
 }
 {
- const f=fixture(x=>x>=4?78:79);f.tap();f.run();assert.ok(f.p.location.x+.28<4,'stops before even a one-block drop');assert.equal(f.p.location.y,80);
+ const f=fixture(x=>x>=4?78:79);f.tap();f.run();assert.ok(f.p.location.x>20,'crosses a one-block drop');
 }
 {
- const f=fixture(x=>x>=4?-64:79);f.tap();f.run();assert.ok(f.p.location.x+.28<4,'stops before void');
+ const f=fixture(x=>x>=4?-64:79);f.tap();f.run();assert.ok(f.p.location.x>20,'crosses a gap without support checks');
 }
 {
  const f=fixture();for(let y=80;y<=83;y++)f.edits.set(`3,${y},0`,solid);f.tap();f.run();assert.ok(f.p.location.x+.28<3,'cannot pass through a wall');

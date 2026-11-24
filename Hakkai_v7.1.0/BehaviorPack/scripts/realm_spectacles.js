@@ -25,7 +25,7 @@ export function realmPanorama(r,x,z,noise){
 // Three differently shaped landmarks per realm. Rotation and placement are
 // seeded per chunk; all columns remain at least one block inside the chunk.
 export function spectaclePlan(r,cx,cz,hash){
- if(!Number.isInteger(r)||r<0||r>7||hash(cx,cz,r,1901)>=.38)return [];
+ if(!Number.isInteger(r)||r<0||r>7||hash(cx,cz,r,1901)>=.78)return [];
  const variant=Math.min(2,Math.floor(hash(cx,cz,r,1907)*3));
  const rotation=Math.min(3,Math.floor(hash(cx,cz,r,1913)*4));
  const x=cx*16+8,z=cz*16+8,out=[],occupied=new Set();
@@ -111,6 +111,28 @@ export function spectaclePlan(r,cx,cz,hash){
    else{ring(1,5,brass);for(const [dx,dz,h] of [[-4,0,12],[4,0,12],[0,-4,9],[0,4,9]]){col(dx,dz,h,stone);add(dx,h+1,dz,glass);}col(0,0,17,brass);add(0,18,0,glass);}
    break;
   }
+ }
+ return out;
+}
+
+// A 48x48 open ruin, split into independently protected 16x16 tiles.
+// A missing, unsafe or previously-generated tile is never forced or rebuilt.
+export function grandStructureTile(r,cx,cz,hash){
+ if(!Number.isInteger(r)||r<0||r>7)return [];
+ const gx=Math.floor(cx/4),gz=Math.floor(cz/4),tx=cx-gx*4,tz=cz-gz*4;
+ if(tx>=3||tz>=3||hash(gx,gz,r,2201)>=.42)return [];
+ const stones=['hakkai:windworn_sandstone','minecraft:birch_log','hakkai:red_dune_stone','hakkai:mirror_ice','hakkai:thunderstone','hakkai:abyssal_stone','hakkai:cloudstone','hakkai:clockstone'];
+ const lights=['hakkai:sky_crystal','hakkai:glow_moss','minecraft:bone_block','hakkai:frost_crystal','hakkai:storm_crystal','hakkai:moonstone','hakkai:sky_crystal','hakkai:timeglass'];
+ const stone=stones[r],light=lights[r],out=[];
+ for(let lx=0;lx<16;lx++)for(let lz=0;lz<16;lz++){
+  const x=tx*16+lx,z=tz*16+lz,edge=(x===4||x===43)&&z>=4&&z<=43||(z===4||z===43)&&x>=4&&x<=43;
+  const gate=(Math.abs(x-24)<=2&&(z===4||z===43))||(Math.abs(z-24)<=2&&(x===4||x===43));
+  const tower=[4,24,43].includes(x)&&[4,24,43].includes(z)&&(x!==24||z!==24);
+  const center=x===24&&z===24;
+  const walk=(Math.abs(x-24)<=1&&z>=4&&z<=43)||(Math.abs(z-24)<=1&&x>=4&&x<=43);
+  let h=0;
+  if(tower)h=17;else if(center)h=21;else if(edge&&!gate)h=3;else if(walk)h=1;
+  for(let y=1;y<=h;y++)out.push({x:cx*16+lx,y,z:cz*16+lz,type:y===h&&(tower||center)?light:stone});
  }
  return out;
 }

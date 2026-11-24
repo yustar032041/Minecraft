@@ -33,7 +33,7 @@ class FakeDimension{
  setBlockType(p,type){
   assert.ok(p.x>=this.cx*16&&p.x<this.cx*16+16,`out of chunk x ${JSON.stringify(p)}`);
   assert.ok(p.z>=this.cz*16&&p.z<this.cz*16+16,`out of chunk z ${JSON.stringify(p)}`);
-  assert.ok(p.y>=40&&p.y<=152,`out of envelope y ${JSON.stringify(p)}`);
+  assert.ok(p.y>=(this.id==='hakkai:realm_5'?-48:40)&&p.y<=152,`out of envelope y ${JSON.stringify(p)}`);
   this.writes.push({x:p.x,y:p.y,z:p.z,type});this.blocks.set(key(p.x,p.y,p.z),type);
  }
  setBlockPermutation(p,perm){this.setBlockType(p,perm.type);}
@@ -408,4 +408,28 @@ console.log('New seeded building placement and late player block protection (moc
  withMob.dimension.getEntities=()=>[{typeId:'minecraft:villager_v2'}];withMob.run();
  assert.equal(withMob.props.has(`seed_spectacle_0_${cx}_${cz}_v1`),false,'incoming entities stop landmark placement');
  console.log('All eight realm spectacles placed by real terrain jobs and late edits protected (mocked)');
+}
+// A deep cave sector validates the expanded envelope before writing. The old
+// Y<40 player block must not be overwritten by the enlarged 7.1.25 terrain.
+{
+ const f=fixture(5,100,100),pos={x:1602,y:5,z:1603};f.dimension.blocks.set(key(pos.x,pos.y,pos.z),'minecraft:diamond_block');
+ f.generator.tick(f.player,20);f.run();assert.equal(f.dimension.getBlock(pos).typeId,'minecraft:diamond_block');assert.equal(f.dimension.writes.length,0);assert.equal(f.props.get('seed_land_5_100_100_skip_v1'),1);
+}
+{
+ const f=fixture(5,100,100);f.generator.tick(f.player,20);f.run();assert.equal(f.reports.length,0);assert.ok(f.dimension.writes.some(w=>w.y<40),'fresh cavern sector is deep');
+}
+console.log('Deep realm: expanded envelope preserves old blocks, fresh sector extends below Y40 (mocked)');
+// Execute an actual fresh grand-ruin tile, then verify that an existing block
+// in the same selected tile causes whole-sector refusal before any writes.
+{
+ const {grandStructureTile}=await import('../Hakkai_v7.1.0/BehaviorPack/scripts/realm_spectacles.js');const {hash}=seedFunctions('731');let placed;
+ for(let cx=100;cx<112&&!placed;cx++)for(let cz=100;cz<112&&!placed;cz++){
+  if(!grandStructureTile(0,cx,cz,hash).length)continue;
+  const f=fixture(0,cx,cz);f.generator.tick(f.player,20);f.run();
+  if(f.props.get(`seed_grand_0_${cx}_${cz}_v1`)){assert.equal(f.reports.length,0);placed={cx,cz};}
+ }
+ assert.ok(placed,'at least one grand tile placed by the real sector job');
+ const f=fixture(0,placed.cx,placed.cz),pos={x:placed.cx*16+8,y:80,z:placed.cz*16+8};f.dimension.blocks.set(key(pos.x,pos.y,pos.z),'minecraft:diamond_block');
+ f.generator.tick(f.player,20);f.run();assert.equal(f.dimension.writes.length,0);assert.equal(f.dimension.getBlock(pos).typeId,'minecraft:diamond_block');
+ console.log('Grand ruin: real tile placement and pre-existing block preservation (mocked)');
 }

@@ -6,40 +6,23 @@ const ATTACKS=new Set([EntityDamageCause.entityAttack,EntityDamageCause.projecti
  EntityDamageCause.entityExplosion,EntityDamageCause.magic,EntityDamageCause.sonicBoom,
  EntityDamageCause.ramAttack,EntityDamageCause.maceSmash].filter(x=>typeof x==='string'));
 
-// These are deliberately conservative full-footprint checks. No point in the
-// footprint may be over a drop; incomplete blocks are governed by safe().
-function footprint(pos,fn){
- for(const dx of [-.28,0,.28])for(const dz of [-.28,0,.28])if(!fn({x:pos.x+dx,y:pos.y,z:pos.z+dz}))return false;
+// Permit gaps and uneven footing. The player never crosses a solid body cell
+// or an unloaded chunk, and can step over a one-block obstruction if clear.
+function clearBody(d,pos){
+ for(const dx of [-.28,0,.28])for(const dz of [-.28,0,.28])for(const dy of [0,1]){
+  const at={x:pos.x+dx,y:pos.y+dy,z:pos.z+dz};if(!d.isChunkLoaded(at))return false;
+  const block=d.getBlock(at);if(!block||(!block.isAir&&block.isSolid!==false))return false;
+ }
  return true;
 }
-function supported(d,pos,safe){return footprint(pos,p=>d.isChunkLoaded(p)&&safe(d,p));}
-function clearBody(d,pos){
- return footprint(pos,p=>{
-  for(const dy of [0,1]){const at={x:p.x,y:p.y+dy,z:p.z};if(!d.isChunkLoaded(at)||!d.getBlock(at)?.isAir)return false;}
-  return true;
- });
-}
-// Plan no more than 2.4 blocks, sample every .3 and never move down. Step up
-// only when the entire transition has headroom and lower or upper support,
-// and the final footprint is fully supported at the raised height.
-export function planRollSegment(d,start,dir,distance,safe){
+export function planRollSegment(d,start,dir,distance,_safe){
  let pos={...start},travel=0;
- if(!supported(d,pos,safe))return undefined;
  while(travel+1e-6<distance){
   const step=Math.min(SAMPLE,distance-travel),next={x:pos.x+dir.x*step,y:pos.y,z:pos.z+dir.z*step};
-  if(supported(d,next,safe)){pos=next;travel+=step;continue;}
-  // Check the old location's extra headroom before lifting the body.
-  if(!clearBody(d,{...pos,y:pos.y+1}))break;
-  let climbed;
-  for(let delta=step;delta<=1.20001&&travel+delta<=distance+1e-6;delta+=SAMPLE){
-   const high={x:pos.x+dir.x*delta,y:pos.y+1,z:pos.z+dir.z*delta};
-   if(!clearBody(d,high)||!footprint(high,p=>{
-    const lower={...p,y:p.y-1};return d.isChunkLoaded(p)&&(safe(d,p)||safe(d,lower));
-   }))break;
-   if(supported(d,high,safe)){climbed={high,delta};break;}
-  }
-  if(!climbed)break;
-  pos=climbed.high;travel+=climbed.delta;
+  if(clearBody(d,next)){pos=next;travel+=step;continue;}
+  const raised={...next,y:next.y+1};
+  if(!clearBody(d,{...pos,y:pos.y+1})||!clearBody(d,raised))break;
+  pos=raised;travel+=step;
  }
  return travel>0?{pos,travel}:undefined;
 }
@@ -81,16 +64,13 @@ export function setupCombatRoll({notice,safe}){
   if(e.down)return;e.down=true;
   if(e.first===undefined||t-e.first>DOUBLE_TAP){e.first=t;return;}
   e.first=undefined;
-  // The action is ground-based; motion already in progress may briefly appear
-  // airborne when traversing an upward step. No cooldown or speed restriction.
-  if(!p.isOnGround&&!e.motion)return;
   if(p.getGameMode()!==GameMode.Creative&&s.s<COST){notice(p,'§e回避に必要なスタミナが足りない',35);return;}
   try{
    const view=p.getViewDirection(),n=Math.hypot(view.x,view.z),at=p.location,d=p.dimension;
    if(n<.01||![n,at.x,at.y,at.z].every(Number.isFinite))return;
    const x=view.x/n,z=view.z/n;
    e.motion={dir:{x,z},remaining:DISTANCE};
-   if(!move(p,e)){notice(p,'§e前方の足場や空間を確認してください',35);return;}
+   if(!move(p,e)){notice(p,'§e前方の空間や読み込みを確認してください',35);return;}
    if(p.getGameMode()!==GameMode.Creative)s.s-=COST;e.until=t+INVULNERABLE;
    try{p.playAnimation('animation.hakkai.dodge_roll',{blendOutTime:.12,stopExpression:'query.any_animation_finished'});}catch{}
    try{p.playSound('random.orb',{volume:.22,pitch:1.25});}catch{}

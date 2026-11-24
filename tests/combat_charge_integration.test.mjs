@@ -4,7 +4,7 @@ const src=fs.readFileSync('Hakkai_v7.1.0/BehaviorPack/scripts/main.js','utf8');c
 const callbacks={},stops=[],casts=[],system={currentTick:0,run:fn=>stops.push(fn)},s={useTick:-100},weapon={kind:'剣',id:'s'},shield={kind:'盾',id:'d'},gear=new Map([['s',weapon],['d',shield]]);
 const p={id:'p',isValid:true,isSneaking:true,selectedSlotIndex:0,dimension:{id:'r'},getGameMode:()=>GameMode.Survival};let selectedId='s';
 const cast=(_,g,c)=>casts.push([g.id,c]),selected=()=>({typeId:selectedId}),state=()=>s,combatCharge=setupCombatCharge({system,gear,selected,state,cast});
-const ctx={gear,RELEASE_WEAPON_KINDS,combatCharge,selected,state,system,cast,GameMode,safeSub:(_,__,name,cb)=>callbacks[name]=cb,world:{afterEvents:{itemStopUse:{subscribe:cb=>callbacks.stop=cb}}}};
+const ctx={isTraceWeapon:()=>false,gear,RELEASE_WEAPON_KINDS,combatCharge,selected,state,system,cast,GameMode,safeSub:(_,__,name,cb)=>callbacks[name]=cb,world:{afterEvents:{itemStopUse:{subscribe:cb=>callbacks.stop=cb}}}};
 vm.createContext(ctx);vm.runInContext(src.slice(start,end),ctx);
 callbacks.itemStartUse({source:p,itemStack:{typeId:'s'}});system.currentTick=300;ctx.completeFocus({source:p,itemStack:{typeId:'s'}});callbacks.itemReleaseUse({source:p,itemStack:{typeId:'s'}});assert.equal(casts.length,0,'auto-completed use does not attack');
 system.currentTick=310;callbacks.itemStartUse({source:p,itemStack:{typeId:'s'}});system.currentTick=334;callbacks.stop({source:p});callbacks.itemReleaseUse({source:p,itemStack:{typeId:'s'}});assert.deepEqual(casts,[['s',true]]);stops.forEach(fn=>fn());

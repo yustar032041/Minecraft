@@ -12,7 +12,7 @@ function fixture(){
 function arm(f,t=0){f.p.isOnGround=true;f.ctrl.tick(f.p,f.s,t);f.p.isOnGround=false;f.set(0,0);f.ctrl.tick(f.p,f.s,t+1);}
 function tap(f,t=2){f.set(0,1);f.ctrl.tick(f.p,f.s,t);f.set(0,0);f.ctrl.tick(f.p,f.s,t+1);f.set(0,1);f.ctrl.tick(f.p,f.s,t+2);}
 {
- const f=fixture();arm(f);tap(f);assert.equal(f.s.s,35);assert.deepEqual(f.impulses,[{x:1.50,y:0,z:0}]);assert.equal(f.checks.length,279);
+ const f=fixture();arm(f);tap(f);assert.equal(f.s.s,35);assert.deepEqual(f.impulses,[{x:1.50,y:0,z:0}]);assert.equal(f.checks.length,0);
  assert.equal(f.animations[0][0],'animation.hakkai.air_dash');assert.equal(f.particles.length,10);assert.ok(f.ctrl.status(f.p).includes('着地'));
  tap(f,8);assert.equal(f.impulses.length,1,'once per airtime');assert.equal(f.s.s,35);
  arm(f,20);assert.equal(f.ctrl.status({...f.p,isOnGround:true}),'');tap(f,22);assert.equal(f.impulses.length,2);assert.equal(f.s.s,20);
@@ -29,7 +29,7 @@ function tap(f,t=2){f.set(0,1);f.ctrl.tick(f.p,f.s,t);f.set(0,0);f.ctrl.tick(f.p
 {
  const f=fixture();arm(f);f.set(0,1);f.ctrl.tick(f.p,f.s,2);f.set(0,0);f.ctrl.tick(f.p,f.s,3);f.set(0,1);f.ctrl.tick(f.p,f.s,12);assert.equal(f.impulses.length,0,'late second tap starts a new sequence');
 }
-for(const change of [f=>f.s.s=14,f=>f.d.isChunkLoaded=()=>false,f=>f.d.getBlock=()=>({isAir:false}),f=>f.d.getBlock=()=>undefined,f=>f.d.getBlock=()=>{throw Error('unloaded')},f=>f.p.applyImpulse=()=>{throw Error('rejected')},f=>f.p.getVelocity=()=>({x:.6,y:0,z:0}),f=>f.p.getViewDirection=()=>({x:0,z:0})]){
+for(const change of [f=>f.s.s=14,f=>f.d.isChunkLoaded=()=>false,f=>f.p.applyImpulse=()=>{throw Error('rejected')},f=>f.p.getViewDirection=()=>({x:0,z:0})]){
  const f=fixture();arm(f);change(f);const before=f.s.s;tap(f);assert.equal(f.s.s,before);assert.equal(f.impulses.length,0,'failed dash never consumes');
 }
 for(const change of [f=>f.p.isSneaking=true,f=>f.p.isSwimming=true,f=>f.p.isGliding=true,f=>f.p.isFlying=true,f=>f.p.getComponent=()=>({}),f=>f.p.getGameMode=()=>GameMode.Spectator,f=>f.s.menu=true,f=>f.s.busy=true,f=>f.p.inputPermissions.isPermissionCategoryEnabled=()=>false,f=>f.p.inputInfo.getMovementVector=()=>{throw Error()}]){

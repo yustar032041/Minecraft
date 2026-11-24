@@ -21,3 +21,11 @@ system.currentTick+=100;c.start(p,{typeId:'s'});p.isSneaking=false;c.start(p,{ty
 // Stop for a different item cannot erase a newer draw.
 system.currentTick+=100;c.start(p,{typeId:'s'});c.stop(p,{typeId:'a'});system.queue.splice(0).forEach(fn=>fn());system.currentTick+=24;assert.equal(c.release(p,{typeId:'s'}),true);
 console.log('Charged weapons: hold/release, duration, interruption, stop ordering, bow and anti-duplicates (mocked)');
+// The live tap-mode uses the immediate crouch action for melee; bow retains
+// release semantics but needs only eight ticks instead of eighteen.
+{
+ const out=[],easy=setupCombatCharge({system,gear,selected:()=>({typeId:held}),state:()=>s,cast:(_,g)=>out.push(g.kind),tapMode:true});
+ p.isSneaking=true;p.selectedSlotIndex=0;p.dimension.id='d';s.busy=false;s.useTick=-100;held='s';system.currentTick=1000;easy.start(p,{typeId:'s'});system.currentTick=1024;assert.equal(easy.release(p,{typeId:'s'}),false,'melee must not double cast');
+ held='b';system.currentTick=1100;easy.start(p,{typeId:'b'});system.currentTick=1107;assert.equal(easy.release(p,{typeId:'b'}),false);
+ system.currentTick=1120;easy.start(p,{typeId:'b'});system.currentTick=1128;assert.equal(easy.release(p,{typeId:'b'}),true);assert.deepEqual(out,['弓']);
+}

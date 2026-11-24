@@ -7,7 +7,7 @@ import { createLandscapeField } from './landscape_regions.js';
 import { valleyProfile } from './terrain_valleys.js';
 import { extraBiomeAt, newerBiomeAt } from './extra_biomes.js';
 import { streamPlan } from './terrain_streams.js';
-import { realmPanorama, realmSurface, spectaclePlan, cavernHangingPlan } from './realm_spectacles.js';
+import { realmPanorama, realmSurface, spectaclePlan, grandStructureTile, cavernHangingPlan } from './realm_spectacles.js';
 import { caveInterval, solidIntervals, treeCandidates, scenicPlan, realmRelief, skyRoute, skySiteRoute, pondPlan, moonGroveAt, bambooCandidates } from './terrain_features.js';
 
 // 8界の現在地を中心に、4チャンク先までの見える範囲を先行生成する。
@@ -281,8 +281,7 @@ export function setupSeededWorlds(ctx){
  // All blocks are planned before writing. Decorations yield in small batches,
  // recheck the block and nearby players before each write, and never replace
  // existing blocks. A late obstruction aborts and preserves partial decoration.
- function* placeSpectacle(d,realm,cx,cz){
-  const plan=spectaclePlan(realm,cx,cz,hash);if(!plan.length)return false;
+ function* placeSpectacle(d,realm,cx,cz,plan=spectaclePlan(realm,cx,cz,hash)){if(!plan.length)return false;
   const center={x:cx*16+8,z:cz*16+8},base=heightFor(realm,center.x,center.z);
   if(base<0||base+24>MAX_Y||playersNear(d,{x:center.x+.5,y:base+9,z:center.z+.5},20))return false;
   const columns=new Map(),adjusted=[];
@@ -371,18 +370,18 @@ export function setupSeededWorlds(ctx){
    d.setBlockType({x:cell.x,y,z:cell.z},plan.frozen&&y===plan.level?'minecraft:packed_ice':'minecraft:water');
  }
  function* buildSector(task){
-  const {realm,cx,cz,key}=task,d=task.dimension;
+  const {realm,cx,cz,key}=task,d=task.dimension,sectorMin=realm===5?-48:MIN_Y;
   if(!chunkLoaded(d,cx,cz))return;
   const x0=cx*CHUNK,z0=cz*CHUNK,x1=x0+CHUNK-1,z1=z0+CHUNK-1;
   if(isReserved(realm,x0,z0,x1,z1))return;
   const sites=naturalSites[realm].filter(s=>siteIntersects(s,x0,z0,x1,z1));
-  const envelope=new BlockVolume({x:x0,y:MIN_Y,z:z0},{x:x1,y:MAX_Y,z:z1});
+  const envelope=new BlockVolume({x:x0,y:sectorMin,z:z0},{x:x1,y:MAX_Y,z:z1});
   // Existing built structures are expected in boundary chunks. Check every
   // non-site column separately; no natural or player block may be replaced.
   if(sites.length){
    for(let x=x0;x<=x1;x++)for(let z=z0;z<=z1;z++){
     if(siteAt(realm,x,z))continue;
-    if(d.containsBlock(new BlockVolume({x,y:MIN_Y,z},{x,y:MAX_Y,z}),{excludeTypes:['minecraft:air']})){
+    if(d.containsBlock(new BlockVolume({x,y:sectorMin,z},{x,y:MAX_Y,z}),{excludeTypes:['minecraft:air']})){
      property(world,skipKey(realm,cx,cz),1);return;
     }
    }
@@ -402,7 +401,7 @@ export function setupSeededWorlds(ctx){
     // Old sites have no opt-in marker and are completely untouched. Newly
     // placed sites get only entirely empty columns, never their structures.
     if(site&&!num(world,`natural_join_${site.id}_v1`)){yield;continue;}
-    const column=new BlockVolume({x,y:MIN_Y,z},{x,y:MAX_Y,z});
+    const column=new BlockVolume({x,y:sectorMin,z},{x,y:MAX_Y,z});
     if(d.containsBlock(column,{excludeTypes:['minecraft:air']})){
      if(site){yield;continue;}
      property(world,skipKey(realm,cx,cz),1);return;
@@ -414,7 +413,7 @@ export function setupSeededWorlds(ctx){
     if(top<0){yield;continue;}
     // Avoid creating solid terrain in an occupied player body. If generation
     // already began, preserve the partial chunk instead of risking a retry.
-    if(playerIntersectsColumn(d,x,z,MIN_Y,realm===5?MAX_Y:top)){
+    if(playerIntersectsColumn(d,x,z,sectorMin,realm===5?MAX_Y:top)){
      if(wroteTerrain)property(world,skipKey(realm,cx,cz),1);
      return;
     }
@@ -431,8 +430,8 @@ export function setupSeededWorlds(ctx){
      d.setBlockType({x,y:top-1,z},mat.sub);
      d.setBlockType({x,y:top,z},mat.top);
     }else{
-     const depth=realm===5?16+Math.floor(hash(x,z,realm,257)*5):20+Math.floor(hash(x,z,realm,257)*9);
-     bottom=Math.max(MIN_Y+2,top-depth);
+     const depth=realm===5?68+Math.floor(hash(x,z,realm,257)*9):20+Math.floor(hash(x,z,realm,257)*9);
+     bottom=Math.max(sectorMin+2,top-depth);
      const cave=nearPond?undefined:caveInterval(realm,x,z,top,bottom,hash);
      for(const [lower,upper] of solidIntervals(bottom,top-2,cave))
       d.fillBlocks(new BlockVolume({x,y:lower,z},{x,y:upper,z}),mat.rock);
@@ -453,7 +452,15 @@ export function setupSeededWorlds(ctx){
      d.fillBlocks(new BlockVolume({x,y:lower,z},{x,y:upper,z}),`hakkai:ore_${ore.id}`);
     // Keep the passages navigable: occasional illuminated floor stones, not
     // obstructions in the air or replacements for the ore just placed.
-    if(cave&&hash(x,z,realm,631)>.985){
+    if(realm===5&&cave&&cave.upper-cave.lower>=4&&hash(x,z,realm,1703)>.982){
+     const height=2+Math.floor(hash(x,z,realm,1709)*3);
+     for(let i=0;i<height&&cave.lower+i<=cave.upper;i++){
+      const at={x,y:cave.lower+i,z};
+      if(!d.getBlock(at)?.isAir||playersNear(d,{x:x+.5,y:at.y,z:z+.5},4)||sceneryOccupied(d,at))break;
+      d.setBlockType(at,i===height-1?'hakkai:glow_moss':'hakkai:moonstone');
+     }
+    }
+    if(cave&&hash(x,z,realm,631)>(realm===5?.965:.985)){
      const floor={x,y:cave.lower-1,z};
      const existing=d.getBlock(floor);
      if(existing?.typeId===mat.rock){
@@ -470,8 +477,11 @@ export function setupSeededWorlds(ctx){
   // Preserve the time realm's bamboo groves and shrine, and keep cloud roads
   // unobstructed. Pools already exist and fail spectacle ground validation.
   const groveArea=realm===7&&moonGroveAt(cx*16+8,cz*16+8,noise);
-  const spectacle=!shrine&&!hasSkyRoad&&!groveArea?(yield* placeSpectacle(d,realm,cx,cz)):false;
-  if(spectacle===true)property(world,`seed_spectacle_${realm}_${cx}_${cz}_v1`,1);
+  const grandPlan=!shrine&&!hasSkyRoad&&!groveArea?grandStructureTile(realm,cx,cz,hash):[];
+  const grand=grandPlan.length?(yield* placeSpectacle(d,realm,cx,cz,grandPlan)):false;
+  if(grand===true)property(world,`seed_grand_${realm}_${cx}_${cz}_v1`,1);
+  const spectacle=!grand&&!shrine&&!hasSkyRoad&&!groveArea?(yield* placeSpectacle(d,realm,cx,cz)):grand;
+  if(spectacle===true&&!grand)property(world,`seed_spectacle_${realm}_${cx}_${cz}_v1`,1);
   if(!shrine&&!hasSkyRoad&&!spectacle)placeScenery(d,realm,cx,cz);
   const planted=realm===7&&placeMoonBamboo(d,cx,cz,shrine);
   const moonGrove=realm===7&&Boolean(shrine||planted);

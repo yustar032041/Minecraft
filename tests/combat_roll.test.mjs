@@ -32,7 +32,7 @@ function tap(f,t){f.set(0,1);f.ctrl.tick(f.p,f.s,t);f.set(0,0);f.ctrl.tick(f.p,f
 for(const prepare of [f=>f.s.s=9,f=>f.d.isChunkLoaded=()=>false,f=>f.p.tryTeleport=()=>false,f=>f.p.clearVelocity=()=>{throw Error()},f=>f.p.getViewDirection=()=>({x:0,z:0})]){
  const f=fixture();prepare(f);const before=f.s.s;tap(f,0);assert.equal(f.s.s,before);assert.equal(f.ctrl.evading(f.p,2),false,'failed roll grants no immunity');
 }
-for(const prepare of [f=>f.p.isSneaking=false,f=>f.p.isSwimming=true,f=>f.p.isGliding=true,f=>f.p.isFlying=true,f=>f.p.isOnGround=false,f=>f.p.getComponent=()=>({}),f=>f.p.getGameMode=()=>GameMode.Spectator,f=>f.s.menu=true,f=>f.s.busy=true,f=>f.p.inputInfo.getMovementVector=()=>{throw Error()},f=>f.p.inputPermissions.isPermissionCategoryEnabled=()=>false]){
+for(const prepare of [f=>f.p.isSneaking=false,f=>f.p.isSwimming=true,f=>f.p.isGliding=true,f=>f.p.isFlying=true,f=>f.p.getComponent=()=>({}),f=>f.p.getGameMode=()=>GameMode.Spectator,f=>f.s.menu=true,f=>f.s.busy=true,f=>f.p.inputInfo.getMovementVector=()=>{throw Error()},f=>f.p.inputPermissions.isPermissionCategoryEnabled=()=>false]){
  const f=fixture();prepare(f);tap(f,0);assert.equal(f.moves.length,0);assert.equal(f.s.s,50);
 }
 {

@@ -19,7 +19,14 @@ for(const change of [p=>p.isSneaking=true,p=>p.isSwimming=true,p=>p.isFlying=tru
 for(const g of weapons){
  const hits=[],particles=[],d={id:'d',spawnParticle:(id)=>particles.push(id),isChunkLoaded:()=>true,getEntitiesFromRay:()=>[]},p=mkPlayer(d),s={s:20,m:20},system={currentTick:1};
  const z=enemy(d,'z',2);z.applyDamage=n=>hits.push(n);d.getEntities=()=>[z];
- const ctrl=setupCombatUltimate({system,notice:()=>{},visibleFrom:()=>true});assert.equal(ctrl.cast(p,s,g),true,g.id);assert.deepEqual(hits,[20],g.id);assert.equal(s.s,0);assert.ok(particles.includes(`hakkai:${g.visualId??g.id}`));assert.equal(ctrl.cast(p,{s:20,m:20},g),false,'cooldown');
+ const ctrl=setupCombatUltimate({system,notice:()=>{},visibleFrom:()=>true});assert.equal(ctrl.cast(p,s,g),true,g.id);assert.deepEqual(hits,[20],g.id);assert.equal(s.s,0);assert.equal(s.m,10);assert.ok(particles.includes(`hakkai:${g.visualId??g.id}`));assert.equal(ctrl.cast(p,{s:20,m:20},g),false,'cooldown');
+}
+// The new weapon cost has no upper resource threshold; insufficient
+// resources never pay for a failed ultimate.
+for(const [stamina,mana,ok] of [[100,100,true],[19,100,false],[20,9,false]]){
+ const d={id:'d',spawnParticle:()=>{},isChunkLoaded:()=>true,getEntitiesFromRay:()=>[]},p=mkPlayer(d),s={s:stamina,m:mana},g=weapons[0],z=enemy(d,'z',2),system={currentTick:1};d.getEntities=()=>[z];
+ const ctrl=setupCombatUltimate({system,notice:()=>{},visibleFrom:()=>true});assert.equal(ctrl.cast(p,s,g),ok);
+ if(ok){assert.equal(s.s,80);assert.equal(s.m,90);}else{assert.equal(s.s,stamina);assert.equal(s.m,mana);}
 }
 // Weapon ultimates do not consume stamina when a friend or unloaded path blocks the target.
 for(const obstacle of ['friend','unloaded','wall','outside']){

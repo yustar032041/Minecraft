@@ -16,7 +16,7 @@ for(const seed of ['1','731','other']){
   assert.ok(maxStep<2,`${seed} r${r} local height step ${maxStep}`);
   for(const edge of [-32,-16,0,16,32])assert.ok(Math.abs(realmPanorama(r,edge-.001,300,noise)-realmPanorama(r,edge+.001,300,noise))<.02);
   let planned=0;for(let cx=-20;cx<=20;cx++)for(let cz=-20;cz<=20;cz++)if(spectaclePlan(r,cx,cz,hash).length)planned++;
-  assert.ok(planned>400&&planned<850,`${seed} ${r} distribution ${planned}`);
+  assert.ok(planned>1150&&planned<1480,`${seed} ${r} distribution ${planned}`);
  }
 }
 // Force all 24 variants and all orientations, even if a seed never picks one.
@@ -37,3 +37,19 @@ for(const seed of ['1','731']){
  assert.ok(count>1000);
 }
 console.log('8 seeded panorama fields, 24 chunk-contained silhouettes × 4 rotations, cavern ceiling plans (pure/mocked)');
+
+// The new 48x48 ruins are deterministic, local writes only, and consist of
+// several independently protected chunks; incomplete tiles are possible.
+const {grandStructureTile}=await import('../Hakkai_v7.1.0/BehaviorPack/scripts/realm_spectacles.js');
+for(let realm=0;realm<8;realm++){
+ const all=[];for(let cx=-4;cx<=-2;cx++)for(let cz=8;cz<=10;cz++){
+  const tile=grandStructureTile(realm,cx,cz,()=>0);assert.deepEqual(tile,grandStructureTile(realm,cx,cz,()=>0));assert.ok(tile.length>0);
+  assert.ok(tile.every(q=>Math.floor(q.x/16)===cx&&Math.floor(q.z/16)===cz&&q.y>=1&&q.y<=23));all.push(...tile);
+ }
+ assert.ok(all.length>500);assert.equal(new Set(all.map(p=>`${p.x},${p.y},${p.z}`)).size,all.length);
+ assert.ok(Math.max(...all.map(p=>p.x))-Math.min(...all.map(p=>p.x))>=39);
+ for(const q of all)if(q.type.startsWith('hakkai:'))assert.ok(fs.existsSync(`Hakkai_v7.1.0/BehaviorPack/blocks/${q.type.slice(7)}.json`),q.type);
+ assert.equal(grandStructureTile(realm,3,0,()=>0).length,0,'fourth tile is spacing');
+ assert.equal(grandStructureTile(realm,0,0,()=>.9).length,0,'seed chance');
+}
+console.log('Grand structures: 48x48 plan, deterministic seed, independently bounded tiles (pure)');

@@ -11,17 +11,20 @@ export function caveInterval(realm,x,z,top,bottom,hash){
  const zwarp=z+Math.sin(x/90-realm*.8-phase)*27;
  const first=Math.abs(Math.sin(xwarp/61+realm*.81+phase)+.30*Math.sin(zwarp/92));
  const second=Math.abs(Math.sin(zwarp/74-realm*.68-phase)+.25*Math.sin(xwarp/82));
- const width=realm===5?.18:.095, distance=Math.hypot(first,second);
+ // A substantially larger and deeper cavern is used only when the caller
+ // reserved a deep, empty sector. Old shallow callers retain the old plan.
+ const deep=realm===5&&top-bottom>=48;
+ const width=deep?.34:realm===5?.18:.095, distance=Math.hypot(first,second);
  const inPassage=first<=width||second<=width;
  // Round out junctions into larger chambers, still connected to both bands.
  // Their extra area keeps a roof; only the original passage can reach daylight.
- const chamber=Math.max(0,1-distance/(realm===5?.36:.27));
+ const chamber=Math.max(0,1-distance/(deep?.72:realm===5?.36:.27));
  if(!inPassage&&chamber===0)return undefined;
  // At tunnel intersections the floor gently climbs to the surface. The
  // radius is deliberately broad so an entrance is not a sudden deep shaft.
- const entrance=Math.max(0,1-distance/.28);
- const floor=Math.max(bottom+2,Math.round(top-(realm===5?11:10)+entrance*9));
- const lower=floor+1,upper=Math.min(inPassage?top:top-1,floor+4+Math.round(chamber*2));
+ const entrance=Math.max(0,1-distance/(deep?.90:.28));
+ const floor=Math.max(bottom+2,Math.round(top-(deep?48:realm===5?11:10)+entrance*(deep?47:9)));
+ const lower=floor+1,upper=Math.min(inPassage?top:top-1,floor+(deep?22:4)+Math.round(chamber*(deep?10:2)));
  return lower<=upper?{lower,upper}:undefined;
 }
 

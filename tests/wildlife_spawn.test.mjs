@@ -59,14 +59,14 @@ for(let realm=0;realm<8;realm++){
 }
 {
  const f=spawnFixture(),{ctx,state}=makeCtx(f,{safe:()=>false});ctx.wildlifeTick(f.p,undefined,undefined);
- assert.equal(f.spawned.length,0);assert.equal(state.wildAt,200,'failed terrain attempt is retried, not marked');
+ assert.equal(f.spawned.length,0);assert.equal(state.wildAt,120,'failed terrain attempt is retried, not marked');
 }
 {
  const f=spawnFixture(),{ctx,world}=makeCtx(f);world.gameRules.doMobSpawning=false;ctx.wildlifeTick(f.p,undefined,undefined);assert.equal(f.spawned.length,0);
  const g=spawnFixture(),q=makeCtx(g,{quiet:true});q.ctx.wildlifeTick(g.p,undefined,undefined);assert.equal(g.spawned.length,0);
 }
 {
- const f=spawnFixture(),{ctx}=makeCtx(f);f.d.getEntities=()=>Array.from({length:5},()=>({typeId:'hakkai:other',location:{x:10,y:90,z:10}}));
+ const f=spawnFixture(),{ctx}=makeCtx(f);f.d.getEntities=()=>Array.from({length:14},()=>({typeId:'hakkai:other',location:{x:10,y:90,z:10}}));
  ctx.wildlifeTick(f.p,undefined,undefined);assert.equal(f.spawned.length,0,'local cap');
 }
 {

@@ -2750,6 +2750,7 @@ function cast(p,g,charged=false){
    try{p.playSound('random.orb',{volume:.35,pitch:.6});}catch{}
  }
  if(resonance)for(let i=0;i<16;i++){const a=i*Math.PI/8;try{p.dimension.spawnParticle('hakkai:wind_burst',{x:l.x+Math.cos(a)*1.7,y:l.y+.55,z:l.z+Math.sin(a)*1.7});}catch{}}
+ if(charged)for(let i=0;i<24;i++){const a=i*Math.PI/6,r=.8+i*.07;try{p.dimension.spawnParticle(i%3?'hakkai:wind_trace':'hakkai:wind_burst',{x:l.x+Math.cos(a)*r,y:l.y+.3+i*.055,z:l.z+Math.sin(a)*r});}catch{}}
  try{p.dimension.spawnParticle(ns+visualId,where);p.playSound('random.orb',{volume:.36,pitch:.74+(n%21)*.038});}catch{}
  if(g.rank>1||['弓','槍','ハンマー'].includes(g.kind))system.runTimeout(()=>{
    if(p.isValid&&dist(p.location,l)<7)try{p.dimension.spawnParticle(ns+visualId,{x:where.x+v.x*.75,y:where.y+.25,z:where.z+v.z*.75});}catch{}
@@ -4199,7 +4200,7 @@ async function survivalGuide(p){
  if(i===8)return help(p);
  if(i===9)return openCreatureGuide(p);
  if(i===10)return wardenArena?.open(p);
- if(i===11)return simple(p,'風紋・防御・回避・パリィ（試作）','§b風記の剣・斧・槍で立ったまま敵に命中すると風紋がたまります。4秒以内の命中を3回、間隔は0.4秒以上。最大で6秒間維持します。\n\n§e2つたまったら、しゃがみながら武器の使用を約1.2秒長押しして離すと二連終撃。剣は前方3体、槍は前方2体、斧は周囲6体まで。威力と吹き飛ばしが上がります。3つたまってからの溜め技は代わりに風紋閃。壁や味方で止まります。どちらも外しても消費します。通常の近接命中はスタミナ3、溜め技は8と魔力が必要です。\n\n§b風記の剣・斧・槍を持ってしゃがむと、前方からの近接・飛び道具を70%軽減します。スタミナを毎秒5消費し、なくなったらしゃがみを解除して回復。構えの開始には最大約0.5秒かかります。\n\n§b風記の盾は両手どちらでも持て、しゃがむと試作の正面防御。斧を防ぐと約5秒無効。耐久と矢の跳ね返りは試作で、完全再現ではありません。実機確認まで頼らないでね。\n\n§a回避ロール：地上でしゃがみながら前進を素早く2回入力。スタミナ10、約0.5秒の攻撃回避。前方に安全な平地が必要です。\n\n§b空中ダッシュ：空中でしゃがまずに前進を一度離し、素早く2回入力。スタミナ15、着地まで1回。無敵や落下防止はありません。\n\n§b武器の軌跡：風記の武器97種で攻撃すると前方に当たり判定付きの軌跡が出ます。同じ一振りで本体が当たった相手には重ねて当たりません。軌跡は壁や味方を越えず、プレイヤーや友好生物を攻撃しません。基礎威力は武器と同じですが防具やエンチャント等で実際の損傷は変わります。落下中に攻撃すると着地まで1回空中攻撃に変化。スタミナ9を消費し、通常命中の費用は別。直接命中への重複ダメージはありません。杖は最大16ブロックへ飛ぶ弾を放ち、弓の矢には光跡が付きます。剣・斧・槍・盾・扇・ハンマーは種類ごとの形。しゃがみ近接の自動スキルは停止し、武器の使用ボタンからスキルを使います。\n\n§6必殺：スタミナ1〜20・魔力0〜20で不屈の護符か風記の武器を持ち、立って使うと、見通せる敵に攻撃。武器の種類で範囲が変わり、この条件中は通常技の代わりに発動を試みます。スタミナを全消費し1秒間通常ダメージを防ぎます。奈落や直接体力変更は防げず、30秒待機します。\n\n§eパリィ：盾を持たない剣・斧・槍の防御中にしゃがみを解除し、約0.3秒以内に正面から敵の近接か飛び道具を受けるとスタミナ15で防ぎます。近い敵の近接と一部の技を約2秒止めます。全攻撃・全行動が止まるわけではありません。管理者へのしゃがみ近接パリィも使えます。\n\n§7マナ・再使用時間は通常通り必要。操作・演出・バランスは試作で、統合版の検証が必要です。');
+ if(i===11)return simple(p,'風紋・防御・回避・パリィ（試作）','§b風記の剣・斧・槍で立ったまま敵に命中すると風紋がたまります。4秒以内の命中を3回、間隔は0.4秒以上。最大で6秒間維持します。\n\n§e2つたまったら、しゃがみながら剣・斧・槍を使うボタンを押すだけで二連終撃。剣は前方3体、槍は前方2体、斧は周囲6体まで。威力と吹き飛ばしが上がります。3つたまってからの溜め技は代わりに風紋閃。壁や味方で止まります。どちらも外しても消費します。通常の近接命中はスタミナ3、溜め技は8と魔力が必要です。\n\n§b風記の剣・斧・槍を持ってしゃがむと、前方からの近接・飛び道具を70%軽減します。スタミナを毎秒5消費し、なくなったらしゃがみを解除して回復。構えの開始には最大約0.5秒かかります。\n\n§b風記の盾は両手どちらでも持て、しゃがむと試作の正面防御。斧を防ぐと約5秒無効。耐久と矢の跳ね返りは試作で、完全再現ではありません。実機確認まで頼らないでね。\n\n§a回避ロール：しゃがみながら前進を素早く2回入力。スタミナ10、約0.5秒の攻撃回避。空中や段差・すき間でも発動しますが、壁・未読込は停止し、崖から落ちる可能性があります。\n\n§b空中ダッシュ：空中でしゃがまずに前進を一度離し、素早く2回入力。スタミナ15、着地まで1回。着地時の落下ダメージ1回を防ぎますが、攻撃無敵や奈落防止ではありません。\n\n§b武器の軌跡：風記の武器97種で攻撃すると前方に当たり判定付きの軌跡が出ます。同じ一振りで本体が当たった相手には重ねて当たりません。軌跡は壁や味方を越えず、プレイヤーや友好生物を攻撃しません。基礎威力は武器と同じですが防具やエンチャント等で実際の損傷は変わります。落下中に攻撃すると着地まで1回空中攻撃に変化。スタミナ9を消費し、通常命中の費用は別。直接命中への重複ダメージはありません。杖は最大16ブロックへ飛ぶ弾を放ち、弓の矢には光跡が付きます。剣・斧・槍・盾・扇・ハンマーは種類ごとの形。しゃがみ近接の自動スキルは停止。しゃがんで武器を使うと溜め技（弓は約0.4秒使用して離す）。\n\n§6必殺：武器を持ってジャンプし、しゃがまず空中で使うボタン。スタミナ20と魔力10で、見通せる敵へ必殺。武器の種類で範囲が変わり、1秒間通常ダメージを防ぎます。護符版は従来の低資源条件です。奈落や直接体力変更は防げず、30秒待機します。\n\n§eパリィ：盾を持たない剣・斧・槍の防御中にしゃがみを解除し、約0.3秒以内に正面から敵の近接か飛び道具を受けるとスタミナ15で防ぎます。近い敵の近接と一部の技を約2秒止めます。全攻撃・全行動が止まるわけではありません。管理者へのしゃがみ近接パリィも使えます。\n\n§7マナ・再使用時間は通常通り必要。操作・演出・バランスは試作で、統合版の検証が必要です。');
  if(i===12)return guide(p);
 }
 
@@ -5091,7 +5092,12 @@ function use(e){
  const p=e.source,id=e.itemStack?.typeId;
  if(p.typeId!=='minecraft:player'||!id||!p.isValid||p.getGameMode()===GameMode.Spectator)return;
  const s=state(p), t=system.currentTick;
- if(t-s.useTick<7||s.busy||s.menu||p.isSneaking&&gear.has(id))return;
+ if(t-s.useTick<7||s.busy||s.menu)return;
+ const heldGear=gear.get(id);
+ if(p.isSneaking&&heldGear){
+  if(isTraceWeapon(heldGear)&&heldGear.kind!=='弓'&&selected(p)?.typeId===id){s.useTick=t;return cast(p,heldGear,true);}
+  return;
+ }
  s.useTick=t;
  if(id===ns+'guide')menu(p,guide);
  if(id===ns+'industrial_guide')return menu(p,industrialGuide);
@@ -5140,7 +5146,7 @@ function use(e){
  const book=id.match(/^hakkai:rune_book_([0-3])$/);
  if(book)return notice(p,'§eエンチャント台で、刻印書を持ってしゃがみながら使ってね');
  const g=gear.get(id);if(g){
-  if(isTraceWeapon(g)&&s.s>0&&s.s<=20&&s.m>=0&&s.m<=20&&selected(p)?.typeId===id)return combatUltimate?.cast(p,s,g);
+  if(isTraceWeapon(g)&&p.isOnGround===false&&selected(p)?.typeId===id)return combatUltimate?.cast(p,s,g);
   cast(p,g);
  }
 }
@@ -5150,6 +5156,7 @@ system.runInterval(()=>{
 function completeFocus({source:p,itemStack:item}){
  const g=gear.get(item?.typeId);
  if(!g||!p?.isValid)return;
+ if(isTraceWeapon(g)&&g.kind!=='弓')return;
  if(RELEASE_WEAPON_KINDS.has(g.kind)){combatCharge?.complete(p,item);return;}
  if(g.kind==='弓'||!p.isSneaking||p.getGameMode()===GameMode.Spectator||selected(p)?.typeId!==item.typeId)return;
  const s=state(p),t=system.currentTick;
@@ -5575,7 +5582,7 @@ function wildlifeTick(p,b,site){
  const s=state(p), t=system.currentTick, d=p.dimension;
  if(num(p,'quiet_wildlife')||s.busy||t<(s.wildAt??0))return;
  if(!(world.gameRules.doMobSpawning))return;
- s.wildAt=t+420+Math.floor(Math.random()*260);
+ s.wildAt=t+80+Math.floor(Math.random()*40);
  const realmId=d.id.startsWith(ns+'realm_')?Number(d.id.slice((ns+'realm_').length)):-1;
  const seededBiome=realmId>=0&&realmId<8?seededWorlds?.biomeAt(realmId,p.location):undefined;
  const inRealm=Number.isInteger(realmId)&&realmId>=0&&realmId<8;
@@ -5585,7 +5592,7 @@ function wildlifeTick(p,b,site){
  // still need a local wildlife pool. Keep vanilla-world rules unchanged.
  if(!inRealm&&!place&&!procedural&&(!b||b.profile.mode==='water'||b.key==='end'&&Math.hypot(p.location.x,p.location.z)<160))return;
  // 近距離の密度を制限しつつ、遠くの個体が新規出現を永久に塞がないようにする。
- const around=d.getEntities({families:['hakkai_wildlife'],location:p.location,maxDistance:32,closest:6});
+ const around=d.getEntities({families:['hakkai_wildlife'],location:p.location,maxDistance:32,closest:16});
  const night=world.getTimeOfDay()>=13000;
  if(realmId===7){
   const grove=seededWorlds?.isGenerated(7,p.location)&&seededWorlds?.isMoonGrove(p.location);
@@ -5594,7 +5601,7 @@ function wildlifeTick(p,b,site){
   if(roll<chances.normal&&spawnFushi(p,t,false))return;
  }
  if(realmId>=0&&realmId<8&&Math.random()<(night?.18:.09)&&spawnRealmEnder(p,realmId,t))return;
- if(around.length>=5)return;
+ if(around.length>=14)return;
  if(site?.kind==='atlas'&&families[site.family].mode==='water')return;
  let m;
  if(site?.kind==='atlas')m=wildlifeById.get(ns+families[site.family].species);
@@ -5610,18 +5617,18 @@ function wildlifeTick(p,b,site){
    m=pickRealmWildlife(wildlife,realmId,entry=>marked(p,'sight',wildlifeIndex.get(entry.id))||marked(p,'wild_spawn_seen',wildlifeIndex.get(entry.id)),world.getDifficulty()===Difficulty.Peaceful);
  }else m=wildlifeById.get(ns+b.profile.species);
  const peaceful=world.getDifficulty()===Difficulty.Peaceful;
- if(inRealm&&(!m||m.temper==='hostile'&&peaceful||around.some(e=>e.typeId===ns+m.id&&dist(e.location,p.location)<28))){
-   const available=wildlife.filter(entry=>!around.some(e=>e.typeId===ns+entry.id&&dist(e.location,p.location)<28));
+ if(inRealm&&(!m||m.temper==='hostile'&&peaceful||around.some(e=>e.typeId===ns+m.id&&dist(e.location,p.location)<10))){
+   const available=wildlife.filter(entry=>!around.some(e=>e.typeId===ns+entry.id&&dist(e.location,p.location)<10));
    m=pickRealmWildlife(available,realmId,entry=>marked(p,'sight',wildlifeIndex.get(entry.id))||marked(p,'wild_spawn_seen',wildlifeIndex.get(entry.id)),peaceful);
  }
  // Near protected arrival centres a hostile draw cannot spawn at most candidate
  // sites. Prefer an available peaceful species instead of repeatedly failing.
  if(inRealm&&m?.temper==='hostile'&&places.slice(0,9).some(s=>s.dim===realmId&&Math.hypot(p.location.x-s.x,p.location.z-s.z)<20)){
-   const available=wildlife.filter(entry=>!around.some(e=>e.typeId===ns+entry.id&&dist(e.location,p.location)<28));
+   const available=wildlife.filter(entry=>!around.some(e=>e.typeId===ns+entry.id&&dist(e.location,p.location)<10));
    m=pickRealmWildlife(available,realmId,entry=>marked(p,'sight',wildlifeIndex.get(entry.id))||marked(p,'wild_spawn_seen',wildlifeIndex.get(entry.id)),true);
  }
  if(!m||m.temper==='hostile'&&peaceful)return;
- if(around.some(e=>e.typeId===ns+m.id&&dist(e.location,p.location)<28))return;
+ if(around.some(e=>e.typeId===ns+m.id&&dist(e.location,p.location)<10))return;
  const spawned=spawnWildlife({
   player:p,type:ns+m.id,tick:t,safe,allowNearbyBiome:inRealm,
   avoid:pos=>{
@@ -5641,7 +5648,7 @@ function wildlifeTick(p,b,site){
  if(spawned){
   // Recording a spawn is separate from observing an entity in the guide.
   mark(p,'wild_spawn_seen',wildlifeIndex.get(m.id));
- }else s.wildAt=t+160; // retry a safe search sooner, without a per-tick loop
+ }else s.wildAt=t+80; // retry at the next bounded nature scan
 
 }
 safeSub('world','after','entityHurt',({hurtEntity:e,damageSource:source,damage})=>{
@@ -5794,6 +5801,7 @@ safeSub('world','before','entityHurt',e=>{
  if(e.cancel)return;
  const victim=/** @type {import('@minecraft/server').Player} */ (e.hurtEntity);
  try{if(fushiTotem?.isReplaying(victim))return;}catch{}
+ try{if(e.damageSource?.cause===EntityDamageCause.fall&&airDash?.blocksFall(victim,system.currentTick)){e.cancel=true;return;}}catch{}
  try{if(combatRoll?.blocks(victim,e.damageSource,system.currentTick)||combatUltimate?.blocks(victim,e.damageSource,system.currentTick)){e.cancel=true;return;}}catch{}
  try{if(customShield.blocks(victim,e.damageSource,system.currentTick)&&shieldWear.reserve(victim,customShield.equipped(victim),e.damage)){e.cancel=true;deferShieldArrow({system,player:victim,source:e.damageSource});const broken=customShield.recordBlock(victim,e.damageSource,system.currentTick);try{system.run(()=>{if(victim.isValid){try{victim.playSound(broken?'item.shield.break':'item.shield.block',{volume:.5});}catch{}if(broken)notice(victim,'§e盾の構えが崩れた（約5秒）',60);}});}catch{}return;}}catch{}
  try{if(e.damageSource?.cause===EntityDamageCause.entityAttack&&combatParry?.isStaggered(e.damageSource.damagingEntity,system.currentTick)){e.cancel=true;return;}}catch{}
@@ -5921,7 +5929,8 @@ function hudLine(p,s,t){
  const pale=num(p,'hud_color'),st=Math.floor(s.s),mana=Math.floor(s.m),show=t<s.until,mode=num(p,'hud_pos');
  const held=gear.get(selected(p)?.typeId),boss=mobSystem?.bossHudLine(p,t),marks=combatResonance?.level(p,held,t)??0,guard=combatGuard?.status(p,held,t);
  const remaining=held?Math.max(0,(s.cd.get(held.id)??0)-t):0;
- const extra=[customShield.cooldown(p,t)>0?`§e盾の構え直し ${Math.ceil(customShield.cooldown(p,t)/20)}秒`:undefined,combatCharge?.status(p,t),combatUltimate?.status(p,t),combatParry?.status(p,t),combatRoll?.status(p,t),airDash?.status(p),guard,marks?`§b風紋 ${'◆'.repeat(marks)}${'◇'.repeat(3-marks)}${marks===3?' 解放可能':marks===2?' 溜め終撃可能':''}`:undefined,remaining?`§7武器技 ${Math.ceil(remaining/20)}秒`:undefined,show?s.action:undefined,boss].filter(Boolean).join('\n');
+ const hint=isTraceWeapon(held)?(p.isSneaking?(held.kind==='弓'?'§7溜め撃ち：少し引いて離す':'§7溜め技：使うボタン'):(p.isOnGround?'§7通常技：使う｜必殺：跳んで使う':'§6必殺：使う（スタミナ20・魔力10）')):undefined;
+ const extra=[hint,customShield.cooldown(p,t)>0?`§e盾の構え直し ${Math.ceil(customShield.cooldown(p,t)/20)}秒`:undefined,combatCharge?.status(p,t),combatUltimate?.status(p,t),combatParry?.status(p,t),combatRoll?.status(p,t),airDash?.status(p),guard,marks?`§b風紋 ${'◆'.repeat(marks)}${'◇'.repeat(3-marks)}${marks===3?' 解放可能':marks===2?' 溜め終撃可能':''}`:undefined,remaining?`§7武器技 ${Math.ceil(remaining/20)}秒`:undefined,show?s.action:undefined,boss].filter(Boolean).join('\n');
  if(num(p,'hide_hud'))return extra||undefined;
  if(mode===2){
    const line=`${pale?'§f':'§c'}スタミナ ${bar(st)} ${st}§r  ${pale?'§7':'§b'}魔力 ${bar(mana)} ${mana}§r`;
@@ -6027,7 +6036,7 @@ system.runInterval(()=>{
      trailTick(p,site,s);
      atlasTick(p,site,s);
      linkedTick(p,site,s);
-     if(p.dimension.id.startsWith(ns+'realm_')&&p.location.y<40&&!s.busy&&!isCreative(p)&&t>=(s.rescueAt??0)){
+     if(p.dimension.id.startsWith(ns+'realm_')&&p.location.y<(p.dimension.id===ns+'realm_5'?-52:40)&&!s.busy&&!isCreative(p)&&t>=(s.rescueAt??0)){
        s.rescueAt=t+100;
        s.arrival=0;
        const last=travelSites.get(num(p,'last_site')),destination=isNaturalSite(last)?places[last.dim+1]:(last??places[0]);
@@ -6122,7 +6131,7 @@ airDash=setupAirDash({notice});
 airStrike=setupAirStrike({notice,visibleFrom});
 fushiTotem=setupFushiTotem({system,notice});
 combatUltimate=setupCombatUltimate({system,notice,visibleFrom});
-combatCharge=setupCombatCharge({system,gear,selected,state,cast});
+combatCharge=setupCombatCharge({system,gear,selected,state,cast,tapMode:true});
 let weaponSwingAvailable=false;
 try{const signal=world.afterEvents.playerSwingStart;if(signal){signal.subscribe(e=>weaponTrace?.swing(e));weaponSwingAvailable=true;}}catch(err){report('武器の振りイベント',err);}
 weaponTrace=setupWeaponTrace({system,gear,selected,state,visibleFrom,airAttack:(p,s,g,t)=>airStrike?.beginSwing(p,s,g,t)??false,enabled:weaponSwingAvailable,report});
