@@ -1,4 +1,5 @@
 import { BlockVolume, BlockPermutation, ItemStack } from '@minecraft/server';
+import { repeatSitePlan } from './seeded_repeat_sites.js';
 import { oreColumn } from './ore_distribution.js';
 import { placeMoonShrine } from './moon_shrine.js';
 import { nearestQueuedDistance } from './terrain_queue.js';
@@ -17,9 +18,16 @@ const skyColours=['#83B7F0','#9BB7A7','#D9A36B','#B9DFF4','#7F8AA6','#52636C','#
 const DEEP_SITES=[[[544,-160],[704,0],[864,160]],[[544,160],[704,-32],[864,-160]],[[544,-160],[704,64],[864,160]],[[544,160],[704,-64],[864,-160]],[[544,-160],[704,0],[864,160]],[[544,160],[704,-32],[864,-160]],[[544,-160],[704,64],[864,160]],[[544,160],[704,-64],[864,-160]]];
 
 export function setupSeededWorlds(ctx){
- const {ns,world,system,num,property,report,places=[],biomes={},families={},buildSite,onShrineChief}=ctx;
+ const {ns,world,system,num,property,report,places=[],biomes={},families={},buildSite,buildRepeatSite,onShrineChief}=ctx;
  const naturalSites=Array.from({length:8},(_,r)=>places.filter(s=>s.dim===r&&isNaturalSite(s)));
- const siteAt=(r,x,z)=>naturalSites[r].find(s=>inSite(s,x,z));
+ const repeats=new Map();
+ const repeatAt=(r,x,z)=>{
+  if(!buildRepeatSite)return undefined;
+  const gx=Math.floor(x/256),gz=Math.floor(z/256),k=`${r}:${gx}:${gz}`;
+  if(!repeats.has(k)){if(repeats.size>=2048)repeats.clear();repeats.set(k,repeatSitePlan(places,r,gx,gz,hash));}
+  return repeats.get(k);
+ };
+ const siteAt=(r,x,z)=>naturalSites[r].find(s=>inSite(s,x,z))??(()=>{const q=repeatAt(r,x,z);return q&&num(world,q.repeatKey)===1&&inSite(q,x,z)?q:undefined;})();
  let seedText='0';
  try{seedText=String(world.seed??'0');}catch{}
  let seedHash=2166136261;
@@ -34,6 +42,7 @@ export function setupSeededWorlds(ctx){
  };
  const propKey=(r,cx,cz)=>`seed_land_${r}_${cx}_${cz}_v1`;
  const skipKey=(r,cx,cz)=>`seed_land_${r}_${cx}_${cz}_skip_v1`;
+ const decorKey=(r,cx,cz)=>`seed_decor_wait_${r}_${cx}_${cz}_v1`;
  function hash(x,z,r,salt=0){
   let h=(seedHash ^ Math.imul((x|0),0x9e3779b1) ^ Math.imul((z|0),0x85ebca6b) ^ Math.imul(r+1,0xc2b2ae35) ^ salt)>>>0;
   h=Math.imul(h^(h>>>16),0x7feb352d)>>>0;
@@ -128,6 +137,8 @@ export function setupSeededWorlds(ctx){
   // An unbuilt site owns its exact footprint; wait until it is placed.
   // Reserving the whole intersecting chunk prevents structure/terrain races.
   if(naturalSites[r].some(s=>siteIntersects(s,x0,z0,x1,z1)&&!num(world,`built_${s.id}`)))return true;
+  const repeated=repeatAt(r,x0,z0);
+  if(repeated&&!num(world,repeated.repeatKey)&&siteIntersects(repeated,x0,z0,x1,z1))return true;
   return false;
  }
  function chunkLoaded(d,cx,cz){
@@ -149,7 +160,8 @@ export function setupSeededWorlds(ctx){
     base=Math.round(route.height*(1-blend)+island*blend);
    }
   }else base=heightAt(r,x,z,style);
-  return blendSiteHeight(base,x,z,naturalSites[r]);
+  const repeat=repeatAt(r,x,z);
+  return blendSiteHeight(base,x,z,repeat&&num(world,repeat.repeatKey)===1?[...naturalSites[r],repeat]:naturalSites[r]);
  }
  function playersNear(d,location,radius){
   // If the query fails, skip decorations rather than risk trapping a player.
@@ -283,7 +295,7 @@ export function setupSeededWorlds(ctx){
  // existing blocks. A late obstruction aborts and preserves partial decoration.
  function* placeSpectacle(d,realm,cx,cz,plan=spectaclePlan(realm,cx,cz,hash)){if(!plan.length)return false;
   const center={x:cx*16+8,z:cz*16+8},base=heightFor(realm,center.x,center.z);
-  if(base<0||base+24>MAX_Y||playersNear(d,{x:center.x+.5,y:base+9,z:center.z+.5},20))return false;
+  if(base<0||base+24>MAX_Y)return false;
   const columns=new Map(),adjusted=[];
   for(const at of plan){
    const k=`${at.x},${at.z}`;let ground=columns.get(k);
@@ -298,6 +310,11 @@ export function setupSeededWorlds(ctx){
    if(pos.y>MAX_Y||!d.getBlock(pos)?.isAir)return false;
    adjusted.push(pos);
   }
+  // Do not discard an entire planned structure merely because the person
+  // exploring is nearby. Defer before writing if anyone is close to an actual
+  // planned block; query failure is also conservative. No blocks are touched.
+  let nearby;try{nearby=d.getPlayers();}catch{return 'deferred';}
+  if(nearby.some(p=>adjusted.some(a=>Math.hypot(p.location.x-(a.x+.5),p.location.z-(a.z+.5))<3.5&&p.location.y>=a.y-3&&p.location.y<=a.y+3)))return 'deferred';
   const leaves=new Map();
   for(const at of adjusted)if(at.type.endsWith('_leaves')&&!leaves.has(at.type)){
    try{leaves.set(at.type,BlockPermutation.resolve(at.type,{persistent_bit:true,update_bit:false}));}catch{return false;}
@@ -375,6 +392,8 @@ export function setupSeededWorlds(ctx){
   const x0=cx*CHUNK,z0=cz*CHUNK,x1=x0+CHUNK-1,z1=z0+CHUNK-1;
   if(isReserved(realm,x0,z0,x1,z1))return;
   const sites=naturalSites[realm].filter(s=>siteIntersects(s,x0,z0,x1,z1));
+  const repeat=repeatAt(realm,x0,z0);
+  if(repeat&&num(world,repeat.repeatKey)===1&&siteIntersects(repeat,x0,z0,x1,z1))sites.push(repeat);
   const envelope=new BlockVolume({x:x0,y:sectorMin,z:z0},{x:x1,y:MAX_Y,z:z1});
   // Existing built structures are expected in boundary chunks. Check every
   // non-site column separately; no natural or player block may be replaced.
@@ -400,7 +419,7 @@ export function setupSeededWorlds(ctx){
     const site=siteAt(realm,x,z);
     // Old sites have no opt-in marker and are completely untouched. Newly
     // placed sites get only entirely empty columns, never their structures.
-    if(site&&!num(world,`natural_join_${site.id}_v1`)){yield;continue;}
+    if(site&&!site.repeatKey&&!num(world,`natural_join_${site.id}_v1`)){yield;continue;}
     const column=new BlockVolume({x,y:sectorMin,z},{x,y:MAX_Y,z});
     if(d.containsBlock(column,{excludeTypes:['minecraft:air']})){
      if(site){yield;continue;}
@@ -477,10 +496,16 @@ export function setupSeededWorlds(ctx){
   // Preserve the time realm's bamboo groves and shrine, and keep cloud roads
   // unobstructed. Pools already exist and fail spectacle ground validation.
   const groveArea=realm===7&&moonGroveAt(cx*16+8,cz*16+8,noise);
-  const grandPlan=!shrine&&!hasSkyRoad&&!groveArea?grandStructureTile(realm,cx,cz,hash):[];
+  // Reserve some naturally selected small ruins before large tiles so
+  // supply caches and small buildings do not disappear at high density.
+  const scenicFirst=hash(cx,cz,realm,2209)<.65&&scenicPlan(realm,cx,cz,0,hash).length>0;
+  const grandPlan=!scenicFirst&&!shrine&&!hasSkyRoad&&!groveArea?grandStructureTile(realm,cx,cz,hash):[];
   const grand=grandPlan.length?(yield* placeSpectacle(d,realm,cx,cz,grandPlan)):false;
+  if(grand==='deferred'){property(world,decorKey(realm,cx,cz),'grand');property(world,key,1);return;}
   if(grand===true)property(world,`seed_grand_${realm}_${cx}_${cz}_v1`,1);
-  const spectacle=!grand&&!shrine&&!hasSkyRoad&&!groveArea?(yield* placeSpectacle(d,realm,cx,cz)):grand;
+  // Leave some non-grand chunks for the existing small supply structures.
+  const spectacle=!scenicFirst&&!grand&&!shrine&&!hasSkyRoad&&!groveArea?(yield* placeSpectacle(d,realm,cx,cz)):grand;
+  if(spectacle==='deferred'){property(world,decorKey(realm,cx,cz),'spectacle');property(world,key,1);return;}
   if(spectacle===true&&!grand)property(world,`seed_spectacle_${realm}_${cx}_${cz}_v1`,1);
   if(!shrine&&!hasSkyRoad&&!spectacle)placeScenery(d,realm,cx,cz);
   const planted=realm===7&&placeMoonBamboo(d,cx,cz,shrine);
@@ -513,22 +538,39 @@ export function setupSeededWorlds(ctx){
   property(world,key,1);
   if(moonGrove)property(world,`seed_moon_grove_${cx}_${cz}_v1`,1);
  }
+ function pendingDecor(realm,cx,cz){
+  try{const v=world.getDynamicProperty(ns+decorKey(realm,cx,cz));return v==='grand'||v==='spectacle'?v:undefined;}catch{return undefined;}
+ }
  function enqueue(realm,cx,cz,d,dist){
   const key=propKey(realm,cx,cz);
-  if(num(world,key)||num(world,skipKey(realm,cx,cz))||queued.has(key))return;
+  if(queued.has(key)||num(world,skipKey(realm,cx,cz)))return;
   if(system.currentTick<(retryAt.get(key)??0)||!chunkLoaded(d,cx,cz))return;
   if(isReserved(realm,cx*CHUNK,cz*CHUNK,cx*CHUNK+15,cz*CHUNK+15))return;
-  queued.add(key);queue.push({realm,cx,cz,key,dimension:d,dist});
+  const decoration=num(world,key)?pendingDecor(realm,cx,cz):undefined;
+  if(num(world,key)&&!decoration)return;
+  queued.add(key);queue.push({realm,cx,cz,key,dimension:d,dist,decoration});
  }
  function pump(){
   if(running)return;
   while(queue.length){
    queue.sort((a,b)=>a.dist-b.dist);
    const task=queue.shift();
-   if(num(world,task.key)||num(world,skipKey(task.realm,task.cx,task.cz))){queued.delete(task.key);continue;}
+   if(num(world,skipKey(task.realm,task.cx,task.cz))||(!task.decoration&&num(world,task.key))||(task.decoration&&(!num(world,task.key)||pendingDecor(task.realm,task.cx,task.cz)!==task.decoration))){queued.delete(task.key);continue;}
    running=true;
    const job=(function*(){
-    try{yield* buildSector(task);}
+    try{
+     if(task.decoration){
+      const {realm,cx,cz,dimension:d,decoration}=task;
+      if(!chunkLoaded(d,cx,cz)||isReserved(realm,cx*16,cz*16,cx*16+15,cz*16+15)){retryAt.set(task.key,system.currentTick+100);return;}
+      const plan=decoration==='grand'?grandStructureTile(realm,cx,cz,hash):spectaclePlan(realm,cx,cz,hash);
+      const result=yield* placeSpectacle(d,realm,cx,cz,plan);
+      if(result==='deferred'){retryAt.set(task.key,system.currentTick+100);return;}
+      // Never retry after a partial write or modified terrain. A new player
+      // construction therefore cannot be overwritten on a later attempt.
+      property(world,decorKey(realm,cx,cz),undefined);
+      if(result===true)property(world,`seed_${decoration}_${realm}_${cx}_${cz}_v1`,1);
+     }else yield* buildSector(task);
+    }
     catch(err){retryAt.set(task.key,system.currentTick+200);report('シード地形の区画生成',err);}
     finally{running=false;queued.delete(task.key);}
    })();
@@ -552,14 +594,25 @@ export function setupSeededWorlds(ctx){
    // Reserve all intersecting chunks before scheduling the site's structure.
    // The same viewport scan that queues terrain controls site generation.
    if(buildSite)for(const site of naturalSites[realm]){
+    if(sitePending.size>=2)break;
     if(num(world,`built_${site.id}`)||sitePending.has(site.id)||t<(siteRetry.get(site.id)??0))continue;
     const b=siteBounds(site),x0=(cx-VIEW)*CHUNK,z0=(cz-VIEW)*CHUNK,x1=(cx+VIEW+1)*CHUNK-1,z1=(cz+VIEW+1)*CHUNK-1;
     if(!siteIntersects(site,x0,z0,x1,z1))continue;
     let occupied=true;
     try{occupied=d.getPlayers().some(other=>other.location.x>=b.x0-2&&other.location.x<=b.x1+2&&other.location.z>=b.z0-2&&other.location.z<=b.z1+2);}catch{}
     if(occupied)continue;
-    sitePending.add(site.id);siteRetry.set(site.id,t+1200);
+    sitePending.add(site.id);siteRetry.set(site.id,t+200);
     Promise.resolve().then(()=>buildSite(site)).catch(err=>report('探索地のシード生成',err)).finally(()=>sitePending.delete(site.id));
+   }
+   if(buildRepeatSite)for(let gx=Math.floor((cx*16-96)/256);gx<=Math.floor((cx*16+96)/256);gx++)for(let gz=Math.floor((cz*16-96)/256);gz<=Math.floor((cz*16+96)/256);gz++){
+    if(sitePending.size>=2)continue;
+    const site=repeatAt(realm,gx*256+128,gz*256+128);if(!site)continue;
+    const key=site.repeatKey,b=siteBounds(site),x0=(cx-VIEW)*16,z0=(cz-VIEW)*16,x1=(cx+VIEW+1)*16-1,z1=(cz+VIEW+1)*16-1;
+    if(num(world,key)||sitePending.has(key)||t<(siteRetry.get(key)??0)||!siteIntersects(site,x0,z0,x1,z1))continue;
+    let occupied=true;try{occupied=d.getPlayers().some(other=>other.location.x>=b.x0-2&&other.location.x<=b.x1+2&&other.location.z>=b.z0-2&&other.location.z<=b.z1+2);}catch{}
+    if(occupied)continue;
+    sitePending.add(key);siteRetry.set(key,t+200);
+    Promise.resolve().then(()=>buildRepeatSite(site)).catch(err=>report('反復探索地の生成',err)).finally(()=>sitePending.delete(key));
    }
    const tasks=[];
    for(let dx=-VIEW;dx<=VIEW;dx++)for(let dz=-VIEW;dz<=VIEW;dz++)tasks.push({cx:cx+dx,cz:cz+dz,dist:dx*dx+dz*dz});

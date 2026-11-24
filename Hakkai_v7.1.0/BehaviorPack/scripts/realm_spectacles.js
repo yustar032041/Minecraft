@@ -25,7 +25,7 @@ export function realmPanorama(r,x,z,noise){
 // Three differently shaped landmarks per realm. Rotation and placement are
 // seeded per chunk; all columns remain at least one block inside the chunk.
 export function spectaclePlan(r,cx,cz,hash){
- if(!Number.isInteger(r)||r<0||r>7||hash(cx,cz,r,1901)>=.78)return [];
+ if(!Number.isInteger(r)||r<0||r>7||hash(cx,cz,r,1901)>=.98)return [];
  const variant=Math.min(2,Math.floor(hash(cx,cz,r,1907)*3));
  const rotation=Math.min(3,Math.floor(hash(cx,cz,r,1913)*4));
  const x=cx*16+8,z=cz*16+8,out=[],occupied=new Set();
@@ -120,7 +120,7 @@ export function spectaclePlan(r,cx,cz,hash){
 export function grandStructureTile(r,cx,cz,hash){
  if(!Number.isInteger(r)||r<0||r>7)return [];
  const gx=Math.floor(cx/4),gz=Math.floor(cz/4),tx=cx-gx*4,tz=cz-gz*4;
- if(tx>=3||tz>=3||hash(gx,gz,r,2201)>=.42)return [];
+ if(tx>=3||tz>=3||hash(gx,gz,r,2201)>=.95)return [];
  const stones=['hakkai:windworn_sandstone','minecraft:birch_log','hakkai:red_dune_stone','hakkai:mirror_ice','hakkai:thunderstone','hakkai:abyssal_stone','hakkai:cloudstone','hakkai:clockstone'];
  const lights=['hakkai:sky_crystal','hakkai:glow_moss','minecraft:bone_block','hakkai:frost_crystal','hakkai:storm_crystal','hakkai:moonstone','hakkai:sky_crystal','hakkai:timeglass'];
  const stone=stones[r],light=lights[r],out=[];

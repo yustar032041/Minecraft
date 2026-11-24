@@ -30,6 +30,7 @@ export const FRONTIER_SITES=[[310,25],[352,-24],[394,25]];
 export const SKY_FRONTIER_SITES=[[302,0],[342,0],[398,0]];
 
 // Assign each original identity to one well-separated seeded cell per realm.
+// New plans are closer to the starting areas; saved plans are never moved.
 // This remains a scripted, one-per-identity plan, not native worldgen.
 export function seededSiteCandidates(places,seed){
  let seedHash=2166136261;
@@ -41,11 +42,11 @@ export function seededSiteCandidates(places,seed){
  };
  const plans=new Map();
  for(let realm=0;realm<8;realm++){
-  const cells=[];for(const x of [-768,-256,256,768])for(const z of [-1024,-512,512,1024])cells.push({x,z});
+  const cells=[];for(const x of [-512,-256,256,512])for(const z of [-544,-288,288,544])cells.push({x,z});
   for(let i=cells.length-1;i>0;i--){const j=hash(realm,i,401)%(i+1);[cells[i],cells[j]]=[cells[j],cells[i]];}
   const sites=places.filter(s=>s.dim===realm&&isNaturalSite(s)).sort((a,b)=>a.id-b.id);
   sites.forEach((site,i)=>{
-   const dx=hash(realm,site.id,409)%193-96,dz=hash(realm,site.id,419)%193-96;
+   const dx=hash(realm,site.id,409)%49-24,dz=hash(realm,site.id,419)%49-24;
    plans.set(site.id,cells.map((_,j)=>{const c=cells[(i+j)%cells.length];return {x:c.x+dx,z:c.z+dz};}));
   });
  }

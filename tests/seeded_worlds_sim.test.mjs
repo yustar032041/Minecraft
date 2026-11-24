@@ -433,3 +433,28 @@ console.log('Deep realm: expanded envelope preserves old blocks, fresh sector ex
  f.generator.tick(f.player,20);f.run();assert.equal(f.dimension.writes.length,0);assert.equal(f.dimension.getBlock(pos).typeId,'minecraft:diamond_block');
  console.log('Grand ruin: real tile placement and pre-existing block preservation (mocked)');
 }
+// A player near an actually planned landmark postpones it without deleting the
+// candidate. On departure, only that freshly generated tile is retried.
+{
+ const {spectaclePlan}=await import('../Hakkai_v7.1.0/BehaviorPack/scripts/realm_spectacles.js');
+ const {hash,height}=seedFunctions('731');let sample;
+ for(let cx=100;cx<130&&!sample;cx++)for(let cz=100;cz<130&&!sample;cz++){
+  const f=fixture(0,cx,cz);f.generator.tick(f.player,20);f.run();
+  if(f.props.get(`seed_spectacle_0_${cx}_${cz}_v1`))sample={cx,cz};
+ }
+ assert.ok(sample);const {cx,cz}=sample,plan=spectaclePlan(0,cx,cz,hash),a=plan[0];
+ for(const blocked of [false,true]){
+  const f=fixture(0,cx,cz);f.generator.tick(f.player,20);f.step(256);
+  const loc={x:a.x+.5,y:height(0,a.x,a.z)+a.y,z:a.z+.5};f.dimension.players=[{location:loc}];f.run();
+  assert.equal(f.props.get(`seed_decor_wait_0_${cx}_${cz}_v1`),'spectacle');
+  assert.equal(f.props.get(`seed_land_0_${cx}_${cz}_v1`),1);
+  assert.equal(f.props.has(`seed_spectacle_0_${cx}_${cz}_v1`),false);
+  f.dimension.players=[];
+  if(blocked)f.dimension.blocks.set(key(a.x,loc.y,a.z),'minecraft:diamond_block');
+  f.system.currentTick=41;f.generator.tick(f.player,41);assert.ok(f.job());f.run();
+  if(blocked){assert.equal(f.dimension.getBlock({x:a.x,y:loc.y,z:a.z}).typeId,'minecraft:diamond_block');assert.notEqual(f.props.get(`seed_spectacle_0_${cx}_${cz}_v1`),1);}
+  else assert.equal(f.props.get(`seed_spectacle_0_${cx}_${cz}_v1`),1);
+  assert.equal(f.props.get(`seed_decor_wait_0_${cx}_${cz}_v1`),undefined);
+ }
+ console.log('Near-player landmarks defer and safely retry; modified blocks remain protected (mocked)');
+}

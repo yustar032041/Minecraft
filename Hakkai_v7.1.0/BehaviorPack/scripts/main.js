@@ -1,4 +1,5 @@
 import { configureFriendlyFire,friendlyFireEnabled,setFriendlyFire,protectsPlayer } from './friendly_fire.js';
+import { placeRepeatSite } from './seeded_repeat_sites.js';
 import { setupBowTrail } from './combat_bow_trail.js';
 import { setupWeaponTrace, isTraceWeapon } from './combat_weapon_trace.js';
 import { tomeSpells, tomeUnlocked, tomeCurrent, tomeNext, tomeCrouchTick } from './spell_tome.js';
@@ -6136,7 +6137,7 @@ safeSub('world','after','worldLoad',()=>{
   const seed=world.seed;
   if(typeof seed!=='string')throw Error('ワールドシードを取得できません');
   initializeNaturalSitePlans({places,seed,world,num,property,ns});
-  seededWorlds=setupSeededWorlds({ns,world,system,num,property,report,places,biomes,families,buildSite:buildSeededSite,onShrineChief:shrineChiefs.created});
+  seededWorlds=setupSeededWorlds({ns,world,system,num,property,report,places,biomes,families,buildSite:buildSeededSite,buildRepeatSite:site=>placeRepeatSite({site,world,dimension:world.getDimension(dimID(site.dim)),num,property,loaded,BlockVolume}),onShrineChief:shrineChiefs.created});
  }catch(err){report('シード地形の初期化',err);}
 });
 combatRoll=setupCombatRoll({notice,safe});
