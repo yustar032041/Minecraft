@@ -13,7 +13,7 @@ function fixture(type){
 {
  const f=fixture('hakkai:eclipse_colossus');const c=setupMobSystem({...f,ns:'hakkai:',num:()=>0,property:()=>{},report:(_,e)=>{throw e;}});
  for(let t=0;t<=260;t+=10){f.step(t);c.tickBosses(f.p,t);c.tickBosses(f.q,t);}
- assert.deepEqual(f.hits.map(v=>[v[0],v[1],v[2]]),[[140,'p',19.5],[140,'q',19.5],[260,'p',18],[260,'q',18]],'enhanced damage and phase 1 cadence once per warned hit');
+ assert.deepEqual(f.hits.map(v=>[v[0],v[1],v[2]]),[[140,'p',26],[140,'q',26],[260,'p',24],[260,'q',24]],'enhanced damage and phase 1 cadence once per warned hit');
  const warnings=f.messages.filter(([t,id,m])=>id==='p'&&m.includes('秒後')).map(([t])=>t);
  assert.deepEqual(warnings,[100,220]); // 40-tick warning, 80-tick recovery
 }

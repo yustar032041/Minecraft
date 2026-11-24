@@ -1,6 +1,6 @@
 // Legacy 12 locations + 8 frontiers + 20 more islands. Keep IDs and saved
 // visit/build markers stable; only their access and terrain integration change.
-export const isNaturalSite=site=>Number.isInteger(site?.id)&&site.id>=9&&site.id<=48;
+export const isNaturalSite=site=>Number.isInteger(site?.id)&&(site.id>=9&&site.id<=48||site.id===59||site.id===60);
 export function siteBounds(site,width=45){
  const size=site.size??width,half=(size-1)/2;
  return {x0:site.x-half,x1:site.x+half,z0:site.z-half,z1:site.z+half};

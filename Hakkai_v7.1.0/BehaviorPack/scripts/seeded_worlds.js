@@ -5,7 +5,7 @@ import { nearestQueuedDistance } from './terrain_queue.js';
 import { isNaturalSite, inSite, siteIntersects, siteBounds, blendSiteHeight, FRONTIER_SITES, SKY_FRONTIER_SITES } from './natural_sites.js';
 import { createLandscapeField } from './landscape_regions.js';
 import { valleyProfile } from './terrain_valleys.js';
-import { extraBiomeAt } from './extra_biomes.js';
+import { extraBiomeAt, newerBiomeAt } from './extra_biomes.js';
 import { streamPlan } from './terrain_streams.js';
 import { caveInterval, solidIntervals, treeCandidates, scenicPlan, realmRelief, skyRoute, skySiteRoute, pondPlan, moonGroveAt, bambooCandidates } from './terrain_features.js';
 
@@ -76,13 +76,13 @@ export function setupSeededWorlds(ctx){
    if(Math.abs(site.x-x)<=half&&Math.abs(site.z-z)<=half)return undefined;
   }
   const cx=Math.floor(x/CHUNK),cz=Math.floor(z/CHUNK);
-  const extra=num(world,propKey(r,cx,cz))&&num(world,`seed_extra_${r}_${cx}_${cz}_v1`)?newBiomeAt(r,x,z):undefined;
+  const extra=num(world,propKey(r,cx,cz))&&num(world,`seed_extra_${r}_${cx}_${cz}_v1`)?newBiomeAt(r,x,z,Boolean(num(world,`seed_extra_${r}_${cx}_${cz}_v2`))):undefined;
   const id=extra?.profile.id??`hakkai:seed_${r}_${String(biomeIndexAt(r,x,z)).padStart(2,'0')}`,key=biomes[id],profile=families[key];
   return key&&profile?{id,key,profile}:undefined;
  }
- function newBiomeAt(r,x,z){
+ function newBiomeAt(r,x,z,newer=true){
   // Preserve the established moon-bamboo grove and its recognition semantics.
-  return r===7&&moonGroveAt(x,z,noise)?undefined:extraBiomeAt(r,x,z,noise);
+  return r===7&&moonGroveAt(x,z,noise)?undefined:(newer?newerBiomeAt:extraBiomeAt)(r,x,z,noise);
  }
  function heightAt(r,x,z,style=biomeIndexAt(r,x,z)){
   const base=[88,87,85,91,88,76,94,84][r];
@@ -433,6 +433,7 @@ export function setupSeededWorlds(ctx){
    }
   }
   property(world,`seed_extra_${realm}_${cx}_${cz}_v1`,1);
+  property(world,`seed_extra_${realm}_${cx}_${cz}_v2`,1);
   property(world,key,1);
   if(moonGrove)property(world,`seed_moon_grove_${cx}_${cz}_v1`,1);
  }

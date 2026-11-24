@@ -255,3 +255,16 @@ console.log('Seasonal harvesting → powered transport → bread assembly end-to
 for(const type of ['farm_harvester','farm_fertilizer','farm_planter','item_extractor']){
  const f=fixture(type,[item('minecraft:wheat_seeds')]),before=snap(f.from);f.run();assert.deepEqual(snap(f.from),before,type+' no power');assert.deepEqual(snap(f.to),[undefined,undefined],type+' no power');
 }
+// The village's exact powered crusher setup runs a real inventory transaction
+// and then updates the actual town production record; failed output does not.
+{
+ const f=fixture('crusher',[item('minecraft:cobblestone',2)]),get=f.b.dimension.getBlock;
+ f.b.dimension.getBlock=p=>p.x===0&&p.y===80&&p.z===1?{typeId:'hakkai:wind_rotor',...p,location:p}:get(p);
+ f.b.dimension.getBlockFromRay=()=>undefined;
+ Object.assign(f.b.dimension,{spawnParticle(){},playSound(){},getPlayers(){return [];}});
+ const town={data:{goods:3,work:0},factoryVillage:true};
+ Object.assign(f.ctx,{townNear:()=>town,townRecord:t=>t.data,townSave:(t,v)=>t.data=v,state:()=>({})});f.ctx.world.getAbsoluteTime=()=>450;
+ vm.runInContext(src.slice(src.indexOf('function production(b,count){'),src.indexOf('function gatherTown(')),f.ctx);
+ f.run();assert.equal(f.to.getItem(0).typeId,'minecraft:gravel');assert.equal(town.data.goods,4);assert.equal(town.data.work,450);
+ f.ctx.system.currentTick=50;f.to.failOnce=true;f.run();assert.equal(town.data.goods,4,'failed inventory write never awards goods');
+}

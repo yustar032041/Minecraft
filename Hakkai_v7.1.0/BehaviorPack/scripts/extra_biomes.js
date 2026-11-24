@@ -27,3 +27,17 @@ export function extraBiomeAt(r,x,z,noise){
  const t=Math.max(0,Math.min(1,(mask-.12)/.25)),weight=t*t*(3-2*t);
  return {profile:EXTRA_BIOMES[r][i],weight,index:i};
 }
+
+// Added after the original 32 profiles: old survey indices remain stable.
+const NEW_NAMES=['風車草の高原','森影の花庭','陽炎の赤礫野','氷霧の白原','雷雲の銅丘','夜光菌の地下庭','薄雲の白花島','刻鉄の古原'];
+export const NEW_BIOMES=NEW_NAMES.map((name,r)=>({
+ ...EXTRA_BIOMES[r][1],id:`hakkai:seed_new_${r}_0`,key:`seed_new_realm_${r}_0`,name,
+ top:EXTRA_BIOMES[r][2].top,accent:EXTRA_BIOMES[r][0].accent,terrainStyle:16,
+ lore:'新規区画に現れる界ごとの地形帯。'
+}));
+export function newerBiomeAt(r,x,z,noise){
+ const old=extraBiomeAt(r,x,z,noise);
+ if(!old)return undefined;
+ // A second, independent patch mask leaves the previous four types present.
+ return noise(x+817,z-563,205,r,1709)>.18?{...old,profile:NEW_BIOMES[r],index:4}:old;
+}

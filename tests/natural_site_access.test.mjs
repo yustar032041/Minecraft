@@ -26,7 +26,7 @@ for(const site of places.filter(isNaturalSite)){
  const code=main.slice(main.indexOf('async function arrive(p,site){'),main.indexOf('async function returnNatural('));let notices=0;
  const ctx={isNaturalSite,notice:()=>notices++,state:()=>{throw Error('must not initialize teleport') }};vm.createContext(ctx);vm.runInContext(code,ctx);
  for(const site of places.filter(isNaturalSite))assert.equal(await ctx.arrive({},site),false);
- assert.equal(notices,40);
+ assert.equal(notices,42);
 }
 // The actual guide-accessible menus must not list or teleport to any of the
 // 40 former destinations (including the previously overlooked rank/rail/port).

@@ -70,7 +70,7 @@ export function wardenPhase(hp,max=5000){
 }
 export const WARDEN_HEAL_PER_SECOND=12;
 // Increase all 100 scripted patterns without changing their warning geometry.
-export const WARDEN_DAMAGE_MULTIPLIER=1.8;
+export const WARDEN_DAMAGE_MULTIPLIER=2.4;
 export const WARDEN_RECOVERY_TICKS=40;
 // Every fifth selection belongs to the same source form. Final starts with its
 // own attack, then alternates through forms 1–4 before repeating that order.

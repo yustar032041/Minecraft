@@ -1,3 +1,4 @@
+import { FACTORY_VILLAGE_ID, foundFactoryResident } from './factory_village.js';
 import { farmStep } from './factory_farm.js';
 import { itemDuctStep } from './factory_ducts.js';
 import { bearingState, setBearingMode, bearingStep, bearingAutoTick, armBearing } from './factory_bearing.js';
@@ -2798,8 +2799,9 @@ async function form(p,title,body,rows){
 }
 const chapters=[
  ['はじめに','ガイド本は持ち物から「使う」で開きます。迷ったらこの本の章を順に読んでね。風見の帰還石を使うと、風見台・ベッド・登録地点・元の世界に帰れます。風見台で旅の地図を使い、まずは始まりの草原へ。'],
- ['世界の生成とシード','8つの界はそれぞれ別の空間です。到着すると、今いる場所を中心に周囲4チャンク分（最大9×9チャンク）の地形を先に準備します。地形の高さ・山脈・谷・島・地表素材はワールドシードと界ごとの計算で決まり、同じワールドの同じ座標なら同じ地形になります。各界には旧12種に加えて新4種ずつ、合計128種のスクリプト式シード地形帯があり、歩き続けるほど新しい地形帯が続きます。拠点・街道・既存建築のある区画は上書きしません。'],
- ['新しい地形帯と川','各界に4種類ずつ新しい地形帯を追加。界の土や植生、岩・結晶の景観が現れ、自然調査ノートにも記録されます。これはスクリプトで分類した地形帯で、エンジン本来のバイオーム変更ではありません。6界の谷では、地形条件が合えば短い川区画に水が入ります。氷の界は表面が凍ります。土手と床を確認して水を置くため川は区画ごとに途切れ、湖や海への連結はまだありません。生成済み区画は変更しません。'],
+ ['世界の生成とシード','8つの界はそれぞれ別の空間です。到着すると、今いる場所を中心に周囲4チャンク分（最大9×9チャンク）の地形を先に準備します。地形の高さ・山脈・谷・島・地表素材はワールドシードと界ごとの計算で決まり、同じワールドの同じ座標なら同じ地形になります。各界には旧12種に加えて新5種ずつ、合計136種のスクリプト式シード地形帯があり、歩き続けるほど新しい地形帯が続きます。拠点・街道・既存建築のある区画は上書きしません。'],
+ ['新しい地形帯と川','各界に5種類ずつ新しい地形帯を追加。界の土や植生、岩・結晶の景観が現れ、自然調査ノートにも記録されます。これはスクリプトで分類した地形帯で、エンジン本来のバイオーム変更ではありません。6界の谷では、地形条件が合えば短い川区画に水が入ります。氷の界は表面が凍ります。土手と床を確認して水を置くため川は区画ごとに途切れ、湖や海への連結はまだありません。生成済み区画は変更しません。'],
+ ['工場村と観測遺跡','風車工場村は草原の界、雷雲の観測遺跡は雷の界の新しい探索地です。手引きで選ぶと予定座標を表示します。工場村では鐘が動く間に住人が少しずつ現れます。破砕機と製材機の西側の樽に素材を入れ、東側の樽に空きを作ると、風力で加工し、成功した生産量が集落の備蓄に加わります。備蓄は住人の維持や成長に使います。生成条件が合わない場合は現れません。'],
  ['最初のサバイバル','①ガイド本から旅の地図を開き、始まりの草原へ。②木・石・食料を集め、作業台とかまどを用意。③畑・釣り・牧場・採集を使って食料を確保。④スタミナ表示が減ったら走るのをやめて回復。⑤魔法を使うと魔力を消費するので、使いどころを考えよう。⑥ベッドでリスポーン地点を設定し、風見の帰還石も手元に置いておくと安心です。最初から守護獣に挑まず、食料と装備を整えてから遠征しよう。'],
  ['地形と集め方','各界の新しく生成される地形では、地表の下を掘って結晶鉱を探せます。浮島の地層は薄いので掘り抜きに注意。生成済みの場所には後から追加されません。到着地点近くにも小さな鉱床があります。守護獣を倒すと欠片が手に入り、同じ欠片2個とアメジストの欠片1個から結晶を作れます。バニラの敵も、ときどき欠片を落とします。'],
  ['野営とサバイバル','焚き火か魂の焚き火の近くで、しゃがんで静止すると野営休息になり、スタミナと魔力が速く回復します。野営のきのこ包み・根菜の焚き火焼き・森歩きの滋養食は採集や料理で作れます。乾燥肉・乾燥ベリー・燻製魚の切り身・乾燥昆布を作業台で合わせると野営の補給袋を2個作れます。畑・季節の菜園・釣り・牧場・かまどを組み合わせ、遠征前に食料を準備しましょう。'],
@@ -2810,7 +2812,7 @@ const chapters=[
  ['時の列車','第8界の時の終着駅に着いたら、ガイド本の「時の列車」へ。操車場で過去か未来を選ぶと乗車します。しゃがんで降りると、旅を中止できます。各時代の駅から現在へ戻れます。'],
  ['船便と刻印','五つの港でガイド本の「港の船便と市」を使います。船上で釣り・料理・交易もできます。剣を持ってしゃがんでエンチャント台を使うと、属性刻印の別画面が開きます。刻印書は本1冊と対応する結晶2個で作れます。刻印書を手に持ってしゃがみながらエンチャント台を使い、剣を選ぶと刻印できます。バニラのエンチャントはそのままです。'],
  ['刻印効果','刻印済みの剣で敵に攻撃すると発動します。風：移動速度上昇。水：体力を継続回復。雷：命中した相手に追加ダメージ。時：命中した相手を減速。再発動には約6秒の待ち時間があります。スタミナが0でも刻印効果は発動します。'],
- ['生き物と調査','8界を歩くと、界の素材とバニラブロックを組み合わせた128種のスクリプト式シード地形帯を発見できます。地形帯ごとに生息する野生動物と専用の強化MOBが異なり、夜や高地では希少種との遭遇率が上がります。追加MOBは個体ごとの専用モデル・512×512テクスチャ・発光／法線マップを持ちます。バニラMOBの標準テクスチャはゲーム本来のものを使います。追加の生き物にしゃがんで触れると観察記録に入ります。ガイド本の「自然調査ノート」で報酬を受け取れます。'],
+ ['生き物と調査','8界を歩くと、界の素材とバニラブロックを組み合わせた136種のスクリプト式シード地形帯を発見できます。地形帯ごとに生息する野生動物と専用の強化MOBが異なり、夜や高地では希少種との遭遇率が上がります。追加MOBは個体ごとの専用モデル・512×512テクスチャ・発光／法線マップを持ちます。バニラMOBの標準テクスチャはゲーム本来のものを使います。追加の生き物にしゃがんで触れると観察記録に入ります。ガイド本の「自然調査ノート」で報酬を受け取れます。'],
  ['八界街道','旅の地図から八界街道へ。東西の道を歩くと草原・霧森・砂地・雪の峠・雷の高原・洞門・雲の橋・駅の順でつながります。街道は本界とは別の場所です。街道外へ落ちたら直前の場所に戻ります。']
 ];
 const simple=(p,title,body)=>form(p,title,body,[['閉じる']]);
@@ -3000,7 +3002,14 @@ async function railOffice(p){
 }
 async function help(p){
  const ix=await form(p,'風記の手引き','調べたい章を選んでね。',chapters.map(x=>[x[0]]));
- if(ix!==undefined)await simple(p,chapters[ix][0],chapters[ix][1]);
+ if(ix!==undefined){
+  let body=chapters[ix][1];
+  if(chapters[ix][0]==='工場村と観測遺跡'){
+   const v=travelSites.get(59),o=travelSites.get(60);
+   body+=`\n\n草原の界：工場村の予定地 X ${v.x} / Z ${v.z}\n雷の界：観測遺跡の予定地 X ${o.x} / Z ${o.z}\n予定地は空き区画に限ります。すでに地形や建築がある場合は保護して配置しません。徒歩で近づいて生成を待ってください。`;
+  }
+  await simple(p,chapters[ix][0],body);
+ }
 }
 /** @param {import('@minecraft/server').Player} p @param {(import('@minecraft/server').Vector3 & {dim:string})} [forgeAt] */
 async function details(p,forgeAt){
@@ -4378,11 +4387,11 @@ const workBlocks=new Set(workplaces.filter(Boolean).map(s=>'minecraft:'+s));
 const fortressPart=/^minecraft:.*(?:fence|wall)$/;
 const townKey=(d,l)=>`town:${d.id}:${Math.floor(l.x)}:${Math.floor(l.y)}:${Math.floor(l.z)}`;
 function townNear(d,l){
- let best,range=24;
+ let best,range=Infinity;
  for(const town of townCache.values()){
    if(town.d.id!==d.id||system.currentTick-town.last>240)continue;
    const n=dist(l,town.l);
-   if(n<range){range=n;best=town;}
+   if(n<(town.factoryVillage?60:24)&&n<range){range=n;best=town;}
  }
  return best;
 }
@@ -4402,6 +4411,8 @@ function townGet(d,l,seen=false){
    townCache.set(k,t);
  }
  if(seen)t.last=system.currentTick;
+ const village=travelSites.get(FACTORY_VILLAGE_ID);
+ t.factoryVillage=Boolean(village&&num(world,`built_${village.id}`)&&d.id===dimID(village.dim)&&t.l.x===village.x&&t.l.y===expandedY&&t.l.z===village.z);
  return t;
 }
 function discoverTown(p,s){
@@ -4452,8 +4463,9 @@ function production(b,count){
 function gatherTown(t){
  const d=t.d, c=t.l;
  // Spread the scan across ticks. Rebuild the snapshot from scratch so removing a wall lowers the score.
- for(let j=0;j<155;j++){
-   const i=t.i++, x=i%23-11,z=Math.floor(i/23)%23-11,y=Math.floor(i/529)-1;
+ const side=t.factoryVillage?97:23, span=side*side;
+ for(let j=0;j<(t.factoryVillage?700:155);j++){
+   const i=t.i++, x=i%side-Math.floor(side/2),z=Math.floor(i/side)%side-Math.floor(side/2),y=Math.floor(i/span)-1;
    if(y>5){t.sites=t.list;t.list={};t.i=0;break;}
    const at={x:c.x+x,y:c.y+y,z:c.z+z};
    if(!d.isChunkLoaded(at))continue;
@@ -4463,7 +4475,7 @@ function gatherTown(t){
      /^hakkai:(mill|miner|compressor|kiln|crusher|washer|press|saw|mixer|assembler)$/.test(id)?'machine':cropIds.has(id)?'crop':'';
    if(type){
      const list=t.list[type]??=[];
-     if(list.length<32)list.push({...at,id});
+     if(list.length<(t.factoryVillage?64:32))list.push({...at,id});
    }
  }
 }
@@ -4476,7 +4488,7 @@ function townRoutine(t){
  if(crops.length&&Math.random()<(raining(d)?.9:.48))try{nudgeCrop(d.getBlock(crops[system.currentTick%crops.length]));}catch{}
  if(system.currentTick<(t.duty??0))return;
  t.duty=system.currentTick+75;
- const citizens=d.getEntities({families:['villager'],location:l,maxDistance:23,closest:12}).filter(e=>e.typeId.startsWith('minecraft:villager'));
+ const citizens=d.getEntities({families:['villager'],location:l,maxDistance:t.factoryVillage?60:23,closest:t.factoryVillage?40:12}).filter(e=>e.typeId.startsWith('minecraft:villager'));
  if(!citizens.length)return;
  const hostile=d.getEntities({families:['monster'],location:l,maxDistance:20,closest:6}).filter(e=>['minecraft:zombie','minecraft:husk','minecraft:drowned','minecraft:pillager','minecraft:vindicator','minecraft:witch','minecraft:ravager','minecraft:skeleton'].includes(e.typeId));
  const score=townScore(t), age=seasonDay();
@@ -4501,7 +4513,7 @@ function townRoutine(t){
    }
  }
  const bedCount=Math.ceil((t.sites.shelter?.length??0)/2);
- if(!hostile.length&&world.gameRules.doMobSpawning&&citizens.length>=2&&citizens.length<Math.min(8,bedCount)&&score>=6&&data.goods>=12&&age>data.birth+2&&now<9000){
+ if(!hostile.length&&world.gameRules.doMobSpawning&&citizens.length>=2&&citizens.length<Math.min(t.factoryVillage?32:8,bedCount)&&score>=6&&data.goods>=12&&age>data.birth+2&&now<9000){
    const at=safeNear(d,l,4);
    if(at){
      const born=d.spawnEntity('minecraft:villager_v2',at,{spawnEvent:'minecraft:entity_born'});
@@ -4517,7 +4529,9 @@ function townRoutine(t){
      d.spawnParticle('hakkai:climate_5',{...foe.location,y:foe.location.y+.7});
    }
  }catch{}
- for(const e of citizens.slice(0,7))try{
+ const dutyStart=t.factoryVillage?(t.dutyCursor??0)%citizens.length:0;
+ if(t.factoryVillage)t.dutyCursor=dutyStart+7;
+ for(const e of (t.factoryVillage?Array.from({length:Math.min(7,citizens.length)},(_,i)=>citizens[(dutyStart+i)%citizens.length]):citizens.slice(0,7)))try{
    if(!permit(e,50,'town_duty'))continue;
    const baby=Boolean(e.getComponent('minecraft:is_baby')), born=num(e,'town_born');
    if(!born)property(e,'town_born',age+1);
@@ -4538,8 +4552,10 @@ function townRoutine(t){
 }
 function townTick(block){
  const d=block.dimension;
- if(!d.getPlayers({location:block.location,maxDistance:39,closest:1}).length)return;
+ if(!d.getPlayers({location:block.location,maxDistance:64,closest:1}).length)return;
  const t=townGet(d,block.location,true);if(!t)return;
+ if(!t.factoryVillage&&!d.getPlayers({location:block.location,maxDistance:39,closest:1}).length)return;
+ foundFactoryResident({town:t,world,num,property,findFloor:safeNear,report});
  gatherTown(t);townRoutine(t);
 }
 const deliveryGoods=[
@@ -4759,7 +4775,7 @@ async function usePhysicalRelic(p,at,type){
    }
    return;
  }
- const site=currentPlace(p), env=biomeAt(p), index=site?site.id:places.length+(env?biomeIndex.get(env.id):0);
+ const site=currentPlace(p), env=biomeAt(p), index=site?(site.id===59||site.id===60?4096+site.id-59:site.id):59+(env?biomeIndex.get(env.id):0);
  const stamp=type.endsWith('statue')?'statue_prize':'cache_prize';
  if(marked(p,stamp,index))return notice(p,'§eこの土地ではすでに受け取っています');
  const reward=type.endsWith('statue')?`shard_${site?.ore??(site?home[aspect(site)][0]:env?.profile.ore??0)}`:'chronicle_fragment';

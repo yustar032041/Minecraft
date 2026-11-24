@@ -170,7 +170,7 @@ export function setupMobSystem(ctx){
   state.pending={kind,at:t+windup,targetId:target.id,aim:{...mark},warnedPlayers};
   for(let i=0;i<6;i++)particle(entity.dimension,'minecraft:basic_smoke_particle',{x:mark.x+(Math.random()-.5)*2,y:mark.y+.3+i*.35,z:mark.z+(Math.random()-.5)*2});
  }
- function bossHit(entity,target,damage){return hit(entity,target,damage*1.5);}
+ function bossHit(entity,target,damage){return hit(entity,target,damage*2);}
  function resolveBossAttack(entity,state,phase){
   const attack=state.pending;if(!attack)return;
   state.pending=undefined;

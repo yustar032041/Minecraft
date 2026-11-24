@@ -5,7 +5,7 @@ import {seedFunctions} from './seed_terrain_helpers.mjs';
 import fs from 'node:fs';
 const previousBiomeCount=183,previousFamilyCount=123;
 assert.equal(Object.keys(biomes)[previousBiomeCount-1],'hakkai:seed_7_11');assert.equal(Object.keys(families)[previousFamilyCount-1],'seed_realm_7_11');
-assert.equal(Object.keys(biomes).length,previousBiomeCount+32);assert.equal(Object.keys(families).length,previousFamilyCount+32);
+assert.equal(Object.keys(biomes).length,previousBiomeCount+40);assert.equal(Object.keys(families).length,previousFamilyCount+40);
 const ids=new Set(),names=new Set(),types=new Set(wildlife.map(p=>p.id)),{noise}=seedFunctions('731');
 for(let r=0;r<8;r++){
  const counts=[0,0,0,0];

@@ -57,7 +57,7 @@ for(let phase=0;phase<5;phase++){
  const f=fixture();let started=0;for(let t=0;t<1500;t++){f.tick(t);if(f.messages.some(([,m])=>m.includes(WARDEN_MOVING[0][0].attack))){started=t;break;}}
  assert.ok(started);const q={...f.p,id:'q',sendMessage:()=>{},applyDamage:n=>f.hits.push(['q',n])};f.setPlayers([f.p,q]);f.hits.length=0;
  for(let t=started+1;t<=started+56;t++)f.tick(t);
- assert.deepEqual(f.hits,[['p',7*1.8]],'only warned player is hit, once');
+ assert.deepEqual(f.hits,[['p',7*2.4]],'only warned player is hit, once');
 }
 // A melee counter during the moving move's warning cancels launch entirely.
 {
@@ -108,7 +108,7 @@ for(let phase=0;phase<5;phase++){
  const ctrl=setupWardenBoss({world:f.world,system:f.sys,property:()=>{},report:(_,e)=>{throw e;},tryParry:p=>{if(p.id==='p'){parries++;return true;}return false;}});
  let started=0;for(let t=0;t<1500;t++){f.sys.currentTick=t;ctrl.tick(f.p,t);if(f.messages.some(([,m])=>m.includes(WARDEN_MOVING[0][0].attack))){started=t;break;}}
  parries=0;hits.length=0;for(let t=started+1;t<=started+56;t++){f.sys.currentTick=t;ctrl.tick(f.p,t);}
- assert.equal(parries,1);assert.deepEqual(hits,[7*1.8]);
+ assert.equal(parries,1);assert.deepEqual(hits,[7*2.4]);
 }
 console.log('Warden moving attacks: 15 variants, visual/collision sync, bounds, walls, failures, warnings, counters and multiplayer (mocked)');
 // Refused moving-front damage likewise does not apply a standalone effect.

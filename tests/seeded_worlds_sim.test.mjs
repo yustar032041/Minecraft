@@ -2,7 +2,7 @@
 // This simulates the minimal block API, not Bedrock import, rendering or physics.
 import assert from 'node:assert/strict';
 import {seedFunctions} from './seed_terrain_helpers.mjs';
-import {extraBiomeAt} from '../Hakkai_v7.1.0/BehaviorPack/scripts/extra_biomes.js';
+import {extraBiomeAt,newerBiomeAt} from '../Hakkai_v7.1.0/BehaviorPack/scripts/extra_biomes.js';
 import {streamPlan} from '../Hakkai_v7.1.0/BehaviorPack/scripts/terrain_streams.js';
 import {biomes,families} from '../Hakkai_v7.1.0/BehaviorPack/scripts/data.js';
 import { setupSeededWorlds } from '../Hakkai_v7.1.0/BehaviorPack/scripts/seeded_worlds.js';
@@ -340,4 +340,22 @@ console.log('New seeded building placement and late player block protection (moc
  for(const q of c.p.rim)for(let y=c.p.floor+1;y<=c.p.level;y++)assert.ok(f.dimension.getBlock({...q,y}).isSolid,'partial water stays contained');
  f.system.currentTick=300;f.generator.tick(f.player,300);f.run();assert.equal(f.props.get(`seed_land_0_${c.cx}_${c.cz}_skip_v1`),1,'partial chunks are preserved, not overwritten');
  console.log('Interrupted stream write remains within banks and partial chunk is preserved (mocked)');
+}
+
+// Existing v1 terrain keeps its original identity, even where the new v2
+// profile would now be selected; only freshly generated v2 chunks change.
+{
+ const {noise}=seedFunctions('731');let pos;
+ for(let x=600;x<1500&&!pos;x+=16)for(let z=600;z<1500;z+=16){
+  const nx=x+8,nz=z+8,profile=newerBiomeAt(0,nx,nz,noise);
+  if(profile?.index===4){pos={x:nx,z:nz,cx:Math.floor(nx/16),cz:Math.floor(nz/16)};break;}
+ }
+ assert.ok(pos);const {x,z,cx,cz}=pos;
+ const old=fixture(0,cx,cz,[],undefined,{biomes,families});
+ old.props.set(`seed_land_0_${cx}_${cz}_v1`,1);old.props.set(`seed_extra_0_${cx}_${cz}_v1`,1);
+ assert.equal(old.generator.biomeAt(0,{x,z}).id,extraBiomeAt(0,x,z,noise).profile.id);
+ assert.notEqual(old.generator.biomeAt(0,{x,z}).id,newerBiomeAt(0,x,z,noise).profile.id);
+ const fresh=fixture(0,cx,cz,[],undefined,{biomes,families});fresh.generator.tick(fresh.player,20);fresh.run();
+ assert.equal(fresh.props.get(`seed_extra_0_${cx}_${cz}_v2`),1);
+ assert.equal(fresh.generator.biomeAt(0,{x,z}).id,newerBiomeAt(0,x,z,noise).profile.id);
 }
