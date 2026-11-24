@@ -7,6 +7,7 @@ import { createLandscapeField } from './landscape_regions.js';
 import { valleyProfile } from './terrain_valleys.js';
 import { extraBiomeAt, newerBiomeAt } from './extra_biomes.js';
 import { streamPlan } from './terrain_streams.js';
+import { realmPanorama, realmSurface, spectaclePlan, cavernHangingPlan } from './realm_spectacles.js';
 import { caveInterval, solidIntervals, treeCandidates, scenicPlan, realmRelief, skyRoute, skySiteRoute, pondPlan, moonGroveAt, bambooCandidates } from './terrain_features.js';
 
 // 8界の現在地を中心に、4チャンク先までの見える範囲を先行生成する。
@@ -96,6 +97,7 @@ export function setupSeededWorlds(ctx){
   const extra=newBiomeAt(r,x,z);if(extra)relief+=extra.weight*(1.5+noise(x,z,120,r,1637)*2);
   if(r===5)relief=relief*.62+noise(x,z,33,r,47)*7;
   if(r===6){const shape=noise(x+41,z-27,26,r,151)*.82+noise(x-9,z+63,11,r,157)*.38;if(shape<.22)return -1;relief=relief*.38+Math.max(0,shape-.22)*11;}
+  relief+=realmPanorama(r,x,z,noise);
   return Math.round(Math.max(48,Math.min(145,base+relief)));
  }
  function surfaceFor(r,x,z,y,style=biomeIndexAt(r,x,z)){
@@ -104,7 +106,7 @@ export function setupSeededWorlds(ctx){
   const layered=style===1&&grain>.65?TOPS[r][(style+2)%12]:style===8&&grain>.72?TOPS[r][7]:wetTop;
   const grove=r===7&&moonGroveAt(x,z,noise);
   const valley=valleyProfile(r,x,z,noise),extra=newBiomeAt(r,x,z);
-  return {top:grove?'minecraft:grass_block':valley.top??extra?.profile.top??layered,sub:grove?'minecraft:dirt':style===4||style===6?'minecraft:sand':style===3?'minecraft:clay':style===7?'hakkai:moonstone':SUBS[r],rock:style===11?TOPS[r][11]:ROCKS[r],patch};
+  return {top:grove?'minecraft:grass_block':valley.top??realmSurface(r,x,z,noise,hash)??extra?.profile.top??layered,sub:grove?'minecraft:dirt':style===4||style===6?'minecraft:sand':style===3?'minecraft:clay':style===7?'hakkai:moonstone':SUBS[r],rock:style===11?TOPS[r][11]:ROCKS[r],patch};
  }
  function isReserved(r,x0,z0,x1,z1){
   // 元の接続地形と遠征地形の予約範囲は、生成順序に関係なく保護する。
@@ -153,6 +155,11 @@ export function setupSeededWorlds(ctx){
   // If the query fails, skip decorations rather than risk trapping a player.
   try{return d.getPlayers({location,maxDistance:radius,closest:1}).length>0;}catch{return true;}
  }
+ // Skip rather than trap mobs, items or other entities that enter during a
+ // yielding placement. Failed entity queries are conservatively unsafe.
+ function sceneryOccupied(d,at){
+  try{return d.getEntities({location:{x:at.x+.5,y:at.y+.5,z:at.z+.5},maxDistance:1.5,closest:1}).length>0;}catch{return true;}
+ }
  function playerIntersectsColumn(d,x,z,bottom,top){
   try{
    return d.getPlayers().some(p=>{
@@ -163,11 +170,12 @@ export function setupSeededWorlds(ctx){
  }
  function placeTree(d,r,cx,cz){
   const candidates=treeCandidates(r,cx,cz,hash);
-  const log=r===1?'minecraft:birch_log':r===3?'minecraft:spruce_log':'minecraft:oak_log';
-  const leaf=r===1?'minecraft:birch_leaves':r===3?'minecraft:spruce_leaves':'minecraft:oak_leaves';
-  let leaves;try{leaves=BlockPermutation.resolve(leaf,{persistent_bit:true,update_bit:false});}catch{return;}
   for(const tree of candidates){
    const {x,z,height:h}=tree,y=heightFor(r,x,z);
+   const birch=r===1&&hash(x,z,r,1851)>.48;
+   const log=birch?'minecraft:birch_log':r===3?'minecraft:spruce_log':'minecraft:oak_log';
+   const leaf=birch?'minecraft:birch_leaves':r===3?'minecraft:spruce_leaves':'minecraft:oak_leaves';
+   let leaves;try{leaves=BlockPermutation.resolve(leaf,{persistent_bit:true,update_bit:false});}catch{continue;}
    if(y<0||y+h+1>MAX_Y||playersNear(d,{x:x+.5,y:y+1,z:z+.5},5))continue;
    const ground=d.getBlock({x,y,z});
    if(!ground||ground.typeId!==surfaceFor(r,x,z,y).top)continue;
@@ -270,6 +278,55 @@ export function setupSeededWorlds(ctx){
    c.setItem(1,new ItemStack(realm===5?'minecraft:torch':'minecraft:bread',realm===5?4:2));
   }catch(err){report('探索物資の配置',err);}
  }
+ // All blocks are planned before writing. Decorations yield in small batches,
+ // recheck the block and nearby players before each write, and never replace
+ // existing blocks. A late obstruction aborts and preserves partial decoration.
+ function* placeSpectacle(d,realm,cx,cz){
+  const plan=spectaclePlan(realm,cx,cz,hash);if(!plan.length)return false;
+  const center={x:cx*16+8,z:cz*16+8},base=heightFor(realm,center.x,center.z);
+  if(base<0||base+24>MAX_Y||playersNear(d,{x:center.x+.5,y:base+9,z:center.z+.5},20))return false;
+  const columns=new Map(),adjusted=[];
+  for(const at of plan){
+   const k=`${at.x},${at.z}`;let ground=columns.get(k);
+   if(ground===undefined){
+    ground=heightFor(realm,at.x,at.z);
+    if(ground<0||Math.abs(ground-base)>5)return false;
+    const block=d.getBlock({x:at.x,y:ground,z:at.z});
+    if(!block||block.typeId!==surfaceFor(realm,at.x,at.z,ground).top)return false;
+    columns.set(k,ground);
+   }
+   const pos={x:at.x,y:ground+at.y,z:at.z,type:at.type};
+   if(pos.y>MAX_Y||!d.getBlock(pos)?.isAir)return false;
+   adjusted.push(pos);
+  }
+  const leaves=new Map();
+  for(const at of adjusted)if(at.type.endsWith('_leaves')&&!leaves.has(at.type)){
+   try{leaves.set(at.type,BlockPermutation.resolve(at.type,{persistent_bit:true,update_bit:false}));}catch{return false;}
+  }
+  let written=0;
+  for(const at of adjusted){
+   if(!d.getBlock(at)?.isAir||playersNear(d,{x:at.x+.5,y:at.y,z:at.z+.5},3)||sceneryOccupied(d,at))return 'partial';
+   if(leaves.has(at.type))d.setBlockPermutation(at,leaves.get(at.type));
+   else d.setBlockType(at,at.type);
+   if(++written%6===0)yield;
+  }
+  return true;
+ }
+ function* placeCavernHanging(d,cx,cz){
+  for(const p of cavernHangingPlan(cx,cz,hash)){
+   const top=heightFor(5,p.x,p.z),roofY=124+Math.round(noise(p.x,p.z,23,5,269)*4),root=roofY-2;
+   const roof=d.getBlock({x:p.x,y:root,z:p.z});
+   if(!roof?.isSolid||root-p.length<=top+2||playersNear(d,{x:p.x+.5,y:root-p.length/2,z:p.z+.5},7))continue;
+   let clear=true;for(let y=root-1;y>=root-p.length;y--)if(!d.getBlock({x:p.x,y,z:p.z})?.isAir){clear=false;break;}
+   if(!clear)continue;
+   for(let i=1;i<=p.length;i++){
+    const at={x:p.x,y:root-i,z:p.z};
+    if(!d.getBlock({x:p.x,y:root,z:p.z})?.isSolid||!d.getBlock(at)?.isAir||playersNear(d,{x:at.x+.5,y:at.y,z:at.z+.5},3)||sceneryOccupied(d,at))break;
+    d.setBlockType(at,i===p.length?'hakkai:glow_moss':'hakkai:abyssal_stone');
+    if(i%4===0)yield;
+   }
+  }
+ }
  function placeExpeditionLandmark(d,realm,index,coords){
   const [sx,sz]=coords;
   // Keep every decorative block within the same chunk and within six blocks
@@ -365,7 +422,10 @@ export function setupSeededWorlds(ctx){
     const mat=surfaceFor(realm,x,z,top);
     let bottom;
     if(realm===6){
-     const depth=5+Math.floor(hash(x,z,realm,251)*4);
+     // Deeper toward the island core, while the existing cloud road and
+     // disconnected-island layout remain unchanged. Never dig below MIN_Y.
+     const islandShape=noise(x+41,z-27,26,realm,151)*.82+noise(x-9,z+63,11,realm,157)*.38;
+     const depth=Math.min(top-MIN_Y,5+Math.floor(hash(x,z,realm,251)*3)+Math.floor(Math.max(0,Math.min(1,(islandShape-.22)/.55))*12));
      bottom=top-depth;
      d.fillBlocks(new BlockVolume({x,y:top-depth,z},{x,y:top-2,z}),mat.rock);
      d.setBlockType({x,y:top-1,z},mat.sub);
@@ -407,10 +467,16 @@ export function setupSeededWorlds(ctx){
   if(sites.length){property(world,key,1);return;}
   placePond(d,pond);
   const shrine=realm===7&&placeMoonShrine({dimension:d,cx,cz,hash,heightFor,isGrove:(x,z)=>moonGroveAt(x,z,noise),playersNear,spawnChief:Boolean(world.gameRules?.doMobSpawning),onChief:onShrineChief,report});
-  if(!shrine&&!hasSkyRoad)placeScenery(d,realm,cx,cz);
+  // Preserve the time realm's bamboo groves and shrine, and keep cloud roads
+  // unobstructed. Pools already exist and fail spectacle ground validation.
+  const groveArea=realm===7&&moonGroveAt(cx*16+8,cz*16+8,noise);
+  const spectacle=!shrine&&!hasSkyRoad&&!groveArea?(yield* placeSpectacle(d,realm,cx,cz)):false;
+  if(spectacle===true)property(world,`seed_spectacle_${realm}_${cx}_${cz}_v1`,1);
+  if(!shrine&&!hasSkyRoad&&!spectacle)placeScenery(d,realm,cx,cz);
   const planted=realm===7&&placeMoonBamboo(d,cx,cz,shrine);
   const moonGrove=realm===7&&Boolean(shrine||planted);
-  if(!hasSkyRoad)placeTree(d,realm,cx,cz);
+  if(!hasSkyRoad&&!spectacle)placeTree(d,realm,cx,cz);
+  if(realm===5)yield* placeCavernHanging(d,cx,cz);
   if(!shrine&&!hasSkyRoad){placeBiomeFeature(d,realm,cx,cz);placeExtraBiomeFeatures(d,realm,cx,cz);}
   for(let i=0;i<3;i++){
    for(const coords of [DEEP_SITES[realm][i],(realm===6?SKY_FRONTIER_SITES:FRONTIER_SITES)[i]]){

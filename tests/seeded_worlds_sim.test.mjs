@@ -359,3 +359,53 @@ console.log('New seeded building placement and late player block protection (moc
  assert.equal(fresh.props.get(`seed_extra_0_${cx}_${cz}_v2`),1);
  assert.equal(fresh.generator.biomeAt(0,{x,z}).id,newerBiomeAt(0,x,z,noise).profile.id);
 }
+// Exercise the actual new large landmark placement on finished terrain in all
+// eight realms, not just the pure plans. Try representative seeded candidates.
+{
+ const {spectaclePlan}=await import('../Hakkai_v7.1.0/BehaviorPack/scripts/realm_spectacles.js');
+ const {hash,height,noise}=seedFunctions('731');let meadowExample,skyExample;
+ for(let realm=0;realm<8;realm++){
+  let success,attempts=0;
+  for(let cx=100;cx<180&&!success;cx++)for(let cz=100;cz<180&&!success;cz++){
+   const plan=spectaclePlan(realm,cx,cz,hash);if(!plan.length)continue;
+   if(realm!==6){const base=height(realm,cx*16+8,cz*16+8);if(base+24>152||plan.some(p=>Math.abs(height(realm,p.x,p.z)-base)>5))continue;}
+   if(++attempts>80)break;
+   const f=fixture(realm,cx,cz);f.generator.tick(f.player,20);f.run();
+   if(f.props.get(`seed_spectacle_${realm}_${cx}_${cz}_v1`))success=f;
+  }
+  assert.ok(success,`realm ${realm}: real placement after ${attempts} attempts`);
+  if(realm===0)meadowExample={cx:success.dimension.cx,cz:success.dimension.cz};
+  if(realm===6)skyExample=success;
+  assert.equal(success.reports.length,0);
+  assert.equal(success.props.get(`seed_land_${realm}_${success.dimension.cx}_${success.dimension.cz}_v1`),1);
+ }
+ // The sky generator really produces thicker island undersides, rather than
+ // just reporting a new plan. Look at contiguous cloudstone, not the labels.
+ let deepest=0;
+ for(let x=skyExample.dimension.cx*16;x<skyExample.dimension.cx*16+16;x++)for(let z=skyExample.dimension.cz*16;z<skyExample.dimension.cz*16+16;z++){
+  let run=0;for(let y=40;y<=145;y++){if(skyExample.dimension.getBlock({x,y,z}).typeId==='hakkai:cloudstone')deepest=Math.max(deepest,++run);else run=0;}
+ }
+ assert.ok(deepest>8,`deeper floating-island underside ${deepest}`);
+ // Find a real suspended cavern formation with an intact roof and clear air.
+ const {cavernHangingPlan}=await import('../Hakkai_v7.1.0/BehaviorPack/scripts/realm_spectacles.js');let hanging=false;
+ for(let cx=100;cx<110&&!hanging;cx++)for(let cz=100;cz<110&&!hanging;cz++){
+  const cavern=fixture(5,cx,cz);cavern.generator.tick(cavern.player,20);cavern.run();
+  for(const p of cavernHangingPlan(cx,cz,hash)){
+   const root=124+Math.round(noise(p.x,p.z,23,5,269)*4)-2;
+   if(cavern.dimension.getBlock({x:p.x,y:root,z:p.z}).isSolid&&cavern.dimension.getBlock({x:p.x,y:root-1,z:p.z}).typeId==='hakkai:abyssal_stone'&&cavern.dimension.getBlock({x:p.x,y:root-p.length,z:p.z}).typeId==='hakkai:glow_moss')hanging=true;
+  }
+ }
+ assert.ok(hanging,'real hanging cave formation');
+ // During a yielding landmark build, a late player block is never replaced.
+ const {cx,cz}=meadowExample,plan=spectaclePlan(0,cx,cz,hash),late=plan[20];
+ const f=fixture(0,cx,cz);f.generator.tick(f.player,20);f.step(256);f.step(1);
+ const pos=key(late.x,height(0,late.x,late.z)+late.y,late.z);
+ assert.equal(f.dimension.blocks.get(pos)??'minecraft:air','minecraft:air');
+ f.dimension.blocks.set(pos,'minecraft:diamond_block');f.run();
+ assert.equal(f.dimension.blocks.get(pos),'minecraft:diamond_block');
+ assert.equal(f.props.has(`seed_spectacle_0_${cx}_${cz}_v1`),false,'partial landmark is not marked complete');
+ const withMob=fixture(0,cx,cz);withMob.generator.tick(withMob.player,20);withMob.step(256);withMob.step(1);
+ withMob.dimension.getEntities=()=>[{typeId:'minecraft:villager_v2'}];withMob.run();
+ assert.equal(withMob.props.has(`seed_spectacle_0_${cx}_${cz}_v1`),false,'incoming entities stop landmark placement');
+ console.log('All eight realm spectacles placed by real terrain jobs and late edits protected (mocked)');
+}

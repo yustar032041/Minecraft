@@ -2801,6 +2801,7 @@ const chapters=[
  ['はじめに','ガイド本は持ち物から「使う」で開きます。迷ったらこの本の章を順に読んでね。風見の帰還石を使うと、風見台・ベッド・登録地点・元の世界に帰れます。風見台で旅の地図を使い、まずは始まりの草原へ。'],
  ['世界の生成とシード','8つの界はそれぞれ別の空間です。到着すると、今いる場所を中心に周囲4チャンク分（最大9×9チャンク）の地形を先に準備します。地形の高さ・山脈・谷・島・地表素材はワールドシードと界ごとの計算で決まり、同じワールドの同じ座標なら同じ地形になります。各界には旧12種に加えて新5種ずつ、合計136種のスクリプト式シード地形帯があり、歩き続けるほど新しい地形帯が続きます。拠点・街道・既存建築のある区画は上書きしません。'],
  ['新しい地形帯と川','各界に5種類ずつ新しい地形帯を追加。界の土や植生、岩・結晶の景観が現れ、自然調査ノートにも記録されます。これはスクリプトで分類した地形帯で、エンジン本来のバイオーム変更ではありません。6界の谷では、地形条件が合えば短い川区画に水が入ります。氷の界は表面が凍ります。土手と床を確認して水を置くため川は区画ごとに途切れ、湖や海への連結はまだありません。生成済み区画は変更しません。'],
+ ['八界の大景観','新しい空き区画では、草原の風車の飾り・森の巨木・砂の石門や化石・氷晶塔・雷石の尖塔・地下の光る茸や天井の鍾乳状の石・空の雲の塔・時の時計飾りなどが現れます。各界の丘や地表の色も違います。飾りの風車や時計は動きません。シードと地形により出現しない場所もあり、旧地形や建物は改造しません。'],
  ['工場村と観測遺跡','風車工場村は草原の界、雷雲の観測遺跡は雷の界の新しい探索地です。手引きで選ぶと予定座標を表示します。工場村では鐘が動く間に住人が少しずつ現れます。破砕機と製材機の西側の樽に素材を入れ、東側の樽に空きを作ると、風力で加工し、成功した生産量が集落の備蓄に加わります。備蓄は住人の維持や成長に使います。生成条件が合わない場合は現れません。'],
  ['最初のサバイバル','①ガイド本から旅の地図を開き、始まりの草原へ。②木・石・食料を集め、作業台とかまどを用意。③畑・釣り・牧場・採集を使って食料を確保。④スタミナ表示が減ったら走るのをやめて回復。⑤魔法を使うと魔力を消費するので、使いどころを考えよう。⑥ベッドでリスポーン地点を設定し、風見の帰還石も手元に置いておくと安心です。最初から守護獣に挑まず、食料と装備を整えてから遠征しよう。'],
  ['地形と集め方','各界の新しく生成される地形では、地表の下を掘って結晶鉱を探せます。浮島の地層は薄いので掘り抜きに注意。生成済みの場所には後から追加されません。到着地点近くにも小さな鉱床があります。守護獣を倒すと欠片が手に入り、同じ欠片2個とアメジストの欠片1個から結晶を作れます。バニラの敵も、ときどき欠片を落とします。'],
@@ -5294,7 +5295,7 @@ function spawnFushi(p,t,chief){
 }
 // Restrict hostile spawns to terrain-like floors; this is not a claim-detection system.
 const wildlifeNaturalFloors=new Set(['grass_block','dirt','coarse_dirt','rooted_dirt','podzol','mycelium','moss_block','mud','sand','red_sand','sandstone','gravel','clay','stone','deepslate','tuff','andesite','calcite','snow_block','ice','packed_ice','blue_ice','terracotta','quartz_block'].map(id=>'minecraft:'+id));
-for(const id of ['wind_soil','mist_loam','sun_silt','rime_soil','storm_grit','deep_loam','cloud_loam','epoch_soil'])wildlifeNaturalFloors.add('hakkai:'+id);
+for(const id of ['wind_soil','mist_loam','sun_silt','rime_soil','storm_grit','deep_loam','cloud_loam','epoch_soil','red_dune_stone','mirror_ice','thunderstone','copper_slate','glow_moss','moonstone','cloudstone','clockstone','brasswork'])wildlifeNaturalFloors.add('hakkai:'+id);
 function wildlifeTick(p,b,site){
  const s=state(p), t=system.currentTick, d=p.dimension;
  if(num(p,'quiet_wildlife')||s.busy||t<(s.wildAt??0))return;

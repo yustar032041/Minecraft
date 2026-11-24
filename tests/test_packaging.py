@@ -35,7 +35,7 @@ with tempfile.TemporaryDirectory() as tmp:
                 assert ('scripts/main.js' if pack=='BehaviorPack' else 'textures/item_texture.json') in names
         assert total==count
         bp,rp=manifests['BehaviorPack'],manifests['ResourcePack']
-        assert bp['header']['version'] == rp['header']['version'] == [7, 1, 15]
+        assert bp['header']['version'] == rp['header']['version'] == [7, 1, 16]
         assert any(d.get('uuid') == rp['header']['uuid'] and d.get('version')==rp['header']['version'] for d in bp['dependencies'])
     try:
         build(Path(tmp) / 'wrong.zip')

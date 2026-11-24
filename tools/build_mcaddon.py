@@ -20,9 +20,9 @@ def build(destination):
         raise ValueError('output must be outside the pack directories')
     manifests = [json.loads((PACK_ROOT / name / 'manifest.json').read_text(encoding='utf-8-sig')) for name in PACKS]
     for manifest in manifests:
-        if manifest['header']['version'] != [7, 1, 15]:
+        if manifest['header']['version'] != [7, 1, 16]:
             raise ValueError('unexpected pack version')
-    if not any(dep.get('uuid') == manifests[1]['header']['uuid'] and dep.get('version') == [7, 1, 15]
+    if not any(dep.get('uuid') == manifests[1]['header']['uuid'] and dep.get('version') == [7, 1, 16]
                for dep in manifests[0]['dependencies']):
         raise ValueError('resource pack dependency mismatch')
     paths = []

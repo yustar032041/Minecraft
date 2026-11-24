@@ -56,10 +56,10 @@ export function solidIntervals(lower,upper,gap){
 }
 
 export function treeCandidates(realm,cx,cz,hash){
- const chance=({0:.13,1:.32,3:.16,6:.10})[realm];
+ const chance=({0:.13,1:.62,3:.16,6:.10})[realm];
  if(chance===undefined)return [];
  const candidates=[];
- for(let i=0;i<3;i++){
+ for(let i=0;i<(realm===1?5:3);i++){
   const xx=cx*17+i*101,zz=cz*19+i*67;
   if(hash(xx,zz,realm,211)>=chance)continue;
   // 3-block inset keeps the entire crown in the original chunk.
