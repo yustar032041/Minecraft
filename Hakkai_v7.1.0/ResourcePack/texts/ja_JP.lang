@@ -1037,3 +1037,21 @@ item.spawn_egg.entity.hakkai:resident_7_2.name=時結びの物資係のスポー
 entity.hakkai:resident_7_3.name=時結びの見守り兵
 item.spawn_egg.entity.hakkai:resident_7_3.name=時結びの見守り兵のスポーンエッグ
 ## HAKKAI_FRIENDLY_RESIDENTS_END
+## HAKKAI_BUILDERS_START
+entity.hakkai:builder_0.name=風車の建築係
+item.spawn_egg.entity.hakkai:builder_0.name=風車の建築係のスポーンエッグ
+entity.hakkai:builder_1.name=霧森の建築係
+item.spawn_egg.entity.hakkai:builder_1.name=霧森の建築係のスポーンエッグ
+entity.hakkai:builder_2.name=砂路の建築係
+item.spawn_egg.entity.hakkai:builder_2.name=砂路の建築係のスポーンエッグ
+entity.hakkai:builder_3.name=鏡湖の建築係
+item.spawn_egg.entity.hakkai:builder_3.name=鏡湖の建築係のスポーンエッグ
+entity.hakkai:builder_4.name=雷炉の建築係
+item.spawn_egg.entity.hakkai:builder_4.name=雷炉の建築係のスポーンエッグ
+entity.hakkai:builder_5.name=灯苔の建築係
+item.spawn_egg.entity.hakkai:builder_5.name=灯苔の建築係のスポーンエッグ
+entity.hakkai:builder_6.name=雲渡りの建築係
+item.spawn_egg.entity.hakkai:builder_6.name=雲渡りの建築係のスポーンエッグ
+entity.hakkai:builder_7.name=時結びの建築係
+item.spawn_egg.entity.hakkai:builder_7.name=時結びの建築係のスポーンエッグ
+## HAKKAI_BUILDERS_END

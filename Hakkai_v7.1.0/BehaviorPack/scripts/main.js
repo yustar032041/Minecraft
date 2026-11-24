@@ -1,3 +1,4 @@
+import { BUILDER_IDS, BLUEPRINTS, blueprint, readBuilderProject, stepBuilderProject, clearBuilderProject, foundBuilder, builderHome, builderPaused, setBuilderPaused, autoBuilderPlan, constructionCredit } from './village_builders.js';
 import { friendlyResidentById, foundFriendlyResident, friendlySupportTick, friendlyTrade } from './friendly_residents.js';
 import { CULTURE_SITES, CULTURE_PEOPLE, cultureResidentIdentity, foundCultureResident, factoryResidentRole, factoryResidentBonus } from './realm_culture.js';
 import { FACTORY_VILLAGE_ID, foundFactoryResident } from './factory_village.js';
@@ -2803,6 +2804,7 @@ const chapters=[
  ['はじめに','ガイド本は持ち物から「使う」で開きます。迷ったらこの本の章を順に読んでね。風見の帰還石を使うと、風見台・ベッド・登録地点・元の世界に帰れます。風見台で旅の地図を使い、まずは始まりの草原へ。'],
  ['世界の生成とシード','8つの界はそれぞれ別の空間です。到着すると、今いる場所を中心に周囲4チャンク分（最大9×9チャンク）の地形を先に準備します。地形の高さ・山脈・谷・島・地表素材はワールドシードと界ごとの計算で決まり、同じワールドの同じ座標なら同じ地形になります。各界には旧12種に加えて新5種ずつ、合計136種のスクリプト式シード地形帯があり、歩き続けるほど新しい地形帯が続きます。拠点・街道・既存建築のある区画は上書きしません。'],
  ['新しい地形帯と川','各界に5種類ずつ新しい地形帯を追加。界の土や植生、岩・結晶の景観が現れ、自然調査ノートにも記録されます。これはスクリプトで分類した地形帯で、エンジン本来のバイオーム変更ではありません。6界の谷では、地形条件が合えば短い川区画に水が入ります。氷の界は表面が凍ります。土手と床を確認して水を置くため川は区画ごとに途切れ、湖や海への連結はまだありません。生成済み区画は変更しません。'],
+ ['建築係と村の発展','文化名所と風車工場村に建築係が一度だけ現れ、村の空き地を自分で探して小さな家・加工場・農場・交流施設を順に建てます。必要な平地・空間がなければ待機し、既存ブロックは壊しません。人や生物が工事範囲にいる間も作業を止めます。建築係に話しかけると進捗を見たり停止したりできます。材料不要の試作で、保護プラグインには対応せず、空地がなければ発展しません。'],
  ['特別な友好住人','八界それぞれの名所に道案内・手当て係・物資係・見守り兵の4種類、合計32種類が現れます。通常村人とは別の友好モブで、姿と帽子は界と役割ごとに違います。近くの道案内は移動支援、手当て係は傷の手当て、物資係はエメラルドと品の交換、見守り兵は近くの敵対モブと戦います。直接話しかけると説明を読めます。自然生成はモブ生成が有効なとき、各名所で各役割1人だけ一度限りです。死亡・失敗時の補充や通常の村人交易・繁殖・就職はありません。動きや描画は実機未確認です。'],
  ['八界の暮らしと名所','八界の人々が残した風車・文庫・隊商の迷路・氷宮・鍛冶場・地下庭・空の観測庭・待合駅があります。名所にある記録石を使うと、その土地の約束と歴史を読み、旅の記録にも残せます。名所ではモブ生成が有効なら語り手が各2人まで一度だけ現れます。しゃがんで話しかけると土地の話、立って話しかけると通常の取引です。予定地は新規の空き区画に限られます。'],
  ['八界の大景観','新しい空き区画では、草原の風車の飾り・森の巨木・砂の石門や化石・氷晶塔・雷石の尖塔・地下の光る茸や天井の鍾乳状の石・空の雲の塔・時の時計飾りなどが現れます。各界の丘や地表の色も違います。飾りの風車や時計は動きません。シードと地形により出現しない場所もあり、旧地形や建物は改造しません。'],
@@ -5293,6 +5295,38 @@ function along(e,dx,dz,strength=.21,vertical=.02){
  }
  e.applyImpulse({x:dx*strength,y:vertical,z:dz*strength});return true;
 }
+function builderWorkTick(p,t){
+ const workers=p.dimension.getEntities({families:['hakkai_builder'],location:p.location,maxDistance:32,closest:4});
+ for(const worker of workers){
+   if(!worker.isValid||!permit(worker,40,'builder_work')||builderPaused(worker))continue;
+   let job=readBuilderProject(worker);
+   if(job===undefined){autoBuilderPlan(worker,{sites:places,world,num,property});job=readBuilderProject(worker);}
+   if(!job)continue;
+   const finish=(e,j)=>{
+     const home=builderHome(e),site=places.find(s=>s.id===home&&(s.id===59||s.kind==='culture'));
+     if(!site||j.homeId!==home||!Number.isInteger(j.stage)||BLUEPRINTS[j.stage]?.id!==j.kind)return;
+     const stageKey=`builder_stage_${home}_v1`,current=num(world,stageKey);
+     if(current<=j.stage)property(world,stageKey,j.stage+1);
+     const town=townNear(e.dimension,j.at);
+     if(town&&['minecraft:bell',ns+'town_bell'].includes(town.d.getBlock(town.l)?.typeId)){
+       const next=constructionCredit(townRecord(town),j.kind);if(next)townSave(town,next);
+     }
+     if(current<=j.stage)for(const player of e.dimension.getPlayers({location:j.at,maxDistance:24,closest:8}))player.sendMessage(`§a建築係が${BLUEPRINTS[j.stage].name}を完成させました。`);
+     clearBuilderProject(e);
+   };
+   if(job.done){finish(worker,job);continue;}
+   const dx=worker.location.x-(job.at.x+.5),dz=worker.location.z-(job.at.z+.5);
+   // Approach a point outside the worksite; do not override monster avoidance.
+   if(!p.dimension.getEntities({families:['monster'],location:worker.location,maxDistance:9,closest:1}).length){
+     const gx=Math.abs(dx)>=Math.abs(dz)?(dx>=0?5.5:-5.5):0,gz=Math.abs(dx)<Math.abs(dz)?(dz>=0?5.5:-5.5):0;
+     if(Math.hypot(dx-gx,dz-gz)>.5)try{along(worker,gx-dx,gz-dz,.13);}catch{}
+   }
+   for(let n=0;n<3;n++){
+     const result=stepBuilderProject(worker,{resolve:(id,states)=>BlockPermutation.resolve(id,states),report,completed:finish});
+     if(result!=='placed'&&result!=='recovered')break;
+   }
+ }
+}
 function visibleFrom(e,l){
  const h=e.getHeadLocation(),v={x:l.x-h.x,y:l.y-h.y,z:l.z-h.z},len=Math.hypot(v.x,v.y,v.z);
  return len<.4||!e.dimension.getBlockFromRay(h,{x:v.x/len,y:v.y/len,z:v.z/len},{maxDistance:len-.25});
@@ -5438,6 +5472,20 @@ safeSub('world','before','playerInteractWithEntity',e=>{
    const match=e.target.nameTag.match(/§d風記の案内人§r｜(\d+)｜/);
    const index=match?Number(match[1]):-1;
    if(index>=0&&index<8)menu(p,async()=>realmNpcConversation(p,index));
+   return;
+ }
+ if(BUILDER_IDS.includes(e.target.typeId)){
+   e.cancel=true;const worker=e.target;
+   menu(p,async()=>{
+     const near=()=>p.isValid&&worker.isValid&&p.dimension.id===worker.dimension.id&&dist(p.location,worker.location)<6&&[GameMode.Survival,GameMode.Creative].includes(p.getGameMode());
+     if(!near())return;
+     const job=readBuilderProject(worker),paused=builderPaused(worker),home=builderHome(worker);
+     const status=job?`${BLUEPRINTS.find(b=>b.id===job.kind)?.name}：${job.i}/${blueprint(job.kind).length} ${job.done?'完成':'建築中・障害があれば待機'}\n中心 X ${job.at.x} Y ${job.at.y} Z ${job.at.z}`:job===null?'保存された作業を読み取れません。':home===undefined?'この建築係は村に所属していないため、自動建築しません。':num(world,`builder_stage_${home}_v1`)>=BLUEPRINTS.length?'この村の4種類の建築計画は完了しました。':'安全な空き地を探しています。';
+     const ix=await form(p,'建築係｜村づくり',`${status}\n自動建築：${paused?'停止中':'有効'}\n\n建築係は村の空き地に小さな家・加工場・農場・交流施設を各1つ目指します。既存ブロックは壊さず、範囲に人や生物がいる間は待機。建築資材は消費しない試作です。停止・中止しても設置済みブロックは残ります。`,[[paused?'自動建築を再開':'自動建築を停止'],['停止して現在の作業記録を消す'],['閉じる']]);
+     if(!near())return;
+     if(ix===0){setBuilderPaused(worker,!paused);notice(p,paused?'§a建築係を再開しました':'§e建築係を停止しました');}
+     if(ix===1){setBuilderPaused(worker,true);clearBuilderProject(worker);notice(p,'§e作業を中止しました。設置済みブロックは残ります');}
+   });
    return;
  }
  const resident=friendlyResidentById.get(e.target.typeId);
@@ -5770,6 +5818,8 @@ system.runInterval(()=>{
        s.natureAt=t+40;
        if(/^hakkai:realm_[0-7]$/.test(p.dimension.id)){
          if(site?.kind==='culture')foundFriendlyResident({site,world,dimension:p.dimension,num,property,findFloor:safeNear,report});
+         if(site?.kind==='culture'||site?.id===59)foundBuilder({site,world,dimension:p.dimension,num,property,findFloor:safeNear,report});
+         builderWorkTick(p,t);
          if([GameMode.Survival,GameMode.Adventure].includes(p.getGameMode()))friendlySupportTick(p,s,t);
        }
        let profile;try{profile=survey(p);}catch{}
