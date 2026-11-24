@@ -40,6 +40,6 @@ const snap=c=>c.items.map(x=>x&&[x.typeId,x.amount]);
  const missing=inventory([new Item('minecraft:diamond')]);assert.equal(friendlyTrade(missing,new Item('minecraft:bread')),false);
 }
 const main=fs.readFileSync('Hakkai_v7.1.0/BehaviorPack/scripts/main.js','utf8');
-assert.match(main,/foundFriendlyResident\(\{site,world,dimension:p\.dimension/);assert.match(main,/friendlySupportTick\(p,s,t\)/);assert.match(main,/friendlyTrade\(space\(p\)/);
+assert.match(main,/foundFriendlyResident\(\{site,world,dimension:p\.dimension/);assert.match(main,/friendlySupportTick\(p,s,t,e=>villagerJob\(e,world\)\)/);assert.match(main,/friendlyTrade\(space\(p\)/);
 assert.match(main,/const near=\(\)=>p\.isValid&&target\.isValid&&p\.dimension\.id===target\.dimension\.id&&dist\(p\.location,target\.location\)<6/);
 console.log('32 residents: independent one-time spawning, safe support cooldowns and planned trades (mocked)');

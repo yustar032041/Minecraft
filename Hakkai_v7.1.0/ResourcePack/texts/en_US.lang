@@ -1041,3 +1041,13 @@ item.spawn_egg.entity.hakkai:builder_6.name=雲渡りの建築係のスポーン
 entity.hakkai:builder_7.name=時結びの建築係
 item.spawn_egg.entity.hakkai:builder_7.name=時結びの建築係のスポーンエッグ
 ## HAKKAI_BUILDERS_END
+
+tile.hakkai:workstation_guide.name=Guide Workstation
+
+tile.hakkai:workstation_healer.name=Healer Workstation
+
+tile.hakkai:workstation_artisan.name=Supplier Workstation
+
+tile.hakkai:workstation_guard.name=Guardian Workstation
+
+tile.hakkai:workstation_builder.name=Builder Workstation

@@ -103,7 +103,7 @@ export function validWorkshop(t,setup){
  const distance=(u,v)=>Math.hypot(u.x-v.x,u.y-v.y,u.z-v.z),limit=t.factoryVillage?50:28;
  return distance(a,b)<=4&&distance(t.l,a)<=limit&&distance(t.l,b)<=limit;
 }
-export function workshopStep(t,setup,{ItemStack,factoryTransaction,factoryResidentRole,friendlyResidentById,onCraft=()=>{},report=()=>{}}){
+export function workshopStep(t,setup,{ItemStack,factoryTransaction,factoryResidentRole,friendlyResidentById,extraRole=()=>undefined,onCraft=()=>{},report=()=>{}}){
  if(!validWorkshop(t,setup))return undefined;
  const d=t.d,a=setup.input,b=setup.output;
  try{
@@ -112,7 +112,7 @@ export function workshopStep(t,setup,{ItemStack,factoryTransaction,factoryReside
   const input=west.getComponent('minecraft:inventory')?.container,output=east.getComponent('minecraft:inventory')?.container;
   if(!input||!output||input===output)return undefined;
   const workers=d.getEntities({location:a,maxDistance:6,closest:32}).filter(e=>e.isValid&&Math.hypot(e.location.x-b.x,e.location.y-b.y,e.location.z-b.z)<=6);
-  const artisan=workers.some(e=>friendlyResidentById.get(e.typeId)?.role==='artisan');
+  const artisan=workers.some(e=>friendlyResidentById.get(e.typeId)?.role==='artisan'||extraRole(e)==='artisan');
   const saw=t.factoryVillage&&workers.some(e=>e.typeId==='minecraft:villager_v2'&&factoryResidentRole(e)==='saw'&&!e.getComponent('minecraft:is_baby'));
   const candidates=[];
   if(artisan)candidates.push({cost:'minecraft:wheat',need:3,product:'minecraft:bread',amount:1,label:'物資係が小麦3個からパン1個を作った'});

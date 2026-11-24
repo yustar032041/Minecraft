@@ -1,6 +1,13 @@
+import { world as jobWorld } from '@minecraft/server';
+import { villagerJob } from './villager_jobs.js';
 import { residentSpot,villageIdentity,villageBuilt } from './resident_spawn.js';
 // Autonomous, bounded construction on vacant village plots. It never clears blocks.
 export const BUILDER_IDS=Array.from({length:8},(_,r)=>`hakkai:builder_${r}`);
+export function builderRealm(builder){
+ const i=BUILDER_IDS.indexOf(builder?.typeId);if(i>=0)return i;
+ if(villagerJob(builder,jobWorld)!=='builder')return -1;
+ const m=/^hakkai:realm_([0-7])$/.exec(builder.dimension.id);return m?Number(m[1]):-1;
+}
 export const BLUEPRINTS=[
  {id:'house',name:'小さな家',desc:'屋根と入口、作業台と収納樽。ベッドは別途設置。'},
  {id:'factory',name:'小さな加工場',desc:'屋外の破砕機・風力回転機・入出力樽。'},
@@ -13,6 +20,20 @@ const HOME='hakkai:builder_home_v1',PAUSED='hakkai:builder_paused_v1';
 export function builderHome(builder){try{const id=builder.getDynamicProperty(HOME);return Number.isInteger(id)||typeof id==='string'&&/^seed_repeat_[0-7]_-?\d+_-?\d+_v1$/.test(id)?id:undefined;}catch{return undefined;}}
 export function builderPaused(builder){try{return builder.getDynamicProperty(PAUSED)===1;}catch{return true;}}
 export function setBuilderPaused(builder,paused){builder.setDynamicProperty(PAUSED,paused?1:0);}
+// A village can have several builders, but only one construction project at a
+// time. Keep the reservation across reloads; never guess that an unloaded
+// owner is dead. Death or explicit cancellation releases it.
+const lockKey=id=>`hakkai:builder_owner_${id}_v1`;
+export function claimBuilderWork(worker,world){
+ const home=builderHome(worker);if(home===undefined)return false;
+ const key=lockKey(home),owner=world.getDynamicProperty(key);
+ if(owner!==undefined&&owner!==worker.id)return false;
+ if(owner===undefined)world.setDynamicProperty(key,worker.id);
+ return true;
+}
+export function releaseBuilderWork(worker,world){
+ try{const home=builderHome(worker);if(home!==undefined&&world.getDynamicProperty(lockKey(home))===worker.id)world.setDynamicProperty(lockKey(home),undefined);}catch{}
+}
 // A town receives each type's prosperity credit once, even after a restart.
 export function constructionCredit(data,kind){
  const i=BLUEPRINTS.findIndex(b=>b.id===kind);if(i<0)return undefined;
@@ -66,9 +87,9 @@ const save=(builder,job)=>builder.setDynamicProperty(KEY,JSON.stringify(job));
 const NATURAL_GROUND=new Set(['minecraft:grass_block','minecraft:dirt','minecraft:stone','minecraft:gravel','minecraft:moss_block','minecraft:sandstone','minecraft:snow_block','minecraft:tuff','minecraft:deepslate','hakkai:cloudstone','hakkai:clockstone']);
 const safeGround=b=>Boolean(b&&b.isSolid&&!b.isLiquid&&NATURAL_GROUND.has(b.typeId));
 export function startBuilderProject(builder,kind,at,homeId,stage){
- if(!builder?.isValid||!BUILDER_IDS.includes(builder.typeId)||readBuilderProject(builder)!==undefined||!blueprint(kind).length||!['x','y','z'].every(k=>Number.isSafeInteger(at?.[k])))return 'invalid';
+ if(!builder?.isValid||builderRealm(builder)<0||readBuilderProject(builder)!==undefined||!blueprint(kind).length||!['x','y','z'].every(k=>Number.isSafeInteger(at?.[k])))return 'invalid';
  const d=builder.dimension;
- if(!/^hakkai:realm_[0-7]$/.test(d.id)||d.id!==`hakkai:realm_${BUILDER_IDS.indexOf(builder.typeId)}`||Math.hypot(builder.location.x-at.x,builder.location.y-at.y,builder.location.z-at.z)>48)return 'distance';
+ if(!/^hakkai:realm_[0-7]$/.test(d.id)||d.id!==`hakkai:realm_${builderRealm(builder)}`||Math.hypot(builder.location.x-at.x,builder.location.y-at.y,builder.location.z-at.z)>48)return 'distance';
  try{
   // The floor stays untouched. Require a 7x7x5 work volume plus a
   // one-block air buffer; never force-load or clear terrain/buildings.
@@ -83,11 +104,11 @@ export function startBuilderProject(builder,kind,at,homeId,stage){
 // non-air block. After interruption a matching pending block may be accepted.
 // A missing/occupied/unloaded block suspends rather than deletes anything.
 export function stepBuilderProject(builder,{resolve,report=()=>{},completed=()=>{}}){
- if(!builder?.isValid||!BUILDER_IDS.includes(builder.typeId))return 'invalid';
+ if(!builder?.isValid||builderRealm(builder)<0)return 'invalid';
  const j=readBuilderProject(builder);if(!j)return j===null?'invalid':'idle';
  const plan=blueprint(j.kind),d=builder.dimension;
  if(j.done)return 'done';
- if(d.id!==`hakkai:realm_${BUILDER_IDS.indexOf(builder.typeId)}`||Math.hypot(builder.location.x-j.at.x,builder.location.y-j.at.y,builder.location.z-j.at.z)>16)return 'worker_far';
+ if(d.id!==`hakkai:realm_${builderRealm(builder)}`||Math.hypot(builder.location.x-j.at.x,builder.location.y-j.at.y,builder.location.z-j.at.z)>16)return 'worker_far';
  try{
   if(!d.isChunkLoaded(j.at))return 'unloaded';
   const center={x:j.at.x+.5,y:j.at.y+2,z:j.at.z+.5};
@@ -143,7 +164,7 @@ export function foundBuilder({site,world,dimension,num,property,findFloor,report
 export function autoBuilderPlan(builder,{sites,world,num,property}){
  if(!builder?.isValid||builderPaused(builder)||readBuilderProject(builder)!==undefined)return 'idle';
  const id=builderHome(builder),site=sites.find(s=>villageIdentity(s)===id&&(s.id===59||s.kind==='culture'));
- if(!site||!villageBuilt(site,world,num)||builder.dimension.id!==`hakkai:realm_${site.dim}`||builder.typeId!==BUILDER_IDS[site.dim])return 'no_home';
+ if(!site||!villageBuilt(site,world,num)||builder.dimension.id!==`hakkai:realm_${site.dim}`||builderRealm(builder)!==site.dim)return 'no_home';
  const stage=num(world,`builder_stage_${id}_v1`);if(!Number.isInteger(stage)||stage<0||stage>=BLUEPRINTS.length)return 'finished';
  const limit=Math.floor(((site.size??45)-1)/2)-4,points=[];
  for(let x=-limit;x<=limit;x+=10)for(let z=-limit;z<=limit;z+=10)points.push({x:site.x+x,y:88,z:site.z+z});

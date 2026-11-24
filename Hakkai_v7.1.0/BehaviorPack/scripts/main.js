@@ -1,3 +1,5 @@
+import { JOBS, villagerJob, workstationTick, releaseWorkstation, releaseDeadWorker } from './villager_jobs.js';
+import { disallowHostileSpawn, suppressVanillaSpawn, VANILLA_HOSTILES } from './hostile_spawn_rules.js';
 import { configureFriendlyFire,friendlyFireEnabled,setFriendlyFire,protectsPlayer } from './friendly_fire.js';
 import { placeRepeatSite } from './seeded_repeat_sites.js';
 import { setupBowTrail } from './combat_bow_trail.js';
@@ -6,8 +8,8 @@ import { tomeSpells, tomeUnlocked, tomeCurrent, tomeNext, tomeCrouchTick } from 
 import { VILLAGE_GUIDE_CHAPTERS } from './village_guide.js';
 import { validPlot, repairPlotStep, validRoute, readCarry, carryStep, retrieveCargo, festivalGameStart, festivalGameAdvance, GAME_CORNERS, GAME_COURSES } from './village_projects.js';
 import { seasonAt, festivalAt, villageTier, requestStatus, contributeRequest, festivalJoin, donation, workDay, detectCrisis, recoverCrisis, addVillageMemory, depositToVillage, validWorkshop, workshopStep } from './village_life.js';
-import { BUILDER_IDS, BLUEPRINTS, blueprint, readBuilderProject, stepBuilderProject, clearBuilderProject, foundBuilder, builderHome, builderPaused, setBuilderPaused, autoBuilderPlan, constructionCredit } from './village_builders.js';
-import { friendlyResidentById, foundFriendlyResident, friendlySupportTick, friendlyTrade } from './friendly_residents.js';
+import { BUILDER_IDS, claimBuilderWork, releaseBuilderWork, BLUEPRINTS, blueprint, readBuilderProject, stepBuilderProject, clearBuilderProject, foundBuilder, builderHome, builderPaused, setBuilderPaused, autoBuilderPlan, constructionCredit } from './village_builders.js';
+import { FRIENDLY_RESIDENTS, friendlyResidentById, foundFriendlyResident, friendlySupportTick, friendlyTrade } from './friendly_residents.js';
 import { CULTURE_SITES, CULTURE_PEOPLE, cultureResidentIdentity, foundCultureResident, factoryResidentRole, factoryResidentBonus } from './realm_culture.js';
 import { FACTORY_VILLAGE_ID, foundFactoryResident } from './factory_village.js';
 import { villageIdentity, villageBuilt } from './resident_spawn.js';
@@ -52,7 +54,7 @@ import { equippedSeries, ownsSeriesPiece, trialRewardSlot, seriesLegUpgrade } fr
 import { setupCombatCharge, RELEASE_WEAPON_KINDS } from './combat_charge.js';
 import { places, atlas, linkedRealms, attrs, home, pairs, guardians, catalog, anchor, baseY, width, expandedY, expandedHeight, patterns, chronicles, biomes, families, wildlife, hudTokens, civicRoles, seasonalPlants } from './data.js';
 import { setupFrontierWorlds } from './frontier_worlds.js';
-import { isNaturalSite, initializeNaturalSitePlans, siteBounds } from './natural_sites.js';
+import { isNaturalSite, initializeNaturalSitePlans, siteBounds, inSite } from './natural_sites.js';
 import { setupSeededWorlds } from './seeded_worlds.js';
 import { pickRealmWildlife } from './wildlife_selection.js';
 import { spawnWildlife } from './wildlife_spawn.js';
@@ -4693,7 +4695,7 @@ function lifeSignals(t){
 }
 function lifeWorkers(t){
  const people=t.d.getEntities({location:t.l,maxDistance:t.factoryVillage?60:32,closest:48}).filter(e=>e.isValid);
- return {farmer:people.some(e=>t.factoryVillage&&e.typeId==='minecraft:villager_v2'&&factoryResidentRole(e)==='grower'&&!e.getComponent('minecraft:is_baby')),artisan:people.some(e=>friendlyResidentById.get(e.typeId)?.role==='artisan'),builder:people.some(e=>BUILDER_IDS.includes(e.typeId))};
+ return {farmer:people.some(e=>t.factoryVillage&&e.typeId==='minecraft:villager_v2'&&factoryResidentRole(e)==='grower'&&!e.getComponent('minecraft:is_baby')),artisan:people.some(e=>friendlyResidentById.get(e.typeId)?.role==='artisan'||villagerJob(e,world)==='artisan'),builder:people.some(e=>BUILDER_IDS.includes(e.typeId)||villagerJob(e,world)==='builder')};
 }
 function lifeTick(p,site,tick){
  const s=state(p);if(tick<(s.villageLifeAt??0))return;s.villageLifeAt=tick+200;
@@ -4703,7 +4705,7 @@ function lifeTick(p,site,tick){
   const next=workDay(alert??data,day,lifeWorkers(t));if(next||alert)saveVillageLife(t,next??alert);
   const live=townRecord(t),now=world.getAbsoluteTime();
   if(live.lifeWorkshop&&now>=(live.lifeCraftAt??-1200)+1200){
-   workshopStep(t,live.lifeWorkshop,{ItemStack,factoryTransaction,factoryResidentRole,friendlyResidentById,report,
+   workshopStep(t,live.lifeWorkshop,{ItemStack,factoryTransaction,factoryResidentRole,friendlyResidentById,extraRole:e=>villagerJob(e,world),report,
     onCraft:result=>saveVillageLife(t,addVillageMemory({...townRecord(t),lifeCraftAt:now},day,result))});
   }
   const f=festivalAt(day,lifeRealm(t)),tier=villageTier(townRecord(t),lifeBuildings(t));
@@ -5410,6 +5412,13 @@ function transfer(b){
     rollbackExternal:waterTank?()=>waterTank.setPermutation(waterBefore):undefined}))worked(outputCount);return;
  }
 }
+function jobHomeForBlock(block){
+ const d=block.dimension,at=block.location,m=/^hakkai:realm_([0-7])$/.exec(d.id);if(!m)return;
+ const realm=Number(m[1]),repeat=seededWorlds?.repeatSiteAt(realm,at.x,at.z);
+ if(repeat?.id===59)return villageIdentity(repeat);
+ const site=places.find(s=>s.dim===realm&&(s.id===59||s.kind==='culture')&&villageBuilt(s,world,num)&&inSite(s,at.x,at.z));
+ return site?villageIdentity(site):undefined;
+}
 safeSub('system','before','startup',({itemComponentRegistry,blockComponentRegistry})=>{
  safeReg(itemComponentRegistry,ns+'use',{onUse:use,onUseOn:use,onCompleteUse:completeFocus});
  safeReg(blockComponentRegistry,ns+'bearing',{
@@ -5421,6 +5430,14 @@ safeSub('system','before','startup',({itemComponentRegistry,blockComponentRegist
   onPlayerInteract:({player,block})=>{if(player?.isValid&&isGantry(block.typeId)&&![GameMode.Spectator,GameMode.Adventure].includes(player.getGameMode()))menu(player,p=>gantryMenu(p,block));}
  });
  safeReg(blockComponentRegistry,ns+'factory',{onTick:({block})=>transfer(block),onPlayerInteract:({player,block})=>{try{if(!player?.isSneaking)return;if(block.typeId===ns+'fluid_tank'){const s=tankState(block);player.sendMessage(!s?'§e液体タンクの状態を確認できません':`§b液体タンク ${['空','水','溶岩'][s.kind]} ${s.n}/8（1目盛り＝バケツ1/4）`);return;}if(block.typeId===ns+'clutch'){const on=toggleClutch(block);if(on!==undefined)notice(player,on?'§a動力クラッチ：接続':'§e動力クラッチ：切断');return;}factoryMeter(player,block);}catch{}}});
+ safeReg(blockComponentRegistry,ns+'workstation',{
+  onTick:({block})=>workstationTick(block,world,jobHomeForBlock),
+  onPlayerInteract:({block,player})=>{
+   if(!player||player.getGameMode()===GameMode.Spectator)return;
+   if(player.isSneaking){const released=releaseWorkstation(block.dimension,block.location,world,releaseBuilderWork);notice(player,released?'§e職場の登録を解除しました。再び村人が就職できます。':'§eまだ登録された村人はいません。');}
+   else notice(player,'§a近くの大人の村人が追加役割に就きます。通常の交易は維持されます。しゃがんで使用すると登録解除。建築係は八界の村の中で建築します。',120);
+  }
+ });
  safeReg(blockComponentRegistry,ns+'town',{onTick:({block})=>townTick(block),onPlayerInteract:({player,block})=>{
    if(player&&player.getGameMode()!==GameMode.Spectator)menu(player,p=>townMenu(p,townGet(block.dimension,block.location,true)));
  }});
@@ -5531,8 +5548,17 @@ function along(e,dx,dz,strength=.21,vertical=.02){
  }
  e.applyImpulse({x:dx*strength,y:vertical,z:dz*strength});return true;
 }
+function villagerGuardTick(p,t){
+ for(const guard of p.dimension.getEntities({families:['villager'],location:p.location,maxDistance:32,closest:24})){
+  if(villagerJob(guard,world)!=='guard'||!permit(guard,40,'villager_guard'))continue;
+  try{
+   const target=p.dimension.getEntities({families:['monster'],location:guard.location,maxDistance:4,closest:12}).find(e=>e.isValid&&e.typeId!=='minecraft:creeper'&&(VANILLA_HOSTILES.has(e.typeId)||wildlifeById.get(e.typeId)?.temper==='hostile')&&visibleFrom(guard,e.location));
+   if(target)target.applyDamage(3,{cause:EntityDamageCause.entityAttack,damagingEntity:guard});
+  }catch{}
+ }
+}
 function builderWorkTick(p,t){
- const workers=p.dimension.getEntities({families:['hakkai_builder'],location:p.location,maxDistance:32,closest:4});
+ const workers=[...p.dimension.getEntities({families:['hakkai_builder'],location:p.location,maxDistance:32,closest:4}),...p.dimension.getEntities({families:['villager'],location:p.location,maxDistance:32,closest:32}).filter(e=>villagerJob(e,world)==='builder')];
  for(const worker of workers){
    if(!worker.isValid||!permit(worker,40,'builder_work')||builderPaused(worker))continue;
    let job=readBuilderProject(worker);
@@ -5551,9 +5577,11 @@ function builderWorkTick(p,t){
        }
        worker.setDynamicProperty(ns+'repair_cursor_v1',(i+1)%BLUEPRINTS.length);
      }
+     if(!claimBuilderWork(worker,world))continue;
      autoBuilderPlan(worker,{sites:site?.repeatKey?[...places,site]:places,world,num,property});job=readBuilderProject(worker);
+     if(!job)releaseBuilderWork(worker,world);
    }
-   if(!job)continue;
+   if(!job||!claimBuilderWork(worker,world))continue;
    const finish=(e,j)=>{
      const home=builderHome(e),site=villageSiteByHome(home);
      if(!site||j.homeId!==home||!Number.isInteger(j.stage)||BLUEPRINTS[j.stage]?.id!==j.kind)return;
@@ -5566,7 +5594,7 @@ function builderWorkTick(p,t){
        const next=constructionCredit(townRecord(town),j.kind);if(next)saveVillageLife(town,addVillageMemory(next,seasonDay(),`建築係が${BLUEPRINTS[j.stage].name}を完成（備蓄+8）`));
      }
      if(current<=j.stage)for(const player of e.dimension.getPlayers({location:j.at,maxDistance:24,closest:8}))player.sendMessage(`§a建築係が${BLUEPRINTS[j.stage].name}を完成させました。`);
-     clearBuilderProject(e);
+     clearBuilderProject(e);releaseBuilderWork(e,world);
    };
    if(job.done){finish(worker,job);continue;}
    const dx=worker.location.x-(job.at.x+.5),dz=worker.location.z-(job.at.z+.5);
@@ -5595,6 +5623,7 @@ function spawnFushi(p,t,chief){
 // Restrict hostile spawns to terrain-like floors; this is not a claim-detection system.
 const wildlifeNaturalFloors=new Set(['grass_block','dirt','coarse_dirt','rooted_dirt','podzol','mycelium','moss_block','mud','sand','red_sand','sandstone','gravel','clay','stone','deepslate','tuff','andesite','calcite','snow_block','ice','packed_ice','blue_ice','terracotta','quartz_block'].map(id=>'minecraft:'+id));
 for(const id of ['wind_soil','mist_loam','sun_silt','rime_soil','storm_grit','deep_loam','cloud_loam','epoch_soil','red_dune_stone','mirror_ice','thunderstone','copper_slate','glow_moss','moonstone','cloudstone','clockstone','brasswork'])wildlifeNaturalFloors.add('hakkai:'+id);
+function hostileSpawnContext(){return {factory:travelSites.get(FACTORY_VILLAGE_ID),world,num,repeatSiteAt:(r,x,z)=>seededWorlds?.repeatSiteAt(r,x,z)};}
 function wildlifeTick(p,b,site){
  const s=state(p), t=system.currentTick, d=p.dimension;
  if(num(p,'quiet_wildlife')||s.busy||t<(s.wildAt??0))return;
@@ -5650,6 +5679,7 @@ function wildlifeTick(p,b,site){
   player:p,type:ns+m.id,tick:t,safe,allowNearbyBiome:inRealm,
   avoid:pos=>{
    if(m.temper!=='hostile')return false;
+   if(disallowHostileSpawn(d,pos,hostileSpawnContext()))return true;
    // Keep the central arrival areas clear even when the player stands outside.
    if(inRealm&&places.slice(0,9).some(s=>s.dim===realmId&&Math.hypot(pos.x-s.x,pos.z-s.z)<16))return true;
    if(site&&dist(pos,coords(site))<9)return true;
@@ -5688,6 +5718,10 @@ safeSub('world','after','entityHurt',({hurtEntity:e,damageSource:source,damage})
  }
 
 });
+// Suppress newly naturally spawned vanilla hostiles, never loaded entities.
+safeSub('world','after','entitySpawn',e=>suppressVanillaSpawn(e,hostileSpawnContext()));
+safeSub('world','after','playerBreakBlock',({block,brokenBlockPermutation})=>{if(brokenBlockPermutation.type.id.startsWith(ns+'workstation_'))releaseWorkstation(block.dimension,block.location,world,releaseBuilderWork);});
+safeSub('world','after','entityDie',({deadEntity})=>{releaseBuilderWork(deadEntity,world);releaseDeadWorker(deadEntity,world);});
 safeSub('world','after','entityDie',({deadEntity,damageSource})=>{
  const killer=/** @type {import('@minecraft/server').Player | undefined} */ (damageSource.damagingEntity);
  if(killer?.typeId!=='minecraft:player'||!killer.isValid)return;
@@ -5729,7 +5763,7 @@ safeSub('world','before','playerInteractWithEntity',e=>{
    if(index>=0&&index<8)menu(p,async()=>realmNpcConversation(p,index));
    return;
  }
- if(BUILDER_IDS.includes(e.target.typeId)){
+ if(BUILDER_IDS.includes(e.target.typeId)||(p.isSneaking&&villagerJob(e.target,world)==='builder')){
    e.cancel=true;const worker=e.target;
    menu(p,async()=>{
      const near=()=>p.isValid&&worker.isValid&&p.dimension.id===worker.dimension.id&&dist(p.location,worker.location)<6&&[GameMode.Survival,GameMode.Creative].includes(p.getGameMode());
@@ -5739,7 +5773,7 @@ safeSub('world','before','playerInteractWithEntity',e=>{
      const ix=await form(p,'建築係｜村づくり',`${status}\n自動建築：${paused?'停止中':'有効'}\n\n建築係は村の空き地に小さな家・加工場・農場・交流施設・祭り会場を各1つ目指します。既存ブロックは壊さず、範囲に人や生物がいる間は待機。建築資材は消費しない試作です。停止・中止しても設置済みブロックは残ります。`,[[paused?'自動建築を再開':'自動建築を停止'],['停止して現在の作業記録を消す'],['閉じる']]);
      if(!near())return;
      if(ix===0){setBuilderPaused(worker,!paused);notice(p,paused?'§a建築係を再開しました':'§e建築係を停止しました');}
-     if(ix===1){setBuilderPaused(worker,true);clearBuilderProject(worker);notice(p,'§e作業を中止しました。設置済みブロックは残ります');}
+     if(ix===1){setBuilderPaused(worker,true);clearBuilderProject(worker);releaseBuilderWork(worker,world);notice(p,'§e作業を中止しました。設置済みブロックは残ります');}
    });
    return;
  }
@@ -5761,6 +5795,22 @@ safeSub('world','before','playerInteractWithEntity',e=>{
      else notice(p,'§eエメラルド・空き容量を確認してください。処理失敗時は持ち物も確認してください');
    });
    return;
+ }
+ if(p.isSneaking&&villagerJob(e.target,world)){
+  e.cancel=true;const target=e.target,role=villagerJob(target,world);
+  menu(p,async()=>{
+   const near=()=>p.isValid&&target.isValid&&p.dimension.id===target.dimension.id&&dist(p.location,target.location)<6&&villagerJob(target,world)===role;
+   if(!near())return;
+   const match=/^hakkai:realm_([0-7])$/.exec(target.dimension.id),realm=match?Number(match[1]):0;
+   const resident=FRIENDLY_RESIDENTS[realm*4+Math.max(0,['guide','healer','artisan','guard'].indexOf(role))];
+   const text=`村人の追加役割：${JOBS[role]}。${resident.description}\n立ったまま話すと通常の村人の交易です。`;
+   const ix=await form(p,JOBS[role],text,role==='artisan'?[[`エメラルド1個 → ${resident.itemName}${resident.count}個`],['閉じる']]:[['閉じる']]);
+   if(role==='artisan'&&ix===0&&near()){
+    if(friendlyTrade(space(p),new ItemStack(resident.item,resident.count),report))notice(p,`§a${resident.itemName}を受け取りました`);
+    else notice(p,'§eエメラルド・空き容量を確認してください');
+   }
+  });
+  return;
  }
  if(p.isSneaking&&['minecraft:villager','minecraft:villager_v2'].includes(e.target.typeId)){
    const identity=cultureResidentIdentity(e.target);
@@ -6096,8 +6146,9 @@ system.runInterval(()=>{
          lifeTick(p,site,t);
          villageCarryTick(p,site,t);
          villageGameTick(p,t);
-         if([GameMode.Survival,GameMode.Adventure].includes(p.getGameMode()))friendlySupportTick(p,s,t);
        }
+       villagerGuardTick(p,t);
+       if([GameMode.Survival,GameMode.Adventure].includes(p.getGameMode()))friendlySupportTick(p,s,t,e=>villagerJob(e,world));
        let profile;try{profile=survey(p);}catch{}
        // Allow observing realm wildlife in creative too; keep vanilla-world behavior unchanged.
        if(!isCreative(p)||/^hakkai:realm_[0-7]$/.test(p.dimension.id))try{wildlifeTick(p,profile,site);}catch(err){if(t%200===0)report('生き物の出現',err);}

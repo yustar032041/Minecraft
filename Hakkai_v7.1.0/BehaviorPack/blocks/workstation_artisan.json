@@ -1,0 +1,40 @@
+{
+  "format_version": "1.26.60",
+  "minecraft:block": {
+    "description": {
+      "identifier": "hakkai:workstation_artisan",
+      "menu_category": {
+        "category": "construction"
+      }
+    },
+    "components": {
+      "minecraft:display_name": "tile.hakkai:workstation_artisan.name",
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "hakkai_workstation_artisan",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:map_color": "#cb9d42",
+      "minecraft:sound": {
+        "sound": "wood"
+      },
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 1.5
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 3
+      },
+      "minecraft:loot": "loot_tables/hakkai/blocks/workstation_artisan.json",
+      "hakkai:workstation": {},
+      "minecraft:tick": {
+        "interval_range": [
+          100,
+          120
+        ],
+        "looping": true
+      }
+    }
+  }
+}

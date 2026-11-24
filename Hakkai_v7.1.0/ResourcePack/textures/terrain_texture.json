@@ -549,6 +549,21 @@
     },
     "hakkai_epoch_soil": {
       "textures": "textures/blocks/hakkai_epoch_soil"
+    },
+    "hakkai_workstation_guide": {
+      "textures": "textures/blocks/hakkai_workstation_guide"
+    },
+    "hakkai_workstation_healer": {
+      "textures": "textures/blocks/hakkai_workstation_healer"
+    },
+    "hakkai_workstation_artisan": {
+      "textures": "textures/blocks/hakkai_workstation_artisan"
+    },
+    "hakkai_workstation_guard": {
+      "textures": "textures/blocks/hakkai_workstation_guard"
+    },
+    "hakkai_workstation_builder": {
+      "textures": "textures/blocks/hakkai_workstation_builder"
     }
   }
 }

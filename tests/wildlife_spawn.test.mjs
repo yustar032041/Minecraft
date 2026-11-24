@@ -5,9 +5,10 @@ import {spawnWildlife} from '../Hakkai_v7.1.0/BehaviorPack/scripts/wildlife_spaw
 import {pickRealmWildlife} from '../Hakkai_v7.1.0/BehaviorPack/scripts/wildlife_selection.js';
 import {wildlife,places} from '../Hakkai_v7.1.0/BehaviorPack/scripts/data.js';
 import {Difficulty} from '@minecraft/server';
+import {disallowHostileSpawn} from '../Hakkai_v7.1.0/BehaviorPack/scripts/hostile_spawn_rules.js';
 function spawnFixture(){
  const spawned=[],players=[];
- const d={id:'hakkai:realm_0',getEntities:()=>[],getPlayers:()=>players,isChunkLoaded:()=>true,spawnEntity:(...x)=>spawned.push(x),getBiome:()=>({id:'minecraft:plains'}),getBlock:()=>({typeId:'minecraft:grass_block'})};
+ const d={id:'hakkai:realm_0',getEntities:()=>[],getPlayers:()=>players,isChunkLoaded:()=>true,getLightLevel:()=>0,spawnEntity:(...x)=>spawned.push(x),getBiome:()=>({id:'minecraft:plains'}),getBlock:()=>({typeId:'minecraft:grass_block'})};
  const p={id:'p',dimension:d,location:{x:0,y:90,z:0}};
  const args={player:p,type:'hakkai:wild_0_0',tick:40,safe:()=>true};
  return {args,d,p,players,spawned};
@@ -46,7 +47,7 @@ function makeCtx(f,opts={}){
   seededWorlds:opts.seededWorlds,wildlife,wildlifeById:new Map(wildlife.map(x=>['hakkai:'+x.id,x])),wildlifeIndex:new Map(wildlife.map((x,i)=>[x.id,i])),
   Math:random,marked:()=>false,mark:(_p,k,i)=>marks.push([k,i]),pickRealmWildlife,spawnWildlife,safe:opts.safe??(()=>true),
   spawnRealmEnder:()=>false,spawnFushi:()=>false,isMoonlitNight:()=>false,fushiThresholds:()=>({chief:0,normal:0}),
-  Difficulty,places,aspect:s=>s.theme??s.dim,dist:(a,b)=>Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z),coords:s=>({x:s.x+.5,y:89,z:s.z+.5}),families:{}};
+  disallowHostileSpawn,travelSites:new Map(),FACTORY_VILLAGE_ID:59, Difficulty,places,aspect:s=>s.theme??s.dim,dist:(a,b)=>Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z),coords:s=>({x:s.x+.5,y:89,z:s.z+.5}),families:{}};
  vm.createContext(ctx);vm.runInContext(code,ctx);return {ctx,world,state,marks};
 }
 for(let realm=0;realm<8;realm++){
@@ -80,6 +81,22 @@ for(let realm=0;realm<8;realm++){
  ctx.pickRealmWildlife=(entries,realm,seen,peaceful)=>entries.find(m=>m.dim===realm&&(peaceful?m.temper!=='hostile':m.temper==='hostile'));
  ctx.wildlifeTick(f.p,undefined,undefined);assert.equal(f.spawned.length,1);
  const species=wildlife.find(m=>'hakkai:'+m.id===f.spawned[0][0]);assert.notEqual(species.temper,'hostile');
+}
+// Production candidate search: bright positions and factory copies are refused
+// for hostile draws, while peaceful wildlife remains eligible.
+{
+ const f=spawnFixture();f.p.location={x:500,y:90,z:500};f.d.getLightLevel=()=>1;
+ const {ctx}=makeCtx(f);ctx.pickRealmWildlife=(entries,realm)=>entries.find(m=>m.dim===realm&&m.temper==='hostile');
+ ctx.wildlifeTick(f.p,undefined,undefined);assert.equal(f.spawned.length,0,'hostile rejected at light 1');
+ const g=spawnFixture();g.p.location={x:500,y:90,z:500};g.d.getLightLevel=()=>1;
+ const h=makeCtx(g,{peaceful:true});h.ctx.pickRealmWildlife=(entries,realm)=>entries.find(m=>m.dim===realm&&m.temper==='passive');
+ h.ctx.wildlifeTick(g.p,undefined,undefined);assert.equal(g.spawned.length,1,'peaceful animals are not restricted by light');
+}
+{
+ const f=spawnFixture();f.p.location={x:500,y:90,z:500};
+ const {ctx}=makeCtx(f,{seededWorlds:{biomeAt:()=>undefined,repeatSiteAt:()=>({id:59})}});
+ ctx.pickRealmWildlife=(entries,realm)=>entries.find(m=>m.dim===realm&&m.temper==='hostile');
+ ctx.wildlifeTick(f.p,undefined,undefined);assert.equal(f.spawned.length,0,'factory-copy candidates rejected');
 }
 {
  const f=spawnFixture();f.p.location={x:500,y:90,z:500};f.d.getBlock=()=>({typeId:'minecraft:oak_planks'});

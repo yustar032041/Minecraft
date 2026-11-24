@@ -1055,3 +1055,13 @@ item.spawn_egg.entity.hakkai:builder_6.name=雲渡りの建築係のスポーン
 entity.hakkai:builder_7.name=時結びの建築係
 item.spawn_egg.entity.hakkai:builder_7.name=時結びの建築係のスポーンエッグ
 ## HAKKAI_BUILDERS_END
+
+tile.hakkai:workstation_guide.name=案内人の職業ブロック
+
+tile.hakkai:workstation_healer.name=手当て係の職業ブロック
+
+tile.hakkai:workstation_artisan.name=物資係の職業ブロック
+
+tile.hakkai:workstation_guard.name=守り手の職業ブロック
+
+tile.hakkai:workstation_builder.name=建築係の職業ブロック

@@ -1,6 +1,6 @@
 import {addVillageMemory} from '../Hakkai_v7.1.0/BehaviorPack/scripts/village_life.js';
 import assert from 'node:assert/strict';import fs from 'node:fs';
-import {BUILDER_IDS,BLUEPRINTS,blueprint,readBuilderProject,startBuilderProject,stepBuilderProject,clearBuilderProject,foundBuilder,autoBuilderPlan,builderHome,builderPaused,setBuilderPaused,constructionCredit} from '../Hakkai_v7.1.0/BehaviorPack/scripts/village_builders.js';
+import {BUILDER_IDS,claimBuilderWork,releaseBuilderWork,BLUEPRINTS,blueprint,readBuilderProject,startBuilderProject,stepBuilderProject,clearBuilderProject,foundBuilder,autoBuilderPlan,builderHome,builderPaused,setBuilderPaused,constructionCredit} from '../Hakkai_v7.1.0/BehaviorPack/scripts/village_builders.js';
 import {CULTURE_SITES} from '../Hakkai_v7.1.0/BehaviorPack/scripts/realm_culture.js';
 assert.equal(BUILDER_IDS.length,8);assert.equal(BLUEPRINTS.length,5);
 const at={x:0,y:80,z:0},key=p=>`${p.x},${p.y},${p.z}`;
@@ -13,7 +13,7 @@ function fixture(realm=0){
    setType(type){if(fail){fail=false;throw Error('before write');}blocks.set(key(p),type);if(throwsAfterWrite){throwsAfterWrite=false;throw Error('after write');}},
    setPermutation(perm){this.setType(perm.type);}};
  }};
- const builder={typeId:BUILDER_IDS[realm],isValid:true,dimension:dim,location:{x:7,y:80,z:0},getDynamicProperty:k=>props.get(k),setDynamicProperty(k,v){if(v===undefined)props.delete(k);else props.set(k,v);}};
+ const builder={id:'builder',typeId:BUILDER_IDS[realm],isValid:true,dimension:dim,location:{x:7,y:80,z:0},getDynamicProperty:k=>props.get(k),setDynamicProperty(k,v){if(v===undefined)props.delete(k);else props.set(k,v);}};
  return {dim,builder,blocks,props,setLoaded:v=>loaded=v,setPeople:v=>people=v,setFail:v=>fail=v,setThrowAfter:v=>throwsAfterWrite=v};
 }
 const resolve=(type,states)=>({type,states});
@@ -91,7 +91,7 @@ console.log('Five real autonomous construction plans, obstruction/water checks, 
  f.builder.location.y=88;f.builder.setDynamicProperty('hakkai:builder_home_v1',61);
  f.dim.getEntities=q=>q.families?.includes('hakkai_builder')?[f.builder]:[];f.dim.getPlayers=()=>[];
  const props=new Map([['built_61',1]]),town={l:{x:40,y:88,z:40},d:f.dim,data:{goods:0}},site={id:61,kind:'culture',dim:0,x:0,z:0,size:65};
- const ctx={villageSiteByHome:id=>site.id===id?site:undefined,villageBuilt:(s,w,num)=>num(w,`built_${s.id}`)===1,BUILDER_IDS,BLUEPRINTS,blueprint,readBuilderProject,stepBuilderProject,clearBuilderProject,builderHome,builderPaused,autoBuilderPlan,constructionCredit,places:[site],world:{},num:(_,k)=>props.get(k)??0,property:(_,k,v)=>props.set(k,v),permit:()=>true,along:()=>{},townNear:()=>town,townRecord:t=>t.data,townSave:(t,v)=>t.data=v,ns:'hakkai:',BlockPermutation:{resolve},report:()=>{},cultureTownForSite:()=>town,saveVillageLife:(t,v)=>t.data=v,addVillageMemory,seasonDay:()=>0};
+ const ctx={villageSiteByHome:id=>site.id===id?site:undefined,villageBuilt:(s,w,num)=>num(w,`built_${s.id}`)===1,BUILDER_IDS,claimBuilderWork,releaseBuilderWork,BLUEPRINTS,blueprint,readBuilderProject,stepBuilderProject,clearBuilderProject,builderHome,builderPaused,autoBuilderPlan,constructionCredit,places:[site],world:{getDynamicProperty:k=>props.get(k),setDynamicProperty:(k,v)=>v===undefined?props.delete(k):props.set(k,v)},num:(_,k)=>props.get(k)??0,property:(_,k,v)=>props.set(k,v),permit:()=>true,along:()=>{},townNear:()=>town,townRecord:t=>t.data,townSave:(t,v)=>t.data=v,ns:'hakkai:',BlockPermutation:{resolve},report:()=>{},cultureTownForSite:()=>town,saveVillageLife:(t,v)=>t.data=v,addVillageMemory,seasonDay:()=>0};
  // The test bell exists only for the completion credit check.
  const get2=f.dim.getBlock;f.dim.getBlock=p=>p.x===40&&p.y===88&&p.z===40?{typeId:'hakkai:town_bell'}:get2(p);
  vm.createContext(ctx);vm.runInContext(main.slice(main.indexOf('function builderWorkTick('),main.indexOf('function visibleFrom(')),ctx);

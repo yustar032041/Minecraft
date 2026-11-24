@@ -11,3 +11,5 @@ export const Difficulty={Peaceful:'peaceful',Normal:'normal'};
 export class ItemStack {constructor(typeId,amount=1){this.typeId=typeId;this.amount=amount;}}
 
 export const InputPermissionCategory={LateralMovement:4,MoveForward:9};
+// Tests may configure this when exercising villager job integration.
+export const world={getDynamicProperty:()=>undefined};

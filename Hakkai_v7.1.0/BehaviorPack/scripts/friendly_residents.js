@@ -37,11 +37,12 @@ export function foundFriendlyResident({site,world,dimension,num,property,findFlo
 }
 // Bounded player-centered scan, no world blocks or inventories are modified.
 // Cooldowns are per player; don't overwrite existing effects from other sources.
-export function friendlySupportTick(player,state,tick){
+export function friendlySupportTick(player,state,tick,extraRole=()=>undefined){
  if(tick<(state.friendlyScanAt??0))return;
  state.friendlyScanAt=tick+40;
  let nearby;try{nearby=player.dimension.getEntities({families:['hakkai_resident'],location:player.location,maxDistance:6,closest:12});}catch{return;}
  const jobs=new Set(nearby.filter(e=>e.isValid).map(e=>friendlyResidentById.get(e.typeId)?.role));
+ try{for(const e of player.dimension.getEntities({families:['villager'],location:player.location,maxDistance:6,closest:12}))if(e.isValid)jobs.add(extraRole(e));}catch{}
  if(jobs.has('guide')&&tick>=(state.friendlyGuideAt??0))try{
   if(!player.getEffect('speed')){player.addEffect('speed',120,{amplifier:0,showParticles:false});state.friendlyGuideAt=tick+600;}
  }catch{}
