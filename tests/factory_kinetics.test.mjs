@@ -36,3 +36,9 @@ console.log('Kinetic gear ratios, direction, capacity, loops, limits and unloade
  assert.equal(toggleClutch(block),true);assert.equal(kineticNetwork(d,{x:2,y:80,z:0}).status,'running');
  assert.equal(toggleClutch(block),false);assert.equal(kineticNetwork(d,{x:2,y:80,z:0}).status,'no_source');
 }
+for(const [axis,v] of [['z',[0,0,1]],['y',[0,1,0]]])for(const [gear,rpm] of [['gear_up',-32],['gear_down',-8]]){
+ const {d,put}=fixture();const base=[0,80,0];put(...base,'wind_rotor');put(v[0],80+v[1],v[2],`${gear}_${axis}`);put(v[0]*2,80+v[1]*2,v[2]*2,'crusher');
+ let n=kineticNetwork(d,{x:v[0]*2,y:80+v[1]*2,z:v[2]*2});assert.equal(n.status,'running');assert.equal(n.rpm,rpm);
+ const sideways=axis==='z'?[1,80,1]:[1,81,0];put(...sideways,'press');assert.equal(kineticNetwork(d,{x:sideways[0],y:sideways[1],z:sideways[2]}).status,'no_source');
+}
+console.log('Vertical and north/south gearbox axes, speed ratios and side isolation OK (simulated)');

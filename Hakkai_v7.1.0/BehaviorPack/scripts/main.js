@@ -1,3 +1,4 @@
+import { fluidPumpStep, fluidBasinStep, fluidLoaderStep, adjacentWaterTank, tankState, consumeTankWater } from './factory_fluids.js';
 import { INDUSTRY_CHAPTERS, claimIndustryGuide } from './industry_guide.js';
 import { pipeEndpoints } from './factory_transport.js';
 import { findLineRecipe, filteredDestination } from './factory_lines.js';
@@ -4928,8 +4929,8 @@ function transfer(b){
  const d=b.dimension,x=b.x,y=b.y,z=b.z;
  const t=world.getTimeOfDay(), night=t>=13000&&t<23000, evening=t>=12000&&t<13000;
  const weather=currentWeather.get(d.id?.replace(/^minecraft:/,'')),thunder=weather===WeatherType.Thunder, wet=thunder||weather===WeatherType.Rain;
- if(['shaft','wind_rotor','water_wheel','gear_up','gear_down','clutch'].some(id=>b.typeId===ns+id)){syncKineticVisual(b,kineticNetwork(d,{x,y,z}));return;}
- const kind=b.typeId.slice(ns.length),visualMachine=['crusher','washer','press','saw','mixer','assembler'].includes(kind);
+ if(['shaft','wind_rotor','water_wheel','gear_up','gear_down','gear_up_z','gear_down_z','gear_up_y','gear_down_y','clutch'].some(id=>b.typeId===ns+id)){syncKineticVisual(b,kineticNetwork(d,{x,y,z}));return;}
+ const kind=b.typeId.slice(ns.length),visualMachine=['crusher','washer','press','saw','mixer','assembler','fluid_basin'].includes(kind);
  let kinetic;
  if(visualMachine){kinetic=kineticNetwork(d,{x,y,z});syncKineticVisual(b,kinetic);}
  if(b.typeId===ns+'conveyor'){
@@ -4940,6 +4941,16 @@ function transfer(b){
        if(l.x>=x&&l.x<x+1&&l.z>=z&&l.z<z+1&&l.y>=y+.9&&vel.x<.60)e.applyImpulse({x:thrust,y:.018,z:0});
      }
    }catch{}
+   return;
+ }
+ // Water pumps use a bounded, independently connected pipe graph.
+ if(kind==='fluid_pipe'||kind==='fluid_tank')return;
+ if(kind==='fluid_pump'||kind.startsWith('fluid_pump_')){
+   const network=kineticNetwork(d,{x,y,z});if(network.status!=='running')return;
+   const k=`${d.id}:${x},${y},${z}`,delay=Math.max(10,Math.ceil(40*16/Math.abs(network.rpm)));
+   if(system.currentTick-(factoryCycleAt.get(k)??-Infinity)<delay)return;
+   if(factoryCycleAt.size>=8192)factoryCycleAt.clear();factoryCycleAt.set(k,system.currentTick);
+   fluidPumpStep(b,report);
    return;
  }
  // Directional pipes are an independent barrel-to-barrel operation.
@@ -4992,7 +5003,7 @@ function transfer(b){
    if(b.typeId===ns+'mill'&&thunder&&power)limit++;
    if(night&&limit>1)limit=Math.max(1,Math.floor(limit/2));
  }
- if(['mixer','assembler','filter_router'].includes(kind)){
+ if(['mixer','assembler','filter_router','fluid_basin','fluid_loader'].includes(kind)){
    kinetic=kinetic??kineticNetwork(d,{x,y,z});
    if(kinetic.status!=='running')return;
  }
@@ -5005,6 +5016,14 @@ function transfer(b){
  if(system.currentTick-(factoryCycleAt.get(cycleKey)??-Infinity)<delay)return;
  const schedule=()=>{if(factoryCycleAt.size>=8192)factoryCycleAt.clear();factoryCycleAt.set(cycleKey,system.currentTick);};
  const worked=n=>{schedule();production(b,n);};
+ if(kind==='fluid_loader'){
+   if(fluidLoaderStep({dimension:d,p:{x,y,z},input:from,output:to,ItemStack,factoryTransaction,report}))worked(1);
+   return;
+ }
+ if(kind==='fluid_basin'){
+   if(fluidBasinStep({dimension:d,p:{x,y,z},input:from,output:to,ItemStack,factoryTransaction,report}))worked(1);
+   return;
+ }
  if(kind==='filter_router'){
    let north,south;try{north=d.getBlock({x,y,z:z-1});south=d.getBlock({x,y,z:z+1});}catch{return;}
    if(north?.typeId!=='minecraft:barrel'||south?.typeId!=='minecraft:barrel')return;
@@ -5042,7 +5061,9 @@ function transfer(b){
    const item=from.getItem(i);if(!item)continue;
    let out,need=1,aux='',outputCount=1;
    const recipe=factoryRecipe(kind,item.typeId);
-   if(recipe){[out,need,outputCount]=recipe;if(kind==='washer'&&!hasAdjacentWater(d,{x,y,z}))return;}
+   let waterTank;
+   if(recipe){[out,need,outputCount]=recipe;if(kind==='washer'&&!hasAdjacentWater(d,{x,y,z})){waterTank=adjacentWaterTank(d,{x,y,z});if(!waterTank)return;}}
+
    if(b.typeId===ns+'mill')out=mill[item.typeId];
    if(b.typeId===ns+'kiln')out=kiln[item.typeId];
    if(b.typeId===ns+'sorter'&&(item.typeId.startsWith(ns+'shard_')||item.typeId.startsWith(ns+'crystal_')))out=item.typeId;
@@ -5060,12 +5081,15 @@ function transfer(b){
    }
    const product=new ItemStack(out,outputCount);if(!room(to,product))return;
    const costs=[{id:item.typeId,count:need}];if(aux)costs.push({id:aux,count:1});if(power)costs.push({id:power,count:1});
-   if(factoryTransaction({input:from,output:to,costs,product,report}))worked(outputCount);return;
+   const waterBefore=waterTank?.permutation;
+   if(factoryTransaction({input:from,output:to,costs,product,report,
+    commitExternal:waterTank?()=>consumeTankWater(waterTank,1):undefined,
+    rollbackExternal:waterTank?()=>waterTank.setPermutation(waterBefore):undefined}))worked(outputCount);return;
  }
 }
 safeSub('system','before','startup',({itemComponentRegistry,blockComponentRegistry})=>{
  safeReg(itemComponentRegistry,ns+'use',{onUse:use,onUseOn:use,onCompleteUse:completeFocus});
- safeReg(blockComponentRegistry,ns+'factory',{onTick:({block})=>transfer(block),onPlayerInteract:({player,block})=>{try{if(!player?.isSneaking)return;if(block.typeId===ns+'clutch'){const on=toggleClutch(block);if(on!==undefined)notice(player,on?'§a動力クラッチ：接続':'§e動力クラッチ：切断');return;}factoryMeter(player,block);}catch{}}});
+ safeReg(blockComponentRegistry,ns+'factory',{onTick:({block})=>transfer(block),onPlayerInteract:({player,block})=>{try{if(!player?.isSneaking)return;if(block.typeId===ns+'fluid_tank'){const s=tankState(block);player.sendMessage(!s?'§e液体タンクの状態を確認できません':`§b液体タンク ${['空','水','溶岩'][s.kind]} ${s.n}/8（1目盛り＝バケツ1/4）`);return;}if(block.typeId===ns+'clutch'){const on=toggleClutch(block);if(on!==undefined)notice(player,on?'§a動力クラッチ：接続':'§e動力クラッチ：切断');return;}factoryMeter(player,block);}catch{}}});
  safeReg(blockComponentRegistry,ns+'town',{onTick:({block})=>townTick(block),onPlayerInteract:({player,block})=>{
    if(player&&player.getGameMode()!==GameMode.Spectator)menu(player,p=>townMenu(p,townGet(block.dimension,block.location,true)));
  }});

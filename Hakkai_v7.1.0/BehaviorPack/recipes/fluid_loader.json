@@ -1,0 +1,26 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "hakkai:fluid_loader"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "hakkai:fluid_pipe"
+      },
+      {
+        "item": "minecraft:hopper"
+      },
+      {
+        "item": "minecraft:iron_ingot"
+      }
+    ],
+    "result": {
+      "item": "hakkai:fluid_loader",
+      "count": 1
+    }
+  }
+}

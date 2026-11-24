@@ -1,0 +1,23 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "hakkai:gear_down_y"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "hakkai:gear_down"
+      },
+      {
+        "item": "minecraft:feather"
+      }
+    ],
+    "result": {
+      "item": "hakkai:gear_down_y",
+      "count": 1
+    }
+  }
+}

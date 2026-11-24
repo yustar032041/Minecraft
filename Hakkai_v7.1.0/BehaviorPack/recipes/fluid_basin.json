@@ -1,0 +1,26 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "hakkai:fluid_basin"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:cauldron"
+      },
+      {
+        "item": "hakkai:fluid_pipe"
+      },
+      {
+        "item": "minecraft:iron_ingot"
+      }
+    ],
+    "result": {
+      "item": "hakkai:fluid_basin",
+      "count": 1
+    }
+  }
+}

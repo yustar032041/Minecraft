@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';import fs from 'node:fs';import vm from 
 import {kineticNetwork,hasAdjacentWater,factoryRecipe} from '../Hakkai_v7.1.0/BehaviorPack/scripts/factory_network.js';
 import {findLineRecipe,filteredDestination} from '../Hakkai_v7.1.0/BehaviorPack/scripts/factory_lines.js';
 import {pipeEndpoints} from '../Hakkai_v7.1.0/BehaviorPack/scripts/factory_transport.js';
+import {fluidPumpStep,fluidBasinStep,fluidLoaderStep,adjacentWaterTank,tankState,consumeTankWater} from '../Hakkai_v7.1.0/BehaviorPack/scripts/factory_fluids.js';
 import {factoryTransaction} from '../Hakkai_v7.1.0/BehaviorPack/scripts/factory_transaction.js';
 class ItemStack {constructor(typeId,amount=1){Object.assign(this,{typeId,amount,maxAmount:64});}clone(){const c=new ItemStack(this.typeId,this.amount);c.nameTag=this.nameTag;return c;}isStackableWith(x){return this.typeId===x.typeId&&this.nameTag===x.nameTag;}}
 class Container {constructor(items){this.items=items;this.size=items.length;this.failOnce=false;}getItem(i){return this.items[i]?.clone();}setItem(i,v){this.items[i]=v?.clone();if(this.failOnce){this.failOnce=false;throw Error('write failed');}}}
@@ -16,7 +17,7 @@ function fixture(kind,inputs,outputs=[undefined,undefined]){
  d.getBlock=l=>l.y===80&&l.z===0&&l.x===-1?barrel(from):l.y===80&&l.z===0&&l.x===1?barrel(to):l.y===80&&l.z===0&&l.x===0?b:l.x===0&&l.z===0&&l.y<80?ore:{typeId:'minecraft:air'};
  const total=(c,id)=>c.items.reduce((a,v)=>a+(v?.typeId===id?v.amount:0),0);
  const room=(c,s)=>c.items.reduce((a,v)=>a+(!v?s.maxAmount:v.isStackableWith(s)?v.maxAmount-v.amount:0),0)>=s.amount;
- const ctx={ns:'hakkai:',world:{getTimeOfDay:()=>6000},currentWeather:new Map(),WeatherType:{Thunder:'thunder',Rain:'rain'},system:{currentTick:0},ItemStack,total,room,factoryTransaction,kineticNetwork,hasAdjacentWater,factoryRecipe,syncKineticVisual:()=>{},findLineRecipe,filteredDestination,pipeEndpoints,factoryCycleAt:new Map(),production:(_,n)=>produced.push(n),report:(...x)=>reports.push(x)};
+ const ctx={ns:'hakkai:',world:{getTimeOfDay:()=>6000},currentWeather:new Map(),WeatherType:{Thunder:'thunder',Rain:'rain'},system:{currentTick:0},ItemStack,total,room,factoryTransaction,kineticNetwork,hasAdjacentWater,factoryRecipe,syncKineticVisual:()=>{},findLineRecipe,filteredDestination,pipeEndpoints,fluidPumpStep,fluidBasinStep,fluidLoaderStep,adjacentWaterTank,tankState,consumeTankWater,factoryCycleAt:new Map(),production:(_,n)=>produced.push(n),report:(...x)=>reports.push(x)};
  vm.createContext(ctx);vm.runInContext(src.slice(start,end),ctx);
  return {from,to,ore,b,ctx,reports,produced,run:()=>ctx.transfer(b)};
 }
@@ -180,4 +181,27 @@ for(const fault of ['unpowered','full','write_failure','overload']){
  if(fault==='full')f.to.items=[item('minecraft:stone',64),item('minecraft:stone',64)];
  if(fault==='write_failure'){let once=true;f.to.setItem=(i,v)=>{if(once){once=false;throw Error('simulated');}f.to.items[i]=v;};}
  const beforeIn=snap(f.from),beforeOut=snap(f.to);f.run();assert.deepEqual(snap(f.from),beforeIn,fault);assert.deepEqual(snap(f.to),beforeOut,fault);
+}
+// Exercise actual tick entry points, not just the isolated fluid helpers.
+const fluidPerm=(kind,n)=>({getState:k=>k==='hakkai:fluid'?kind:k==='hakkai:level'?n:undefined,withState:(k,v)=>fluidPerm(k==='hakkai:fluid'?v:kind,k==='hakkai:level'?v:n)});
+const tankBlock=(kind,n)=>({typeId:'hakkai:fluid_tank',permutation:fluidPerm(kind,n),setPermutation(p){this.permutation=p;}});
+const rotor=p=>({typeId:'hakkai:wind_rotor',...p,location:p});
+{
+ const f=fixture('fluid_pump',[]),tank=tankBlock(0,0),get=f.b.dimension.getBlock;
+ f.b.dimension.getBlock=p=>p.x===-1&&p.y===80&&p.z===0?{typeId:'minecraft:water',permutation:{getState:()=>0}}:p.x===1&&p.y===80&&p.z===0?tank:p.x===0&&p.y===81&&p.z===0?rotor(p):get(p);f.b.dimension.getBlockFromRay=()=>undefined;
+ f.run();assert.equal(tankState(tank).n,1);f.run();assert.equal(tankState(tank).n,1,'tick throttling');f.ctx.system.currentTick=40;f.run();assert.equal(tankState(tank).n,2);
+}
+for(const [kind,input,expected,tankKind,tankLevel,remaining] of [['fluid_loader','minecraft:lava_bucket','minecraft:bucket',0,0,4],['fluid_basin','minecraft:bucket','minecraft:lava_bucket',2,4,0],['washer','hakkai:crushed_iron','hakkai:washed_iron',1,2,1]]){
+ const f=fixture(kind,[item(input)]),tank=tankBlock(tankKind,tankLevel),get=f.b.dimension.getBlock;
+ f.b.dimension.getBlock=p=>p.x===0&&p.y===80&&p.z===1?tank:p.x===0&&p.y===81&&p.z===0?rotor(p):get(p);f.b.dimension.getBlockFromRay=()=>undefined;
+ f.run();assert.equal(f.to.getItem(0)?.typeId,expected,kind);assert.equal(tankState(tank).n,remaining,kind);
+}
+console.log('Actual powered pump, loader, basin and tank-fed washer transfers OK (simulated)');
+{
+ const f=fixture('fluid_basin',[item('minecraft:dirt')]),tank=tankBlock(1,4),get=f.b.dimension.getBlock;
+ f.b.dimension.getBlock=p=>p.x===0&&p.y===80&&p.z===1?tank:get(p);f.run();assert.equal(tankState(tank).n,4);assert.equal(f.to.getItem(0),undefined,'new machines never fall back to fuel');
+}
+{
+ const f=fixture('fluid_basin',[item('minecraft:dirt')]),tank=tankBlock(1,4),get=f.b.dimension.getBlock;
+ f.b.dimension.getBlock=p=>p.x===0&&p.y===80&&p.z===1?tank:p.x===0&&p.y===81&&p.z===0?rotor(p):get(p);f.b.dimension.getBlockFromRay=()=>undefined;f.to.failOnce=true;f.run();assert.equal(tankState(tank).n,4);assert.equal(f.from.getItem(0)?.typeId,'minecraft:dirt');assert.equal(f.to.getItem(0),undefined);
 }

@@ -351,6 +351,99 @@
     },
     "hakkai_factory_pipe_down": {
       "textures": "textures/blocks/hakkai_factory_pipe_down"
+    },
+    "hakkai_fluid_pipe": {
+      "textures": "textures/blocks/hakkai_fluid_pipe"
+    },
+    "hakkai_fluid_tank": {
+      "textures": "textures/blocks/hakkai_fluid_tank"
+    },
+    "hakkai_fluid_tank_0": {
+      "textures": "textures/blocks/hakkai_fluid_tank_0"
+    },
+    "hakkai_fluid_pump": {
+      "textures": "textures/blocks/hakkai_fluid_pump"
+    },
+    "hakkai_fluid_pump_west": {
+      "textures": "textures/blocks/hakkai_fluid_pump_west"
+    },
+    "hakkai_fluid_pump_north": {
+      "textures": "textures/blocks/hakkai_fluid_pump_north"
+    },
+    "hakkai_fluid_pump_south": {
+      "textures": "textures/blocks/hakkai_fluid_pump_south"
+    },
+    "hakkai_fluid_pump_up": {
+      "textures": "textures/blocks/hakkai_fluid_pump_up"
+    },
+    "hakkai_fluid_pump_down": {
+      "textures": "textures/blocks/hakkai_fluid_pump_down"
+    },
+    "hakkai_fluid_basin": {
+      "textures": "textures/blocks/hakkai_fluid_basin"
+    },
+    "hakkai_fluid_tank_1_1": {
+      "textures": "textures/blocks/hakkai_fluid_tank_1_1"
+    },
+    "hakkai_fluid_tank_1_2": {
+      "textures": "textures/blocks/hakkai_fluid_tank_1_2"
+    },
+    "hakkai_fluid_tank_1_3": {
+      "textures": "textures/blocks/hakkai_fluid_tank_1_3"
+    },
+    "hakkai_fluid_tank_1_4": {
+      "textures": "textures/blocks/hakkai_fluid_tank_1_4"
+    },
+    "hakkai_fluid_tank_1_5": {
+      "textures": "textures/blocks/hakkai_fluid_tank_1_5"
+    },
+    "hakkai_fluid_tank_1_6": {
+      "textures": "textures/blocks/hakkai_fluid_tank_1_6"
+    },
+    "hakkai_fluid_tank_1_7": {
+      "textures": "textures/blocks/hakkai_fluid_tank_1_7"
+    },
+    "hakkai_fluid_tank_1_8": {
+      "textures": "textures/blocks/hakkai_fluid_tank_1_8"
+    },
+    "hakkai_fluid_tank_2_1": {
+      "textures": "textures/blocks/hakkai_fluid_tank_2_1"
+    },
+    "hakkai_fluid_tank_2_2": {
+      "textures": "textures/blocks/hakkai_fluid_tank_2_2"
+    },
+    "hakkai_fluid_tank_2_3": {
+      "textures": "textures/blocks/hakkai_fluid_tank_2_3"
+    },
+    "hakkai_fluid_tank_2_4": {
+      "textures": "textures/blocks/hakkai_fluid_tank_2_4"
+    },
+    "hakkai_fluid_tank_2_5": {
+      "textures": "textures/blocks/hakkai_fluid_tank_2_5"
+    },
+    "hakkai_fluid_tank_2_6": {
+      "textures": "textures/blocks/hakkai_fluid_tank_2_6"
+    },
+    "hakkai_fluid_tank_2_7": {
+      "textures": "textures/blocks/hakkai_fluid_tank_2_7"
+    },
+    "hakkai_fluid_tank_2_8": {
+      "textures": "textures/blocks/hakkai_fluid_tank_2_8"
+    },
+    "hakkai_fluid_loader": {
+      "textures": "textures/blocks/hakkai_fluid_loader"
+    },
+    "hakkai_gear_up_z": {
+      "textures": "textures/blocks/hakkai_gear_up_z"
+    },
+    "hakkai_gear_up_y": {
+      "textures": "textures/blocks/hakkai_gear_up_y"
+    },
+    "hakkai_gear_down_z": {
+      "textures": "textures/blocks/hakkai_gear_down_z"
+    },
+    "hakkai_gear_down_y": {
+      "textures": "textures/blocks/hakkai_gear_down_y"
     }
   }
 }

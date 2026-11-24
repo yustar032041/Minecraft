@@ -1,6 +1,6 @@
 import { recycleProduct } from './factory_lines.js';
 // Small bounded mechanical graph, computed synchronously from loaded blocks.
-// Gearboxes are fixed west->east two-port devices, not omnidirectional shafts.
+// Gearboxes connect only their chosen axis, not omnidirectional shafts.
 const DIRS=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
 const at=(p,d)=>({x:p.x+d[0],y:p.y+d[1],z:p.z+d[2]});
 const key=p=>`${p.x},${p.y},${p.z}`;
@@ -11,12 +11,12 @@ function generatorWorks(d,b){
  if(b.typeId!=='hakkai:wind_rotor'||b.y<64)return false;
  try{return !d.getBlockFromRay({x:b.x+.5,y:b.y+1.01,z:b.z+.5},{x:0,y:1,z:0},{maxDistance:32});}catch{return false;}
 }
-const LOAD={mill:32,miner:64,kiln:32,crusher:32,washer:24,press:48,saw:24,compressor:32,sorter:16,mixer:48,assembler:40,filter_router:16};
+const LOAD={mill:32,miner:64,kiln:32,crusher:32,washer:24,press:48,saw:24,compressor:32,sorter:16,mixer:48,assembler:40,filter_router:16,fluid_basin:32,fluid_loader:16,fluid_pump:16,fluid_pump_west:16,fluid_pump_north:16,fluid_pump_south:16,fluid_pump_up:16,fluid_pump_down:16};
 const GEN={wind_rotor:128,water_wheel:192};
 const CONDUCTORS=new Set(['shaft','clutch',...Object.keys(LOAD),...Object.keys(GEN)]);
 export function clutchEnabled(block){try{return block.permutation.getState('hakkai:engaged')===1;}catch{return false;}}
 export function toggleClutch(block){try{const on=!clutchEnabled(block);block.setPermutation(block.permutation.withState('hakkai:engaged',on?1:0));return on;}catch{return undefined;}}
-const GEARS={gear_up:1,gear_down:-1};
+const GEARS={gear_up:[1,[1,0,0]],gear_down:[-1,[1,0,0]],gear_up_z:[1,[0,0,1]],gear_down_z:[-1,[0,0,1]],gear_up_y:[1,[0,1,0]],gear_down_y:[-1,[0,1,0]]};
 const id=b=>b?.typeId?.startsWith('hakkai:')?b.typeId.slice(7):'';
 // Return status and total capacity / reserved demand. All attached machines
 // reserve capacity even if their barrels are empty. Inconsistent loops,
@@ -38,16 +38,16 @@ export function kineticNetwork(d,origin,maxNodes=96){
   const n=queue[i],b=get(d,n.p);if(!b){incomplete=true;continue;}
   const name=id(b);blocks.set(key(n.p),{block:b,name,node:n});
   if(GEARS[name]!==undefined){
-   const east=n.port==='w',ratio=GEARS[name]*(east?1:-1);
+   const east=n.port==='w',ratio=GEARS[name][0]*(east?1:-1);
    enqueue(n.p,east?'e':'w',n.exp+ratio,-n.sign);
   }
-  const directions=GEARS[name]!==undefined?[[n.port==='w'?-1:1,0,0]]:DIRS;
+  const directions=GEARS[name]!==undefined?[GEARS[name][1].map(x=>x*(n.port==='w'?-1:1))]:DIRS;
   for(const delta of directions){
    const p=at(n.p,delta),nb=get(d,p);if(!nb){incomplete=true;continue;}
    const other=id(nb);if(!CONDUCTORS.has(other)&&GEARS[other]===undefined)continue;
    if(other==='clutch'&&!clutchEnabled(nb))continue;
-   // Gear side ports face only west/east; shafts attach to either end.
-   let port='';if(GEARS[other]!==undefined){if(delta[1]||delta[2])continue;port=delta[0]===1?'w':'e';}
+   // Enter only along the gearbox's two chosen axis ports.
+   let port='';if(GEARS[other]!==undefined){const axis=GEARS[other][1],dot=delta[0]*axis[0]+delta[1]*axis[1]+delta[2]*axis[2];if(!dot)continue;port=dot===1?'w':'e';}
    enqueue(p,port,n.exp,n.sign);
   }
  }
