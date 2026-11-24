@@ -205,3 +205,9 @@ console.log('Actual powered pump, loader, basin and tank-fed washer transfers OK
  const f=fixture('fluid_basin',[item('minecraft:dirt')]),tank=tankBlock(1,4),get=f.b.dimension.getBlock;
  f.b.dimension.getBlock=p=>p.x===0&&p.y===80&&p.z===1?tank:p.x===0&&p.y===81&&p.z===0?rotor(p):get(p);f.b.dimension.getBlockFromRay=()=>undefined;f.to.failOnce=true;f.run();assert.equal(tankState(tank).n,4);assert.equal(f.from.getItem(0)?.typeId,'minecraft:dirt');assert.equal(f.to.getItem(0),undefined);
 }
+{
+ const f=fixture('fluid_pump',[]),tank=tankBlock(0,0),get=f.b.dimension.getBlock;
+ const original={getState:k=>k==='liquid_depth'?0:undefined},lava={typeId:'minecraft:lava',permutation:original,setType(id){this.typeId=id;},setPermutation(p){this.permutation=p;this.typeId='minecraft:lava';}};
+ f.b.dimension.getBlock=p=>p.x===-1&&p.y===80&&p.z===0?lava:p.x===1&&p.y===80&&p.z===0?tank:p.x===0&&p.y===81&&p.z===0?rotor(p):get(p);f.b.dimension.getBlockFromRay=()=>undefined;
+ f.run();assert.equal(lava.typeId,'minecraft:air');assert.deepEqual(tankState(tank),{n:4,kind:2});f.ctx.system.currentTick=40;f.run();assert.equal(tankState(tank).n,4);
+}

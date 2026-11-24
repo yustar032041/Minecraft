@@ -56,3 +56,15 @@ console.log('Water/lava tank persistence, six pumps, bounded branching, loader/b
  for(let x=1;x<=64;x++)w.put(P(x,0,0),'hakkai:fluid_pipe');const target=w.tank(P(65,0,0));assert.ok(fluidPumpStep(pump));assert.equal(tankState(target).n,1);
  source.permutation=perm({'hakkai:fluid':1,'hakkai:level':1});target.permutation=perm({'hakkai:fluid':0,'hakkai:level':0});w.put(P(65,0,0),'hakkai:fluid_pipe');const far=w.tank(P(66,0,0));assert.equal(fluidPumpStep(pump),false);assert.equal(tankState(source).n,1);assert.equal(tankState(far).n,0);
 }
+for(const [name,v] of Object.entries({fluid_pump:[1,0,0],fluid_pump_west:[-1,0,0],fluid_pump_north:[0,0,-1],fluid_pump_south:[0,0,1],fluid_pump_up:[0,1,0],fluid_pump_down:[0,-1,0]})){
+ const f=setup(),pump=f.put(P(0,0,0),'hakkai:'+name),lava=f.put(P(...v.map(x=>-x)),'minecraft:lava',{liquid_depth:0}),target=f.tank(P(...v));
+ lava.setType=function(id){this.typeId=id;this.permutation=perm({});};lava.setPermutation=function(p){this.typeId='minecraft:lava';this.permutation=p;};
+ assert.equal(fluidPumpStep(pump),true,name);assert.equal(lava.typeId,'minecraft:air');assert.deepEqual(tankState(target),{kind:2,n:4});assert.equal(fluidPumpStep(pump),false,'cannot duplicate lava source');
+}
+for(const fault of ['space','different','flowing','unloaded','source_write','target_write']){
+ const f=setup(),pump=f.put(P(0,0,0),'hakkai:fluid_pump'),lava=f.put(P(-1,0,0),'minecraft:lava',{liquid_depth:fault==='flowing'?1:0}),target=f.tank(P(1,0,0),fault==='different'?1:2,fault==='space'?5:1);
+ lava.setType=function(id){this.typeId=id;this.permutation=perm({});if(fault==='source_write')throw Error('write failed after source removal');};lava.setPermutation=function(p){this.typeId='minecraft:lava';this.permutation=p;};
+ if(fault==='target_write')target.fail=true;if(fault==='unloaded')f.d.unloaded=new Set([key(P(1,0,0))]);
+ const prior=tankState(target);assert.equal(fluidPumpStep(pump),false,fault);assert.equal(lava.typeId,'minecraft:lava',fault);assert.deepEqual(tankState(target),prior,fault);
+}
+console.log('Finite lava source extraction, six directions, blocked/full/unloaded and rollback OK (simulated)');

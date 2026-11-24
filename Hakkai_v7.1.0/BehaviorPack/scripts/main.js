@@ -1,3 +1,4 @@
+import { isGantry, gantryState, setGantryMode, gantryStep, gantryAutoTick, armGantry } from './factory_gantry.js';
 import { fluidPumpStep, fluidBasinStep, fluidLoaderStep, adjacentWaterTank, tankState, consumeTankWater } from './factory_fluids.js';
 import { INDUSTRY_CHAPTERS, claimIndustryGuide } from './industry_guide.js';
 import { pipeEndpoints } from './factory_transport.js';
@@ -4919,6 +4920,25 @@ safeSub('world','after','itemReleaseUse',({source:p,itemStack:item})=>{combatCha
 try{world.afterEvents.itemStopUse?.subscribe(({source:p,itemStack:item})=>{combatCharge?.stop(p,item);});}catch{}
 
 const factoryCycleAt=new Map();
+async function gantryMenu(player,block){
+ const d=block.dimension,pos={x:block.x,y:block.y,z:block.z},id=block.typeId,initial=gantryState(block);if(!initial)return;
+ const choice=await form(player,'§6動力移動装置',`位置 ${initial.offset}/8｜状態 ${['停止','連続前進','連続後退'][initial.mode]}\n専用フレーム・パネルのみ。人や生物が近いと停止。連続運転は開始後、離れる時間があります。`,[['1歩前進'],['1歩後退'],['連続前進'],['連続後退'],['停止'],['閉じる']]);
+ if(choice===undefined||choice===5||!player.isValid||player.dimension.id!==d.id||[GameMode.Spectator,GameMode.Adventure].includes(player.getGameMode()))return;
+ const l=player.location;if(Math.hypot(l.x-pos.x-.5,l.y-pos.y-.5,l.z-pos.z-.5)>6)return notice(player,'§e移動装置から離れすぎました');
+ let now;try{if(!d.isChunkLoaded(pos))return;now=d.getBlock(pos);}catch{return;}
+ const current=gantryState(now);if(now?.typeId!==id||!current)return notice(player,'§e装置が見つかりません');
+ if(choice===4){setGantryMode(now,0);return notice(player,'§e移動装置を停止しました');}
+ if(current.offset!==initial.offset||current.mode!==initial.mode)return notice(player,'§e装置の状態が変わりました。もう一度開いてね');
+ if(choice===2||choice===3){
+  const n=kineticNetwork(d,pos);if(n.status!=='running')return notice(player,'§e動力不足または回路を確認してね');
+  if(setGantryMode(now,choice===2?1:2)){armGantry(now,factoryCycleAt,system.currentTick);notice(player,'§a連続運転を予約。構造物から離れてね');}return;
+ }
+ if(choice!==0&&choice!==1)return;
+ if(!setGantryMode(now,0))return notice(player,'§e装置を停止できません');
+ const result=gantryStep(now,choice===0?1:-1,{kineticNetwork,report});
+ const errors={limit:'移動範囲の端です',power:'動力がありません',anchor:'先頭に専用フレームかパネルがありません',size:'構造物が32ブロックを超えています',blocked:'移動先が空いていません',entity:'周囲に人や生物などがいます',unloaded:'周囲を読み込めません',failed:'移動に失敗しました',rollback:'復旧を確認してください'};
+ notice(player,result.ok?`§a${result.count}ブロックを移動：${result.offset}/8`:`§e${errors[result.reason]??'移動できません'}`);
+}
 function factoryMeter(player,block){
  if(!player?.isSneaking)return;
  const n=kineticNetwork(block.dimension,{x:block.x,y:block.y,z:block.z});
@@ -5089,6 +5109,10 @@ function transfer(b){
 }
 safeSub('system','before','startup',({itemComponentRegistry,blockComponentRegistry})=>{
  safeReg(itemComponentRegistry,ns+'use',{onUse:use,onUseOn:use,onCompleteUse:completeFocus});
+ safeReg(blockComponentRegistry,ns+'gantry',{
+  onTick:({block})=>gantryAutoTick(block,{kineticNetwork,report,cycleAt:factoryCycleAt,tick:system.currentTick}),
+  onPlayerInteract:({player,block})=>{if(player?.isValid&&isGantry(block.typeId)&&![GameMode.Spectator,GameMode.Adventure].includes(player.getGameMode()))menu(player,p=>gantryMenu(p,block));}
+ });
  safeReg(blockComponentRegistry,ns+'factory',{onTick:({block})=>transfer(block),onPlayerInteract:({player,block})=>{try{if(!player?.isSneaking)return;if(block.typeId===ns+'fluid_tank'){const s=tankState(block);player.sendMessage(!s?'§e液体タンクの状態を確認できません':`§b液体タンク ${['空','水','溶岩'][s.kind]} ${s.n}/8（1目盛り＝バケツ1/4）`);return;}if(block.typeId===ns+'clutch'){const on=toggleClutch(block);if(on!==undefined)notice(player,on?'§a動力クラッチ：接続':'§e動力クラッチ：切断');return;}factoryMeter(player,block);}catch{}}});
  safeReg(blockComponentRegistry,ns+'town',{onTick:({block})=>townTick(block),onPlayerInteract:({player,block})=>{
    if(player&&player.getGameMode()!==GameMode.Spectator)menu(player,p=>townMenu(p,townGet(block.dimension,block.location,true)));

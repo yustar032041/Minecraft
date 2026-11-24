@@ -1,0 +1,58 @@
+{
+  "format_version": "1.26.60",
+  "minecraft:block": {
+    "description": {
+      "identifier": "hakkai:gantry",
+      "menu_category": {
+        "category": "construction"
+      },
+      "states": {
+        "hakkai:offset": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "hakkai:motion": [
+          0,
+          1,
+          2
+        ]
+      }
+    },
+    "components": {
+      "minecraft:display_name": "tile.hakkai:gantry.name",
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "hakkai_gantry",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:map_color": "#ad8d60",
+      "minecraft:sound": {
+        "sound": "wood"
+      },
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 1
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 3
+      },
+      "minecraft:loot": "loot_tables/hakkai/blocks/gantry.json",
+      "minecraft:tick": {
+        "interval_range": [
+          8,
+          10
+        ],
+        "looping": true
+      },
+      "hakkai:gantry": {}
+    }
+  }
+}

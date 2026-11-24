@@ -11,7 +11,7 @@ function generatorWorks(d,b){
  if(b.typeId!=='hakkai:wind_rotor'||b.y<64)return false;
  try{return !d.getBlockFromRay({x:b.x+.5,y:b.y+1.01,z:b.z+.5},{x:0,y:1,z:0},{maxDistance:32});}catch{return false;}
 }
-const LOAD={mill:32,miner:64,kiln:32,crusher:32,washer:24,press:48,saw:24,compressor:32,sorter:16,mixer:48,assembler:40,filter_router:16,fluid_basin:32,fluid_loader:16,fluid_pump:16,fluid_pump_west:16,fluid_pump_north:16,fluid_pump_south:16,fluid_pump_up:16,fluid_pump_down:16};
+const LOAD={mill:32,miner:64,kiln:32,crusher:32,washer:24,press:48,saw:24,compressor:32,sorter:16,mixer:48,assembler:40,filter_router:16,gantry:32,gantry_west:32,gantry_north:32,gantry_south:32,gantry_up:32,gantry_down:32,fluid_basin:32,fluid_loader:16,fluid_pump:16,fluid_pump_west:16,fluid_pump_north:16,fluid_pump_south:16,fluid_pump_up:16,fluid_pump_down:16};
 const GEN={wind_rotor:128,water_wheel:192};
 const CONDUCTORS=new Set(['shaft','clutch',...Object.keys(LOAD),...Object.keys(GEN)]);
 export function clutchEnabled(block){try{return block.permutation.getState('hakkai:engaged')===1;}catch{return false;}}

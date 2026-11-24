@@ -14,28 +14,30 @@ export function adjacentTank(d,p,minimum=1,kind=1){
 export function adjacentWaterTank(d,p,minimum=1){return adjacentTank(d,p,minimum,1);}
 // The back is the only input, the front the only output. Pipes connect in six
 // directions, tanks are endpoints (not pipes). Water sources are not removed.
+// A lava source is consumed as one whole bucket, never generated infinitely.
 export function fluidPumpStep(block,report=()=>{},maxPipes=64){
  const d=block.dimension,p={x:block.x,y:block.y,z:block.z},v=PUMPS[block.typeId.slice(7)];if(!v)return false;
  try{
-  const source=loaded(d,at(p,v,-1)),state=tankState(source);let kind,infinite=false;
+  const source=loaded(d,at(p,v,-1)),state=tankState(source);let kind,infinite=false,lavaSource=false,units=1;
   if(state){if(state.n<1)return false;kind=state.kind;}
   else{
-   if(source.typeId!=='minecraft:water')return false;
-   try{infinite=source.permutation.getState('liquid_depth')===0;}catch{return false;}
-   if(!infinite)return false;kind=1;
+   if(source.typeId!=='minecraft:water'&&source.typeId!=='minecraft:lava')return false;
+   let full;try{full=source.permutation.getState('liquid_depth')===0;}catch{return false;}
+   if(!full)return false;
+   infinite=source.typeId==='minecraft:water';lavaSource=!infinite;kind=infinite?1:2;units=lavaSource?4:1;
   }
   const queue=[at(p,v)],seen=new Set(),tanks=[];let pipes=0;
   for(let i=0;i<queue.length;i++){
    const pos=queue[i],k=key(pos);if(seen.has(k))continue;seen.add(k);
    const b=loaded(d,pos),s=tankState(b);
-   if(s){if(k!==key(at(p,v,-1))&&s.n<8&&(s.kind===0||s.kind===kind))tanks.push({b,s});continue;}
+   if(s){if(k!==key(at(p,v,-1))&&s.n+units<=8&&(s.kind===0||s.kind===kind))tanks.push({b,s});continue;}
    if(b.typeId!=='hakkai:fluid_pipe')continue;
    if(++pipes>maxPipes)return false;
    for(const delta of DIRS){const next=at(pos,delta);if(key(next)!==key(p)&&!seen.has(key(next)))queue.push(next);}
   }
   if(!tanks.length)return false;
   const target=tanks[0],oldSource=source.permutation,oldTarget=target.b.permutation;
-  try{if(!infinite)writeTank(source,kind,state.n-1);writeTank(target.b,kind,target.s.n+1);return true;}
+  try{if(lavaSource)source.setType('minecraft:air');else if(!infinite)writeTank(source,kind,state.n-1);writeTank(target.b,kind,target.s.n+units);return true;}
   catch(e){try{target.b.setPermutation(oldTarget);}catch(r){report('液体搬送の出力復旧失敗',r);}if(!infinite)try{source.setPermutation(oldSource);}catch(r){report('液体搬送の入力復旧失敗',r);}report('液体搬送失敗（復旧を試行）',e);return false;}
  }catch(e){report('液体経路未読込または無効',e);return false;}
 }

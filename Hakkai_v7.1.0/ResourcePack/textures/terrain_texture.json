@@ -444,6 +444,30 @@
     },
     "hakkai_gear_down_y": {
       "textures": "textures/blocks/hakkai_gear_down_y"
+    },
+    "hakkai_gantry_frame": {
+      "textures": "textures/blocks/hakkai_gantry_frame"
+    },
+    "hakkai_gantry_panel": {
+      "textures": "textures/blocks/hakkai_gantry_panel"
+    },
+    "hakkai_gantry": {
+      "textures": "textures/blocks/hakkai_gantry"
+    },
+    "hakkai_gantry_west": {
+      "textures": "textures/blocks/hakkai_gantry_west"
+    },
+    "hakkai_gantry_north": {
+      "textures": "textures/blocks/hakkai_gantry_north"
+    },
+    "hakkai_gantry_south": {
+      "textures": "textures/blocks/hakkai_gantry_south"
+    },
+    "hakkai_gantry_up": {
+      "textures": "textures/blocks/hakkai_gantry_up"
+    },
+    "hakkai_gantry_down": {
+      "textures": "textures/blocks/hakkai_gantry_down"
     }
   }
 }
