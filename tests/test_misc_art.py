@@ -20,7 +20,7 @@ for name,(kind,attr) in mapping().items():
  expected=icon(name,kind,attr)
  actual=Image.open(root/'Hakkai_v7.1.0/ResourcePack/textures/items'/f'hakkai_{name}.png').convert('RGBA')
  assert expected.tobytes()==actual.tobytes(),name
-all_changed=progress['redrawn_existing']+progress['derived_existing']+progress['derived_extra_existing']+progress['refined_misc_existing']+progress['provisional_misc_existing']
+all_changed=progress['redrawn_existing']+progress['derived_existing']+progress['derived_extra_existing']+progress['refined_misc_existing']+progress['provisional_misc_existing']+progress['industry_generated_existing']
 items={f.stem for f in (root/'Hakkai_v7.1.0/BehaviorPack/items').glob('*.json')}
 assert len(all_changed)==len(set(all_changed)) and set(all_changed)==items
 print(f'{len(items)} item image files replaced; {len(misc)} provisional misc designs tracked (visual quality unverified)')

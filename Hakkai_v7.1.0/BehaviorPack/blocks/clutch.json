@@ -1,0 +1,65 @@
+{
+  "format_version": "1.26.60",
+  "minecraft:block": {
+    "description": {
+      "identifier": "hakkai:clutch",
+      "menu_category": {
+        "category": "construction"
+      },
+      "states": {
+        "hakkai:spin": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "hakkai:engaged": [
+          0,
+          1
+        ]
+      }
+    },
+    "components": {
+      "minecraft:display_name": "tile.hakkai:clutch.name",
+      "minecraft:geometry": "geometry.hakkai.kinetic_base",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "hakkai_shaft_0",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:map_color": "#ad8d60",
+      "minecraft:sound": {
+        "sound": "wood"
+      },
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 1
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 3
+      },
+      "minecraft:loot": "loot_tables/hakkai/blocks/clutch.json",
+      "minecraft:tick": {
+        "interval_range": [
+          12,
+          16
+        ],
+        "looping": true
+      },
+      "hakkai:factory": {}
+    },
+    "permutations": [
+      {
+        "condition": "q.block_state('hakkai:engaged') == 1",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "hakkai_shaft_2",
+              "render_method": "opaque"
+            }
+          }
+        }
+      }
+    ]
+  }
+}

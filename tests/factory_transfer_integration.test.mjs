@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';import fs from 'node:fs';import vm from 'node:vm';
 import {kineticNetwork,hasAdjacentWater,factoryRecipe} from '../Hakkai_v7.1.0/BehaviorPack/scripts/factory_network.js';
 import {findLineRecipe,filteredDestination} from '../Hakkai_v7.1.0/BehaviorPack/scripts/factory_lines.js';
+import {pipeEndpoints} from '../Hakkai_v7.1.0/BehaviorPack/scripts/factory_transport.js';
 import {factoryTransaction} from '../Hakkai_v7.1.0/BehaviorPack/scripts/factory_transaction.js';
 class ItemStack {constructor(typeId,amount=1){Object.assign(this,{typeId,amount,maxAmount:64});}clone(){const c=new ItemStack(this.typeId,this.amount);c.nameTag=this.nameTag;return c;}isStackableWith(x){return this.typeId===x.typeId&&this.nameTag===x.nameTag;}}
 class Container {constructor(items){this.items=items;this.size=items.length;this.failOnce=false;}getItem(i){return this.items[i]?.clone();}setItem(i,v){this.items[i]=v?.clone();if(this.failOnce){this.failOnce=false;throw Error('write failed');}}}
@@ -15,7 +16,7 @@ function fixture(kind,inputs,outputs=[undefined,undefined]){
  d.getBlock=l=>l.y===80&&l.z===0&&l.x===-1?barrel(from):l.y===80&&l.z===0&&l.x===1?barrel(to):l.y===80&&l.z===0&&l.x===0?b:l.x===0&&l.z===0&&l.y<80?ore:{typeId:'minecraft:air'};
  const total=(c,id)=>c.items.reduce((a,v)=>a+(v?.typeId===id?v.amount:0),0);
  const room=(c,s)=>c.items.reduce((a,v)=>a+(!v?s.maxAmount:v.isStackableWith(s)?v.maxAmount-v.amount:0),0)>=s.amount;
- const ctx={ns:'hakkai:',world:{getTimeOfDay:()=>6000},currentWeather:new Map(),WeatherType:{Thunder:'thunder',Rain:'rain'},system:{currentTick:0},ItemStack,total,room,factoryTransaction,kineticNetwork,hasAdjacentWater,factoryRecipe,syncKineticVisual:()=>{},findLineRecipe,filteredDestination,factoryCycleAt:new Map(),production:(_,n)=>produced.push(n),report:(...x)=>reports.push(x)};
+ const ctx={ns:'hakkai:',world:{getTimeOfDay:()=>6000},currentWeather:new Map(),WeatherType:{Thunder:'thunder',Rain:'rain'},system:{currentTick:0},ItemStack,total,room,factoryTransaction,kineticNetwork,hasAdjacentWater,factoryRecipe,syncKineticVisual:()=>{},findLineRecipe,filteredDestination,pipeEndpoints,factoryCycleAt:new Map(),production:(_,n)=>produced.push(n),report:(...x)=>reports.push(x)};
  vm.createContext(ctx);vm.runInContext(src.slice(start,end),ctx);
  return {from,to,ore,b,ctx,reports,produced,run:()=>ctx.transfer(b)};
 }
@@ -145,4 +146,38 @@ for(const problem of ['no_source','empty_filter','full_output','write_failure'])
  const get=f.b.dimension.getBlock;f.b.dimension.getBlock=p=>p.x===0&&p.y===81&&p.z===0&&problem!=='no_source'?{typeId:'hakkai:wind_rotor',...p,location:p}:p.x===0&&p.y===80&&p.z===-1?barrel(samples):p.x===0&&p.y===80&&p.z===1?barrel(reject):get(p);
  f.b.dimension.getBlockFromRay=()=>undefined;const before=snap(f.from),target=snap(f.to);f.run();
  assert.deepEqual(snap(f.from),before,problem);assert.deepEqual(snap(f.to),target,problem);assert.equal(reject.getItem(0),undefined);
+}
+// End-to-end ore doubling through the actual crusher/washer/mill branches.
+for(const metal of ['iron','gold','copper']){
+ const crusher=fixture('crusher',[item(`minecraft:raw_${metal}`)]);
+ const power=f=>{const get=f.b.dimension.getBlock;f.b.dimension.getBlock=p=>p.x===0&&p.y===81&&p.z===0?{typeId:'hakkai:wind_rotor',...p,location:p}:get(p);f.b.dimension.getBlockFromRay=()=>undefined;};
+ power(crusher);crusher.run();assert.deepEqual(snap(crusher.to),[[`hakkai:crushed_${metal}`,2],undefined]);
+ const washer=fixture('washer',[crusher.to.getItem(0)]);power(washer);
+ const get=washer.b.dimension.getBlock;washer.b.dimension.getBlock=p=>p.x===0&&p.y===80&&p.z===1?{typeId:'minecraft:water'}:get(p);
+ washer.run();washer.ctx.system.currentTick=40;washer.run();assert.deepEqual(snap(washer.to),[[`hakkai:washed_${metal}`,2],undefined]);
+ const mill=fixture('mill',[washer.to.getItem(0)]);power(mill);mill.run();mill.ctx.system.currentTick=40;mill.run();
+ assert.deepEqual(snap(mill.to),[[`minecraft:${metal}_ingot`,2],undefined]);
+}
+{
+ const f=fixture('washer',[item('hakkai:crushed_iron')]);const get=f.b.dimension.getBlock;
+ f.b.dimension.getBlock=p=>p.x===0&&p.y===81&&p.z===0?{typeId:'hakkai:wind_rotor',...p,location:p}:get(p);f.b.dimension.getBlockFromRay=()=>undefined;
+ f.run();assert.deepEqual(snap(f.from),[['hakkai:crushed_iron',1]]);assert.deepEqual(snap(f.to),[undefined,undefined]);
+}
+for(const kind of ['factory_pipe','factory_pipe_west','factory_pipe_north','factory_pipe_south','factory_pipe_up','factory_pipe_down']){
+ const named=item('minecraft:diamond',2);named.nameTag='kept';const f=fixture(kind,[named]),p=pipeEndpoints(kind,{x:0,y:80,z:0});
+ const barrel=c=>({typeId:'minecraft:barrel',getComponent:()=>({container:c})});
+ const k=q=>`${q.x},${q.y},${q.z}`,get=f.b.dimension.getBlock;
+ f.b.dimension.getBlock=q=>k(q)===k(p.from)?barrel(f.from):k(q)===k(p.to)?barrel(f.to):get(q);
+ f.run();assert.equal(f.from.getItem(0).amount,1,kind);assert.equal(f.to.getItem(0).nameTag,'kept',kind);
+ const initial=snap(f.from);f.b.dimension.isChunkLoaded=q=>k(q)!==k(p.to);f.run();assert.deepEqual(snap(f.from),initial,kind);
+}
+console.log('Three ore doubling lines and six directional barrel pipes OK (simulated)');
+for(const fault of ['unpowered','full','write_failure','overload']){
+ const f=fixture('crusher',[item('minecraft:raw_iron')]);
+ if(fault!=='unpowered'){
+  const get=f.b.dimension.getBlock;f.b.dimension.getBlock=p=>p.x===0&&p.y===81&&p.z===0?{typeId:'hakkai:wind_rotor',...p,location:p}:fault==='overload'&&p.y===80&&p.x===0&&p.z>0&&p.z<=4?{typeId:'hakkai:press',...p,location:p}:get(p);f.b.dimension.getBlockFromRay=()=>undefined;
+ }
+ if(fault==='full')f.to.items=[item('minecraft:stone',64),item('minecraft:stone',64)];
+ if(fault==='write_failure'){let once=true;f.to.setItem=(i,v)=>{if(once){once=false;throw Error('simulated');}f.to.items[i]=v;};}
+ const beforeIn=snap(f.from),beforeOut=snap(f.to);f.run();assert.deepEqual(snap(f.from),beforeIn,fault);assert.deepEqual(snap(f.to),beforeOut,fault);
 }

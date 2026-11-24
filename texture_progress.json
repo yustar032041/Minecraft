@@ -507,5 +507,14 @@
     "village_badge",
     "war_horn",
     "wind_legacy_memorial"
+  ],
+  "industry_generated_existing": [
+    "industrial_guide",
+    "crushed_iron",
+    "washed_iron",
+    "crushed_gold",
+    "washed_gold",
+    "crushed_copper",
+    "washed_copper"
   ]
 }

@@ -1492,6 +1492,27 @@
     },
     "hakkai_ult_pickaxe": {
       "textures": "textures/items/hakkai_ult_pickaxe"
+    },
+    "hakkai_industrial_guide": {
+      "textures": "textures/items/hakkai_industrial_guide"
+    },
+    "hakkai_crushed_iron": {
+      "textures": "textures/items/hakkai_crushed_iron"
+    },
+    "hakkai_washed_iron": {
+      "textures": "textures/items/hakkai_washed_iron"
+    },
+    "hakkai_crushed_gold": {
+      "textures": "textures/items/hakkai_crushed_gold"
+    },
+    "hakkai_washed_gold": {
+      "textures": "textures/items/hakkai_washed_gold"
+    },
+    "hakkai_crushed_copper": {
+      "textures": "textures/items/hakkai_crushed_copper"
+    },
+    "hakkai_washed_copper": {
+      "textures": "textures/items/hakkai_washed_copper"
     }
   }
 }

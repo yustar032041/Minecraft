@@ -336,6 +336,21 @@
     },
     "hakkai_filter_router_3": {
       "textures": "textures/blocks/hakkai_filter_router_3"
+    },
+    "hakkai_factory_pipe_west": {
+      "textures": "textures/blocks/hakkai_factory_pipe_west"
+    },
+    "hakkai_factory_pipe_north": {
+      "textures": "textures/blocks/hakkai_factory_pipe_north"
+    },
+    "hakkai_factory_pipe_south": {
+      "textures": "textures/blocks/hakkai_factory_pipe_south"
+    },
+    "hakkai_factory_pipe_up": {
+      "textures": "textures/blocks/hakkai_factory_pipe_up"
+    },
+    "hakkai_factory_pipe_down": {
+      "textures": "textures/blocks/hakkai_factory_pipe_down"
     }
   }
 }
