@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';import vm from 'node:vm';
 const src=fs.readFileSync('Hakkai_v7.1.0/BehaviorPack/scripts/main.js','utf8');
-const helper=src.slice(src.indexOf('function castMagic(p,kind){'),src.indexOf('async function spells(p){'));
+const helper=src.slice(src.indexOf('function castMagic(p,kind){'),src.indexOf('const TOME_SPELLS='));
 const prefix=src.slice(src.indexOf('function use(e){'),src.indexOf(" if(id===ns+'return_stone')menu(p,returnMenu);"))+'\n}';
 let selected='hakkai:fushi_totem',selection=1,change=()=>{},calls=[],notices=[],unlocked=new Set([1,2,3,7]);
 const p={id:'p',typeId:'minecraft:player',isValid:true,isSneaking:false,selectedSlotIndex:0,dimension:{id:'d'},getGameMode:()=> 'survival'};

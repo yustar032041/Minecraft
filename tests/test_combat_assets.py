@@ -14,7 +14,7 @@ main=(bp/'scripts/main.js').read_text(encoding='utf8');combat=(bp/'scripts/comba
 for token in ['combatResonance?.onHurt','combatResonance?.consume','combatResonance?.level','combatResonance?.clear','combatEnemies(p,r,cap)','applyCombatHit(p,e,str,a,mod,push)','風紋連撃・戦闘の試作']:
  assert token in main,token
 assert main.index("s.m<cost||s.s<effort")<main.index('combatResonance?.consume(p,g)')
-assert 'g&&!parried&&p.isSneaking' in main
+assert 'g&&!parried&&(!weaponTrace?.enabled()||!isTraceWeapon(g))&&p.isSneaking' in main
 for token in ('combatGuard?.tick','combatGuard?.scale','combatGuard?.invalidate','combatGuard?.clear','spendParry:', 'prepareWindRay(p,g)', 'renderWindRay(p,beam)', 'combatResonance?.consumeCombo(p,g)', '二連終撃', 'combatRoll?.tick', 'combatRoll?.blocks', 'combatRoll?.clear', 'combatParry?.tick', 'combatParry?.tryHit', 'combatParry?.isStaggered', 'combatParry?.flush', 'animation.hakkai.parry_rebound', 'airDash?.tick', 'airDash?.clear', 'setupAirDash({notice})','airStrike?.tick','airStrike?.onHurt','airStrike?.chargeMelee','airStrike?.clear','castNewMagic({p,s:state(p)' ):
  assert token in main,token
 assert main.index('prepareWindRay(p,g)')<main.index('s.m-=cost')<main.index('combatResonance?.consume(p,g)')

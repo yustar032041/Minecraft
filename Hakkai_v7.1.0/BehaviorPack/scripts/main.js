@@ -1,3 +1,5 @@
+import { setupWeaponTrace, isTraceWeapon } from './combat_weapon_trace.js';
+import { tomeSpells, tomeUnlocked, tomeCurrent, tomeNext, tomeCrouchTick } from './spell_tome.js';
 import { VILLAGE_GUIDE_CHAPTERS } from './village_guide.js';
 import { validPlot, repairPlotStep, validRoute, readCarry, carryStep, retrieveCargo, festivalGameStart, festivalGameAdvance, GAME_CORNERS, GAME_COURSES } from './village_projects.js';
 import { seasonAt, festivalAt, villageTier, requestStatus, contributeRequest, festivalJoin, donation, workDay, detectCrisis, recoverCrisis, addVillageMemory, depositToVillage, validWorkshop, workshopStep } from './village_life.js';
@@ -54,7 +56,7 @@ import { setupExpeditionRecords } from './expedition_records.js';
 import { GUIDE_ENTRIES, GUIDE_ICONS, GUIDE_SECTIONS, selectGuidePage, creatureEntriesByRealm, gearKinds, filterGear } from './guide_navigation.js';
 
 const ns='hakkai:', dimID=(id)=>ns+'realm_'+id;
-let frontierWorlds, expeditionRecords, seededWorlds, mobSystem, realmEnders, fushiSystem, wardenArena, wardenBoss, combatResonance, combatGuard, combatRoll, combatParry, airDash, airStrike, fushiTotem, combatUltimate, combatCharge;
+let frontierWorlds, expeditionRecords, seededWorlds, mobSystem, realmEnders, fushiSystem, wardenArena, wardenBoss, combatResonance, combatGuard, combatRoll, combatParry, airDash, airStrike, fushiTotem, combatUltimate, combatCharge, weaponTrace;
 const shieldWear=setupShieldWear({system});
 const customShield=setupCustomShield({catalog,prepare:shieldWear.prepare});
 const gear=new Map([...catalog,...ULTIMATE_WEAPONS].map(g=>[ns+g.id,g]));
@@ -2817,7 +2819,7 @@ const chapters=[
  ['地形と集め方','各界の新しく生成される地形では、地表の下を掘って結晶鉱を探せます。浮島の地層は薄いので掘り抜きに注意。生成済みの場所には後から追加されません。到着地点近くにも小さな鉱床があります。守護獣を倒すと欠片が手に入り、同じ欠片2個とアメジストの欠片1個から結晶を作れます。バニラの敵も、ときどき欠片を落とします。'],
  ['野営とサバイバル','焚き火か魂の焚き火の近くで、しゃがんで静止すると野営休息になり、スタミナと魔力が速く回復します。野営のきのこ包み・根菜の焚き火焼き・森歩きの滋養食は採集や料理で作れます。乾燥肉・乾燥ベリー・燻製魚の切り身・乾燥昆布を作業台で合わせると野営の補給袋を2個作れます。畑・季節の菜園・釣り・牧場・かまどを組み合わせ、遠征前に食料を準備しましょう。'],
  ['戦闘とスタミナ','走る・泳ぐ・攻撃するとスタミナを使い、止まると回復。装備スキルや属性魔法を使えます。ガイド本の「八界の幻影闘技場」では、体力・魔力・相手の予告を見ながら行動を選ぶターン制ミニゲームに挑戦できます。記念館の達成度と記念品の収集が進むと、特別な第4戦が解放されます。闘技場はゲーム内の幻影戦で、実際のプレイヤーや建築物にはダメージを与えません。'],
- ['八属性と魔導書','本＋風の結晶＋水の結晶で魔導書を作れます。風・水・火・土・雷・光・闇・時の8属性を使え、一度訪れた場所の属性が解放されます。霧・溶岩・嵐・虹・疾風は両方の属性が必要です。光の矢は光を訪問後、魔力5で視線上の敵へ放ちます。絆の灯は風と水を訪問後、近くにもう一人いる時に魔力20で参加者を回復し敵を攻撃します。風・水・炎の専用魔法も選べます。FUSHIのトーテムから月のまどろみを使用すると確認後に消費します。魔法の再使用時間は共通6秒です。'],
+ ['八属性と魔導書','本＋風の結晶＋水の結晶で魔導書を作れます。手に持ってしゃがむたび、使用可能な魔法へ順に切り替え、使うボタンで選択中の魔法を発動。選択名は画面に表示されます。風・水・火・土・雷・光・闇・時の8属性を使え、一度訪れた場所の属性が解放されます。霧・溶岩・嵐・虹・疾風は両方の属性が必要です。光の矢は光を訪問後、魔力5で視線上の敵へ放ちます。絆の灯は風と水を訪問後、近くにもう一人いる時に魔力20で参加者を回復し敵を攻撃します。風・水・炎の専用魔法も選べます。FUSHIのトーテムから月のまどろみを使用すると確認後に消費します。魔法の再使用時間は共通6秒です。'],
  ['村の暮らし','風記の集落鐘を置くか、村人の近くで普通の鐘をしゃがんで使うと台帳が開きます。壁の数、高い見張り台、足止め罠、工場が守りを強くします。工場が出荷した備蓄は交易・村の成長・祭りに役立ちます。村人には朝・昼・夕の行き先があります。'],
  ['季節と釣り','季節は4ゲーム日ごとに変わります。花壇を置くと季節の花に変わり、集落鐘の周りでは作物の成長も変化します。釣り竿を持ち物に入れてガイド本の「水辺の釣り」へ。釣果は季節や天気、水辺の種類で変わります。'],
  ['時の列車','第8界の時の終着駅に着いたら、ガイド本の「時の列車」へ。操車場で過去か未来を選ぶと乗車します。しゃがんで降りると、旅を中止できます。各時代の駅から現在へ戻れます。'],
@@ -3178,25 +3180,21 @@ async function totemMagicMenu(p){
  if(p.selectedSlotIndex!==slot||p.dimension.id!==dim||selected(p)?.typeId!==ns+'fushi_totem')return notice(p,'§eトーテムの位置が変わったため中止しました');
  castMagic(p,'moon');
 }
-async function spells(p){
- const learned=(a)=>isCreative(p)||visited(p,home.findIndex(x=>x.includes(a))+1);
- const slot=p.selectedSlotIndex,dimension=p.dimension.id;
- const list=[...attrs.slice(0,8).map((s,i)=>({label:s,a:i,b:-1})),...pairs,
-   {label:'光の矢（魔力5）',a:5,b:-1,special:'light'},
-   {label:'絆の灯（魔力20・2人以上）',a:0,b:1,special:'bond'},
-   {label:'風の輪（魔力8）',a:0,b:-1,special:'wind'},
-   {label:'水の縛り（魔力10）',a:1,b:-1,special:'water'},
-   {label:'炎の環（魔力12）',a:2,b:-1,special:'fire'}];
- const ix=await form(p,'八属性の魔導書','単属性：魔力12　合成：魔力19。専用魔法は表示された魔力を使います。各属性の界を訪れると解放されます。',
-   list.map(({a,b,label},i)=>[`${marked(p,'learned_spells',i)?'◆':learned(a)&&(b<0||learned(b))?'◇':'×'}  ${label}${b>=0?`（${attrs[a]}＋${attrs[b]}）`:''}`]));
- if(ix===undefined)return;
- const {a,b,label,special}=list[ix];
- if(!learned(a)||(b>=0&&!learned(b)))return notice(p,'§e対応する属性の界を先に訪れてね');
- if(special){
-   if(!p.isValid||p.dimension.id!==dimension||p.selectedSlotIndex!==slot||selected(p)?.typeId!==ns+'element_tome')return notice(p,'§e魔導書の位置が変わったため中止しました');
-   return castMagic(p,special);
- }
- castElement(p,a,b,label);
+const TOME_SPELLS=tomeSpells(attrs,pairs);
+function tomeHasAttribute(p,a){return isCreative(p)||visited(p,home.findIndex(x=>x.includes(a))+1);}
+function tomeSelection(p){return tomeCurrent(TOME_SPELLS,num(p,'tome_spell_v1',-1),a=>tomeHasAttribute(p,a));}
+function advanceTome(p){
+ const next=tomeNext(TOME_SPELLS,num(p,'tome_spell_v1',-1),a=>tomeHasAttribute(p,a));
+ if(next<0)return notice(p,'§eまだ使用できる魔法がありません。対応する界を訪れてね',70);
+ property(p,'tome_spell_v1',next);notice(p,`§b魔導書：${TOME_SPELLS[next].label} §7｜使うボタンで発動`,70);
+}
+function castTome(p){
+ if(!p?.isValid||p.getGameMode()===GameMode.Spectator||selected(p)?.typeId!==ns+'element_tome')return;
+ const i=tomeSelection(p);if(i<0)return notice(p,'§eまだ使用できる魔法がありません。対応する界を訪れてね',70);
+ const spell=TOME_SPELLS[i];if(!tomeUnlocked(spell,a=>tomeHasAttribute(p,a)))return;
+ property(p,'tome_spell_v1',i);
+ if(spell.special)return castMagic(p,spell.special);
+ return castElement(p,spell.a,spell.b,spell.label);
 }
 function shore(p){
  const l=p.location;
@@ -4200,7 +4198,7 @@ async function survivalGuide(p){
  if(i===8)return help(p);
  if(i===9)return openCreatureGuide(p);
  if(i===10)return wardenArena?.open(p);
- if(i===11)return simple(p,'風紋・防御・回避・パリィ（試作）','§b風記の剣・斧・槍で立ったまま敵に命中すると風紋がたまります。4秒以内の命中を3回、間隔は0.4秒以上。最大で6秒間維持します。\n\n§e2つたまったら、しゃがみながら武器の使用を約1.2秒長押しして離すと二連終撃。剣は前方3体、槍は前方2体、斧は周囲6体まで。威力と吹き飛ばしが上がります。3つたまってからの溜め技は代わりに風紋閃。壁や味方で止まります。どちらも外しても消費します。通常の近接命中はスタミナ3、溜め技は8と魔力が必要です。\n\n§b風記の剣・斧・槍を持ってしゃがむと、前方からの近接・飛び道具を70%軽減します。スタミナを毎秒5消費し、なくなったらしゃがみを解除して回復。構えの開始には最大約0.5秒かかります。\n\n§b風記の盾は両手どちらでも持て、しゃがむと試作の正面防御。斧を防ぐと約5秒無効。耐久と矢の跳ね返りは試作で、完全再現ではありません。実機確認まで頼らないでね。\n\n§a回避ロール：地上でしゃがみながら前進を素早く2回入力。スタミナ10、約0.5秒の攻撃回避。前方に安全な平地が必要です。\n\n§b空中ダッシュ：空中でしゃがまずに前進を一度離し、素早く2回入力。スタミナ15、着地まで1回。無敵や落下防止はありません。\n\n§b空中衝撃：風記の剣・斧・槍を持ち、しゃがまず落下中に敵へ近接を当てると、対象と近くの敵に追加ダメージ。着地まで1回、通常近接分を含めスタミナ12必要。落下ダメージは防ぎません。\n\n§6必殺：不屈の護符を持ち、スタミナ1〜20・魔力0〜20で使うと、見通せる近くの敵に攻撃。スタミナを全消費し1秒間通常ダメージを防ぎます。奈落や直接体力変更は防げず、30秒待機します。\n\n§eパリィ：盾を持たない剣・斧・槍の防御中にしゃがみを解除し、約0.3秒以内に正面から敵の近接か飛び道具を受けるとスタミナ15で防ぎます。近い敵の近接と一部の技を約2秒止めます。全攻撃・全行動が止まるわけではありません。管理者へのしゃがみ近接パリィも使えます。\n\n§7マナ・再使用時間は通常通り必要。操作・演出・バランスは試作で、統合版の検証が必要です。');
+ if(i===11)return simple(p,'風紋・防御・回避・パリィ（試作）','§b風記の剣・斧・槍で立ったまま敵に命中すると風紋がたまります。4秒以内の命中を3回、間隔は0.4秒以上。最大で6秒間維持します。\n\n§e2つたまったら、しゃがみながら武器の使用を約1.2秒長押しして離すと二連終撃。剣は前方3体、槍は前方2体、斧は周囲6体まで。威力と吹き飛ばしが上がります。3つたまってからの溜め技は代わりに風紋閃。壁や味方で止まります。どちらも外しても消費します。通常の近接命中はスタミナ3、溜め技は8と魔力が必要です。\n\n§b風記の剣・斧・槍を持ってしゃがむと、前方からの近接・飛び道具を70%軽減します。スタミナを毎秒5消費し、なくなったらしゃがみを解除して回復。構えの開始には最大約0.5秒かかります。\n\n§b風記の盾は両手どちらでも持て、しゃがむと試作の正面防御。斧を防ぐと約5秒無効。耐久と矢の跳ね返りは試作で、完全再現ではありません。実機確認まで頼らないでね。\n\n§a回避ロール：地上でしゃがみながら前進を素早く2回入力。スタミナ10、約0.5秒の攻撃回避。前方に安全な平地が必要です。\n\n§b空中ダッシュ：空中でしゃがまずに前進を一度離し、素早く2回入力。スタミナ15、着地まで1回。無敵や落下防止はありません。\n\n§b武器の軌跡：風記の武器97種で攻撃すると前方に当たり判定付きの軌跡が出ます。同じ一振りで本体が当たった相手には重ねて当たりません。軌跡は壁や味方を越えず、プレイヤーや友好生物を攻撃しません。基礎威力は武器と同じですが防具やエンチャント等で実際の損傷は変わります。空中衝撃としゃがみ近接の自動スキルは二重ヒット防止のため停止し、武器の使用ボタンからスキルを使います。\n\n§6必殺：不屈の護符を持ち、スタミナ1〜20・魔力0〜20で使うと、見通せる近くの敵に攻撃。スタミナを全消費し1秒間通常ダメージを防ぎます。奈落や直接体力変更は防げず、30秒待機します。\n\n§eパリィ：盾を持たない剣・斧・槍の防御中にしゃがみを解除し、約0.3秒以内に正面から敵の近接か飛び道具を受けるとスタミナ15で防ぎます。近い敵の近接と一部の技を約2秒止めます。全攻撃・全行動が止まるわけではありません。管理者へのしゃがみ近接パリィも使えます。\n\n§7マナ・再使用時間は通常通り必要。操作・演出・バランスは試作で、統合版の検証が必要です。');
  if(i===12)return guide(p);
 }
 
@@ -5108,7 +5106,7 @@ function use(e){
  const pearl=id.match(/^hakkai:pearl_([0-7])$/);
  if(pearl){const realm=Number(pearl[1]);void arrive(p,places[realm===0?0:realm+1]);return;}
  if(id===ns+'island_stone')menu(p,returnMenu);
- if(id===ns+'element_tome')menu(p,spells);
+ if(id===ns+'element_tome'){tomeCrouchTick(p,s,id,()=>advanceTome(p));return castTome(p);}
  if(id===ns+'trail_ration'){s.s=bounds(s.s+35,0,max);notice(p,'§a旅人の携帯食でスタミナが回復した');}
  if(id===ns+'camp_stew'){s.s=bounds(s.s+50,0,max);s.m=bounds(s.m+10,0,max);notice(p,'§a野営の具だくさんスープでスタミナと魔力が少し回復した');}
  if(id===ns+'dried_meat'){s.s=bounds(s.s+18,0,max);notice(p,'§a乾燥肉でスタミナが少し回復した');}
@@ -5647,7 +5645,8 @@ safeSub('world','after','entityHurt',({hurtEntity:e,damageSource:source,damage})
    const p=source.damagingEntity;
    if(p.getGameMode()!==GameMode.Spectator){
     const g=gear.get(selected(p)?.typeId);combatResonance?.onHurt(p,e,g,damage);
-    airStrike?.onHurt(p,e,state(p),g,damage,system.currentTick);
+    weaponTrace?.record(p,e,damage);
+    if(!weaponTrace?.enabled()||!isTraceWeapon(g))airStrike?.onHurt(p,e,state(p),g,damage,system.currentTick);
    }
  }catch(err){report('風紋連撃',err);}
  mobSystem?.onHurt({hurtEntity:e,damageSource:source});
@@ -5690,9 +5689,9 @@ safeSub('world','after','entityDie',({deadEntity,damageSource})=>{
 safeSub('world','after','entityDie',e=>{combatParry?.clearAttacker(e.deadEntity.id);try{realmEnders?.onDeath(e);fushiSystem?.onDeath(e);wardenBoss?.onDeath(e);mobSystem?.onDeath(e);}catch(err){report('追加MOBの討伐記録',err);}});
 // Optional events clear a stored wind mark promptly; the identity/expiry
 // check in the controller still protects older API versions.
-try{world.afterEvents.playerHotbarSelectedSlotChange?.subscribe(({player})=>{combatResonance?.clear(player.id);combatGuard?.invalidate(player.id);combatParry?.clear(player.id);combatCharge?.clear(player.id);});}catch{}
-try{world.afterEvents.playerDimensionChange?.subscribe(({player})=>{combatResonance?.clear(player.id);combatGuard?.invalidate(player.id);combatRoll?.clear(player.id);combatParry?.clear(player.id);airDash?.clear(player.id);airStrike?.clear(player.id);combatUltimate?.invalidate(player.id);combatCharge?.clear(player.id);});}catch{}
-safeSub('world','after','entityDie',({deadEntity})=>{if(deadEntity?.typeId==='minecraft:player'){customShield.clear(deadEntity.id);wardenBoss?.clearMusic(deadEntity.id);combatResonance?.clear(deadEntity.id);combatGuard?.clear(deadEntity.id);combatRoll?.clear(deadEntity.id);combatParry?.clear(deadEntity.id);airDash?.clear(deadEntity.id);airStrike?.clear(deadEntity.id);combatUltimate?.clear(deadEntity.id);combatCharge?.clear(deadEntity.id);}});
+try{world.afterEvents.playerHotbarSelectedSlotChange?.subscribe(({player})=>{combatResonance?.clear(player.id);combatGuard?.invalidate(player.id);combatParry?.clear(player.id);combatCharge?.clear(player.id);weaponTrace?.clear(player.id);});}catch{}
+try{world.afterEvents.playerDimensionChange?.subscribe(({player})=>{combatResonance?.clear(player.id);combatGuard?.invalidate(player.id);combatRoll?.clear(player.id);combatParry?.clear(player.id);airDash?.clear(player.id);airStrike?.clear(player.id);combatUltimate?.invalidate(player.id);combatCharge?.clear(player.id);weaponTrace?.clear(player.id);});}catch{}
+safeSub('world','after','entityDie',({deadEntity})=>{if(deadEntity?.typeId==='minecraft:player'){customShield.clear(deadEntity.id);wardenBoss?.clearMusic(deadEntity.id);combatResonance?.clear(deadEntity.id);combatGuard?.clear(deadEntity.id);combatRoll?.clear(deadEntity.id);combatParry?.clear(deadEntity.id);airDash?.clear(deadEntity.id);airStrike?.clear(deadEntity.id);combatUltimate?.clear(deadEntity.id);combatCharge?.clear(deadEntity.id);weaponTrace?.clear(deadEntity.id);}});
 safeSub('world','before','playerInteractWithEntity',e=>{
  const p=e.player;
  if(['minecraft:villager','minecraft:villager_v2'].includes(e.target.typeId)&&typeof e.target.nameTag==='string'&&e.target.nameTag.startsWith('§d風記の案内人§r｜')){
@@ -5866,12 +5865,13 @@ safeSub('world','after','playerInteractWithEntity',({player,target,beforeItemSta
  }
 });
 safeSub('world','after','entityHitEntity',({damagingEntity:p,hitEntity})=>{
+ try{weaponTrace?.record(p,hitEntity);}catch{}
  if(p.typeId!=='minecraft:player'||!p.isValid||p.getGameMode()===GameMode.Spectator)return;
  // Creative can preview the crouching weapon skill without spending stamina
  // or advancing survival-only affinity and boss-parry progression.
  if(isCreative(p)){
   const g=gear.get(selected(p)?.typeId),s=state(p);
-  if(g&&p.isSneaking&&hitEntity.typeId!=='minecraft:player'&&system.currentTick-s.useTick>=7){s.useTick=system.currentTick;cast(p,g);}
+  if(g&&(!weaponTrace?.enabled()||!isTraceWeapon(g))&&p.isSneaking&&hitEntity.typeId!=='minecraft:player'&&system.currentTick-s.useTick>=7){s.useTick=system.currentTick;cast(p,g);}
   return;
  }
  let parried=false;try{parried=wardenBoss?.onMeleeParry({damagingEntity:p,hitEntity})??false;}catch(err){report('管理者へのパリィ',err);}
@@ -5896,7 +5896,7 @@ safeSub('world','after','entityHitEntity',({damagingEntity:p,hitEntity})=>{
      if(rune===3){hitEntity.addEffect('slowness',65,{showParticles:false});notice(p,'§d時の刻印が発動：相手を減速');}
    }
  }
- if(g&&!parried&&p.isSneaking&&hitEntity.typeId!=='minecraft:player'&&system.currentTick-s.useTick>=7){s.useTick=system.currentTick;cast(p,g);}
+ if(g&&!parried&&(!weaponTrace?.enabled()||!isTraceWeapon(g))&&p.isSneaking&&hitEntity.typeId!=='minecraft:player'&&system.currentTick-s.useTick>=7){s.useTick=system.currentTick;cast(p,g);}
 });
 safeSub('world','after','playerSpawn',({player:p,initialSpawn})=>{
  system.runTimeout(()=>{
@@ -5911,7 +5911,7 @@ safeSub('world','after','playerSpawn',({player:p,initialSpawn})=>{
    }
  },12);
 });
-safeSub('world','after','playerLeave',({playerId})=>{sessions.delete(playerId);customShield.clear(playerId);shrineChiefs.clearPlayer(playerId);expeditionRecords?.clear(playerId);wardenArena?.clearPlayer(playerId);wardenBoss?.clearMusic(playerId);combatCharge?.clear(playerId);combatResonance?.clear(playerId);combatGuard?.clear(playerId);combatRoll?.clear(playerId);combatParry?.clear(playerId);airDash?.clear(playerId);airStrike?.clear(playerId);combatUltimate?.clear(playerId);});
+safeSub('world','after','playerLeave',({playerId})=>{sessions.delete(playerId);customShield.clear(playerId);shrineChiefs.clearPlayer(playerId);expeditionRecords?.clear(playerId);wardenArena?.clearPlayer(playerId);wardenBoss?.clearMusic(playerId);combatCharge?.clear(playerId);weaponTrace?.clear(playerId);combatResonance?.clear(playerId);combatGuard?.clear(playerId);combatRoll?.clear(playerId);combatParry?.clear(playerId);airDash?.clear(playerId);airStrike?.clear(playerId);combatUltimate?.clear(playerId);});
 const bar=n=>'■'.repeat(Math.floor(n/20))+'□'.repeat(5-Math.floor(n/20));
 function hudLine(p,s,t){
  const pale=num(p,'hud_color'),st=Math.floor(s.s),mana=Math.floor(s.m),show=t<s.until,mode=num(p,'hud_pos');
@@ -6081,6 +6081,7 @@ system.runInterval(()=>{
  const t=system.currentTick,players=world.getAllPlayers();
  for(const p of players)try{
   const s=state(p);
+  try{tomeCrouchTick(p,s,selected(p)?.typeId,()=>advanceTome(p));}catch{}
   // Isolate optional input/API failures so one feature can't disable others.
   try{customShield.tick(p,t);}catch{}
   try{combatRoll?.tick(p,s,t);}catch{}
@@ -6118,6 +6119,9 @@ airStrike=setupAirStrike({notice,visibleFrom});
 fushiTotem=setupFushiTotem({system,notice});
 combatUltimate=setupCombatUltimate({system,notice,visibleFrom});
 combatCharge=setupCombatCharge({system,gear,selected,state,cast});
+let weaponSwingAvailable=false;
+try{const signal=world.afterEvents.playerSwingStart;if(signal){signal.subscribe(e=>weaponTrace?.swing(e));weaponSwingAvailable=true;}}catch(err){report('武器の振りイベント',err);}
+weaponTrace=setupWeaponTrace({system,gear,selected,state,visibleFrom,enabled:weaponSwingAvailable,report});
 combatGuard=setupCombatGuard({notice});
 combatParry=setupCombatParry({guard:combatGuard,onSuccess:({p,attacker,near,at})=>{
  ultimateParryHeal(p);
