@@ -1,0 +1,40 @@
+{
+  "format_version": "1.26.60",
+  "minecraft:block": {
+    "description": {
+      "identifier": "hakkai:item_extractor_up",
+      "menu_category": {
+        "category": "construction"
+      }
+    },
+    "components": {
+      "minecraft:display_name": "tile.hakkai:item_extractor_up.name",
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "hakkai_item_extractor_up",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:map_color": "#ad8d60",
+      "minecraft:sound": {
+        "sound": "wood"
+      },
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 1
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 3
+      },
+      "minecraft:loot": "loot_tables/hakkai/blocks/item_extractor_up.json",
+      "minecraft:tick": {
+        "interval_range": [
+          8,
+          10
+        ],
+        "looping": true
+      },
+      "hakkai:factory": {}
+    }
+  }
+}

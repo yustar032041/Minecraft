@@ -8,7 +8,7 @@ for(const [kind,recipes] of Object.entries(LINE_RECIPES)){
  for(const r of recipes){
   const c={items:r.costs.map(x=>({typeId:x.id,amount:x.count}))};
   assert.ok(findLineRecipe(kind,c,total));
-  assert.ok(r.amount>=1&&r.costs.length>=2);
+  assert.ok(r.amount>=1&&r.costs.length>=1);
  }
 }
 assert.equal(Object.keys(RECYCLE_DROPS).length,120);

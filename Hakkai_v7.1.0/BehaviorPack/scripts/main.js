@@ -1,3 +1,5 @@
+import { farmStep } from './factory_farm.js';
+import { itemDuctStep } from './factory_ducts.js';
 import { bearingState, setBearingMode, bearingStep, bearingAutoTick, armBearing } from './factory_bearing.js';
 import { isGantry, gantryState, setGantryMode, gantryStep, gantryAutoTick, armGantry } from './factory_gantry.js';
 import { fluidPumpStep, fluidBasinStep, fluidLoaderStep, adjacentWaterTank, tankState, consumeTankWater } from './factory_fluids.js';
@@ -4920,7 +4922,7 @@ safeSub('world','after','itemStartUse',({source:p,itemStack:item})=>{combatCharg
 safeSub('world','after','itemReleaseUse',({source:p,itemStack:item})=>{combatCharge?.release(p,item);});
 try{world.afterEvents.itemStopUse?.subscribe(({source:p,itemStack:item})=>{combatCharge?.stop(p,item);});}catch{}
 
-const factoryCycleAt=new Map();
+const factoryCycleAt=new Map(),farmCursors=new Map();
 async function gantryMenu(player,block){
  const d=block.dimension,pos={x:block.x,y:block.y,z:block.z},id=block.typeId,initial=gantryState(block);if(!initial)return;
  const choice=await form(player,'§6動力移動装置',`位置 ${initial.offset}/8｜状態 ${['停止','連続前進','連続後退','往復前進','往復後退'][initial.mode]}\nフレーム・パネル・接合器と接合先の対応ブロック。人や生物が近いと停止。連続運転は開始後、離れる時間があります。`,[['1歩前進'],['1歩後退'],['連続前進'],['連続後退'],['自動往復'],['停止'],['閉じる']]);
@@ -4967,7 +4969,7 @@ function transfer(b){
  const t=world.getTimeOfDay(), night=t>=13000&&t<23000, evening=t>=12000&&t<13000;
  const weather=currentWeather.get(d.id?.replace(/^minecraft:/,'')),thunder=weather===WeatherType.Thunder, wet=thunder||weather===WeatherType.Rain;
  if(['shaft','wind_rotor','water_wheel','gear_up','gear_down','gear_up_z','gear_down_z','gear_up_y','gear_down_y','clutch'].some(id=>b.typeId===ns+id)){syncKineticVisual(b,kineticNetwork(d,{x,y,z}));return;}
- const kind=b.typeId.slice(ns.length),visualMachine=['crusher','washer','press','saw','mixer','assembler','fluid_basin'].includes(kind);
+ const kind=b.typeId.slice(ns.length),visualMachine=['crusher','washer','press','saw','mixer','assembler','fluid_basin','farm_harvester','farm_fertilizer','farm_planter'].includes(kind);
  let kinetic;
  if(visualMachine){kinetic=kineticNetwork(d,{x,y,z});syncKineticVisual(b,kinetic);}
  if(b.typeId===ns+'conveyor'){
@@ -4979,6 +4981,28 @@ function transfer(b){
      }
    }catch{}
    return;
+ }
+ // Dedicated agricultural machines scan a small same-height field.
+ if(kind==='farm_harvester'||kind==='farm_fertilizer'||kind==='farm_planter'){
+   const network=kinetic??kineticNetwork(d,{x,y,z});if(network.status!=='running')return;
+   const k=`farm:${d.id}:${x},${y},${z}`,delay=Math.max(10,Math.ceil(40*16/Math.abs(network.rpm)));
+   if(system.currentTick-(factoryCycleAt.get(k)??-Infinity)<delay)return;
+   if(factoryCycleAt.size>=8192)factoryCycleAt.clear();factoryCycleAt.set(k,system.currentTick);
+   try{
+    const position=kind==='farm_harvester'?{x,y:y+1,z}:{x:x-1,y,z};
+    if(!d.isChunkLoaded(position))return;
+    const barrel=d.getBlock(position);if(barrel?.typeId!=='minecraft:barrel')return;
+    const c=barrel.getComponent('minecraft:inventory')?.container;if(!c)return;
+    if(farmStep({block:b,mode:kind==='farm_harvester'?'harvest':kind==='farm_planter'?'plant':'fertilize',input:c,output:c,ItemStack,factoryTransaction,cursors:farmCursors,resolve:id=>BlockPermutation.resolve(id),report}))production(b,1);
+   }catch(err){report('農機',err);}return;
+ }
+ if(kind==='item_duct')return;
+ if(kind==='item_extractor'||kind.startsWith('item_extractor_')){
+   const network=kineticNetwork(d,{x,y,z});if(network.status!=='running')return;
+   const k=`duct:${d.id}:${x},${y},${z}`,delay=Math.max(10,Math.ceil(40*16/Math.abs(network.rpm)));
+   if(system.currentTick-(factoryCycleAt.get(k)??-Infinity)<delay)return;
+   if(factoryCycleAt.size>=8192)factoryCycleAt.clear();factoryCycleAt.set(k,system.currentTick);
+   itemDuctStep(b,{factoryTransaction,report});return;
  }
  // Water pumps use a bounded, independently connected pipe graph.
  if(kind==='fluid_pipe'||kind==='fluid_tank')return;

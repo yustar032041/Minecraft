@@ -4,6 +4,8 @@ import {kineticNetwork,hasAdjacentWater,factoryRecipe} from '../Hakkai_v7.1.0/Be
 import {findLineRecipe,filteredDestination} from '../Hakkai_v7.1.0/BehaviorPack/scripts/factory_lines.js';
 import {pipeEndpoints} from '../Hakkai_v7.1.0/BehaviorPack/scripts/factory_transport.js';
 import {fluidPumpStep,fluidBasinStep,fluidLoaderStep,adjacentWaterTank,tankState,consumeTankWater} from '../Hakkai_v7.1.0/BehaviorPack/scripts/factory_fluids.js';
+import {farmStep} from '../Hakkai_v7.1.0/BehaviorPack/scripts/factory_farm.js';
+import {itemDuctStep} from '../Hakkai_v7.1.0/BehaviorPack/scripts/factory_ducts.js';
 import {factoryTransaction} from '../Hakkai_v7.1.0/BehaviorPack/scripts/factory_transaction.js';
 class ItemStack {constructor(typeId,amount=1){Object.assign(this,{typeId,amount,maxAmount:64});}clone(){const c=new ItemStack(this.typeId,this.amount);c.nameTag=this.nameTag;return c;}isStackableWith(x){return this.typeId===x.typeId&&this.nameTag===x.nameTag;}}
 class Container {constructor(items){this.items=items;this.size=items.length;this.failOnce=false;}getItem(i){return this.items[i]?.clone();}setItem(i,v){this.items[i]=v?.clone();if(this.failOnce){this.failOnce=false;throw Error('write failed');}}}
@@ -17,7 +19,7 @@ function fixture(kind,inputs,outputs=[undefined,undefined]){
  d.getBlock=l=>l.y===80&&l.z===0&&l.x===-1?barrel(from):l.y===80&&l.z===0&&l.x===1?barrel(to):l.y===80&&l.z===0&&l.x===0?b:l.x===0&&l.z===0&&l.y<80?ore:{typeId:'minecraft:air'};
  const total=(c,id)=>c.items.reduce((a,v)=>a+(v?.typeId===id?v.amount:0),0);
  const room=(c,s)=>c.items.reduce((a,v)=>a+(!v?s.maxAmount:v.isStackableWith(s)?v.maxAmount-v.amount:0),0)>=s.amount;
- const ctx={ns:'hakkai:',world:{getTimeOfDay:()=>6000},currentWeather:new Map(),WeatherType:{Thunder:'thunder',Rain:'rain'},system:{currentTick:0},ItemStack,total,room,factoryTransaction,kineticNetwork,hasAdjacentWater,factoryRecipe,syncKineticVisual:()=>{},findLineRecipe,filteredDestination,pipeEndpoints,fluidPumpStep,fluidBasinStep,fluidLoaderStep,adjacentWaterTank,tankState,consumeTankWater,factoryCycleAt:new Map(),production:(_,n)=>produced.push(n),report:(...x)=>reports.push(x)};
+ const ctx={ns:'hakkai:',world:{getTimeOfDay:()=>6000},currentWeather:new Map(),WeatherType:{Thunder:'thunder',Rain:'rain'},system:{currentTick:0},BlockPermutation:{resolve:id=>({id,withState:(k,v)=>({id,getState:x=>x===k?v:undefined})})},ItemStack,total,room,factoryTransaction,kineticNetwork,hasAdjacentWater,factoryRecipe,syncKineticVisual:()=>{},findLineRecipe,filteredDestination,pipeEndpoints,fluidPumpStep,fluidBasinStep,fluidLoaderStep,adjacentWaterTank,tankState,consumeTankWater,farmStep,itemDuctStep,farmCursors:new Map(),factoryCycleAt:new Map(),production:(_,n)=>produced.push(n),report:(...x)=>reports.push(x)};
  vm.createContext(ctx);vm.runInContext(src.slice(start,end),ctx);
  return {from,to,ore,b,ctx,reports,produced,run:()=>ctx.transfer(b)};
 }
@@ -215,4 +217,41 @@ console.log('Actual powered pump, loader, basin and tank-fed washer transfers OK
  const f=fixture('fluid_basin',[undefined]),lava=tankBlock(2,4),water=tankBlock(1,1),get=f.b.dimension.getBlock;
  f.b.dimension.getBlock=p=>p.x===0&&p.y===80&&p.z===-1?lava:p.x===0&&p.y===80&&p.z===1?water:p.x===0&&p.y===81&&p.z===0?rotor(p):get(p);f.b.dimension.getBlockFromRay=()=>undefined;
  f.run();assert.equal(f.to.getItem(0)?.typeId,'minecraft:obsidian');assert.equal(tankState(lava).n,0);assert.equal(tankState(water).n,0);
+}
+const cropPerm=(state,age)=>({getState:k=>k===state?age:undefined,withState:(k,v)=>cropPerm(k,v)});
+{
+ const f=fixture('farm_harvester',[]),get=f.b.dimension.getBlock;const crop={typeId:'hakkai:summer_corn',permutation:cropPerm('hakkai:age',3),setPermutation(p){this.permutation=p;}};
+ const output={typeId:'minecraft:barrel',getComponent:()=>({container:f.to})};
+ f.b.dimension.getBlock=p=>p.x===0&&p.y===81&&p.z===0?output:p.x===0&&p.y===80&&p.z===-1?rotor(p):p.x===1&&p.y===80&&p.z===0?crop:p.x===1&&p.y===79&&p.z===0?{typeId:'minecraft:farmland'}:get(p);f.b.dimension.getBlockFromRay=()=>undefined;
+ f.run();assert.deepEqual(snap(f.to),[['hakkai:summer_corn_produce',2],undefined]);assert.equal(crop.permutation.getState('hakkai:age'),0);
+}
+{
+ const f=fixture('farm_fertilizer',[item('minecraft:bone_meal')]),tank=tankBlock(1,2),get=f.b.dimension.getBlock;const crop={typeId:'minecraft:wheat',permutation:cropPerm('growth',3),setPermutation(p){this.permutation=p;}};
+ f.b.dimension.getBlock=p=>p.x===0&&p.y===81&&p.z===0?tank:p.x===0&&p.y===80&&p.z===-1?rotor(p):p.x===1&&p.y===80&&p.z===0?crop:p.x===1&&p.y===79&&p.z===0?{typeId:'minecraft:farmland'}:get(p);f.b.dimension.getBlockFromRay=()=>undefined;
+ f.run();assert.equal(crop.permutation.getState('growth'),4);assert.equal(tankState(tank).n,1);assert.equal(f.from.getItem(0),undefined);
+}
+{
+ const named=item('minecraft:diamond',2);named.nameTag='named';const f=fixture('item_extractor',[named]),get=f.b.dimension.getBlock;
+ f.b.dimension.getBlock=p=>p.x===0&&p.y===81&&p.z===0?rotor(p):get(p);f.b.dimension.getBlockFromRay=()=>undefined;f.run();assert.equal(f.to.getItem(0)?.nameTag,'named');assert.equal(f.from.getItem(0).amount,1);
+}
+console.log('Actual powered farm harvester, fertilizer and duct extractor wiring OK (simulated)');
+{
+ const f=fixture('farm_planter',[item('minecraft:wheat_seeds')]),get=f.b.dimension.getBlock,air={typeId:'minecraft:air',permutation:cropPerm('growth',0),setPermutation(p){this.permutation=p;this.typeId=p.id??'minecraft:air';}};
+ f.b.dimension.getBlock=p=>p.x===0&&p.y===81&&p.z===0?rotor(p):p.x===1&&p.y===80&&p.z===0?air:p.x===1&&p.y===79&&p.z===0?{typeId:'minecraft:farmland'}:get(p);f.b.dimension.getBlockFromRay=()=>undefined;
+ f.run();assert.equal(air.typeId,'minecraft:wheat');assert.equal(f.from.getItem(0),undefined);
+}
+{
+ // Complete seasonal crop -> powered duct -> powered bread assembly line.
+ const harvest=fixture('farm_harvester',[]),crop={typeId:'hakkai:summer_corn',permutation:cropPerm('hakkai:age',3),setPermutation(p){this.permutation=p;}},hget=harvest.b.dimension.getBlock;
+ const barrel=c=>({typeId:'minecraft:barrel',getComponent:()=>({container:c})});
+ harvest.b.dimension.getBlock=p=>p.x===0&&p.y===81&&p.z===0?barrel(harvest.to):p.x===0&&p.y===80&&p.z===-1?rotor(p):p.x===1&&p.y===80&&p.z===0?crop:p.x===1&&p.y===79&&p.z===0?{typeId:'minecraft:farmland'}:hget(p);harvest.b.dimension.getBlockFromRay=()=>undefined;harvest.run();
+ const assembler=fixture('assembler',[item('minecraft:wheat'),undefined,undefined]),aget=assembler.b.dimension.getBlock;
+ assembler.b.dimension.getBlock=p=>p.x===0&&p.y===81&&p.z===0?rotor(p):aget(p);assembler.b.dimension.getBlockFromRay=()=>undefined;
+ const duct=fixture('item_extractor',[]),dget=duct.b.dimension.getBlock;
+ duct.b.dimension.getBlock=p=>p.x===-1&&p.y===80&&p.z===0?barrel(harvest.to):p.x===1&&p.y===80&&p.z===0?barrel(assembler.from):p.x===0&&p.y===81&&p.z===0?rotor(p):dget(p);duct.b.dimension.getBlockFromRay=()=>undefined;
+ duct.run();duct.ctx.system.currentTick=40;duct.run();assert.equal(assembler.from.getItem(1)?.amount,2);assembler.run();assert.deepEqual(snap(assembler.to),[['minecraft:bread',2],undefined]);assert.equal(crop.permutation.getState('hakkai:age'),0);
+}
+console.log('Seasonal harvesting → powered transport → bread assembly end-to-end OK (simulated)');
+for(const type of ['farm_harvester','farm_fertilizer','farm_planter','item_extractor']){
+ const f=fixture(type,[item('minecraft:wheat_seeds')]),before=snap(f.from);f.run();assert.deepEqual(snap(f.from),before,type+' no power');assert.deepEqual(snap(f.to),[undefined,undefined],type+' no power');
 }

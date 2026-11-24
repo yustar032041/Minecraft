@@ -489,6 +489,36 @@
     },
     "hakkai_bearing": {
       "textures": "textures/blocks/hakkai_bearing"
+    },
+    "hakkai_farm_harvester": {
+      "textures": "textures/blocks/hakkai_farm_harvester"
+    },
+    "hakkai_farm_fertilizer": {
+      "textures": "textures/blocks/hakkai_farm_fertilizer"
+    },
+    "hakkai_item_duct": {
+      "textures": "textures/blocks/hakkai_item_duct"
+    },
+    "hakkai_item_extractor": {
+      "textures": "textures/blocks/hakkai_item_extractor"
+    },
+    "hakkai_item_extractor_west": {
+      "textures": "textures/blocks/hakkai_item_extractor_west"
+    },
+    "hakkai_item_extractor_north": {
+      "textures": "textures/blocks/hakkai_item_extractor_north"
+    },
+    "hakkai_item_extractor_south": {
+      "textures": "textures/blocks/hakkai_item_extractor_south"
+    },
+    "hakkai_item_extractor_up": {
+      "textures": "textures/blocks/hakkai_item_extractor_up"
+    },
+    "hakkai_item_extractor_down": {
+      "textures": "textures/blocks/hakkai_item_extractor_down"
+    },
+    "hakkai_farm_planter": {
+      "textures": "textures/blocks/hakkai_farm_planter"
     }
   }
 }

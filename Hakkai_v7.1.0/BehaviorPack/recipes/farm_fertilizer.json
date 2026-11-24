@@ -1,0 +1,26 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "hakkai:farm_fertilizer"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:bone_meal"
+      },
+      {
+        "item": "hakkai:shaft"
+      },
+      {
+        "item": "minecraft:bucket"
+      }
+    ],
+    "result": {
+      "item": "hakkai:farm_fertilizer",
+      "count": 1
+    }
+  }
+}

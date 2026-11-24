@@ -1,6 +1,6 @@
 // A client-animated, non-colliding entity is a visual overlay only. Machines
 // and inventory remain real blocks. Reconcile duplicate / stale overlays.
-const KINDS={'hakkai:shaft':0,'hakkai:wind_rotor':1,'hakkai:water_wheel':2,'hakkai:gear_up':3,'hakkai:gear_down':3,'hakkai:gear_up_z':3,'hakkai:gear_down_z':3,'hakkai:gear_up_y':3,'hakkai:gear_down_y':3,'hakkai:clutch':3,'hakkai:crusher':4,'hakkai:saw':4,'hakkai:press':5,'hakkai:washer':6,'hakkai:mixer':7,'hakkai:assembler':8,'hakkai:fluid_basin':7};
+const KINDS={'hakkai:shaft':0,'hakkai:wind_rotor':1,'hakkai:water_wheel':2,'hakkai:gear_up':3,'hakkai:gear_down':3,'hakkai:gear_up_z':3,'hakkai:gear_down_z':3,'hakkai:gear_up_y':3,'hakkai:gear_down_y':3,'hakkai:clutch':3,'hakkai:crusher':4,'hakkai:saw':4,'hakkai:press':5,'hakkai:washer':6,'hakkai:mixer':7,'hakkai:assembler':8,'hakkai:fluid_basin':7,'hakkai:farm_harvester':4,'hakkai:farm_fertilizer':6,'hakkai:farm_planter':8};
 const TYPE='hakkai:kinetic_visual';
 export function syncKineticVisual(block,network){
  const kind=KINDS[block.typeId];if(kind===undefined)return;

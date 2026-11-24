@@ -1,0 +1,26 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "hakkai:item_extractor"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:hopper"
+      },
+      {
+        "item": "hakkai:shaft"
+      },
+      {
+        "item": "hakkai:item_duct"
+      }
+    ],
+    "result": {
+      "item": "hakkai:item_extractor",
+      "count": 1
+    }
+  }
+}

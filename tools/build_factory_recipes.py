@@ -5,8 +5,8 @@ from pathlib import Path
 root=Path(__file__).resolve().parents[1];recipes=root/'Hakkai_v7.1.0/BehaviorPack/recipes'
 out=root/'Hakkai_v7.1.0/BehaviorPack/scripts/factory_line_recipes.js'
 selections={
- 'mixer':['mana_tonic','camp_stew','summer_corn_stew','spring_garden_soup','autumn_squash_potage','frost_blossom_tea'],
- 'assembler':['bandage','trail_ration','preserved_ration','camp_supply_pack','expedition_bento','forest_trail_meal','corn_bread','smoked_fish_strip','dried_sweet_berries']
+ 'mixer':['mana_tonic','camp_stew','summer_corn_stew','spring_garden_soup','autumn_squash_potage','frost_blossom_tea','sunflower_trail_bowl','ice_tonic','spring_petals','sunflower_petals'],
+ 'assembler':['bandage','trail_ration','preserved_ration','camp_supply_pack','expedition_bento','forest_trail_meal','corn_bread','smoked_fish_strip','dried_sweet_berries','autumn_pie','spring_tulip_seed_save','summer_corn_seed_save','autumn_squash_seed_save','ice_blossom_seed_save','summer_sunflower_seed_save']
 }
 data={}
 for kind,names in selections.items():
