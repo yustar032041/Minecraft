@@ -6,7 +6,7 @@ const ctx={form:async()=>{formChange();return choice},gantryState:()=>({...state
 vm.createContext(ctx);vm.runInContext(source.slice(a,z),ctx);
 await ctx.gantryMenu(player,b);assert.deepEqual(steps,[1]);choice=1;await ctx.gantryMenu(player,b);assert.deepEqual(steps,[1,-1]);
 choice=2;await ctx.gantryMenu(player,b);assert.equal(state.mode,1);assert.equal(arms,1);
-choice=4;formChange=()=>{state.offset=1;};await ctx.gantryMenu(player,b);assert.equal(state.mode,0,'stop works despite movement while form is open');
+choice=5;formChange=()=>{state.offset=1;};await ctx.gantryMenu(player,b);assert.equal(state.mode,0,'stop works despite movement while form is open');
 choice=2;formChange=()=>{state.offset++;};await ctx.gantryMenu(player,b);assert.equal(arms,1,'stale form cannot start movement');
 formChange=()=>{};player.location={x:100,y:80,z:0};await ctx.gantryMenu(player,b);assert.equal(arms,1,'distance check');player.location={x:-2,y:80,z:0};player.getGameMode=()=> 'adventure';await ctx.gantryMenu(player,b);assert.equal(arms,1,'adventure cannot operate');
 assert.ok(source.includes("safeReg(blockComponentRegistry,ns+'gantry'"));assert.ok(source.includes('onTick:({block})=>gantryAutoTick'));

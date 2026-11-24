@@ -10,7 +10,7 @@ atlaspath=rp/'textures/terrain_texture.json';atlas=read(atlaspath)
 def gen(name,label,kind,parts):
  j=read(bp/'blocks/factory_pipe.json');b=j['minecraft:block'];b['description']['identifier']='hakkai:'+name;b['components']['minecraft:display_name']='tile.hakkai:'+name+'.name';b['components']['minecraft:loot']='loot_tables/hakkai/blocks/'+name+'.json';b['components']['minecraft:material_instances']['*']['texture']='hakkai_'+name
  b['components'].pop('hakkai:factory');b['components'].pop('minecraft:tick')
- if kind=='drive':b['description']['states']={'hakkai:offset':list(range(9)),'hakkai:motion':[0,1,2]};b['components']['minecraft:tick']={'interval_range':[8,10],'looping':True};b['components']['hakkai:gantry']={}
+ if kind=='drive':b['description']['states']={'hakkai:offset':list(range(9)),'hakkai:motion':[0,1,2,3,4]};b['components']['minecraft:tick']={'interval_range':[8,10],'looping':True};b['components']['hakkai:gantry']={}
  write(bp/f'blocks/{name}.json',j)
  write(bp/f'loot_tables/hakkai/blocks/{name}.json',{'pools':[{'rolls':1,'entries':[{'type':'item','name':'hakkai:'+name}]}]})
  write(bp/f'recipes/{name}.json',{'format_version':'1.21.90','minecraft:recipe_shapeless':{'description':{'identifier':'hakkai:'+name},'tags':['crafting_table'],'ingredients':[{'item':x} for x in parts],'result':{'item':'hakkai:'+name,'count':1}}})

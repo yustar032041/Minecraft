@@ -49,3 +49,11 @@ console.log('Six directional gantries, overlapping frames, bounds, protection, p
  gantryAutoTick(f.get(f.ctrl),{kineticNetwork:f.net,cycleAt:new Map(),tick:500,report:()=>{}});
  assert.deepEqual(gantryState(f.get(f.ctrl)),{offset:0,mode:0},'script restart never resumes unarmed movement');
 }
+{
+ const f=fixture();f.put(P(1,20,0),'hakkai:gantry_frame');const cycles=new Map();setGantryMode(f.get(f.ctrl),3);armGantry(f.get(f.ctrl),cycles,0);
+ const tick=t=>gantryAutoTick(f.get(f.ctrl),{kineticNetwork:f.net,cycleAt:cycles,tick:t,report:()=>{}});
+ for(let i=0;i<8;i++)tick(80+i*40);assert.deepEqual(gantryState(f.get(f.ctrl)),{offset:8,mode:4});
+ tick(400);assert.equal(gantryState(f.get(f.ctrl)).offset,8,'endpoint dwell');
+ for(let i=0;i<8;i++)tick(440+i*40);assert.deepEqual(gantryState(f.get(f.ctrl)),{offset:0,mode:3});
+ tick(760);assert.equal(gantryState(f.get(f.ctrl)).offset,0);tick(800);assert.equal(gantryState(f.get(f.ctrl)).offset,1);
+}

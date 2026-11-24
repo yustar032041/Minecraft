@@ -60,7 +60,16 @@ export function fluidBasinStep({dimension,p,input,output,ItemStack,factoryTransa
    return factoryTransaction({input,output,costs:[{id:item.typeId,count:1}],product:new ItemStack(recipe.output,1),
     commitExternal:()=>writeTank(tank,s.kind,s.n-recipe.units),rollbackExternal:()=>tank.setPermutation(old),report});
   }
- }}catch(e){report('液体加工失敗',e);}
+ }
+ // With no usable item recipe, combine four lava units and one water unit
+ // into obsidian. Both tank states participate in the same best-effort undo.
+ const lava=adjacentTank(dimension,p,4,2),water=adjacentTank(dimension,p,1,1);
+ if(lava&&water){const l=tankState(lava),w=tankState(water),lp=lava.permutation,wp=water.permutation;
+  return factoryTransaction({input,output,costs:[],product:new ItemStack('minecraft:obsidian',1),
+   commitExternal:()=>{writeTank(lava,2,l.n-4);writeTank(water,1,w.n-1);},
+   rollbackExternal:()=>{let error;try{lava.setPermutation(lp);}catch(e){error=e;}try{water.setPermutation(wp);}catch(e){error=error??e;}if(error)throw error;},report});
+ }
+ }catch(e){report('液体加工失敗',e);}
  return false;
 }
 // Loader: filled bucket -> empty bucket plus four tank units. Tank contents

@@ -68,3 +68,11 @@ for(const fault of ['space','different','flowing','unloaded','source_write','tar
  const prior=tankState(target);assert.equal(fluidPumpStep(pump),false,fault);assert.equal(lava.typeId,'minecraft:lava',fault);assert.deepEqual(tankState(target),prior,fault);
 }
 console.log('Finite lava source extraction, six directions, blocked/full/unloaded and rollback OK (simulated)');
+for(const fault of ['none','full','water_write','lava_write']){
+ const w=setup(),lava=w.tank(P(0,1,0),2,4),water=w.tank(P(0,0,1),1,1),input=new Container([undefined]),output=new Container(fault==='full'?[new Item('minecraft:stone',64)]:[undefined]);
+ if(fault==='water_write')water.fail=true;if(fault==='lava_write')lava.fail=true;
+ const ok=fluidBasinStep({dimension:w.d,p:P(0,0,0),input,output,ItemStack:Item,factoryTransaction});
+ if(fault==='none'){assert.ok(ok);assert.equal(output.getItem(0).typeId,'minecraft:obsidian');assert.deepEqual(tankState(lava),{kind:0,n:0});assert.deepEqual(tankState(water),{kind:0,n:0});}
+ else{assert.equal(ok,false,fault);assert.equal(tankState(lava).n,4);assert.equal(tankState(water).n,1);if(fault!=='full')assert.equal(output.getItem(0),undefined);}
+}
+console.log('Dual-fluid obsidian, capacity and tank rollback OK (simulated)');

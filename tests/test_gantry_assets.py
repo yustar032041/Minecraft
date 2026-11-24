@@ -11,5 +11,5 @@ for name in ['gantry_frame','gantry_panel','gantry','gantry_west','gantry_north'
  if name in ('gantry_frame','gantry_panel'):
   assert 'hakkai:gantry' not in b['components'] and 'minecraft:tick' not in b['components']
  else:
-  assert b['components']['hakkai:gantry']=={} and b['description']['states']=={'hakkai:offset':list(range(9)),'hakkai:motion':[0,1,2]}
+  assert b['components']['hakkai:gantry']=={} and b['description']['states']=={'hakkai:offset':list(range(9)),'hakkai:motion':[0,1,2,3,4]}
 print('Gantry controller, inert frame/panel, texture, state, recipes and loot links OK (static)')

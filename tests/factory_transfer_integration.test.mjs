@@ -211,3 +211,8 @@ console.log('Actual powered pump, loader, basin and tank-fed washer transfers OK
  f.b.dimension.getBlock=p=>p.x===-1&&p.y===80&&p.z===0?lava:p.x===1&&p.y===80&&p.z===0?tank:p.x===0&&p.y===81&&p.z===0?rotor(p):get(p);f.b.dimension.getBlockFromRay=()=>undefined;
  f.run();assert.equal(lava.typeId,'minecraft:air');assert.deepEqual(tankState(tank),{n:4,kind:2});f.ctx.system.currentTick=40;f.run();assert.equal(tankState(tank).n,4);
 }
+{
+ const f=fixture('fluid_basin',[undefined]),lava=tankBlock(2,4),water=tankBlock(1,1),get=f.b.dimension.getBlock;
+ f.b.dimension.getBlock=p=>p.x===0&&p.y===80&&p.z===-1?lava:p.x===0&&p.y===80&&p.z===1?water:p.x===0&&p.y===81&&p.z===0?rotor(p):get(p);f.b.dimension.getBlockFromRay=()=>undefined;
+ f.run();assert.equal(f.to.getItem(0)?.typeId,'minecraft:obsidian');assert.equal(tankState(lava).n,0);assert.equal(tankState(water).n,0);
+}

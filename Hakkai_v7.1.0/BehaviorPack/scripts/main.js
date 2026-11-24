@@ -1,3 +1,4 @@
+import { bearingState, setBearingMode, bearingStep, bearingAutoTick, armBearing } from './factory_bearing.js';
 import { isGantry, gantryState, setGantryMode, gantryStep, gantryAutoTick, armGantry } from './factory_gantry.js';
 import { fluidPumpStep, fluidBasinStep, fluidLoaderStep, adjacentWaterTank, tankState, consumeTankWater } from './factory_fluids.js';
 import { INDUSTRY_CHAPTERS, claimIndustryGuide } from './industry_guide.js';
@@ -4922,22 +4923,38 @@ try{world.afterEvents.itemStopUse?.subscribe(({source:p,itemStack:item})=>{comba
 const factoryCycleAt=new Map();
 async function gantryMenu(player,block){
  const d=block.dimension,pos={x:block.x,y:block.y,z:block.z},id=block.typeId,initial=gantryState(block);if(!initial)return;
- const choice=await form(player,'§6動力移動装置',`位置 ${initial.offset}/8｜状態 ${['停止','連続前進','連続後退'][initial.mode]}\n専用フレーム・パネルのみ。人や生物が近いと停止。連続運転は開始後、離れる時間があります。`,[['1歩前進'],['1歩後退'],['連続前進'],['連続後退'],['停止'],['閉じる']]);
- if(choice===undefined||choice===5||!player.isValid||player.dimension.id!==d.id||[GameMode.Spectator,GameMode.Adventure].includes(player.getGameMode()))return;
+ const choice=await form(player,'§6動力移動装置',`位置 ${initial.offset}/8｜状態 ${['停止','連続前進','連続後退','往復前進','往復後退'][initial.mode]}\nフレーム・パネル・接合器と接合先の対応ブロック。人や生物が近いと停止。連続運転は開始後、離れる時間があります。`,[['1歩前進'],['1歩後退'],['連続前進'],['連続後退'],['自動往復'],['停止'],['閉じる']]);
+ if(choice===undefined||choice===6||!player.isValid||player.dimension.id!==d.id||[GameMode.Spectator,GameMode.Adventure].includes(player.getGameMode()))return;
  const l=player.location;if(Math.hypot(l.x-pos.x-.5,l.y-pos.y-.5,l.z-pos.z-.5)>6)return notice(player,'§e移動装置から離れすぎました');
  let now;try{if(!d.isChunkLoaded(pos))return;now=d.getBlock(pos);}catch{return;}
  const current=gantryState(now);if(now?.typeId!==id||!current)return notice(player,'§e装置が見つかりません');
- if(choice===4){setGantryMode(now,0);return notice(player,'§e移動装置を停止しました');}
+ if(choice===5){setGantryMode(now,0);return notice(player,'§e移動装置を停止しました');}
  if(current.offset!==initial.offset||current.mode!==initial.mode)return notice(player,'§e装置の状態が変わりました。もう一度開いてね');
- if(choice===2||choice===3){
+ if(choice===2||choice===3||choice===4){
   const n=kineticNetwork(d,pos);if(n.status!=='running')return notice(player,'§e動力不足または回路を確認してね');
-  if(setGantryMode(now,choice===2?1:2)){armGantry(now,factoryCycleAt,system.currentTick);notice(player,'§a連続運転を予約。構造物から離れてね');}return;
+  if(setGantryMode(now,choice===2?1:choice===3?2:3)){armGantry(now,factoryCycleAt,system.currentTick);notice(player,'§a連続運転を予約。構造物から離れてね');}return;
  }
  if(choice!==0&&choice!==1)return;
  if(!setGantryMode(now,0))return notice(player,'§e装置を停止できません');
  const result=gantryStep(now,choice===0?1:-1,{kineticNetwork,report});
- const errors={limit:'移動範囲の端です',power:'動力がありません',anchor:'先頭に専用フレームかパネルがありません',size:'構造物が32ブロックを超えています',blocked:'移動先が空いていません',entity:'周囲に人や生物などがいます',unloaded:'周囲を読み込めません',failed:'移動に失敗しました',rollback:'復旧を確認してください'};
+ const errors={limit:'移動範囲の端です',power:'動力がありません',anchor:'先頭に移動構造ブロックがありません',unsupported:'接合先が対応外です（チェスト等は不可）',size:'構造物が32ブロックを超えています',blocked:'移動先が空いていません',entity:'周囲に人や生物などがいます',unloaded:'周囲を読み込めません',failed:'移動に失敗しました',rollback:'復旧を確認してください'};
  notice(player,result.ok?`§a${result.count}ブロックを移動：${result.offset}/8`:`§e${errors[result.reason]??'移動できません'}`);
+}
+async function bearingMenu(player,block){
+ const d=block.dimension,pos={x:block.x,y:block.y,z:block.z},initial=bearingState(block);if(!initial)return;
+ const choice=await form(player,'§6動力回転台',`角度 ${initial.angle*90}°｜状態 ${['停止','連続右回転','連続左回転'][initial.mode]}\n上にフレームなどを置いて接続。人や生物が近いと停止。`,[['右に90度'],['左に90度'],['連続右回転'],['連続左回転'],['停止'],['閉じる']]);
+ if(choice===undefined||choice===5||!player.isValid||player.dimension.id!==d.id||[GameMode.Spectator,GameMode.Adventure].includes(player.getGameMode()))return;
+ const l=player.location;if(Math.hypot(l.x-pos.x-.5,l.y-pos.y-.5,l.z-pos.z-.5)>6)return notice(player,'§e回転台から離れすぎました');
+ let now;try{if(!d.isChunkLoaded(pos))return;now=d.getBlock(pos);}catch{return;}
+ const current=bearingState(now);if(!current)return notice(player,'§e回転台が見つかりません');
+ if(choice===4){setBearingMode(now,0);return notice(player,'§e回転台を停止しました');}
+ if(current.angle!==initial.angle||current.mode!==initial.mode)return notice(player,'§e回転台の状態が変わりました。もう一度開いてね');
+ if(choice===2||choice===3){if(kineticNetwork(d,pos).status!=='running')return notice(player,'§e動力不足または回路を確認してね');
+  if(setBearingMode(now,choice===2?1:2)){armBearing(now,factoryCycleAt,system.currentTick);notice(player,'§a連続回転を予約。構造物から離れてね');}return;}
+ if(choice!==0&&choice!==1)return;if(!setBearingMode(now,0))return notice(player,'§e回転台を停止できません');
+ const result=bearingStep(now,choice===0?1:-1,{kineticNetwork,resolve:id=>BlockPermutation.resolve(id),report});
+ const errors={power:'動力がありません',anchor:'回転台の上に移動構造ブロックがありません',size:'32ブロックを超えています',unsupported:'接合先が対応外です',blocked:'回転先が空いていません',entity:'周囲に人や生物などがいます',unloaded:'周囲を読み込めません',failed:'回転に失敗しました',rollback:'復旧を確認してください'};
+ notice(player,result.ok?`§a${result.count}ブロックを回転：${result.angle*90}°`:`§e${errors[result.reason]??'回転できません'}`);
 }
 function factoryMeter(player,block){
  if(!player?.isSneaking)return;
@@ -5109,6 +5126,10 @@ function transfer(b){
 }
 safeSub('system','before','startup',({itemComponentRegistry,blockComponentRegistry})=>{
  safeReg(itemComponentRegistry,ns+'use',{onUse:use,onUseOn:use,onCompleteUse:completeFocus});
+ safeReg(blockComponentRegistry,ns+'bearing',{
+  onTick:({block})=>bearingAutoTick(block,{kineticNetwork,resolve:id=>BlockPermutation.resolve(id),report,cycleAt:factoryCycleAt,tick:system.currentTick}),
+  onPlayerInteract:({player,block})=>{if(player?.isValid&&![GameMode.Spectator,GameMode.Adventure].includes(player.getGameMode()))menu(player,p=>bearingMenu(p,block));}
+ });
  safeReg(blockComponentRegistry,ns+'gantry',{
   onTick:({block})=>gantryAutoTick(block,{kineticNetwork,report,cycleAt:factoryCycleAt,tick:system.currentTick}),
   onPlayerInteract:({player,block})=>{if(player?.isValid&&isGantry(block.typeId)&&![GameMode.Spectator,GameMode.Adventure].includes(player.getGameMode()))menu(player,p=>gantryMenu(p,block));}
