@@ -962,3 +962,4 @@ tile.hakkai:item_extractor_north.name=動力搬出機（北行き）
 tile.hakkai:item_extractor_south.name=動力搬出機（南行き）
 tile.hakkai:item_extractor_up.name=動力搬出機（上行き）
 tile.hakkai:item_extractor_down.name=動力搬出機（下行き）
+tile.hakkai:gantry_harvester.name=可動収穫ヘッド

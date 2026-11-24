@@ -519,6 +519,9 @@
     },
     "hakkai_farm_planter": {
       "textures": "textures/blocks/hakkai_farm_planter"
+    },
+    "hakkai_gantry_harvester": {
+      "textures": "textures/blocks/hakkai_gantry_harvester"
     }
   }
 }

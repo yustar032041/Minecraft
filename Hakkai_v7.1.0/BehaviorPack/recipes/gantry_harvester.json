@@ -1,0 +1,26 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "hakkai:gantry_harvester"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "hakkai:gantry_frame"
+      },
+      {
+        "item": "minecraft:iron_hoe"
+      },
+      {
+        "item": "minecraft:shears"
+      }
+    ],
+    "result": {
+      "item": "hakkai:gantry_harvester",
+      "count": 1
+    }
+  }
+}

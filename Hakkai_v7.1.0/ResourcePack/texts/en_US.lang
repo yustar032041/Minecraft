@@ -948,3 +948,4 @@ tile.hakkai:item_extractor_north.name=Powered Extractor (North)
 tile.hakkai:item_extractor_south.name=Powered Extractor (South)
 tile.hakkai:item_extractor_up.name=Powered Extractor (Up)
 tile.hakkai:item_extractor_down.name=Powered Extractor (Down)
+tile.hakkai:gantry_harvester.name=Mobile Harvester Head

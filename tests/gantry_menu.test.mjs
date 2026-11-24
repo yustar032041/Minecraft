@@ -2,12 +2,12 @@ import assert from 'node:assert/strict';import fs from 'node:fs';import vm from 
 const source=fs.readFileSync('Hakkai_v7.1.0/BehaviorPack/scripts/main.js','utf8');const a=source.indexOf('async function gantryMenu('),z=source.indexOf('function factoryMeter(',a);assert.ok(a>=0&&z>a);
 let state={offset:0,mode:0},choice=0,notices=[],steps=[],arms=0,formChange=()=>{};const d={id:'overworld',isChunkLoaded:()=>true,getBlock:()=>b};
 const b={typeId:'hakkai:gantry',dimension:d,x:0,y:80,z:0};const player={isValid:true,dimension:d,location:{x:-2,y:80,z:0},getGameMode:()=> 'survival'};
-const ctx={form:async()=>{formChange();return choice},gantryState:()=>({...state}),setGantryMode:(_,m)=>{state.mode=m;return true},kineticNetwork:()=>({status:'running'}),gantryStep:(_,n)=>{steps.push(n);return {ok:true,count:1,offset:1}},armGantry:()=>arms++,notice:(_,m)=>notices.push(m),factoryCycleAt:new Map(),system:{currentTick:0},report:()=>{},GameMode:{Spectator:'spectator',Adventure:'adventure'}};
+const ctx={ItemStack:class {},factoryTransaction:()=>true,form:async()=>{formChange();return choice},gantryState:()=>({...state}),setGantryMode:(_,m)=>{state.mode=m;return true},kineticNetwork:()=>({status:'running'}),gantryStep:(_,n)=>{steps.push(n);return {ok:true,count:1,offset:1}},armGantry:()=>arms++,notice:(_,m)=>notices.push(m),factoryCycleAt:new Map(),system:{currentTick:0},report:()=>{},GameMode:{Spectator:'spectator',Adventure:'adventure'}};
 vm.createContext(ctx);vm.runInContext(source.slice(a,z),ctx);
 await ctx.gantryMenu(player,b);assert.deepEqual(steps,[1]);choice=1;await ctx.gantryMenu(player,b);assert.deepEqual(steps,[1,-1]);
 choice=2;await ctx.gantryMenu(player,b);assert.equal(state.mode,1);assert.equal(arms,1);
 choice=5;formChange=()=>{state.offset=1;};await ctx.gantryMenu(player,b);assert.equal(state.mode,0,'stop works despite movement while form is open');
 choice=2;formChange=()=>{state.offset++;};await ctx.gantryMenu(player,b);assert.equal(arms,1,'stale form cannot start movement');
 formChange=()=>{};player.location={x:100,y:80,z:0};await ctx.gantryMenu(player,b);assert.equal(arms,1,'distance check');player.location={x:-2,y:80,z:0};player.getGameMode=()=> 'adventure';await ctx.gantryMenu(player,b);assert.equal(arms,1,'adventure cannot operate');
-assert.ok(source.includes("safeReg(blockComponentRegistry,ns+'gantry'"));assert.ok(source.includes('onTick:({block})=>gantryAutoTick'));
+assert.ok(source.includes("safeReg(blockComponentRegistry,ns+'gantry'"));assert.ok(source.includes('onTick:({block})=>gantryAutoTick(block,{kineticNetwork,ItemStack,factoryTransaction'));assert.ok(source.includes('gantryStep(now,choice===0?1:-1,{kineticNetwork,ItemStack,factoryTransaction'));
 console.log('Actual gantry UI: step, delayed start, stop, stale forms, reach and game mode OK (mocked)');

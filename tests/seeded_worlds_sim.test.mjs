@@ -284,3 +284,17 @@ console.log('Sky site route generation and pre-existing block protection (mocked
  assert.equal(f.reports.length,0);
 }
 console.log('New seeded building placement and late player block protection (mocked)');
+// Exercise the actual generator, not just the mathematical valley profile.
+// Find a desert chunk whose central columns lie in the seed-dependent channel.
+{
+ const {valleyProfile}=await import('../Hakkai_v7.1.0/BehaviorPack/scripts/terrain_valleys.js');
+ let seedHash=2166136261;for(const c of '731')seedHash=Math.imul(seedHash^c.charCodeAt(0),16777619)>>>0;
+ const hash=(x,z,r,salt=0)=>{let h=(seedHash^Math.imul(x|0,0x9e3779b1)^Math.imul(z|0,0x85ebca6b)^Math.imul(r+1,0xc2b2ae35)^salt)>>>0;h=Math.imul(h^(h>>>16),0x7feb352d)>>>0;h=Math.imul(h^(h>>>15),0x846ca68b)>>>0;return ((h^(h>>>16))>>>0)/4294967295;};
+ const noise=(x,z,scale,r,salt)=>{const fx=x/scale,fz=z/scale,x0=Math.floor(fx),z0=Math.floor(fz),s=t=>t*t*(3-2*t),lerp=(a,b,t)=>a+(b-a)*t,tx=s(fx-x0),tz=s(fz-z0);return lerp(lerp(hash(x0,z0,r,salt)*2-1,hash(x0+1,z0,r,salt)*2-1,tx),lerp(hash(x0,z0+1,r,salt)*2-1,hash(x0+1,z0+1,r,salt)*2-1,tx),tz);};
+ const x=1608;let cz;for(let z=1600;z<2000;z++)if(valleyProfile(2,x,z,noise).depth>8.8){cz=Math.floor(z/16);break;}assert.notEqual(cz,undefined);
+ const f=fixture(2,100,cz);f.generator.tick(f.player,20);f.run();assert.equal(f.reports.length,0);
+ let expected=0,found=0;
+ for(let xx=1600;xx<1616;xx++)for(let zz=cz*16;zz<cz*16+16;zz++)if(valleyProfile(2,xx,zz,noise).top){expected++;if(f.dimension.writes.some(w=>w.x===xx&&w.z===zz&&w.type==='minecraft:red_sandstone'))found++;}
+ assert.ok(expected>50);assert.equal(found,expected);assert.equal(f.props.get(`seed_land_2_100_${cz}_v1`),1);
+ console.log('Actual seeded desert job produces continuous dry valley bed (mocked)');
+}

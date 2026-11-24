@@ -2,7 +2,7 @@
 // machines. A directional joint explicitly captures one adjacent payload.
 const V=[[1,0,0],[-1,0,0],[0,0,-1],[0,0,1],[0,1,0],[0,-1,0]];
 export const JOINTS={'hakkai:gantry_joint':[1,0,0],'hakkai:gantry_joint_west':[-1,0,0],'hakkai:gantry_joint_north':[0,0,-1],'hakkai:gantry_joint_south':[0,0,1],'hakkai:gantry_joint_up':[0,1,0],'hakkai:gantry_joint_down':[0,-1,0]};
-const FRAME=new Set(['hakkai:gantry_frame','hakkai:gantry_panel',...Object.keys(JOINTS)]);
+const FRAME=new Set(['hakkai:gantry_frame','hakkai:gantry_panel','hakkai:gantry_harvester',...Object.keys(JOINTS)]);
 const colors='white orange magenta light_blue yellow lime pink gray light_gray cyan purple blue brown green red black'.split(' ');
 const woods='oak spruce birch jungle acacia dark_oak mangrove cherry bamboo pale_oak'.split(' ');
 const vanilla=['stone','cobblestone','stone_bricks','brick_block','glass','tinted_glass','smooth_stone','sandstone','red_sandstone','deepslate','cobbled_deepslate','deepslate_bricks','deepslate_tiles','calcite','tuff','quartz_block','prismarine','sea_lantern',...woods.map(w=>w+'_planks'),...colors.flatMap(c=>[c+'_concrete',c+'_wool',c+'_terracotta',c+'_stained_glass'])];

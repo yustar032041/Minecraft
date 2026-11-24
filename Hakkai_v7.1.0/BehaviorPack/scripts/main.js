@@ -4938,8 +4938,8 @@ async function gantryMenu(player,block){
  }
  if(choice!==0&&choice!==1)return;
  if(!setGantryMode(now,0))return notice(player,'§e装置を停止できません');
- const result=gantryStep(now,choice===0?1:-1,{kineticNetwork,report});
- const errors={limit:'移動範囲の端です',power:'動力がありません',anchor:'先頭に移動構造ブロックがありません',unsupported:'接合先が対応外です（チェスト等は不可）',size:'構造物が32ブロックを超えています',blocked:'移動先が空いていません',entity:'周囲に人や生物などがいます',unloaded:'周囲を読み込めません',failed:'移動に失敗しました',rollback:'復旧を確認してください'};
+ const result=gantryStep(now,choice===0?1:-1,{kineticNetwork,ItemStack,factoryTransaction,report});
+ const errors={limit:'移動範囲の端です',power:'動力がありません',anchor:'先頭に移動構造ブロックがありません',unsupported:'接合先が対応外です（チェスト等は不可）',size:'構造物が32ブロックを超えています',blocked:'移動先が空いていません',entity:'周囲に人や生物などがいます',unloaded:'周囲を読み込めません',failed:'移動に失敗しました',rollback:'復旧を確認してください',farm_layout:'収穫ヘッドは水平移動・最大8個です',farm_output:'装置の真上に出力樽を置いてください',farm_full:'出力樽が満杯です',farm_unavailable:'農機の準備ができません',farm_after_move:'移動後の収穫に失敗。位置と樽・作物を確認してください'};
  notice(player,result.ok?`§a${result.count}ブロックを移動：${result.offset}/8`:`§e${errors[result.reason]??'移動できません'}`);
 }
 async function bearingMenu(player,block){
@@ -5155,7 +5155,7 @@ safeSub('system','before','startup',({itemComponentRegistry,blockComponentRegist
   onPlayerInteract:({player,block})=>{if(player?.isValid&&![GameMode.Spectator,GameMode.Adventure].includes(player.getGameMode()))menu(player,p=>bearingMenu(p,block));}
  });
  safeReg(blockComponentRegistry,ns+'gantry',{
-  onTick:({block})=>gantryAutoTick(block,{kineticNetwork,report,cycleAt:factoryCycleAt,tick:system.currentTick}),
+  onTick:({block})=>gantryAutoTick(block,{kineticNetwork,ItemStack,factoryTransaction,report,cycleAt:factoryCycleAt,tick:system.currentTick}),
   onPlayerInteract:({player,block})=>{if(player?.isValid&&isGantry(block.typeId)&&![GameMode.Spectator,GameMode.Adventure].includes(player.getGameMode()))menu(player,p=>gantryMenu(p,block));}
  });
  safeReg(blockComponentRegistry,ns+'factory',{onTick:({block})=>transfer(block),onPlayerInteract:({player,block})=>{try{if(!player?.isSneaking)return;if(block.typeId===ns+'fluid_tank'){const s=tankState(block);player.sendMessage(!s?'§e液体タンクの状態を確認できません':`§b液体タンク ${['空','水','溶岩'][s.kind]} ${s.n}/8（1目盛り＝バケツ1/4）`);return;}if(block.typeId===ns+'clutch'){const on=toggleClutch(block);if(on!==undefined)notice(player,on?'§a動力クラッチ：接続':'§e動力クラッチ：切断');return;}factoryMeter(player,block);}catch{}}});

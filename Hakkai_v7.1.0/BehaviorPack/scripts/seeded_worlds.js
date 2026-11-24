@@ -4,6 +4,7 @@ import { placeMoonShrine } from './moon_shrine.js';
 import { nearestQueuedDistance } from './terrain_queue.js';
 import { isNaturalSite, inSite, siteIntersects, siteBounds, blendSiteHeight, FRONTIER_SITES, SKY_FRONTIER_SITES } from './natural_sites.js';
 import { createLandscapeField } from './landscape_regions.js';
+import { valleyProfile } from './terrain_valleys.js';
 import { caveInterval, solidIntervals, treeCandidates, scenicPlan, realmRelief, skyRoute, skySiteRoute, pondPlan, moonGroveAt, bambooCandidates } from './terrain_features.js';
 
 // 8界の現在地を中心に、4チャンク先までの見える範囲を先行生成する。
@@ -83,6 +84,7 @@ export function setupSeededWorlds(ctx){
   const fine=noise(x+7*r,z-5*r,17,r,37)*3;
   let relief=continental+broad+middle+fine;
   relief+=realmRelief(r,x,z,noise)+landscape.sample(r,x,z);
+  relief-=valleyProfile(r,x,z,noise).depth;
   if(r===5)relief=relief*.62+noise(x,z,33,r,47)*7;
   if(r===6){const shape=noise(x+41,z-27,26,r,151)*.82+noise(x-9,z+63,11,r,157)*.38;if(shape<.22)return -1;relief=relief*.38+Math.max(0,shape-.22)*11;}
   return Math.round(Math.max(48,Math.min(145,base+relief)));
@@ -92,7 +94,8 @@ export function setupSeededWorlds(ctx){
   const wetTop=style===3&&grain>.55?'minecraft:mud':style===4?'minecraft:gravel':top;
   const layered=style===1&&grain>.65?TOPS[r][(style+2)%12]:style===8&&grain>.72?TOPS[r][7]:wetTop;
   const grove=r===7&&moonGroveAt(x,z,noise);
-  return {top:grove?'minecraft:grass_block':layered,sub:grove?'minecraft:dirt':style===4||style===6?'minecraft:sand':style===3?'minecraft:clay':style===7?'hakkai:moonstone':SUBS[r],rock:style===11?TOPS[r][11]:ROCKS[r],patch};
+  const valley=valleyProfile(r,x,z,noise);
+  return {top:grove?'minecraft:grass_block':valley.top??layered,sub:grove?'minecraft:dirt':style===4||style===6?'minecraft:sand':style===3?'minecraft:clay':style===7?'hakkai:moonstone':SUBS[r],rock:style===11?TOPS[r][11]:ROCKS[r],patch};
  }
  function isReserved(r,x0,z0,x1,z1){
   // 元の接続地形と遠征地形の予約範囲は、生成順序に関係なく保護する。
