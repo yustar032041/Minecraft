@@ -11,7 +11,7 @@ for r in range(8):
  assert 'minecraft:behavior.avoid_mob_type' in entity['components'] and 'minecraft:attack' not in entity['components']
  assert client['geometry']['default']=='geometry.hakkai.resident_2' and (rp/f'textures/entity/{id}.png').is_file()
  assert f'entity.hakkai:{id}.name=' in (rp/'texts/ja_JP.lang').read_text(encoding='utf8')
-# The actual published structures have at least four mutually separate, clear,
+# The actual published structures have at least five mutually separate, clear,
 # 7x7 plots with a one-block air buffer and a solid-looking existing floor.
 allowed={'minecraft:grass_block','minecraft:dirt','minecraft:stone','minecraft:gravel','minecraft:moss_block','minecraft:sandstone','minecraft:snow_block','minecraft:tuff','minecraft:deepslate','hakkai:cloudstone','hakkai:clockstone'}
 for id in [59,*range(61,69)]:
@@ -24,5 +24,5 @@ for id in [59,*range(61,69)]:
   for z in range(-limit,limit+1,10):
    if all(block(x+a,15,z+b) in allowed for a in range(-3,4) for b in range(-3,4)) and all(block(x+a,y,z+b)=='minecraft:air' for a in range(-4,5) for b in range(-4,5) for y in range(16,22)):
     plots.append((x,z))
- assert len(plots)>=4,(id,len(plots))
-print('Eight builder asset links and at least four bounded clear plot candidates per source structure (static)')
+ assert len(plots)>=5,(id,len(plots))
+print('Eight builder asset links and at least five bounded clear plot candidates per source structure (static)')

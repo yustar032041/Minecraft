@@ -2,7 +2,7 @@ import {addVillageMemory} from '../Hakkai_v7.1.0/BehaviorPack/scripts/village_li
 import assert from 'node:assert/strict';import fs from 'node:fs';
 import {BUILDER_IDS,BLUEPRINTS,blueprint,readBuilderProject,startBuilderProject,stepBuilderProject,clearBuilderProject,foundBuilder,autoBuilderPlan,builderHome,builderPaused,setBuilderPaused,constructionCredit} from '../Hakkai_v7.1.0/BehaviorPack/scripts/village_builders.js';
 import {CULTURE_SITES} from '../Hakkai_v7.1.0/BehaviorPack/scripts/realm_culture.js';
-assert.equal(BUILDER_IDS.length,8);assert.equal(BLUEPRINTS.length,4);
+assert.equal(BUILDER_IDS.length,8);assert.equal(BLUEPRINTS.length,5);
 const at={x:0,y:80,z:0},key=p=>`${p.x},${p.y},${p.z}`;
 function fixture(realm=0){
  let loaded=true,people=[],fail=false,throwsAfterWrite=false;
@@ -58,7 +58,7 @@ for(let r=0;r<8;r++){
 }
 const main=fs.readFileSync('Hakkai_v7.1.0/BehaviorPack/scripts/main.js','utf8');
 assert.ok(main.includes('foundBuilder({site,world,dimension:p.dimension'));assert.ok(main.includes('builderWorkTick(p,t)'));assert.ok(main.includes('autoBuilderPlan(worker,{sites:places,world,num,property})'));
-console.log('Four real autonomous construction plans, obstruction/water checks, restart recovery and one-time builder founding (mocked)');
+console.log('Five real autonomous construction plans, obstruction/water checks, restart recovery and one-time builder founding (mocked)');
 
 {
  const f=fixture(),get=f.dim.getBlock;f.dim.getBlock=p=>p.y===87?{typeId:'minecraft:stone',isSolid:true,isAir:false,isLiquid:false}:get(p);f.builder.location.y=88;f.builder.setDynamicProperty('hakkai:builder_home_v1',61);
@@ -69,7 +69,7 @@ console.log('Four real autonomous construction plans, obstruction/water checks, 
  assert.ok(Math.abs(job.at.x)<=28&&Math.abs(job.at.z)<=28,'site buffer stays within village');
  assert.equal(autoBuilderPlan(f.builder,args),'idle','one project per builder');clearBuilderProject(f.builder);
  setBuilderPaused(f.builder,true);assert.equal(builderPaused(f.builder),true);assert.equal(autoBuilderPlan(f.builder,args),'idle');
- setBuilderPaused(f.builder,false);props.set('builder_stage_61_v1',4);assert.equal(autoBuilderPlan(f.builder,args),'finished');
+ setBuilderPaused(f.builder,false);props.set('builder_stage_61_v1',4);assert.equal(autoBuilderPlan(f.builder,args),'started','upgraded four-stage village builds festival next');assert.equal(readBuilderProject(f.builder).kind,'festival');clearBuilderProject(f.builder);props.set('builder_stage_61_v1',5);assert.equal(autoBuilderPlan(f.builder,args),'finished');
  props.set('builder_stage_61_v1',0);props.set('built_61',0);assert.equal(autoBuilderPlan(f.builder,args),'no_home');
  const unassigned=fixture();assert.equal(autoBuilderPlan(unassigned.builder,args),'no_home','spawn eggs cannot auto-build');
 }
@@ -95,13 +95,13 @@ console.log('Four real autonomous construction plans, obstruction/water checks, 
  // The test bell exists only for the completion credit check.
  const get2=f.dim.getBlock;f.dim.getBlock=p=>p.x===40&&p.y===88&&p.z===40?{typeId:'hakkai:town_bell'}:get2(p);
  vm.createContext(ctx);vm.runInContext(main.slice(main.indexOf('function builderWorkTick('),main.indexOf('function visibleFrom(')),ctx);
- for(let step=0;step<1500&&(props.get('builder_stage_61_v1')??0)<4;step++){
+ for(let step=0;step<1500&&(props.get('builder_stage_61_v1')??0)<5;step++){
   ctx.builderWorkTick({dimension:f.dim,location:{x:0,y:88,z:0}},step*40);
   const job=readBuilderProject(f.builder);if(job)f.builder.location={x:job.at.x+5.5,y:88,z:job.at.z+.5};
  }
- assert.equal(props.get('builder_stage_61_v1'),4,'actual loop advances four plans');
- assert.equal(town.data.goods,32);assert.equal(town.data.builderCredits,15);
- assert.equal(readBuilderProject(f.builder),undefined);ctx.builderWorkTick({dimension:f.dim,location:{x:0,y:88,z:0}},100000);assert.equal(town.data.goods,32,'no repeat credit');
+ assert.equal(props.get('builder_stage_61_v1'),5,'actual loop advances five plans');
+ assert.equal(town.data.goods,40);assert.equal(town.data.builderCredits,31);
+ assert.equal(readBuilderProject(f.builder),undefined);ctx.builderWorkTick({dimension:f.dim,location:{x:0,y:88,z:0}},100000);assert.equal(town.data.goods,40,'no repeat credit');
 }
 {
  const f=fixture();assert.equal(startBuilderProject(f.builder,'factory',at),'ok');let credits=0;

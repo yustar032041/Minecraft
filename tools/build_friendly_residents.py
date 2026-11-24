@@ -45,6 +45,7 @@ for r,(prefix,col,accent,skin_hex) in enumerate(themes):
   img.save(rp/f'textures/entity/{ident}.png')
   family=['mob','hakkai_resident',f'hakkai_resident_{roles.index(role)}']
   c={'minecraft:type_family':{'family':family},'minecraft:health':{'value':24,'max':24},'minecraft:collision_box':{'width':0.6,'height':1.95},'minecraft:physics':{},'minecraft:movement':{'value':0.23},'minecraft:movement.basic':{},'minecraft:jump.static':{},'minecraft:navigation.walk':{'avoid_water':True,'avoid_damage_blocks':True},'minecraft:behavior.float':{'priority':0},'minecraft:behavior.random_stroll':{'priority':6,'speed_multiplier':0.65},'minecraft:behavior.look_at_player':{'priority':7,'look_distance':8,'probability':0.08},'minecraft:behavior.random_look_around':{'priority':8},'minecraft:nameable':{}}
+  if i==2:c['minecraft:inventory']={'inventory_size':1,'container_type':'inventory'}
   if i!=3:
    c['minecraft:behavior.avoid_mob_type']={'priority':2,'entity_types':[{'filters':{'test':'is_family','subject':'other','value':'monster'},'max_dist':8,'sprint_speed_multiplier':1.2}]}
   else:

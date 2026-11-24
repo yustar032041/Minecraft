@@ -15,7 +15,7 @@ const CROPS=[['minecraft:wheat','小麦',8],['minecraft:carrot','ニンジン',8
 const finite=(n,fallback=0)=>Number.isFinite(n)?Math.floor(n):fallback;
 const bounded=(n,max)=>Math.min(max,Math.max(0,finite(n)));
 const actor=name=>String(name??'旅人').replace(/[§\n\r\t]/g,'').slice(0,24)||'旅人';
-export function seasonAt(day){day=Math.max(0,finite(day));const cycle=Math.floor(day/3),index=cycle%4;return {day,index,cycle,name:SEASON_NAMES[index],dayInSeason:day%3+1,year:Math.floor(cycle/4)+1};}
+export function seasonAt(day){day=Math.max(0,finite(day));const cycle=Math.floor(day/4),index=cycle%4;return {day,index,cycle,name:SEASON_NAMES[index],dayInSeason:day%4+1,year:Math.floor(cycle/4)+1};}
 export function festivalAt(day,realm){const s=seasonAt(day),r=Math.max(0,Math.min(7,finite(realm)));return {...s,title:CELEBRATIONS[r][s.index],open:s.dayInSeason===2};}
 export function dailyRequest(day,realm){const s=seasonAt(day),r=Math.max(0,Math.min(7,finite(realm))),[item,label,goal]=CROPS[s.index];return {day:s.day,item,label,goal,name:`${REALM_NAMES[r]}の${s.name}の持ち寄り`,amount:2};}
 export function addVillageMemory(data,day,text,who=''){
@@ -24,7 +24,7 @@ export function addVillageMemory(data,day,text,who=''){
  return {...data,lifeHistory:history};
 }
 export function villageTier(data,buildings){
- const structures=bounded(buildings,4), quests=bounded(data.lifeQuests,30), festivals=bounded(data.lifeFestivals,30),recovery=bounded(data.lifeRecoveries,30),level=bounded(data.level,4);
+ const structures=bounded(buildings,5), quests=bounded(data.lifeQuests,30), festivals=bounded(data.lifeFestivals,30),recovery=bounded(data.lifeRecoveries,30),level=bounded(data.level,4);
  const points=structures*2+Math.min(quests,8)+Math.min(festivals,4)+Math.min(recovery,4)+level;
  const index=points>=12?3:points>=6?2:points>=2?1:0;
  return {points,index,name:['小さな集落','育つ村','にぎわう町','絆の交流中心'][index],structures};
@@ -43,9 +43,9 @@ export function contributeRequest(data,day,realm,who){
 }
 export function festivalJoin(data,day,realm,id,name){
  const f=festivalAt(day,realm);if(!f.open||typeof id!=='string'||!id||id.length>256)return undefined;
- const previous=data.lifeFestivalCycle===f.cycle&&Array.isArray(data.lifeFestivalPeople)?data.lifeFestivalPeople.filter(x=>typeof x==='string').slice(0,32):[];
+ const previous=data.lifeFestivalCycle4===f.cycle&&Array.isArray(data.lifeFestivalPeople)?data.lifeFestivalPeople.filter(x=>typeof x==='string').slice(0,32):[];
  if(previous.includes(id)||previous.length>=32)return undefined;
- let next={...data,lifeFestivalCycle:f.cycle,lifeFestivalPeople:[...previous,id]};
+ let next={...data,lifeFestivalCycle4:f.cycle,lifeFestivalPeople:[...previous,id]};
  if(!previous.length)next={...next,lifeFestivals:bounded(data.lifeFestivals,100000)+1,goods:Math.min(200,bounded(data.goods,200)+2)};
  return addVillageMemory(next,day,`${f.title}に参加${previous.length?'':'（村の備蓄+2）'}`,name);
 }
@@ -72,7 +72,7 @@ export function workDay(data,day,{farmer=false,artisan=false,builder=false}={}){
 // damages terrain. Only one new alert per day; it persists until resolved.
 export function detectCrisis(data,day,{monsters=0,rain=false}={}){
  day=Math.max(0,finite(day));if(data.lifeCrisis?.active||data.lifeCrisisDay===day)return undefined;
- const type=monsters>0?'monster':rain&&day%3===2?'storm':undefined;if(!type)return undefined;
+ const type=monsters>0?'monster':rain&&seasonAt(day).dayInSeason===3?'storm':undefined;if(!type)return undefined;
  const next={...data,lifeCrisis:{active:true,type,day},lifeCrisisDay:day};
  return addVillageMemory(next,day,type==='monster'?'近くの魔物に警戒':'嵐の備えを呼びかけ');
 }

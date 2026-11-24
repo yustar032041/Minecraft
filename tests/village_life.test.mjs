@@ -1,10 +1,13 @@
+import {validRoute} from '../Hakkai_v7.1.0/BehaviorPack/scripts/village_projects.js';
 import {factoryTransaction} from '../Hakkai_v7.1.0/BehaviorPack/scripts/factory_transaction.js';
 import assert from 'node:assert/strict';import fs from 'node:fs';import vm from 'node:vm';
 import {seasonAt,festivalAt,villageTier,requestStatus,contributeRequest,festivalJoin,donation,workDay,detectCrisis,recoverCrisis,addVillageMemory,depositToVillage,validWorkshop,workshopStep} from '../Hakkai_v7.1.0/BehaviorPack/scripts/village_life.js';
-assert.deepEqual([0,3,6,9,12].map(d=>seasonAt(d).name),['春','夏','秋','冬','春']);
-assert.equal(seasonAt(11).dayInSeason,3);assert.equal(seasonAt(12).year,2);
-const titles=new Set();for(let r=0;r<8;r++)for(let s=0;s<4;s++){const f=festivalAt(s*3+1,r);assert.ok(f.open);titles.add(f.title);assert.equal(festivalAt(s*3,r).open,false);}assert.equal(titles.size,32);
-for(let season=0;season<4;season++)assert.equal(requestStatus({},season*3,0).item,['minecraft:wheat','minecraft:carrot','minecraft:pumpkin','minecraft:beetroot'][season]);
+assert.deepEqual([0,4,8,12,16].map(d=>seasonAt(d).name),['春','夏','秋','冬','春']);
+assert.equal(seasonAt(15).dayInSeason,4);assert.equal(seasonAt(16).year,2);
+for(let day=0;day<32;day++){assert.equal(seasonAt(day).index,Math.floor(day/4)%4);assert.equal(seasonAt(day).dayInSeason,day%4+1);assert.equal(festivalAt(day,0).open,day%4===1);}
+assert.ok(festivalJoin({lifeFestivalCycle:0,lifeFestivalPeople:['p1']},1,0,'p1','A'),'old 3-day participation does not suppress the new calendar');
+const titles=new Set();for(let r=0;r<8;r++)for(let s=0;s<4;s++){const f=festivalAt(s*4+1,r);assert.ok(f.open);titles.add(f.title);assert.equal(festivalAt(s*4,r).open,false);}assert.equal(titles.size,32);
+for(let season=0;season<4;season++)assert.equal(requestStatus({},season*4,0).item,['minecraft:wheat','minecraft:carrot','minecraft:pumpkin','minecraft:beetroot'][season]);
 {
  let d={goods:0},a=contributeRequest(d,0,0,'友達A');assert.equal(a.count,2);d=a.next;
  for(const person of ['友達B','友達A','友達B']){a=contributeRequest(d,0,0,person);d=a.next;}
@@ -15,7 +18,7 @@ for(let season=0;season<4;season++)assert.equal(requestStatus({},season*3,0).ite
  let d={goods:0};assert.equal(festivalJoin(d,0,1,'p1','A'),undefined);
  d=festivalJoin(d,1,1,'p1','A');assert.equal(d.goods,2);assert.equal(d.lifeFestivals,1);
  assert.equal(festivalJoin(d,1,1,'p1','A'),undefined);d=festivalJoin(d,1,1,'p2','B');assert.equal(d.goods,2);assert.equal(d.lifeFestivals,1);
- d=festivalJoin(d,4,1,'p1','A');assert.equal(d.lifeFestivals,2);assert.equal(d.goods,4);
+ d=festivalJoin(d,5,1,'p1','A');assert.equal(d.lifeFestivals,2);assert.equal(d.goods,4);
 }
 {
  let d={goods:0};d=donation(d,'food',0,'A').next;d=donation(d,'wood',0,'B').next;
@@ -91,11 +94,12 @@ console.log('Season cycle, 32 festivals, shared requests/records, role-gated sto
  const d={id:'hakkai:realm_0',isChunkLoaded:()=>true,getBlock:()=>({typeId:'minecraft:barrel'})};
  const t={d,l:{x:0,y:88,z:0},key:'village',data:{goods:0}},store=new Map(),s={};
  const player={isValid:true,location:{x:1,y:88,z:0},dimension:d,getGameMode:()=>mode.Survival};
- const ctx={safeSub:(_a,_b,_c,fn)=>handler=fn,state:()=>s,system:{currentTick:0,run:fn=>fn()},notice:(_p,text)=>notes.push(text),dist:(a,b)=>Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z),townGet:()=>t,lifeNear:()=>true,validWorkshop,townRecord:t=>t.data,saveVillageLife:(t,v)=>t.data=v,report:()=>{},GameMode:mode};
+ const ctx={safeSub:(_a,_b,_c,fn)=>handler=fn,state:()=>s,system:{currentTick:0,run:fn=>fn()},notice:(_p,text)=>notes.push(text),dist:(a,b)=>Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z),townGet:()=>t,lifeNear:()=>true,validWorkshop,validRoute,townRecord:t=>t.data,saveVillageLife:(t,v)=>t.data=v,report:()=>{},GameMode:mode};
  vm.createContext(ctx);vm.runInContext(main.slice(main.indexOf("safeSub('world','before','playerInteractWithBlock'"),main.indexOf('async function returnMenu(')),ctx);
  function click(x,dimension=d){const e={player,isFirstEvent:true,block:{x,y:88,z:0,dimension,typeId:'minecraft:barrel'}};player.isSneaking=true;handler(e);assert.equal(e.cancel,true);}
  s.villageBarrelPick={town:t,phase:0,expires:600};click(0);assert.equal(s.villageBarrelPick.phase,1);click(2);
  assert.deepEqual(JSON.parse(JSON.stringify(t.data.lifeWorkshop)),{input:{x:0,y:88,z:0},output:{x:2,y:88,z:0}});
+ s.villageBarrelPick={town:t,phase:0,mode:'route',expires:600};click(0);click(5);assert.deepEqual(JSON.parse(JSON.stringify(t.data.lifeRoute)),{input:{x:0,y:88,z:0},output:{x:5,y:88,z:0}});
  s.villageBarrelPick={town:t,phase:0,expires:600};click(0);click(0);assert.equal(s.villageBarrelPick,undefined);assert.ok(notes.some(s=>s.includes('異なる樽')));
 }
 // Exercise the production life tick, including the real 60-second workshop

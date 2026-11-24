@@ -1,3 +1,4 @@
+import { validPlot, repairPlotStep, validRoute, readCarry, carryStep, retrieveCargo, festivalGameStart, festivalGameAdvance, GAME_CORNERS, GAME_COURSES } from './village_projects.js';
 import { seasonAt, festivalAt, villageTier, requestStatus, contributeRequest, festivalJoin, donation, workDay, detectCrisis, recoverCrisis, addVillageMemory, depositToVillage, validWorkshop, workshopStep } from './village_life.js';
 import { BUILDER_IDS, BLUEPRINTS, blueprint, readBuilderProject, stepBuilderProject, clearBuilderProject, foundBuilder, builderHome, builderPaused, setBuilderPaused, autoBuilderPlan, constructionCredit } from './village_builders.js';
 import { friendlyResidentById, foundFriendlyResident, friendlySupportTick, friendlyTrade } from './friendly_residents.js';
@@ -78,7 +79,7 @@ const visited=(p,i)=>marked(p,'visits',i);
 const tale=site=>site.story??chronicles[site.id];
 const aspect=site=>site.theme??site.dim;
 const raining=d=>{const w=currentWeather.get(d.id.replace(/^minecraft:/,''));return w===WeatherType.Rain||w===WeatherType.Thunder;};
-const era=()=>['春','夏','秋','冬'][Math.floor(Math.max(0,world.getAbsoluteTime())/72000)%4];
+const era=()=>['春','夏','秋','冬'][seasonAt(Math.floor(Math.max(0,world.getAbsoluteTime())/24000)).index];
 const timed=(cb,n)=>new Promise(resolve=>system.runTimeout(()=>resolve(cb()),n));
 function safeSub(root,when,name,fn){try{const o=(root==='world'?world:system)[when+'Events']?.[name];if(!o)throw new Error('このバージョンに無いイベント');o.subscribe(fn);}catch(err){console.error(`[8界風記: イベント登録失敗 ${when}.${name}] ${String(err)}`);}}
 function safeReg(reg,name,def){try{reg.registerCustomComponent(name,def);}catch(err){console.error(`[8界風記: 部品登録失敗 ${name}] ${String(err)}`);}}
@@ -1862,7 +1863,7 @@ function realmSeasonalEventTick(p,site){
  if(!site||site.id<1||site.id>8)return;
  const i=site.id-1,expected=Number(p.dimension.id.slice((ns+'realm_').length));
  if(!Number.isFinite(expected)||site.dim!==expected||!marked(p,'realm_ruins',i)||!marked(p,'realm_echoes',i))return;
- const absolute=Math.max(0,world.getAbsoluteTime()),season=Math.floor(absolute/72000)%4,time=absolute%24000,key=season*8+i;
+ const absolute=Math.max(0,world.getAbsoluteTime()),season=seasonAt(Math.floor(absolute/24000)).index,time=absolute%24000,key=season*8+i;
  if(marked(p,'realm_seasonal_events',key)||!realmSeasonWindow(i,time))return;
  const at=realmEchoPoint(site,i),d=Math.hypot(p.location.x-at.x,p.location.z-at.z),st=state(p);
  if(d<10&&Math.abs(p.location.y-at.y)<8){
@@ -1916,7 +1917,7 @@ async function realmAdventurerRecord(p){
   `記憶聖域：${marked(p,'realm_sanctum',0)?'発見済み':'未発見'}`
  ];
  const total=trials+ruins+riddles+echoes+memories+hidden+seasonal;
- return simple(p,'冒険者記録帳',`八界を巡る旅の進行状況\n\n${lines.join('\n')}\n\n季節は約3ゲーム日ごとに春・夏・秋・冬へ変わります。各世界の余韻の場所で、季節と時間帯が合うと光ります。
+ return simple(p,'冒険者記録帳',`八界を巡る旅の進行状況\n\n${lines.join('\n')}\n\n季節は4ゲーム日ごとに春・夏・秋・冬へ変わります。各世界の余韻の場所で、季節と時間帯が合うと光ります。
 夜明け（0～3200）：始まりの草原・雷の断崖／昼（6000～9200）：霧の森・地下庭園／夕暮れ（12000～15200）：砂の回廊・空の浮島群／夜（18000～22000）：氷の鏡湖・時の終着駅。
 隠しルートは追加謎解きと余韻を達成した世界で探せます。\n\n記録ポイント：${total}/96`);
 }
@@ -2805,8 +2806,8 @@ const chapters=[
  ['はじめに','ガイド本は持ち物から「使う」で開きます。迷ったらこの本の章を順に読んでね。風見の帰還石を使うと、風見台・ベッド・登録地点・元の世界に帰れます。風見台で旅の地図を使い、まずは始まりの草原へ。'],
  ['世界の生成とシード','8つの界はそれぞれ別の空間です。到着すると、今いる場所を中心に周囲4チャンク分（最大9×9チャンク）の地形を先に準備します。地形の高さ・山脈・谷・島・地表素材はワールドシードと界ごとの計算で決まり、同じワールドの同じ座標なら同じ地形になります。各界には旧12種に加えて新5種ずつ、合計136種のスクリプト式シード地形帯があり、歩き続けるほど新しい地形帯が続きます。拠点・街道・既存建築のある区画は上書きしません。'],
  ['新しい地形帯と川','各界に5種類ずつ新しい地形帯を追加。界の土や植生、岩・結晶の景観が現れ、自然調査ノートにも記録されます。これはスクリプトで分類した地形帯で、エンジン本来のバイオーム変更ではありません。6界の谷では、地形条件が合えば短い川区画に水が入ります。氷の界は表面が凍ります。土手と床を確認して水を置くため川は区画ごとに途切れ、湖や海への連結はまだありません。生成済み区画は変更しません。'],
- ['四季と村の暮らし','四季は約3ゲーム日ごとに巡ります。文化名所の友好住人や八界の集落鐘から村の暮らしを開き、皆で季節の品を持ち寄れます。祭りは季節の2日目。寄付された小麦や板材は近くの住人が台帳上の備蓄に整理し、危機と復興や思い出も記録します。建物の自動修理・現物運搬ではありません。'],
- ['建築係と村の発展','文化名所と風車工場村に建築係が一度だけ現れ、村の空き地を自分で探して小さな家・加工場・農場・交流施設を順に建てます。必要な平地・空間がなければ待機し、既存ブロックは壊しません。人や生物が工事範囲にいる間も作業を止めます。建築係に話しかけると進捗を見たり停止したりできます。材料不要の試作で、保護プラグインには対応せず、空地がなければ発展しません。'],
+ ['四季と村の暮らし','四季は1季節4ゲーム日、16日で一巡します。文化名所の友好住人や八界の集落鐘から村の暮らしを開き、皆で季節の品を持ち寄れます。祭りは季節の2日目。寄付された小麦や板材は近くの住人が台帳上の備蓄に整理し、危機と復興や思い出も記録します。指定した樽同士の現物運搬と、許可した村の建物の自動修理にも対応します。'],
+ ['建築係と村の発展','文化名所と風車工場村に建築係が一度だけ現れ、村の空き地を自分で探して小さな家・加工場・農場・交流施設・祭り会場を順に建てます。必要な平地・空間がなければ待機し、既存ブロックは壊しません。人や生物が工事範囲にいる間も作業を止めます。建築係に話しかけると進捗を見たり停止したりできます。材料不要の試作で、保護プラグインには対応せず、空地がなければ発展しません。'],
  ['特別な友好住人','八界それぞれの名所に道案内・手当て係・物資係・見守り兵の4種類、合計32種類が現れます。通常村人とは別の友好モブで、姿と帽子は界と役割ごとに違います。近くの道案内は移動支援、手当て係は傷の手当て、物資係はエメラルドと品の交換、見守り兵は近くの敵対モブと戦います。直接話しかけると説明を読めます。自然生成はモブ生成が有効なとき、各名所で各役割1人だけ一度限りです。死亡・失敗時の補充や通常の村人交易・繁殖・就職はありません。動きや描画は実機未確認です。'],
  ['八界の暮らしと名所','八界の人々が残した風車・文庫・隊商の迷路・氷宮・鍛冶場・地下庭・空の観測庭・待合駅があります。名所にある記録石を使うと、その土地の約束と歴史を読み、旅の記録にも残せます。名所ではモブ生成が有効なら語り手が各2人まで一度だけ現れます。しゃがんで話しかけると土地の話、立って話しかけると通常の取引です。予定地は新規の空き区画に限られます。'],
  ['八界の大景観','新しい空き区画では、草原の風車の飾り・森の巨木・砂の石門や化石・氷晶塔・雷石の尖塔・地下の光る茸や天井の鍾乳状の石・空の雲の塔・時の時計飾りなどが現れます。各界の丘や地表の色も違います。飾りの風車や時計は動きません。シードと地形により出現しない場所もあり、旧地形や建物は改造しません。'],
@@ -2817,7 +2818,7 @@ const chapters=[
  ['戦闘とスタミナ','走る・泳ぐ・攻撃するとスタミナを使い、止まると回復。装備スキルや属性魔法を使えます。ガイド本の「八界の幻影闘技場」では、体力・魔力・相手の予告を見ながら行動を選ぶターン制ミニゲームに挑戦できます。記念館の達成度と記念品の収集が進むと、特別な第4戦が解放されます。闘技場はゲーム内の幻影戦で、実際のプレイヤーや建築物にはダメージを与えません。'],
  ['八属性と魔導書','本＋風の結晶＋水の結晶で魔導書を作れます。風・水・火・土・雷・光・闇・時の8属性を使え、一度訪れた場所の属性が解放されます。霧・溶岩・嵐・虹・疾風は両方の属性が必要です。光の矢は光を訪問後、魔力5で視線上の敵へ放ちます。絆の灯は風と水を訪問後、近くにもう一人いる時に魔力20で参加者を回復し敵を攻撃します。風・水・炎の専用魔法も選べます。FUSHIのトーテムから月のまどろみを使用すると確認後に消費します。魔法の再使用時間は共通6秒です。'],
  ['村の暮らし','風記の集落鐘を置くか、村人の近くで普通の鐘をしゃがんで使うと台帳が開きます。壁の数、高い見張り台、足止め罠、工場が守りを強くします。工場が出荷した備蓄は交易・村の成長・祭りに役立ちます。村人には朝・昼・夕の行き先があります。'],
- ['季節と釣り','季節は約3ゲーム日ごとに変わります。花壇を置くと季節の花に変わり、集落鐘の周りでは作物の成長も変化します。釣り竿を持ち物に入れてガイド本の「水辺の釣り」へ。釣果は季節や天気、水辺の種類で変わります。'],
+ ['季節と釣り','季節は4ゲーム日ごとに変わります。花壇を置くと季節の花に変わり、集落鐘の周りでは作物の成長も変化します。釣り竿を持ち物に入れてガイド本の「水辺の釣り」へ。釣果は季節や天気、水辺の種類で変わります。'],
  ['時の列車','第8界の時の終着駅に着いたら、ガイド本の「時の列車」へ。操車場で過去か未来を選ぶと乗車します。しゃがんで降りると、旅を中止できます。各時代の駅から現在へ戻れます。'],
  ['船便と刻印','五つの港でガイド本の「港の船便と市」を使います。船上で釣り・料理・交易もできます。剣を持ってしゃがんでエンチャント台を使うと、属性刻印の別画面が開きます。刻印書は本1冊と対応する結晶2個で作れます。刻印書を手に持ってしゃがみながらエンチャント台を使い、剣を選ぶと刻印できます。バニラのエンチャントはそのままです。'],
  ['刻印効果','刻印済みの剣で敵に攻撃すると発動します。風：移動速度上昇。水：体力を継続回復。雷：命中した相手に追加ダメージ。時：命中した相手を減速。再発動には約6秒の待ち時間があります。スタミナが0でも刻印効果は発動します。'],
@@ -3217,7 +3218,7 @@ async function fishing(p){
  const fish=area==='warmwater'?'tropical_fish':area==='ocean'?'cod':area==='icywater'||site?.style==='snow'?'salmon':
    {'春':'salmon','夏':'tropical_fish','秋':'cod','冬':'salmon'}[era()];
  const night=world.getTimeOfDay()>13000;
- const roll=Math.random(), festival=seasonDay()%3===1, rare=festival&&roll<.17;
+ const roll=Math.random(), festival=seasonAt(seasonDay()).dayInSeason===2, rare=festival&&roll<.17;
  const mode=festival?.38:raining(p.dimension)?.28:night?.23:0, prize=roll<mode;
  if(give(p,rare?ns+`festival_fish_${seasons.indexOf(era())}`:prize?ns+'fish_token':`minecraft:${fish}`)){
    notice(p,rare?`§6${era()}の祭り魚を釣り上げた！`:prize?'§a釣り祭りの記念札を釣り上げた！':'§a釣り上げた！');
@@ -3228,7 +3229,7 @@ const seasonDay=()=>Math.floor(Math.max(0,world.getAbsoluteTime())/24000);
 async function harvestMarket(p){
  if(!villagerNear(p,12))return simple(p,'季節の収穫市','村人の近くで開いてください。季節によって求められる作物が変わります。');
  const [food,label]=({春:['wheat','小麦'],夏:['carrot','ニンジン'],秋:['pumpkin','カボチャ'],冬:['beetroot','ビートルート']})[era()];
- const day=seasonDay(), used=num(p,'harvest_day',-1)===day, festival=day%3===1;
+ const day=seasonDay(), used=num(p,'harvest_day',-1)===day, festival=seasonAt(day).dayInSeason===2;
  const ix=await form(p,`${era()}の収穫市`,`${festival?'今日は釣り祭りの日。':'季節の作物を持ち寄って村を手伝おう。'}\n作物の交換はゲーム内で一日一回。`,[
    [used?'今日は交換済み':`${label}4個 → 風の結晶1個`],['釣り祭りの記念札1枚 → 湖の欠片2個'],['季節の祭り魚1匹 → 湖の結晶1個'],['閉じる']
  ]);
@@ -4456,7 +4457,7 @@ function townScore(t){
  const sites=t.sites,d=townRecord(t), working=d.work+2400>world.getAbsoluteTime();
  return Math.min(12,Math.floor((sites.wall?.length??0)/4)+(sites.tower?.length?2:0)+Math.min(2,sites.trap?.length??0)+Math.min(2,sites.machine?.length??0)+(working?2:0)+Math.min(4,d.level??0));
 }
-function townFestival(t){return seasonDay()%3===1&&townScore(t)>=4&&townRecord(t).goods>=6;}
+function townFestival(t){return seasonAt(seasonDay()).dayInSeason===2&&townScore(t)>=4&&townRecord(t).goods>=6;}
 function production(b,count){
  if(!b.dimension.id)return;
  const l={x:b.x+.5,y:b.y+.5,z:b.z+.5}, town=townNear(b.dimension,l);
@@ -4637,7 +4638,7 @@ function lifeTownForPlayer(p,site=currentPlace(p)){
  return t&&lifeNear(p,t)?t:undefined;
 }
 function lifeNear(p,t){
- if(!p.isValid||p.dimension.id!==t.d.id||![GameMode.Survival,GameMode.Adventure,GameMode.Creative].includes(p.getGameMode())||dist(p.location,t.l)>(t.lifeSiteId?40:24))return false;
+ if(!p.isValid||p.dimension.id!==t.d.id||![GameMode.Survival,GameMode.Adventure,GameMode.Creative].includes(p.getGameMode())||dist(p.location,t.l)>(t.lifeSiteId||t.factoryVillage?40:24))return false;
  try{
   const valid=t.lifeSiteId?(()=>{const site=places.find(s=>s.id===t.lifeSiteId);return Boolean(site&&num(world,`built_${site.id}`)&&t.d.getBlock({x:site.x+2,y:expandedY,z:site.z+11})?.typeId===ns+'chronicle');})():['minecraft:bell',ns+'town_bell'].includes(t.d.getBlock(t.l)?.typeId);
   if(!valid)return false;
@@ -4647,6 +4648,12 @@ function lifeNear(p,t){
  }catch{return false;}
 }
 function lifeRealm(t){const m=/^hakkai:realm_([0-7])$/.exec(t.d.id);return m?Number(m[1]):0;}
+function readVillagePlot(site,stage){
+ try{const v=JSON.parse(String(world.getDynamicProperty(ns+`builder_plot_${site.id}_${stage}_v1`)??''));
+  return v.stage===stage&&BLUEPRINTS[stage]?.id===v.kind&&validPlot(v,site,blueprint)?v:undefined;
+ }catch{return;}
+}
+function villageSite(t){const id=t.lifeSiteId??(t.factoryVillage?59:undefined);return places.find(s=>s.id===id);}
 function lifeBuildings(t){
  const id=t.lifeSiteId??(t.factoryVillage?59:undefined);return id===undefined?0:num(world,`builder_stage_${id}_v1`);
 }
@@ -4678,20 +4685,30 @@ async function villageLifeMenu(p,t){
  if(!t||!lifeNear(p,t))return simple(p,'八界の村の暮らし','文化名所の記録石か、八界にある有効な集落鐘の近くで開いてください。');
  const day=seasonDay(),realm=lifeRealm(t),data=townRecord(t),tier=villageTier(data,lifeBuildings(t)),season=seasonAt(day),fest=festivalAt(day,realm),q=requestStatus(data,day,realm);
  const crisis=data.lifeCrisis?.active?(data.lifeCrisis.type==='monster'?'魔物を警戒中':'嵐への備え'):'なし';
- const ix=await form(p,`${tier.name}｜八界の暮らし`,`${season.year}年目 ${season.name} ${season.dayInSeason}/3日目｜建築 ${tier.structures}/4
+ const ix=await form(p,`${tier.name}｜八界の暮らし`,`${season.year}年目 ${season.name} ${season.dayInSeason}/4日目｜建築 ${tier.structures}/5
 村の備蓄 ${data.goods}/200｜共同小麦 ${data.lifeFood??0}/64｜共同板材 ${data.lifeWood??0}/64
 ${fest.title}：${fest.open?'今日開催':'季節の2日目に開催'}　｜　警戒：${crisis}
 
 村の発展度 ${tier.points}。建物・持ち寄り・祭り・復興の実績で変わります。自然な見た目や住人の行動は実機未検証です。`,[
-  ['みんなの季節のお願い'],['界の四季祭り'],['住人の仕事と共同備蓄'],['危機と復興'],['村の思い出掲示板'],['閉じる']
+  ['みんなの季節のお願い'],['界の四季祭り'],['住人の仕事と共同備蓄'],['危機と復興'],['村の思い出掲示板'],['建築係の自動修理'],['閉じる']
  ]);
  if(ix===undefined||!lifeNear(p,t))return;
  if(ix===0)return villageSharedRequest(p,t);
  if(ix===1)return villageSeasonFestival(p,t);
  if(ix===2)return villageSupplyMenu(p,t);
  if(ix===3)return villageCrisisMenu(p,t);
+ if(ix===5)return villageRepairMenu(p,t);
  if(ix===4){const entries=Array.isArray(townRecord(t).lifeHistory)?townRecord(t).lifeHistory.slice(-20).reverse():[];
   return simple(p,'村の思い出掲示板',entries.length?entries.map(x=>`第${x.day+1}日｜${x.who?x.who+'：':''}${x.text}`).join('\n'):'まだ記録はありません。みんなで村を助けたり、祭りに参加したりしてみましょう。');}
+}
+async function villageRepairMenu(p,t){
+ const site=villageSite(t);if(!site)return simple(p,'自動修理','自動建築係が所属する村で利用できます。');
+ const enabled=!!num(world,`builder_repair_enabled_${site.id}_v1`),plots=BLUEPRINTS.map((_,i)=>readVillagePlot(site,i)).filter(Boolean).length;
+ const ix=await form(p,'建築係の自動修理',`現在：${enabled?'有効':'停止'}｜記録済み建物 ${plots}/5
+
+許可すると、建築係が自分たちの完成記録のある建物だけを見回り、空気になった木材・ガラス・石材・金の目印を少しずつ無料で補修します。既存のブロックは壊しません。改造された建物、人や生物の近く、未読込は待機。水・農作物・樽・機械などは修理しません。
+意図的に撤去した部分も空気なら戻すため、改装前に停止してください。古い完成建物は位置記録がなく対象外です。`,[[enabled?'自動修理を停止':'自動修理を許可'],['閉じる']]);
+ if(ix!==0||!lifeNear(p,t))return;property(world,`builder_repair_enabled_${site.id}_v1`,enabled?0:1);notice(p,enabled?'§e自動修理を停止しました':'§a自動修理を許可しました');
 }
 async function villageSharedRequest(p,t){
  const day=seasonDay(),r=lifeRealm(t),q=requestStatus(townRecord(t),day,r);
@@ -4703,13 +4720,47 @@ async function villageSharedRequest(p,t){
 }
 async function villageSeasonFestival(p,t){
  const day=seasonDay(),f=festivalAt(day,lifeRealm(t));
- const ix=await form(p,f.title,`${f.name}の2日目に開かれる村の祭りです。今は${f.name} ${f.dayInSeason}/3日目。祭りの日は参加者の名前が村の思い出に残り、最初の参加で村の備蓄+2。1人につき村ごとに季節1回です。演出は粒子と音の試作です。`,[['祭りに参加する'],['閉じる']]);
+ const ix=await form(p,f.title,`${f.name}の2日目に開かれる村の祭りです。今は${f.name} ${f.dayInSeason}/4日目。祭りの日は参加者の名前が村の思い出に残り、最初の参加で村の備蓄+2。1人につき村ごとに季節1回です。会場完成後は四隅めぐりと逆回りリレーにも参加できます。`,[['祭りに参加する'],['四隅めぐり'],['逆回りリレー'],['閉じる']]);
+ if((ix===1||ix===2)&&lifeNear(p,t)&&seasonDay()===day)return startVillageGame(p,t,day,ix-1);
  if(ix!==0||!lifeNear(p,t)||seasonDay()!==day)return;
  const next=festivalJoin(townRecord(t),day,lifeRealm(t),p.id,p.name);
  if(!next)return notice(p,'§e開催日ではないか、参加済み／参加人数の上限です');
  saveVillageLife(t,next);
  try{t.d.spawnParticle(`hakkai:climate_${lifeRealm(t)}`,{x:t.l.x+.5,y:t.l.y+2,z:t.l.z+.5});p.playSound('random.levelup',{volume:.6,pitch:1.1});}catch{}
  notice(p,`§d${f.title}に参加しました`);
+}
+function startVillageGame(p,t,day,course){
+ if(!festivalAt(day,lifeRealm(t)).open)return notice(p,'§e祭りの開催日に挑戦できます');
+ const site=villageSite(t),plot=site&&readVillagePlot(site,4);if(!plot)return notice(p,'§e建築係の祭り会場が完成するまで待ってください');
+ try{if(t.d.getBlock({x:plot.at.x,y:plot.at.y+1,z:plot.at.z})?.typeId!=='minecraft:gold_block')return notice(p,'§e会場の中央の目印がありません');}catch{return;}
+ const game=festivalGameStart(day,lifeRealm(t),plot,p,course);if(!game)return notice(p,`§e会場の近くへ：X ${plot.at.x} Z ${plot.at.z}`);
+ game.expires=system.currentTick+(course?1800:1200);game.town=t;state(p).villageGame=game;
+ notice(p,course?'§6逆回りリレー開始！ 90秒以内に四隅を逆順に2周しよう':'§6四隅めぐり開始！ 60秒以内に表示される四隅へ順に走ろう',100);gameHint(p,game);
+}
+function gameHint(p,g){const [x,z]=GAME_CORNERS[GAME_COURSES[g.course][g.step]];notice(p,`§b次の目印 ${g.step+1}/${GAME_COURSES[g.course].length}：X ${g.at.x+x} Z ${g.at.z+z}`,100);}
+function villageGameTick(p,tick){
+ const s=state(p),g=s.villageGame;if(!g)return;const result=festivalGameAdvance(g,p,seasonDay(),tick);
+ if(result==='expired'){s.villageGame=undefined;return notice(p,'§e四隅めぐり終了。もう一度挑戦できます');}
+ if(result==='next')return gameHint(p,g);
+ if(result!=='complete')return;s.villageGame=undefined;
+ if(!lifeNear(p,g.town)||!festivalAt(seasonDay(),g.realm).open)return;
+ const data=townRecord(g.town),cycle=seasonAt(seasonDay()).cycle,all=data.lifeGameCycle4===cycle&&data.lifeGameWinners?data.lifeGameWinners:{},people=Array.isArray(all[g.course])?all[g.course].slice(0,32):[];
+ if(people.includes(p.id)||people.length>=32)return notice(p,'§a完走！ この祭りの記録は登録済みです');
+ saveVillageLife(g.town,addVillageMemory({...data,lifeGameCycle4:cycle,lifeGameWinners:{...all,[g.course]:[...people,p.id]},goods:Math.min(200,(data.goods??0)+1)},seasonDay(),`${g.course?'逆回りリレー':'四隅めぐり'}を完走（村の備蓄+1）`,p.name));
+ notice(p,`§6${g.course?'逆回りリレー':'四隅めぐり'}完走！ 村の備蓄+1、思い出に記録しました`,100);try{p.playSound('random.levelup',{volume:.7,pitch:1.3});}catch{}
+}
+function villageCarryTick(p,site,tick){
+ const town=lifeTownForPlayer(p,site);if(!town||!lifeNear(p,town))return;
+ const route=townRecord(town).lifeRoute;
+ const people=p.dimension.getEntities({families:['hakkai_resident_2'],location:town.l,maxDistance:town.factoryVillage?50:32,closest:8});
+ const candidates=people.filter(e=>e.isValid).sort((a,b)=>String(a.id)<String(b.id)?-1:String(a.id)>String(b.id)?1:0);
+ const active=candidates.some(e=>readCarry(e)?.townKey===town.key);
+ const primary=active?undefined:candidates.find(e=>readCarry(e)===undefined);
+ for(const worker of candidates){
+  const job=readCarry(worker);if(job===null||job&&job.townKey!==town.key||!job&&(!route||worker!==primary)||!permit(worker,40,'carry_work'))continue;
+  const result=carryStep(worker,route,{town,along,report});
+  if(result==='delivered')saveVillageLife(town,addVillageMemory(townRecord(town),seasonDay(),'物資係が実物を樽から樽へ運んだ'));
+ }
 }
 async function villageSupplyMenu(p,t){
  const d=townRecord(t),workers=lifeWorkers(t);
@@ -4718,10 +4769,13 @@ async function villageSupplyMenu(p,t){
 
 寄付した品は抽象備蓄になります。畑守か物資係が近くにいる日、小麦2→村の備蓄3。建築係が近くにいる日、板材2→備蓄2。それぞれ1日1回。寄付備蓄の処理は現物の収穫・運搬や建築資材への消費ではありません。
 
-共同工房：登録した2つの樽だけを使い、近くの物資係は小麦3→パン1、工場村の製材係はオーク原木1→板材4を現物で加工します。入出力樽から6ブロック以内に住人が必要、成功後60秒待機。`,[['小麦4個を寄付'],['オークの板材4個を寄付'],['共同工房の樽を登録'],['工房の登録を解除'],['閉じる']]);
+共同工房：登録した2つの樽だけを使い、近くの物資係は小麦3→パン1、工場村の製材係はオーク原木1→板材4を現物で加工します。入出力樽から6ブロック以内に住人が必要、成功後60秒待機。
+
+運搬：物資係が登録した2樽の間を歩き、実物の小麦・パン・オーク原木・板材を1個ずつ運びます。樽は3〜16ブロック離して登録。住人の持ち物に入るため死亡・移動不能に注意。`,[['小麦4個を寄付'],['オークの板材4個を寄付'],['共同工房の樽を登録'],['工房の登録を解除'],['運搬元と運搬先の樽を登録'],['運搬登録を解除'],['閉じる']]);
  if(!lifeNear(p,t))return;
- if(ix===2){state(p).villageBarrelPick={town:t,phase:0,expires:system.currentTick+600};return notice(p,'§b30秒以内に入力樽、次に出力樽をしゃがんで使ってください',120);}
+ if(ix===2||ix===4){state(p).villageBarrelPick={town:t,phase:0,mode:ix===4?'route':'workshop',expires:system.currentTick+600};return notice(p,'§b30秒以内に入力樽、次に出力樽をしゃがんで使ってください',120);}
  if(ix===3){const data=townRecord(t);delete data.lifeWorkshop;saveVillageLife(t,data);return notice(p,'§e共同工房の樽登録を解除しました');}
+ if(ix===5){const data=townRecord(t);delete data.lifeRoute;saveVillageLife(t,data);return notice(p,'§e運搬登録を解除しました。持ち運び中の品は運搬先へ届けます');}
  if(ix!==0&&ix!==1)return;
  const plan=donation(townRecord(t),ix===0?'food':'wood',seasonDay(),p.name);
  if(!plan)return notice(p,'§e共同備蓄に空きがありません');
@@ -4732,7 +4786,7 @@ async function villageCrisisMenu(p,t){
  const day=seasonDay();let data=townRecord(t),signals;try{signals=lifeSignals(t);}catch{return notice(p,'§e周囲を確認できません');}
  const alert=detectCrisis(data,day,signals);if(alert){saveVillageLife(t,alert);data=alert;}
  const c=data.lifeCrisis,info=!c?.active?'現在警戒はありません。周囲の魔物や季節3日目の雨を観測すると、警戒記録が生まれます。':c.type==='monster'?`魔物への警戒：近くに ${signals.monsters} 体。いなくなったら板材4個で復興を支援できます。`:`嵐への備え：${signals.rain?'雨が続いています。':'雨はやみました。'} 雨がやんだら板材4個で復興を支援できます。`;
- const ix=await form(p,'危機と復興',`${info}\n\nこの仕組みは敵を新たに出現させたり建築物を破壊したりしません。復興は台帳上の備蓄回復で、壊れた建物の自動修理ではありません。`,[['板材4個で復興を支援'],['閉じる']]);
+ const ix=await form(p,'危機と復興',`${info}\n\nこの復興支援は敵を新たに出現させたり建築物を破壊したりしません。備蓄の回復と建築係の自動修理の許可は別です。`,[['板材4個で復興を支援'],['閉じる']]);
  if(ix!==0||!lifeNear(p,t))return;
  try{signals=lifeSignals(t);}catch{return;}
  const plan=recoverCrisis(townRecord(t),seasonDay(),signals,p.name);if(!plan)return notice(p,'§e危険が去っていないか、復興は完了済みです');
@@ -4981,10 +5035,10 @@ safeSub('world','before','playerInteractWithBlock',e=>{
      if(type!=='minecraft:barrel'||!p.isValid||p.dimension.id!==dimension||dimension!==pick.town.d.id||dist(p.location,at)>7){state(p).villageBarrelPick=undefined;return notice(p,'§e樽を選んでください。登録を中止しました');}
      const t=townGet(p.dimension,pick.town.l,true);if(t&&pick.town.lifeSiteId)t.lifeSiteId=pick.town.lifeSiteId;
      if(!t||!lifeNear(p,t)||p.dimension.getBlock(at)?.typeId!=='minecraft:barrel'){state(p).villageBarrelPick=undefined;return notice(p,'§e村か樽を確認できません');}
-     if(pick.phase===0){pick.phase=1;pick.input=at;pick.town=t;return notice(p,'§b次に4ブロック以内の出力樽をしゃがんで使ってください',100);}
+     if(pick.phase===0){pick.phase=1;pick.input=at;pick.town=t;return notice(p,pick.mode==='route'?'§b次に3〜16ブロック先の運搬先樽を選んでください':'§b次に4ブロック以内の出力樽をしゃがんで使ってください',100);}
      state(p).villageBarrelPick=undefined;const setup={input:pick.input,output:at};
-     if(!validWorkshop(t,setup)||!p.dimension.isChunkLoaded(setup.input)||p.dimension.getBlock(setup.input)?.typeId!=='minecraft:barrel')return notice(p,'§e異なる樽を4ブロック以内で指定してください');
-     saveVillageLife(t,{...townRecord(t),lifeWorkshop:setup});notice(p,'§a共同工房の樽を登録しました。登録樽の中身は住人が加工します',120);
+     if(!(pick.mode==='route'?validRoute(t,setup):validWorkshop(t,setup))||!p.dimension.isChunkLoaded(setup.input)||p.dimension.getBlock(setup.input)?.typeId!=='minecraft:barrel')return notice(p,pick.mode==='route'?'§e異なる樽を3〜16ブロック離して指定してください':'§e異なる樽を4ブロック以内で指定してください');
+     saveVillageLife(t,{...townRecord(t),[pick.mode==='route'?'lifeRoute':'lifeWorkshop']:setup});notice(p,pick.mode==='route'?'§a運搬の樽を登録しました。指定された品を物資係が運びます':'§a共同工房の樽を登録しました。登録樽の中身は住人が加工します',120);
    }catch(err){state(p).villageBarrelPick=undefined;report('共同工房の樽登録',err);}});
    return;
  }
@@ -5443,12 +5497,30 @@ function builderWorkTick(p,t){
  for(const worker of workers){
    if(!worker.isValid||!permit(worker,40,'builder_work')||builderPaused(worker))continue;
    let job=readBuilderProject(worker);
-   if(job===undefined){autoBuilderPlan(worker,{sites:places,world,num,property});job=readBuilderProject(worker);}
+   if(job===undefined){
+     const home=builderHome(worker),site=places.find(s=>s.id===home&&(s.id===59||s.kind==='culture'));
+     if(site&&num(world,`built_${home}`)&&num(world,`builder_stage_${home}_v1`)>0&&num(world,`builder_repair_enabled_${home}_v1`)){
+       const i=(Number(worker.getDynamicProperty(ns+'repair_cursor_v1'))||0)%BLUEPRINTS.length,plot=readVillagePlot(site,i);
+       if(plot){
+         const delta=dist(worker.location,plot.at);
+         if(delta>14){
+           if(!p.dimension.getEntities({families:['monster'],location:worker.location,maxDistance:9,closest:1}).length)try{along(worker,plot.at.x-worker.location.x,plot.at.z-worker.location.z,.13);}catch{}
+           continue;
+         }
+         const result=repairPlotStep(worker,plot,site,{blueprint,report});
+         if(result==='repaired'||result==='occupied')continue;
+       }
+       worker.setDynamicProperty(ns+'repair_cursor_v1',(i+1)%BLUEPRINTS.length);
+     }
+     autoBuilderPlan(worker,{sites:places,world,num,property});job=readBuilderProject(worker);
+   }
    if(!job)continue;
    const finish=(e,j)=>{
      const home=builderHome(e),site=places.find(s=>s.id===home&&(s.id===59||s.kind==='culture'));
      if(!site||j.homeId!==home||!Number.isInteger(j.stage)||BLUEPRINTS[j.stage]?.id!==j.kind)return;
      const stageKey=`builder_stage_${home}_v1`,current=num(world,stageKey);
+     // Record only verified completed plots. Older unrecorded plots are never guessed.
+     property(world,`builder_plot_${home}_${j.stage}_v1`,JSON.stringify({at:j.at,kind:j.kind,stage:j.stage}));
      if(current<=j.stage)property(world,stageKey,j.stage+1);
      const town=site.kind==='culture'?cultureTownForSite(e.dimension,site):townNear(e.dimension,j.at);
      if(town&&(town.lifeSiteId||['minecraft:bell',ns+'town_bell'].includes(town.d.getBlock(town.l)?.typeId))){
@@ -5623,8 +5695,8 @@ safeSub('world','before','playerInteractWithEntity',e=>{
      const near=()=>p.isValid&&worker.isValid&&p.dimension.id===worker.dimension.id&&dist(p.location,worker.location)<6&&[GameMode.Survival,GameMode.Creative].includes(p.getGameMode());
      if(!near())return;
      const job=readBuilderProject(worker),paused=builderPaused(worker),home=builderHome(worker);
-     const status=job?`${BLUEPRINTS.find(b=>b.id===job.kind)?.name}：${job.i}/${blueprint(job.kind).length} ${job.done?'完成':'建築中・障害があれば待機'}\n中心 X ${job.at.x} Y ${job.at.y} Z ${job.at.z}`:job===null?'保存された作業を読み取れません。':home===undefined?'この建築係は村に所属していないため、自動建築しません。':num(world,`builder_stage_${home}_v1`)>=BLUEPRINTS.length?'この村の4種類の建築計画は完了しました。':'安全な空き地を探しています。';
-     const ix=await form(p,'建築係｜村づくり',`${status}\n自動建築：${paused?'停止中':'有効'}\n\n建築係は村の空き地に小さな家・加工場・農場・交流施設を各1つ目指します。既存ブロックは壊さず、範囲に人や生物がいる間は待機。建築資材は消費しない試作です。停止・中止しても設置済みブロックは残ります。`,[[paused?'自動建築を再開':'自動建築を停止'],['停止して現在の作業記録を消す'],['閉じる']]);
+     const status=job?`${BLUEPRINTS.find(b=>b.id===job.kind)?.name}：${job.i}/${blueprint(job.kind).length} ${job.done?'完成':'建築中・障害があれば待機'}\n中心 X ${job.at.x} Y ${job.at.y} Z ${job.at.z}`:job===null?'保存された作業を読み取れません。':home===undefined?'この建築係は村に所属していないため、自動建築しません。':num(world,`builder_stage_${home}_v1`)>=BLUEPRINTS.length?'この村の5種類の建築計画は完了しました。':'安全な空き地を探しています。';
+     const ix=await form(p,'建築係｜村づくり',`${status}\n自動建築：${paused?'停止中':'有効'}\n\n建築係は村の空き地に小さな家・加工場・農場・交流施設・祭り会場を各1つ目指します。既存ブロックは壊さず、範囲に人や生物がいる間は待機。建築資材は消費しない試作です。停止・中止しても設置済みブロックは残ります。`,[[paused?'自動建築を再開':'自動建築を停止'],['停止して現在の作業記録を消す'],['閉じる']]);
      if(!near())return;
      if(ix===0){setBuilderPaused(worker,!paused);notice(p,paused?'§a建築係を再開しました':'§e建築係を停止しました');}
      if(ix===1){setBuilderPaused(worker,true);clearBuilderProject(worker);notice(p,'§e作業を中止しました。設置済みブロックは残ります');}
@@ -5640,9 +5712,10 @@ safeSub('world','before','playerInteractWithEntity',e=>{
      const village=lifeTownForPlayer(p),season=seasonAt(seasonDay());
      const mood=village?`\n今は${season.name}。ここは${villageTier(townRecord(village),lifeBuildings(village)).name}。${festivalAt(season.day,lifeRealm(village)).open?'今日は祭りの日です。':'みんなで暮らしを支えています。'}`:'';
      const body=`${resident.lore}\n\n${resident.description}${mood}\n\nこの住人はバニラ村人ではなく、繁殖・通常交易・就職はしません。`;
-     const ix=await form(p,resident.name,`${body}${resident.role==='artisan'?`\n\nエメラルド1個 → ${resident.itemName} ${resident.count}個`:''}`, [...(resident.role==='artisan'?[['交換する']]:[]),...(village?[['村の暮らしと掲示板']]:[]),['閉じる']]);
+     const ix=await form(p,resident.name,`${body}${resident.role==='artisan'?`\n\nエメラルド1個 → ${resident.itemName} ${resident.count}個`:''}`, [...(resident.role==='artisan'?[['交換する'],['運搬中の品を受け取る']]:[]),...(village?[['村の暮らしと掲示板']]:[]),['閉じる']]);
      if(!near())return;
-     if(village&&ix===(resident.role==='artisan'?1:0))return villageLifeMenu(p,village);
+     if(resident.role==='artisan'&&ix===1){if(retrieveCargo(target,space(p),report))notice(p,'§a運搬中の品を受け取りました');else notice(p,'§e運搬中の品がないか持ち物がいっぱいです');return;}
+     if(village&&ix===(resident.role==='artisan'?2:0))return villageLifeMenu(p,village);
      if(resident.role!=='artisan'||ix!==0)return;
      if(friendlyTrade(space(p),new ItemStack(resident.item,resident.count),report))notice(p,`§a${resident.itemName}を受け取りました`);
      else notice(p,'§eエメラルド・空き容量を確認してください。処理失敗時は持ち物も確認してください');
@@ -5968,6 +6041,8 @@ system.runInterval(()=>{
          if(site?.kind==='culture'||site?.id===59)foundBuilder({site,world,dimension:p.dimension,num,property,findFloor:safeNear,report});
          builderWorkTick(p,t);
          lifeTick(p,site,t);
+         villageCarryTick(p,site,t);
+         villageGameTick(p,t);
          if([GameMode.Survival,GameMode.Adventure].includes(p.getGameMode()))friendlySupportTick(p,s,t);
        }
        let profile;try{profile=survey(p);}catch{}

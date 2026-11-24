@@ -61,6 +61,10 @@
             "sprint_speed_multiplier": 1.2
           }
         ]
+      },
+      "minecraft:inventory": {
+        "inventory_size": 1,
+        "container_type": "inventory"
       }
     }
   }

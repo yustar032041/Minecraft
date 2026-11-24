@@ -4,7 +4,8 @@ export const BLUEPRINTS=[
  {id:'house',name:'小さな家',desc:'屋根と入口、作業台と収納樽。ベッドは別途設置。'},
  {id:'factory',name:'小さな加工場',desc:'屋外の破砕機・風力回転機・入出力樽。'},
  {id:'farm',name:'共同農場',desc:'囲われた水源、耕地と小麦の小さな畑。'},
- {id:'hall',name:'交流施設',desc:'屋根のある広場、樽・コンポスター・灯り。'}
+ {id:'hall',name:'交流施設',desc:'屋根のある広場、樽・コンポスター・灯り。'},
+ {id:'festival',name:'四季祭りの会場',desc:'四隅の灯りと中央の目印がある祭り広場。'}
 ];
 const KEY='hakkai:builder_project_v1';
 const HOME='hakkai:builder_home_v1',PAUSED='hakkai:builder_paused_v1';
@@ -22,7 +23,10 @@ export function blueprint(id){
  const blocks=[],add=(x,y,z,type,states)=>blocks.push({x,y,z,type,...(states?{states}:{})});
  if(!BLUEPRINTS.some(p=>p.id===id))return [];
  for(let x=-3;x<=3;x++)for(let z=-3;z<=3;z++)add(x,0,z,'minecraft:oak_planks');
- if(id==='farm'){
+ if(id==='festival'){
+  for(const [x,z] of [[-3,-3],[3,-3],[3,3],[-3,3]]){add(x,1,z,'minecraft:oak_log');add(x,2,z,'minecraft:lantern');}
+  add(0,1,0,'minecraft:gold_block');
+ }else if(id==='farm'){
   for(let x=-3;x<=3;x++)for(let z=-3;z<=3;z++){
    if(Math.abs(x)===3||Math.abs(z)===3)add(x,1,z,'minecraft:stone_bricks');
    else if(x!==0||z!==0)add(x,1,z,'minecraft:farmland',{moisturized_amount:7});
