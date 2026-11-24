@@ -17,7 +17,7 @@ const c={INDUSTRY_CHAPTERS,claimIndustryGuide,space:deps.space,getItem:deps.getI
 c.guideSelect=(p,title,body,rows)=>selectGuidePage(p,title,body,rows,c.form);
 vm.createContext(c);vm.runInContext(src.slice(a,z),c);
 has=false;full=false;choices=[2];await c.guide(player);assert.equal(given,2);assert.ok(display[0].rows[2][0].includes('工業ガイド本を受け取る'));
-choices=[3,0];await c.guide(player);assert.deepEqual(routes,[12],'ordinary guide section indices still route correctly');
+choices=[4,0];await c.guide(player);assert.deepEqual(routes,[12],'ordinary guide section indices still route correctly');
 choices=[1,0,7];await c.industrialGuide(player);assert.ok(display.some(x=>x.title.includes('鉱石を2倍にする')));
 const use=src.slice(src.indexOf('function use(e){'),src.indexOf(" if(id===ns+'warden_sigil')",src.indexOf('function use(e){')))+'\n}';
 let used=false;const useCtx={ns:'hakkai:',GameMode:{Spectator:'spectator'},state:()=>({useTick:-10}),system:{currentTick:100},gear:new Map(),menu:(_,fn)=>{used=fn===useCtx.industrialGuide;},guide:()=>{},industrialGuide:()=>{}};

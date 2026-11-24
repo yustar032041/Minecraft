@@ -1,3 +1,4 @@
+import { VILLAGE_GUIDE_CHAPTERS } from './village_guide.js';
 import { validPlot, repairPlotStep, validRoute, readCarry, carryStep, retrieveCargo, festivalGameStart, festivalGameAdvance, GAME_CORNERS, GAME_COURSES } from './village_projects.js';
 import { seasonAt, festivalAt, villageTier, requestStatus, contributeRequest, festivalJoin, donation, workDay, detectCrisis, recoverCrisis, addVillageMemory, depositToVillage, validWorkshop, workshopStep } from './village_life.js';
 import { BUILDER_IDS, BLUEPRINTS, blueprint, readBuilderProject, stepBuilderProject, clearBuilderProject, foundBuilder, builderHome, builderPaused, setBuilderPaused, autoBuilderPlan, constructionCredit } from './village_builders.js';
@@ -4249,6 +4250,15 @@ async function colossusGuide(p){
  if(choice===1)return mobSystem?.summonColossus(p);
  if(choice===0)return simple(p,'§4終焉の八界王｜攻略帳','三段階の巨大ボス。八界断ち、星骸落とし、時環封じ、蝕光爆ぜ、影兵招来、時空裂波、終焉咆哮、逆刻再編を使う。\n\n赤い予告輪の外へ退避し、最終形態では回復行動を止めるため攻撃を続けよう。討伐すると時蝕核を獲得できる。');
 }
+async function villageGuide(p){
+ while(p.isValid){
+  const chosen=await guideSelect(p,'§6村と四季のガイド','§7知りたい項目を選んでね。村の画面の開き方から、祭り・仕事・運搬・修理まで説明します。',VILLAGE_GUIDE_CHAPTERS.map(([title])=>[title]));
+  if(chosen.closed||chosen.back)return;
+  const chapter=VILLAGE_GUIDE_CHAPTERS[chosen.index];if(!chapter)return;
+  const action=await form(p,`§6${chapter[0]}`,chapter[1],[['§b項目一覧に戻る'],['§8本を閉じる']]);
+  if(action!==0)return;
+ }
+}
 async function industrialGuide(p){
  while(p.isValid){
   const chosen=await guideSelect(p,'§6工業ガイド本','§7章を選んでください。工業の追加や変更に合わせて内容を更新します。',INDUSTRY_CHAPTERS.map(([title])=>[title]));
@@ -4268,6 +4278,7 @@ async function guide(p){
    ['§b旅の地図\n§7行き先を選ぶ',itemTexture('return_stone')],
    ['§aサバイバル実践ガイド\n§7はじめての冒険はこちら',itemTexture('trail_ration')],
    ['§e工業ガイド本を受け取る\n§7工場の動力・加工・搬送',itemTexture('industrial_guide')],
+   ['§a村と四季のガイド\n§7祭り・運搬・自動修理',itemTexture('guide')],
    ...GUIDE_SECTIONS.map(section=>[`§6${section.title}\n§7${section.hint}`,itemTexture(section.icon)]),
    ['§8本を閉じる']
   ];
@@ -4276,7 +4287,8 @@ async function guide(p){
   if(choice===0)return dispatchGuide(p,0);
   if(choice===1)return dispatchGuide(p,52);
   if(choice===2)return claimIndustryGuide(p,{space,getItem,give,notice,ns});
-  const section=GUIDE_SECTIONS[choice-3];if(!section)return;
+  if(choice===3)return villageGuide(p);
+  const section=GUIDE_SECTIONS[choice-4];if(!section)return;
   const sectionRows=section.ids.map(id=>[`§r${GUIDE_ENTRIES[id]}`,itemTexture(GUIDE_ICONS[id])]);
   const picked=await guideSelect(p,`§6風の旅帳｜${section.title}`,`§7${section.hint}`,sectionRows);
   if(picked.closed)return;
@@ -4703,12 +4715,13 @@ ${fest.title}：${fest.open?'今日開催':'季節の2日目に開催'}　｜　
 }
 async function villageRepairMenu(p,t){
  const site=villageSite(t);if(!site)return simple(p,'自動修理','自動建築係が所属する村で利用できます。');
- const enabled=!!num(world,`builder_repair_enabled_${site.id}_v1`),plots=BLUEPRINTS.map((_,i)=>readVillagePlot(site,i)).filter(Boolean).length;
+ const enabled=!!num(world,`builder_repair_enabled_${site.id}_v2`),plots=BLUEPRINTS.map((_,i)=>readVillagePlot(site,i)).filter(Boolean).length;
  const ix=await form(p,'建築係の自動修理',`現在：${enabled?'有効':'停止'}｜記録済み建物 ${plots}/5
 
-許可すると、建築係が自分たちの完成記録のある建物だけを見回り、空気になった木材・ガラス・石材・金の目印を少しずつ無料で補修します。既存のブロックは壊しません。改造された建物、人や生物の近く、未読込は待機。水・農作物・樽・機械などは修理しません。
-意図的に撤去した部分も空気なら戻すため、改装前に停止してください。古い完成建物は位置記録がなく対象外です。`,[[enabled?'自動修理を停止':'自動修理を許可'],['閉じる']]);
- if(ix!==0||!lifeNear(p,t))return;property(world,`builder_repair_enabled_${site.id}_v1`,enabled?0:1);notice(p,enabled?'§e自動修理を停止しました':'§a自動修理を許可しました');
+許可すると、建築係は完成記録のある自分たちの建物を無料で補修します。木材・ガラスのほか、壊れた樽・機械・照明・耕地・水・小麦も設計図に従って空気の場所に再設置。既存ブロックは壊しません。
+樽は空の新品で、中身は復元できません。機械の状態も初期状態です。再設置で機械が動き始めることがあります。水は囲いと床が揃い、人や生物が範囲にいない時だけ復旧。小麦は成長0からです。
+改造された建物、支え不足、人の近く、未読込は待機。意図的に撤去した部分も戻すため改装前に停止してください。古い完成建物は位置記録がなく対象外。水・機械・保護は実機未検証、先にバックアップしてください。`,[[enabled?'自動修理を停止':'自動修理を許可'],['閉じる']]);
+ if(ix!==0||!lifeNear(p,t))return;property(world,`builder_repair_enabled_${site.id}_v2`,enabled?0:1);notice(p,enabled?'§e自動修理を停止しました':'§a自動修理を許可しました');
 }
 async function villageSharedRequest(p,t){
  const day=seasonDay(),r=lifeRealm(t),q=requestStatus(townRecord(t),day,r);
@@ -5499,7 +5512,7 @@ function builderWorkTick(p,t){
    let job=readBuilderProject(worker);
    if(job===undefined){
      const home=builderHome(worker),site=places.find(s=>s.id===home&&(s.id===59||s.kind==='culture'));
-     if(site&&num(world,`built_${home}`)&&num(world,`builder_stage_${home}_v1`)>0&&num(world,`builder_repair_enabled_${home}_v1`)){
+     if(site&&num(world,`built_${home}`)&&num(world,`builder_stage_${home}_v1`)>0&&num(world,`builder_repair_enabled_${home}_v2`)){
        const i=(Number(worker.getDynamicProperty(ns+'repair_cursor_v1'))||0)%BLUEPRINTS.length,plot=readVillagePlot(site,i);
        if(plot){
          const delta=dist(worker.location,plot.at);
@@ -5507,7 +5520,7 @@ function builderWorkTick(p,t){
            if(!p.dimension.getEntities({families:['monster'],location:worker.location,maxDistance:9,closest:1}).length)try{along(worker,plot.at.x-worker.location.x,plot.at.z-worker.location.z,.13);}catch{}
            continue;
          }
-         const result=repairPlotStep(worker,plot,site,{blueprint,report});
+         const result=repairPlotStep(worker,plot,site,{blueprint,resolve:(id,states)=>BlockPermutation.resolve(id,states),report});
          if(result==='repaired'||result==='occupied')continue;
        }
        worker.setDynamicProperty(ns+'repair_cursor_v1',(i+1)%BLUEPRINTS.length);

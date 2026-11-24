@@ -8,7 +8,7 @@ const key=p=>`${p.x},${p.y},${p.z}`,site={id:61,dim:0,x:0,z:0};
 {
  const at={x:0,y:88,z:0},plot={at,kind:'house',stage:0},blocks=new Map(),entities=[];
  for(const q of blueprint('house'))blocks.set(key({x:q.x,y:88+q.y,z:q.z}),q.type);
- let loaded=true;const d={id:'hakkai:realm_0',isChunkLoaded:()=>loaded,getEntities:()=>entities,getBlock(p){const type=blocks.get(key(p))??'minecraft:air';return {typeId:type,isAir:type==='minecraft:air',setType(t){blocks.set(key(p),t);}};}};
+ let loaded=true;const d={id:'hakkai:realm_0',isChunkLoaded:()=>loaded,getEntities:()=>entities,getBlock(p){const type=blocks.get(key(p))??(p.y===87?'minecraft:stone':'minecraft:air');return {typeId:type,isAir:type==='minecraft:air',isSolid:!['minecraft:air','minecraft:water','minecraft:wheat'].includes(type),isLiquid:type==='minecraft:water',setType(t){blocks.set(key(p),t);},setPermutation(v){blocks.set(key(p),v.type);}};}};
  const worker={isValid:true,dimension:d,location:{x:5,y:88,z:0}};
  assert.ok(validPlot(plot,site,blueprint));assert.equal(validPlot({...plot,at:{...at,x:100}},site,blueprint),false);
  assert.equal(repairPlotStep(worker,plot,site,{blueprint}),'intact');
@@ -16,7 +16,7 @@ const key=p=>`${p.x},${p.y},${p.z}`,site={id:61,dim:0,x:0,z:0};
  blocks.set(key({x:3,y:89,z:3}),'minecraft:diamond_block');assert.equal(repairPlotStep(worker,plot,site,{blueprint}),'modified');assert.equal(blocks.has(key(part)),false);
  blocks.set(key({x:3,y:89,z:3}),'minecraft:oak_planks');loaded=false;assert.equal(repairPlotStep(worker,plot,site,{blueprint}),'unloaded');loaded=true;
  assert.equal(repairPlotStep(worker,plot,site,{blueprint}),'repaired');assert.equal(blocks.get(key(part)),'minecraft:oak_planks');
- blocks.delete(key({x:2,y:89,z:-2}));assert.equal(repairPlotStep(worker,plot,site,{blueprint}),'intact','container is never re-created');
+ blocks.delete(key({x:2,y:89,z:-2}));assert.equal(repairPlotStep(worker,plot,site,{blueprint}),'repaired','missing barrel restored');assert.equal(blocks.get(key({x:2,y:89,z:-2})),'minecraft:barrel');assert.equal(repairPlotStep(worker,plot,site,{blueprint}),'intact','existing barrel never overwritten');
  worker.location.x=30;assert.equal(repairPlotStep(worker,plot,site,{blueprint}),'invalid');
 }
 {

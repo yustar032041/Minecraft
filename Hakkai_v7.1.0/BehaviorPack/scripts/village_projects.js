@@ -2,11 +2,14 @@
 // barrels. They never clear or replace a non-air block.
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z);
 const coord=p=>p&&['x','y','z'].every(k=>Number.isSafeInteger(p[k])&&Math.abs(p[k])<30000000);
-const repairable=new Set(['minecraft:oak_planks','minecraft:oak_log','minecraft:glass','minecraft:stone_bricks','minecraft:gold_block']);
+// Only blocks present in one of our known builder blueprints. Restored
+// containers are empty and machines use their blueprint defaults; existing
+// containers, contents, states and crops are never overwritten.
+const repairable=new Set(['minecraft:oak_planks','minecraft:oak_log','minecraft:glass','minecraft:stone_bricks','minecraft:gold_block','minecraft:barrel','minecraft:crafting_table','minecraft:composter','minecraft:lantern','minecraft:farmland','minecraft:wheat','minecraft:water','hakkai:crusher','hakkai:wind_rotor']);
 export function validPlot(plot,site,blueprint){
  return !!(plot&&coord(plot.at)&&Number.isInteger(plot.stage)&&plot.stage>=0&&plot.stage<5&&blueprint(plot.kind).length&&Math.abs(plot.at.x-site.x)<=40&&Math.abs(plot.at.z-site.z)<=40&&plot.at.y===88);
 }
-export function repairPlotStep(worker,plot,site,{blueprint,report=()=>{}}){
+export function repairPlotStep(worker,plot,site,{blueprint,resolve,report=()=>{}}){
  if(!worker?.isValid||!validPlot(plot,site,blueprint)||worker.dimension.id!==`hakkai:realm_${site.dim}`||distance(worker.location,plot.at)>16)return 'invalid';
  const d=worker.dimension,plan=blueprint(plot.kind);
  try{
@@ -17,11 +20,34 @@ export function repairPlotStep(worker,plot,site,{blueprint,report=()=>{}}){
    const at={x:plot.at.x+q.x,y:plot.at.y+q.y,z:plot.at.z+q.z};
    if(!d.isChunkLoaded(at))return 'unloaded';const b=d.getBlock(at);if(!b)return 'unloaded';
    if(!b.isAir&&b.typeId!==q.type)return 'modified';
-   if(!missing&&b.isAir&&repairable.has(q.type))missing={at,type:q.type};
+   if(!missing&&b.isAir&&repairable.has(q.type))missing={at,type:q.type,states:q.states,y:q.y};
   }
   if(!missing)return 'intact';
   if(d.getEntities({location:missing.at,maxDistance:2}).some(e=>e.isValid&&distance(e.location,missing.at)<1.6))return 'occupied';
-  const b=d.getBlock(missing.at);if(!b?.isAir)return 'modified';b.setType(missing.type);return 'repaired';
+  const get=p=>d.isChunkLoaded(p)?d.getBlock(p):undefined;
+  const below=get({x:missing.at.x,y:missing.at.y-1,z:missing.at.z});
+  if(!below)return 'unloaded';
+  if(missing.type==='minecraft:wheat'&&below.typeId!=='minecraft:farmland')return 'support';
+  if(['minecraft:barrel','minecraft:crafting_table','minecraft:composter','minecraft:lantern','minecraft:farmland','hakkai:crusher','hakkai:wind_rotor'].includes(missing.type)&&!below.isSolid)return 'support';
+  if(missing.y===0&&(!below.isSolid||below.isLiquid))return 'support';
+  if(missing.type==='minecraft:water'){
+   // Only the farm's original enclosed basin can receive water. Check the
+   // entire floor, 24 farmland cells and complete outer wall, not merely the
+   // four adjacent blocks, before creating a source. No outside drain can be
+   // intentionally opened through one of the original basin cells.
+   if(plot.kind!=='farm')return 'water_guard';
+   for(let x=-3;x<=3;x++)for(let z=-3;z<=3;z++){
+    const base=get({x:plot.at.x+x,y:plot.at.y,z:plot.at.z+z});
+    if(!base)return 'unloaded';if(base.typeId!=='minecraft:oak_planks')return 'water_guard';
+    if(x||z){const side=get({x:plot.at.x+x,y:plot.at.y+1,z:plot.at.z+z});
+     if(!side)return 'unloaded';if(side.typeId!==(Math.abs(x)===3||Math.abs(z)===3?'minecraft:stone_bricks':'minecraft:farmland'))return 'water_guard';}
+   }
+   const center={x:plot.at.x+.5,y:plot.at.y+1,z:plot.at.z+.5};
+   if(d.getEntities({location:center,maxDistance:9}).some(e=>e.isValid&&Math.abs(e.location.x-center.x)<4.5&&Math.abs(e.location.z-center.z)<4.5&&e.location.y>=plot.at.y-2&&e.location.y<=plot.at.y+5))return 'occupied';
+  }
+  const b=get(missing.at);if(!b?.isAir)return 'modified';
+  if(missing.states){if(typeof resolve!=='function')return 'invalid';b.setPermutation(resolve(missing.type,missing.states));}else b.setType(missing.type);
+  return 'repaired';
  }catch(e){report('建築係の修理',e);return 'error';}
 }
 export function validRoute(t,route){
