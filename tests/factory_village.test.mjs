@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';import vm from 'node:vm';
+import {factoryResidentBonus} from '../Hakkai_v7.1.0/BehaviorPack/scripts/realm_culture.js';
 import {foundFactoryResident,FACTORY_RESIDENTS} from '../Hakkai_v7.1.0/BehaviorPack/scripts/factory_village.js';
 import {places,biomes,families} from '../Hakkai_v7.1.0/BehaviorPack/scripts/data.js';
 import {NEW_BIOMES,newerBiomeAt,extraBiomeAt} from '../Hakkai_v7.1.0/BehaviorPack/scripts/extra_biomes.js';
@@ -26,7 +27,7 @@ const main=fs.readFileSync('Hakkai_v7.1.0/BehaviorPack/scripts/main.js','utf8');
 // factory transaction calls it, and its goods feed the same town record.
 const src=main.slice(main.indexOf('function production(b,count){'),main.indexOf('function gatherTown('));
 let saved;const active={data:{goods:5,work:0},factoryVillage:true};
-const ctx={ns:'hakkai:',townNear:()=>active,townRecord:t=>t.data,townSave:(_,v)=>saved=v,world:{getAbsoluteTime:()=>123},system:{currentTick:20},state:()=>({})};
+const ctx={factoryResidentBonus,ns:'hakkai:',townNear:()=>active,townRecord:t=>t.data,townSave:(_,v)=>saved=v,world:{getAbsoluteTime:()=>123,getTimeOfDay:()=>6000},system:{currentTick:20},state:()=>({})};
 vm.createContext(ctx);vm.runInContext(src,ctx);
 ctx.production({x:4,y:88,z:4,typeId:'hakkai:crusher',dimension:{id:'hakkai:realm_0',spawnParticle(){},playSound(){},getPlayers(){return[];}},permutation:{getState(){return 0},withState(){return {}}},setPermutation(){}},2);
 assert.equal(saved.goods,7);assert.equal(saved.work,123);

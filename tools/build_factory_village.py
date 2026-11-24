@@ -41,6 +41,18 @@ for cx in [-36,-16,16,36]:
    if abs(x-cx)>4:put(x,15,cz+6,path)
   for z in range(min(0,cz+6),max(0,cz+6)+1):
    if abs(z-cz)>5:put(cx,15,z,path)
+# Two irrigated public fields. Sources are enclosed by soil at water level;
+# the lower stone/dirt layer provides a solid basin. Existing villages are not
+# edited when the structure asset changes.
+farmland=block('minecraft:farmland',{'moisturized_amount':Int(7)})
+wheat=block('minecraft:wheat',{'growth':Int(7)})
+water=block('minecraft:water',{'liquid_depth':Int(0)})
+for x0 in (-12,6):
+ for x in range(x0,x0+8):
+  for z in range(12,23):
+   put(x,15,z,farmland)
+   if x%2==0 and z%2==0:put(x,16,z,wheat)
+ for z in range(13,22):put(x0+3,15,z,water)
 # Outdoor, unroofed working machines: input west, output east, rotors north/south.
 put(0,16,0,bell)
 for z,machine,rz in [(4,crusher,5),(-4,saw,-5)]:

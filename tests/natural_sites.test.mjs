@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';import fs from 'node:fs';
 import {places} from '../Hakkai_v7.1.0/BehaviorPack/scripts/data.js';
 import {isNaturalSite,siteBounds,inSite,siteIntersects,blendSiteHeight,FRONTIER_SITES,SKY_FRONTIER_SITES} from '../Hakkai_v7.1.0/BehaviorPack/scripts/natural_sites.js';
 import {setupFrontierWorlds} from '../Hakkai_v7.1.0/BehaviorPack/scripts/frontier_worlds.js';
-const natural=places.filter(isNaturalSite);assert.equal(natural.length,42);assert.equal(natural.filter(s=>s.kind==='frontier').length,8);assert.equal(natural.filter(s=>s.kind==='island').length+natural.filter(s=>s.id>=9&&s.id<=20).length,32);
-const names=new Set(natural.map(s=>s.id));assert.equal(names.size,42);
+const natural=places.filter(isNaturalSite);assert.equal(natural.length,50);assert.equal(natural.filter(s=>s.kind==='frontier').length,8);assert.equal(natural.filter(s=>s.kind==='island').length+natural.filter(s=>s.id>=9&&s.id<=20).length,32);
+const names=new Set(natural.map(s=>s.id));assert.equal(names.size,50);
 for(const s of natural){
  assert.ok(fs.existsSync(`Hakkai_v7.1.0/BehaviorPack/structures/hakkai/site_${s.id}.mcstructure`));
  const b=siteBounds(s);assert.ok(inSite(s,b.x0,b.z0));assert.ok(!inSite(s,b.x0-1,b.z0));assert.ok(siteIntersects(s,b.x0-1,b.z0,b.x0,b.z0));assert.equal(siteIntersects(s,b.x0-16,b.z0-16,b.x0-1,b.z0-1),false);

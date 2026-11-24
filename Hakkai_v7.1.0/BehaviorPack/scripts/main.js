@@ -1,3 +1,4 @@
+import { CULTURE_SITES, CULTURE_PEOPLE, cultureResidentIdentity, foundCultureResident, factoryResidentRole, factoryResidentBonus } from './realm_culture.js';
 import { FACTORY_VILLAGE_ID, foundFactoryResident } from './factory_village.js';
 import { farmStep } from './factory_farm.js';
 import { itemDuctStep } from './factory_ducts.js';
@@ -2801,6 +2802,7 @@ const chapters=[
  ['はじめに','ガイド本は持ち物から「使う」で開きます。迷ったらこの本の章を順に読んでね。風見の帰還石を使うと、風見台・ベッド・登録地点・元の世界に帰れます。風見台で旅の地図を使い、まずは始まりの草原へ。'],
  ['世界の生成とシード','8つの界はそれぞれ別の空間です。到着すると、今いる場所を中心に周囲4チャンク分（最大9×9チャンク）の地形を先に準備します。地形の高さ・山脈・谷・島・地表素材はワールドシードと界ごとの計算で決まり、同じワールドの同じ座標なら同じ地形になります。各界には旧12種に加えて新5種ずつ、合計136種のスクリプト式シード地形帯があり、歩き続けるほど新しい地形帯が続きます。拠点・街道・既存建築のある区画は上書きしません。'],
  ['新しい地形帯と川','各界に5種類ずつ新しい地形帯を追加。界の土や植生、岩・結晶の景観が現れ、自然調査ノートにも記録されます。これはスクリプトで分類した地形帯で、エンジン本来のバイオーム変更ではありません。6界の谷では、地形条件が合えば短い川区画に水が入ります。氷の界は表面が凍ります。土手と床を確認して水を置くため川は区画ごとに途切れ、湖や海への連結はまだありません。生成済み区画は変更しません。'],
+ ['八界の暮らしと名所','八界の人々が残した風車・文庫・隊商の迷路・氷宮・鍛冶場・地下庭・空の観測庭・待合駅があります。名所にある記録石を使うと、その土地の約束と歴史を読み、旅の記録にも残せます。名所ではモブ生成が有効なら語り手が各2人まで一度だけ現れます。しゃがんで話しかけると土地の話、立って話しかけると通常の取引です。予定地は新規の空き区画に限られます。'],
  ['八界の大景観','新しい空き区画では、草原の風車の飾り・森の巨木・砂の石門や化石・氷晶塔・雷石の尖塔・地下の光る茸や天井の鍾乳状の石・空の雲の塔・時の時計飾りなどが現れます。各界の丘や地表の色も違います。飾りの風車や時計は動きません。シードと地形により出現しない場所もあり、旧地形や建物は改造しません。'],
  ['工場村と観測遺跡','風車工場村は草原の界、雷雲の観測遺跡は雷の界の新しい探索地です。手引きで選ぶと予定座標を表示します。工場村では鐘が動く間に住人が少しずつ現れます。破砕機と製材機の西側の樽に素材を入れ、東側の樽に空きを作ると、風力で加工し、成功した生産量が集落の備蓄に加わります。備蓄は住人の維持や成長に使います。生成条件が合わない場合は現れません。'],
  ['最初のサバイバル','①ガイド本から旅の地図を開き、始まりの草原へ。②木・石・食料を集め、作業台とかまどを用意。③畑・釣り・牧場・採集を使って食料を確保。④スタミナ表示が減ったら走るのをやめて回復。⑤魔法を使うと魔力を消費するので、使いどころを考えよう。⑥ベッドでリスポーン地点を設定し、風見の帰還石も手元に置いておくと安心です。最初から守護獣に挑まず、食料と装備を整えてから遠征しよう。'],
@@ -3005,6 +3007,7 @@ async function help(p){
  const ix=await form(p,'風記の手引き','調べたい章を選んでね。',chapters.map(x=>[x[0]]));
  if(ix!==undefined){
   let body=chapters[ix][1];
+  if(chapters[ix][0]==='八界の暮らしと名所')body+='\n\n'+CULTURE_SITES.map(s=>`${s.dim+1}界 ${s.name}：X ${s.x} / Z ${s.z}（${num(world,`built_${s.id}`)?'配置済み':'予定地'}）`).join('\n');
   if(chapters[ix][0]==='工場村と観測遺跡'){
    const v=travelSites.get(59),o=travelSites.get(60);
    body+=`\n\n草原の界：工場村の予定地 X ${v.x} / Z ${v.z}\n雷の界：観測遺跡の予定地 X ${o.x} / Z ${o.z}\n予定地は空き区画に限ります。すでに地形や建築がある場合は保護して配置しません。徒歩で近づいて生成を待ってください。`;
@@ -4456,8 +4459,8 @@ function production(b,count){
  try{b.dimension.spawnParticle(b.typeId===ns+'kiln'?'hakkai:climate_2':b.typeId===ns+'washer'?'hakkai:climate_3':'hakkai:wind_burst',{x:l.x,y:l.y+.7,z:l.z});}catch{}
  try{b.dimension.playSound('random.anvil_use',l,{volume:.18,pitch:1.4});}catch{}
  if(town){
-   const d=townRecord(town);
-   townSave(town,{...d,goods:Math.min(200,d.goods+count),work:world.getAbsoluteTime()});
+   const d=townRecord(town),bonus=town.factoryVillage?factoryResidentBonus(town,b,world.getTimeOfDay()):0;
+   townSave(town,{...d,goods:Math.min(200,d.goods+count+bonus),work:world.getAbsoluteTime()});
  }
  try{for(const p of b.dimension.getPlayers({location:l,maxDistance:14,closest:4}))state(p).workSoundAt=system.currentTick+125;}catch{}
 }
@@ -4538,9 +4541,14 @@ function townRoutine(t){
    if(!born)property(e,'town_born',age+1);
    const elder=!baby&&born>0&&age-born>=8, flee=hostile.find(a=>dist(e.location,a.location)<11);
    const job=e.getComponent('minecraft:variant')?.value??0, workplace=workplaces[job];
+   const villageRole=t.factoryVillage?factoryResidentRole(e):undefined;
    let goal;
    if(flee||now>=11600&&now<23000)goal=nearestSpot(e,t.sites.shelter);
    else if(baby)goal={x:l.x+Math.cos(now/620+e.id.length)*3,y:l.y,z:l.z+Math.sin(now/620+e.id.length)*3};
+   else if(!elder&&villageRole&&now<7100){
+     const target=villageRole==='grower'?t.sites.crop:villageRole==='keeper'?[l]:t.sites.machine?.filter(b=>b.id===ns+villageRole);
+     goal=nearestSpot(e,target);
+   }
    else if(!elder&&job===1&&now<3800)goal=nearestSpot(e,t.sites.crop);
    else if(!elder&&workplace&&now<7100)goal=nearestSpot(e,t.sites.work?.filter(b=>b.id==='minecraft:'+workplace));
    if(!goal&&!flee&&now<11600)goal=l;
@@ -4616,13 +4624,14 @@ async function townMenu(p,ref){
 守り ${score}/12　備蓄 ${info.goods}/200
 ${info.work+2400>world.getAbsoluteTime()?'工場出荷あり':'工場出荷が途絶えている'}　${festival?`${era()}の祭り開催中`:'祭りは守り4・備蓄6以上の季節2日目'}
 壁4個ごとに加点。鐘より3〜5ブロック高い標、足止め罠、加工機と出荷も加点されます。村人は日ごとに備蓄を消費します。`,[
-   ['季節の収穫市'],['備蓄から品物を交換する'],['祭りの記念章を受け取る'],['見回りを頼む'],['日替わりの納品依頼'],['集落の発展計画']
+   ['季節の収穫市'],['備蓄から品物を交換する'],['祭りの記念章を受け取る'],['見回りを頼む'],['日替わりの納品依頼'],['集落の発展計画'],...(t.factoryVillage?[['風車村の暮らしと約束']]:[])
  ]);
  if(ix===undefined||!near())return;
  if(ix===0)return harvestMarket(p);
  if(ix===3)return villageWatch(p);
  if(ix===4)return townOrder(p,t);
  if(ix===5)return townDevelopment(p,t);
+ if(ix===6&&t.factoryVillage)return simple(p,'風車村の暮らしと約束','風は皆で分けるもの。粉砕係と製材係は朝から工房へ向かい、畑守は作物へ、灯守は鐘の周りへ向かいます。\n\n朝〜昼の作業時間に、担当の大人が対応する機械から6ブロック以内にいて、実際の加工が成功すると、通常の生産分に加えて備蓄が1増えます。機械の材料は村人が運ぶわけではありません。備蓄は日々の暮らしや発展・祭りを支えます。');
  const data=townRecord(t);
  if(ix===1){
    if(townScore(t)<3||data.goods<3||!villagerNear(p,18))return notice(p,'§e守り3・備蓄3と村人が必要です');
@@ -4776,7 +4785,7 @@ async function usePhysicalRelic(p,at,type){
    }
    return;
  }
- const site=currentPlace(p), env=biomeAt(p), index=site?(site.id===59||site.id===60?4096+site.id-59:site.id):59+(env?biomeIndex.get(env.id):0);
+ const site=currentPlace(p), env=biomeAt(p), index=site?(site.id>=59&&site.id<=68?4096+site.id-59:site.id):59+(env?biomeIndex.get(env.id):0);
  const stamp=type.endsWith('statue')?'statue_prize':'cache_prize';
  if(marked(p,stamp,index))return notice(p,'§eこの土地ではすでに受け取っています');
  const reward=type.endsWith('statue')?`shard_${site?.ore??(site?home[aspect(site)][0]:env?.profile.ore??0)}`:'chronicle_fragment';
@@ -5429,6 +5438,17 @@ safeSub('world','before','playerInteractWithEntity',e=>{
    if(index>=0&&index<8)menu(p,async()=>realmNpcConversation(p,index));
    return;
  }
+ if(p.isSneaking&&['minecraft:villager','minecraft:villager_v2'].includes(e.target.typeId)){
+   const identity=cultureResidentIdentity(e.target);
+   if(identity){
+     e.cancel=true;const target=e.target,person=CULTURE_PEOPLE[identity.realm][identity.index];
+     menu(p,async()=>{if(!p.isValid||!target.isValid||target.dimension.id!==p.dimension.id||dist(p.location,target.location)>6)return;
+       const phase=world.getTimeOfDay()<12000?'昼':'夜';
+       return simple(p,`${person.name}｜${person.role}`,`${person.line}\n\n今は${phase}。この地に残る記録石にも、暮らしの約束が刻まれています。\n立ったまま話しかけると通常の村人の取引です。`);
+     });
+     return;
+   }
+ }
  if(e.target.typeId===ns+'fushi'||e.target.typeId===ns+'fushi_chief'){
    e.cancel=true;const target=e.target,chief=target.typeId===ns+'fushi_chief';
    menu(p,async()=>{
@@ -5458,7 +5478,8 @@ safeSub('world','before','playerInteractWithEntity',e=>{
  const born=num(e.target,'town_born'),elder=born>0&&seasonDay()-born>=8;
  menu(p,async(p)=>{
    const trust=num(p,'trust');
-   const line=({'若き駅長ハル':'「いつか風車の力で、町中の工房を回してみせるよ。」','工房見習いミナ':'「選別が終わるまで、いつも手が粉だらけ。機械があれば早く帰れるのに。」','駅村の子':'「線路のむこうって、どんな町なの？」'})[name]??(elder?`「${era()}のような日は、はじめてこの村に灯りがともった日のことを思い出すよ。」`:undefined);
+   const villageLine=({crusher:'「石を砕くのは、橋を直す人たちのため。工房に着いたら一緒に働こう。」',saw:'「板は家だけでなく、旅人のための道標にも使うんだ。」',grower:'「畑の実りは、収穫の少ない家にも分けるんだよ。」',keeper:'「灯りは最後に帰る人のために、夜まで残しておくの。」'})[factoryResidentRole(e.target)];
+   const line=villageLine??({'若き駅長ハル':'「いつか風車の力で、町中の工房を回してみせるよ。」','工房見習いミナ':'「選別が終わるまで、いつも手が粉だらけ。機械があれば早く帰れるのに。」','駅村の子':'「線路のむこうって、どんな町なの？」'})[name]??(elder?`「${era()}のような日は、はじめてこの村に灯りがともった日のことを思い出すよ。」`:undefined);
    const ix=await form(p,name||'村人との会話',`${line?line+'\n\n':''}村の信頼度：${trust}\n村人の近くで敵を倒すと信頼度が上がります。立ったまま会話すると通常の交易を使えます。`,[
      [trust>=3?'金のインゴット1個 ↔ 風の欠片2個':'信頼度3で風記の交易を解放'],['剣への属性刻印'],['見回りを頼む'],['村の集落台帳'],['閉じる']
    ]);
@@ -5688,6 +5709,7 @@ system.runInterval(()=>{
      }
      realmDiscoveryTick(p,site);
      naturalSiteTick(p,site,t);
+     if(site?.kind==='culture')foundCultureResident({site,world,dimension:p.dimension,num,property,findFloor:safeNear,report});
      // Boss timers run on the ten-tick loop; nature scans remain at forty ticks.
      try{mobSystem?.tickBosses(p,t);}catch(err){if(t%200===0)report('八界王',err);}
      try{fushiSystem?.tickChiefs(p,t);}catch(err){if(t%200===0)report('チーフ',err);}

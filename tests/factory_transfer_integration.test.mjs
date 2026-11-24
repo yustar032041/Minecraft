@@ -1,3 +1,4 @@
+import {factoryResidentBonus} from '../Hakkai_v7.1.0/BehaviorPack/scripts/realm_culture.js';
 // Runs the actual transfer function with simulated Minecraft objects.
 import assert from 'node:assert/strict';import fs from 'node:fs';import vm from 'node:vm';
 import {kineticNetwork,hasAdjacentWater,factoryRecipe} from '../Hakkai_v7.1.0/BehaviorPack/scripts/factory_network.js';
@@ -263,8 +264,22 @@ for(const type of ['farm_harvester','farm_fertilizer','farm_planter','item_extra
  f.b.dimension.getBlockFromRay=()=>undefined;
  Object.assign(f.b.dimension,{spawnParticle(){},playSound(){},getPlayers(){return [];}});
  const town={data:{goods:3,work:0},factoryVillage:true};
- Object.assign(f.ctx,{townNear:()=>town,townRecord:t=>t.data,townSave:(t,v)=>t.data=v,state:()=>({})});f.ctx.world.getAbsoluteTime=()=>450;
+ Object.assign(f.ctx,{factoryResidentBonus,townNear:()=>town,townRecord:t=>t.data,townSave:(t,v)=>t.data=v,state:()=>({})});f.ctx.world.getAbsoluteTime=()=>450;
  vm.runInContext(src.slice(src.indexOf('function production(b,count){'),src.indexOf('function gatherTown(')),f.ctx);
  f.run();assert.equal(f.to.getItem(0).typeId,'minecraft:gravel');assert.equal(town.data.goods,4);assert.equal(town.data.work,450);
  f.ctx.system.currentTick=50;f.to.failOnce=true;f.run();assert.equal(town.data.goods,4,'failed inventory write never awards goods');
+}
+// A real successful transaction with a matching adult worker in range gives
+// exactly one extra abstract goods unit. Inventory failure gives neither.
+{
+ const f=fixture('crusher',[item('minecraft:cobblestone',2)]),get=f.b.dimension.getBlock;
+ f.b.dimension.getBlock=p=>p.x===0&&p.y===80&&p.z===1?{typeId:'hakkai:wind_rotor',...p,location:p}:get(p);
+ f.b.dimension.getBlockFromRay=()=>undefined;
+ const worker={isValid:true,nameTag:'風車村の住人 1｜粉砕係',getComponent:()=>undefined};
+ Object.assign(f.b.dimension,{spawnParticle(){},playSound(){},getPlayers(){return [];},getEntities(){return [worker];}});
+ const town={data:{goods:3,work:0},factoryVillage:true};
+ Object.assign(f.ctx,{factoryResidentBonus,townNear:()=>town,townRecord:t=>t.data,townSave:(t,v)=>t.data=v,state:()=>({})});f.ctx.world.getAbsoluteTime=()=>450;
+ vm.runInContext(src.slice(src.indexOf('function production(b,count){'),src.indexOf('function gatherTown(')),f.ctx);
+ f.run();assert.equal(town.data.goods,5);assert.equal(f.to.getItem(0).amount,1,'worker does not duplicate physical output');
+ f.ctx.system.currentTick=50;f.to.failOnce=true;f.run();assert.equal(town.data.goods,5,'failed transaction adds no bonus');
 }

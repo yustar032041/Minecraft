@@ -4,7 +4,7 @@ import {places as data} from '../Hakkai_v7.1.0/BehaviorPack/scripts/data.js';
 import {seededSitePlans,initializeNaturalSitePlans,isNaturalSite,siteBounds,siteIntersects} from '../Hakkai_v7.1.0/BehaviorPack/scripts/natural_sites.js';
 const fresh=()=>data.map(s=>({...s}));
 for(const seed of ['0','123','-123','9223372036854775807','another seed']){
- const sites=fresh(),p=seededSitePlans(sites,seed);assert.equal(p.size,42);
+ const sites=fresh(),p=seededSitePlans(sites,seed);assert.equal(p.size,50);
  assert.deepEqual(p,seededSitePlans(sites,seed));
  for(const s of sites.filter(isNaturalSite))Object.assign(s,p.get(s.id));
  for(const a of sites.filter(isNaturalSite))for(const b of sites.filter(s=>s.dim===a.dim&&s.id!==a.id)){
