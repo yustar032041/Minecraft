@@ -20,7 +20,7 @@ function fixture(){
  }
  assert.ok(f.effects.some(([t,id,duration])=>t===121&&id==='levitation'&&duration===28));
  assert.ok(f.props.some(([t,k,v])=>t===122&&k==='hakkai:flying'&&v===true));
- assert.ok(f.messages.some(([t,m])=>t===141&&m.includes('時の斬撃')),'warning starts while visibly flying');
+ assert.ok(f.messages.some(([t,m])=>t===141&&m.includes('空の弾幕')),'warning starts while visibly flying');
  assert.ok(f.particles.some(([t,id])=>t>121&&id==='hakkai:warden_moon'),'flight has a bounded cosmetic aura');
  f.sys.currentTick=173;assert.equal(f.ctrl.onMeleeParry({damagingEntity:f.p,hitEntity:f.e}),true);
  assert.ok(f.removed.some(([t,id])=>t===173&&id==='levitation'));

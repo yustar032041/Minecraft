@@ -20,18 +20,18 @@ for(const group of WARDEN_EXTRA)for(const a of group){
  if(a.shape==='square'){assert.equal(inWardenWarning({x:a.radius,y:80,z:a.radius},o,a),true);assert.equal(inWardenWarning({x:a.radius+.1,y:80,z:0},o,a),false);}
  if(a.shape==='twin'){assert.equal(inWardenWarning({x:a.offset,y:80,z:0},o,a),true);assert.equal(inWardenWarning(o,o,a),false);}
 }
-function reachThird(f){for(const t of [0,80,120,220,260,360])f.tick(t);}
+function reachThird(f){for(const t of [0,80,120,220])f.tick(t);}
 {
  const f=fixture();reachThird(f);assert.ok(f.messages.some(x=>x[1].includes('時の三連撃')));f.hits.length=0;
- f.tick(400);f.tick(420);f.tick(440);assert.deepEqual(f.hits,[['p',6*WARDEN_DAMAGE_MULTIPLIER],['p',6*WARDEN_DAMAGE_MULTIPLIER],['p',6*WARDEN_DAMAGE_MULTIPLIER]],'each warned strike applies once');
+ f.tick(260);f.tick(280);f.tick(300);assert.deepEqual(f.hits,[['p',6*WARDEN_DAMAGE_MULTIPLIER],['p',6*WARDEN_DAMAGE_MULTIPLIER],['p',6*WARDEN_DAMAGE_MULTIPLIER]],'each warned strike applies once');
  assert.equal(f.messages.filter(x=>x[1].includes('次の一撃')).length,2);
 }
 {
- const f=fixture();reachThird(f);f.hits.length=0;f.tick(400);f.system.currentTick=412;
- assert.equal(f.ctrl.onMeleeParry({damagingEntity:f.p,hitEntity:f.boss}),true);f.tick(420);f.tick(440);assert.deepEqual(f.hits,[['p',6*WARDEN_DAMAGE_MULTIPLIER]],'mid-combo parry stops remaining strikes');
+ const f=fixture();reachThird(f);f.hits.length=0;f.tick(260);f.system.currentTick=272;
+ assert.equal(f.ctrl.onMeleeParry({damagingEntity:f.p,hitEntity:f.boss}),true);f.tick(280);f.tick(300);assert.deepEqual(f.hits,[['p',6*WARDEN_DAMAGE_MULTIPLIER]],'mid-combo parry stops remaining strikes');
 }
 {
- const f=fixture();reachThird(f);f.hits.length=0;f.dim.spawnParticle=()=>{throw Error('missing particle')};f.tick(400);f.tick(420);f.tick(440);assert.deepEqual(f.hits,[['p',6*WARDEN_DAMAGE_MULTIPLIER]],'missing follow-up warning aborts remaining hits');
+ const f=fixture();reachThird(f);f.hits.length=0;f.dim.spawnParticle=()=>{throw Error('missing particle')};f.tick(260);f.tick(280);f.tick(300);assert.deepEqual(f.hits,[['p',6*WARDEN_DAMAGE_MULTIPLIER]],'missing follow-up warning aborts remaining hits');
 }
 {
  const f=fixture(4),q=f.player('q');f.setPlayers([f.p,q]);
@@ -42,7 +42,7 @@ function reachThird(f){for(const t of [0,80,120,220,260,360])f.tick(t);}
  assert.ok(f.messages.some(x=>x[0]==='p'&&x[1].includes('和らげた')));
 }
 {
- const f=fixture();reachThird(f);f.hits.length=0;f.tick(400);f.tick(421);f.tick(440);assert.deepEqual(f.hits,[['p',6*WARDEN_DAMAGE_MULTIPLIER]],'late tick cancels stale follow-up');
+ const f=fixture();reachThird(f);f.hits.length=0;f.tick(260);f.tick(281);f.tick(300);assert.deepEqual(f.hits,[['p',6*WARDEN_DAMAGE_MULTIPLIER]],'late tick cancels stale follow-up');
 }
 // Every phase cycles through all three additional, actually scheduled moves.
 for(let phase=0;phase<5;phase++){

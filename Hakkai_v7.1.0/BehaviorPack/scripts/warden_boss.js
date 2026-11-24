@@ -3,6 +3,7 @@ import { WARDEN_DIMENSION } from './warden_arena.js';
 import { rescueWarden,isOutsideWardenArena } from './warden_rescue.js';
 import { updateWardenAppearance,cancelWardenFlight } from './warden_appearance.js';
 import { steerWarden } from './warden_movement.js';
+import { WARDEN_EXTRA_PATTERNS } from './warden_extra_patterns.js';
 import { WARDEN_ADVANCED } from './warden_advanced_attacks.js';
 import { WARDEN_MOVING,startMoving,advanceMoving } from './warden_moving_attacks.js';
 import { wardenTransition,wardenCharge,wardenImpact,wardenParried,wardenStrikePose,wardenFlightAura } from './warden_visuals.js';
@@ -69,16 +70,16 @@ export function wardenPhase(hp,max=5000){
  return 0;
 }
 export const WARDEN_HEAL_PER_SECOND=12;
-// Increase all 100 scripted patterns without changing their warning geometry.
+// Increase all scripted patterns without changing their warning geometry.
 export const WARDEN_DAMAGE_MULTIPLIER=2.4;
 export const WARDEN_RECOVERY_TICKS=40;
 // Every fifth selection belongs to the same source form. Final starts with its
 // own attack, then alternates through forms 1–4 before repeating that order.
 export function wardenPatterns(phase){
- const form=i=>[WARDEN_PHASES[i],WARDEN_ALTERNATES[i],...WARDEN_EXTRA[i],...WARDEN_MOVING[i],...WARDEN_ADVANCED[i]];
+ const form=i=>[WARDEN_PHASES[i],WARDEN_ALTERNATES[i],...WARDEN_EXTRA[i],...WARDEN_MOVING[i],...WARDEN_ADVANCED[i],...WARDEN_EXTRA_PATTERNS[i]];
  if(phase!==4)return form(phase);
  const groups=[4,0,1,2,3].map(form),all=[];
- for(let i=0;i<20;i++)for(const group of groups)all.push(group[i]);
+ for(let i=0;i<40;i++)for(const group of groups)all.push(group[i]);
  return all;
 }
 const MUSIC_TICKS=[937,1372,613,1325,747];
@@ -134,7 +135,7 @@ export function setupWardenBoss({world,system,property,report,isEvading=()=>fals
    if(c)for(let i=0;i<c.size;i++)if(c.getItem(i)?.typeId==='hakkai:fushi_totem')return true;
   }catch{}return false;
  }
- function followUp(e,s,pending,t){
+ function followUp(e,slot,pending,t){
   if(!(pending.remaining>1))return false;
   const warned=[];
   for(const p of world.getAllPlayers())if(pending.warned.includes(p.id)&&valid(p)&&p.dimension.id===WARDEN_DIMENSION)try{
@@ -142,8 +143,10 @@ export function setupWardenBoss({world,system,property,report,isEvading=()=>fals
    try{p.playSound('random.orb',{volume:.35,pitch:1.4});}catch{}
   }catch{}
   if(!warned.length||!telegraph(e.dimension,pending.aim,pending.attack))return false;
-  s.pending={...pending,warned,at:t+20,remaining:pending.remaining-1};return true;
+  slot.pending={...pending,warned,at:t+20,remaining:pending.remaining-1};return true;
  }
+ function clearAttacks(s){s.pending=undefined;s.active=undefined;s.extra=undefined;s.hadAttack=false;}
+ function busy(s){return !!(s.pending||s.active||s.extra?.pending||s.extra?.active);}
  function tickEntity(e,t){
   let s=states.get(e.id);
   if(!s){
@@ -155,80 +158,90 @@ export function setupWardenBoss({world,system,property,report,isEvading=()=>fals
   if(isOutsideWardenArena(e)){
    // Never resolve or begin a damaging attack while the boss is out of bounds,
    // even when safe relocation fails. No catch-up healing on eventual return.
-   s.pending=undefined;s.active=undefined;s.nextAt=t+100;s.lastHeal=t;
+   clearAttacks(s);s.nextAt=t+100;s.lastHeal=t;
    cancelWardenFlight(e,s,t);rescueWarden(e);return;
   }
-  if(world.getDifficulty()===Difficulty.Peaceful){s.pending=undefined;s.active=undefined;s.lastHeal=t;cancelWardenFlight(e,s,t);updateWardenAppearance(e,s,Math.max(0,s.phase),t,{peaceful:true});return;}
+  if(world.getDifficulty()===Difficulty.Peaceful){clearAttacks(s);s.lastHeal=t;cancelWardenFlight(e,s,t);updateWardenAppearance(e,s,Math.max(0,s.phase),t,{peaceful:true});return;}
   const h=e.getComponent('minecraft:health');if(!h)return;
   const phase=Math.max(s.phase,wardenPhase(h.currentValue,h.effectiveMax));
   if(phase!==s.phase){
    const previous=s.phase;s.phase=phase;s.index=0;s.phaseDirty=true;
+   if(previous>=0){clearAttacks(s);s.nextAt=t+40;}
    if(previous>=0)wardenTransition(e,phase);
    for(const p of e.dimension.getPlayers({location:e.location,maxDistance:45}))try{p.sendMessage(`§d時空の管理者：${WARDEN_PHASES[phase].name}`);}catch{}
   }
   // Retry a failed write rather than losing an irreversible transition on reload.
   if(s.phaseDirty&&t>=(s.phaseSaveRetry??0)){try{e.setDynamicProperty('hakkai:warden_phase',phase);s.phaseDirty=false;}catch{s.phaseSaveRetry=t+20;}}
-  const flightBusy=updateWardenAppearance(e,s,phase,t,{idle:!s.pending&&!s.active});
+  const flightBusy=updateWardenAppearance(e,s,phase,t,{idle:!busy(s)});
   if(s.takeoffAt===t&&(phase===1||phase===4))s.nextAt=Math.min(s.nextAt,t+20);
   try{if(s.takeoffAt!==undefined&&e.isOnGround===false&&(t-s.takeoffAt)%12===0)wardenFlightAura(e,phase);}catch{}
   // If a flight begun attack goes too high for a close counter, stop it rather
   // than resolving a warning that the player could not reasonably parry.
-  if(s.flightUnsafe&&(s.pending?.airborne||s.active?.airborne)){
-   s.pending=undefined;s.active=undefined;s.nextAt=t+100;
+  if(s.flightUnsafe&&[s,s.extra].some(slot=>slot?.pending?.airborne||slot?.active?.airborne)){
+   clearAttacks(s);s.nextAt=t+100;
   }
-  steerWarden(e,s,phase,t,{idle:!s.pending&&!s.active});
+  steerWarden(e,s,phase,t,{idle:!busy(s)});
   // Tick-driven healing stops when no player is loading the boss; never grant
   // a large burst when a chunk reloads after a long absence.
   const seconds=Math.min(2,Math.floor((t-Math.max(s.lastHeal,s.stopHealUntil))/20));
   if(t<s.stopHealUntil)s.lastHeal=t;
   else if(seconds>0){try{h.setCurrentValue(Math.min(h.effectiveMax,h.currentValue+seconds*WARDEN_HEAL_PER_SECOND));}catch{}s.lastHeal=t;}
-  if(s.active){
-   const m=s.active;
-   const people=world.getAllPlayers().filter(p=>m.warned.includes(p.id)&&valid(p)&&p.dimension.id===WARDEN_DIMENSION&&!isEvading(p));
-   const result=advanceMoving(e.dimension,m,t,people);
-   for(const p of result.targets){
-    m.hit.add(p.id); // One hit or parry per player, not one per visual frame.
-    if(tryParry(p,e))continue;
-    let hit=false;try{hit=Boolean(p.applyDamage(m.attack.damage*WARDEN_DAMAGE_MULTIPLIER,{cause:EntityDamageCause.entityAttack,damagingEntity:e}));}catch{}
-    if(hit)try{p.addEffect(m.attack.effect,60,{amplifier:0,showParticles:false});}catch{}
-   }
-   if(result.done){s.active=undefined;s.nextAt=t+WARDEN_RECOVERY_TICKS;}
-   return;
+  // Two independently telegraphed slots; a player takes at most one hit
+  // per tick even when both fronts overlap. Parry/stagger clears both.
+  const hitThisTick=new Set();
+  for(const slot of [s,s.extra].filter(Boolean)){
+   if(slot.active){
+    const m=slot.active;
+    const people=world.getAllPlayers().filter(p=>m.warned.includes(p.id)&&valid(p)&&p.dimension.id===WARDEN_DIMENSION&&!isEvading(p));
+    const result=advanceMoving(e.dimension,m,t,people);
+    for(const p of result.targets){
+     m.hit.add(p.id);
+     if(hitThisTick.has(p.id))continue;
+     hitThisTick.add(p.id);
+     if(tryParry(p,e)){if(t<s.stopHealUntil)break;continue;}
+     let hit=false;try{hit=Boolean(p.applyDamage(m.attack.damage*WARDEN_DAMAGE_MULTIPLIER,{cause:EntityDamageCause.entityAttack,damagingEntity:e}));}catch{}
+     if(hit)try{p.addEffect(m.attack.effect,60,{amplifier:0,showParticles:false});}catch{}
+    }
+    if(result.done)slot.active=undefined;
+   }else if(slot.pending&&t>=slot.pending.at){
+    const pending=slot.pending,{warned,aim,attack,at}=pending;slot.pending=undefined;
+    if(t===at){
+     if(attack.motion){
+      if(telegraph(e.dimension,aim,attack)){
+       slot.active=startMoving(aim,attack,pending.phase,warned,t);slot.active.airborne=pending.airborne;
+       wardenStrikePose(e,pending.phase);
+       for(const p of world.getAllPlayers())if(warned.includes(p.id)&&valid(p)&&p.dimension.id===WARDEN_DIMENSION)try{p.playSound('random.explode',{volume:.35,pitch:1.15});}catch{}
+      }
+     }else{
+      wardenImpact(e,aim,attack,pending.phase,inWardenWarning);
+      for(const p of world.getAllPlayers())if(warned.includes(p.id)&&valid(p)&&p.dimension.id===WARDEN_DIMENSION)try{p.playSound('random.explode',{volume:.4,pitch:.9+pending.phase*.1});}catch{}
+      for(const p of world.getAllPlayers())if(warned.includes(p.id)&&valid(p)&&p.dimension.id===WARDEN_DIMENSION&&inWardenWarning(p.location,aim,attack)&&!isEvading(p)&&!hitThisTick.has(p.id)){
+       hitThisTick.add(p.id);
+       if(tryParry(p,e)){if(t<s.stopHealUntil)break;continue;}
+       const warded=attack.totemWard&&hasFushiTotem(p);
+       let hit=false;try{hit=Boolean(p.applyDamage((warded?attack.damage/2:attack.damage)*WARDEN_DAMAGE_MULTIPLIER,{cause:EntityDamageCause.entityAttack,damagingEntity:e}));}catch{}
+       if(hit&&warded)try{p.sendMessage('§dFUSHIのトーテムが月光の審判を和らげた！');}catch{}
+       if(hit)try{p.addEffect(attack.effect,60,{amplifier:0,showParticles:false});}catch{}
+      }
+      if(t>=s.stopHealUntil)followUp(e,slot,pending,t);
+     }
+    }
+   }else if(slot.pending&&(t===slot.pending.at-20||t===slot.pending.at-10))wardenCharge(e,slot.pending.phase,t===slot.pending.at-20?1:2);
+   // A successful scripted parry calls stagger synchronously, so never run
+   // another detached slot or resurrect a follow-up after it.
+   if(t<s.stopHealUntil)break;
   }
-  if(s.pending&&t>=s.pending.at){
-   const pending=s.pending,{warned,aim,attack,at}=pending;s.pending=undefined;
-   if(t>at){s.nextAt=t+100;return;} // A stale marker is no longer visible.
-   if(attack.motion){
-    // Refresh warning through the full moving sequence, not just its launch.
-    if(!telegraph(e.dimension,aim,attack)){s.nextAt=t+100;return;}
-    s.active=startMoving(aim,attack,pending.phase,warned,t);s.active.airborne=pending.airborne;
-    wardenStrikePose(e,pending.phase);
-    for(const p of world.getAllPlayers())if(warned.includes(p.id)&&valid(p)&&p.dimension.id===WARDEN_DIMENSION)try{p.playSound('random.explode',{volume:.35,pitch:1.15});}catch{}
-    return;
-   }
-   wardenImpact(e,aim,attack,pending.phase,inWardenWarning);
-   for(const p of world.getAllPlayers())if(warned.includes(p.id)&&valid(p)&&p.dimension.id===WARDEN_DIMENSION)try{p.playSound('random.explode',{volume:.4,pitch:.9+pending.phase*.1});}catch{}
-   // Only people explicitly warned at cast time can be hit. Others entering
-   // the area later are spared, including on message/API failure.
-   for(const p of world.getAllPlayers())if(warned.includes(p.id)&&valid(p)&&p.dimension.id===WARDEN_DIMENSION&&inWardenWarning(p.location,aim,attack)&&!isEvading(p)){
-    if(tryParry(p,e))continue;
-    const warded=attack.totemWard&&hasFushiTotem(p);
-    let hit=false;try{hit=Boolean(p.applyDamage((warded?attack.damage/2:attack.damage)*WARDEN_DAMAGE_MULTIPLIER,{cause:EntityDamageCause.entityAttack,damagingEntity:e}));}catch{}
-    if(hit&&warded)try{p.sendMessage('§dFUSHIのトーテムが月光の審判を和らげた！');}catch{}
-    if(hit)try{p.addEffect(attack.effect,60,{amplifier:0,showParticles:false});}catch{}
-   }
-   if(!followUp(e,s,pending,t))s.nextAt=t+WARDEN_RECOVERY_TICKS;
-   return;
-  }
-  if(s.pending&&(t===s.pending.at-20||t===s.pending.at-10))wardenCharge(e,s.pending.phase,t===s.pending.at-20?1:2);
-  if(!s.pending&&!flightBusy&&t>=s.nextAt){
+  if(!busy(s)&&s.hadAttack){s.hadAttack=false;s.extra=undefined;s.nextAt=t+WARDEN_RECOVERY_TICKS;}
+  if(!busy(s)&&!flightBusy&&t>=s.nextAt){
    const targets=e.dimension.getPlayers({location:e.location,maxDistance:45}).filter(valid);
    targets.sort((a,b)=>Math.hypot(a.location.x-e.location.x,a.location.z-e.location.z)-Math.hypot(b.location.x-e.location.x,b.location.z-e.location.z));
-   const p=targets[0];if(!p){s.nextAt=t+40;return;}
+   if(!targets.length){s.nextAt=t+40;return;}
    const patterns=wardenPatterns(phase);
+   for(let n=0;n<2;n++){
+   const p=targets[n%targets.length];
    const attack=patterns[s.index++%patterns.length],aim={...p.location};
    const instruction=attack.motion==='wave'?(attack.reverse?'光の輪が外から中心へ収束する':'光の輪が中心から外へ広がる'):
-    attack.motion==='twinwave'?'二つの輪から光が広がる':
+    attack.motion==='twinwave'?(attack.reverse?'二つの輪が外から中心へ収束する':'二つの輪から光が広がる'):
     attack.motion==='cross'?(attack.reverse?'十字の光が外から中心へ収束する':'十字の光が中心から広がる'):
     attack.motion==='sweep'?(attack.reverse?'光の刃が反時計回りに回転する':'光の刃が時計回りに回転する'):
     attack.motion==='zones'?(attack.reverse?'三つの輪が東から西へ順に光る':'三つの輪が西から東へ順に光る'):
@@ -240,10 +253,13 @@ export function setupWardenBoss({world,system,property,report,isEvading=()=>fals
     player.sendMessage(`§c${attack.attack}：${instruction}（約2秒）。直前にしゃがみ近接攻撃でパリィ（スタミナ15）`);warned.push(player.id);
     try{player.playSound('random.orb',{volume:.35,pitch:1});}catch{}
    }catch{}
-   if(!warned.includes(p.id)){s.nextAt=t+100;return;}
-   if(!telegraph(e.dimension,aim,attack)){s.nextAt=t+100;return;}
+   if(!warned.includes(p.id))continue;
+   if(!telegraph(e.dimension,aim,attack))continue;
    wardenCharge(e,phase,0);
-   s.pending={warned,aim,attack,phase,airborne:(phase===1||phase===4)&&s.takeoffAt!==undefined,at:t+40,remaining:attack.strikes??1};
+   const slot=n===0?s:(s.extra={});
+   slot.pending={warned,aim,attack,phase,airborne:(phase===1||phase===4)&&s.takeoffAt!==undefined,at:t+40,remaining:attack.strikes??1};s.hadAttack=true;
+   }
+   if(!busy(s))s.nextAt=t+100;
   }
  }
  function tick(p,t){
@@ -261,18 +277,19 @@ export function setupWardenBoss({world,system,property,report,isEvading=()=>fals
  function onMeleeParry({damagingEntity:p,hitEntity:e}){
   if(!valid(p)||!p.isSneaking||!e?.isValid||e.typeId!=='hakkai:time_warden'||p.dimension.id!==WARDEN_DIMENSION||e.dimension.id!==WARDEN_DIMENSION)return false;
   if(world.getDifficulty()===Difficulty.Peaceful)return false;
-  const s=states.get(e.id),pending=s?.pending,t=system.currentTick;
-  if(!pending||t<pending.at-8||t>=pending.at||!pending.warned.includes(p.id))return false;
-  if(Math.hypot(p.location.x-e.location.x,p.location.z-e.location.z)>5||Math.abs(p.location.y-e.location.y)>3||!inWardenWarning(p.location,pending.aim,pending.attack))return false;
+  const s=states.get(e.id),t=system.currentTick;
+  if(!s||Math.hypot(p.location.x-e.location.x,p.location.z-e.location.z)>5||Math.abs(p.location.y-e.location.y)>3)return false;
+  const pending=[s.pending,s.extra?.pending].find(q=>q&&t>=q.at-8&&t<q.at&&q.warned.includes(p.id)&&inWardenWarning(p.location,q.aim,q.attack));
+  if(!pending)return false;
   try{if(!spendParry(p,15))return false;}catch{return false;}
-  s.pending=undefined;s.nextAt=t+40;s.stopHealUntil=t+200;s.lastHeal=t;cancelWardenFlight(e,s,t);
+  clearAttacks(s);s.hadAttack=false;s.nextAt=t+40;s.stopHealUntil=t+200;s.lastHeal=t;cancelWardenFlight(e,s,t);
   for(const player of e.dimension.getPlayers({location:e.location,maxDistance:45}))try{player.sendMessage('§bパリィ成功！ 攻撃を中断し、回復を10秒止めた。');}catch{}
   wardenParried(e,s.phase);
   return true;
  }
  function stagger(e,t){
   const s=states.get(e?.id);if(!s||e.typeId!=='hakkai:time_warden')return;
-  s.pending=undefined;s.active=undefined;s.nextAt=Math.max(s.nextAt,t+40);s.stopHealUntil=Math.max(s.stopHealUntil,t+200);s.lastHeal=t;cancelWardenFlight(e,s,t);
+  clearAttacks(s);s.hadAttack=false;s.nextAt=Math.max(s.nextAt,t+40);s.stopHealUntil=Math.max(s.stopHealUntil,t+200);s.lastHeal=t;cancelWardenFlight(e,s,t);
  }
  function onDeath({deadEntity,damageSource}){
   if(deadEntity?.typeId!=='hakkai:time_warden')return;

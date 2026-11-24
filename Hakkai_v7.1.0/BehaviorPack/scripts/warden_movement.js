@@ -1,5 +1,5 @@
-// Short, bounded steering impulses in the arena only. No blocks or players
-// are moved. If geometry/API checks fail, the boss stays where it is.
+// Bounded steering: sample the entire prospective path and volume before
+// applying an impulse. Never teleport or change blocks or other entities.
 export function steerWarden(e,s,phase,t,{idle=true,peaceful=false}={}){
  if(!idle||peaceful||t<(s.stopHealUntil??0)||t<(s.nextMove??0))return false;
  try{
@@ -7,26 +7,31 @@ export function steerWarden(e,s,phase,t,{idle=true,peaceful=false}={}){
   const flying=!grounded&&(phase===1||phase===4)&&s.takeoffAt!==undefined&&!s.flightAborted;
   if(!grounded&&!flying)return false;
   s.nextMove=t+(flying?6:12);
-  const v=e.getVelocity();if(![l.x,l.y,l.z,v.x,v.z].every(Number.isFinite)||Math.hypot(v.x,v.z)>.32)return false;
+  const v=e.getVelocity();if(![l.x,l.y,l.z,v.x,v.y??0,v.z].every(Number.isFinite)||Math.hypot(v.x,v.z)>(flying?.55:.32)||Math.abs(v.y??0)>.5)return false;
   const players=d.getPlayers({location:l,maxDistance:45}).filter(p=>p.isValid&&p.typeId==='minecraft:player');
   if(!players.length)return false;
   players.sort((a,b)=>Math.hypot(a.location.x-l.x,a.location.z-l.z)-Math.hypot(b.location.x-l.x,b.location.z-l.z));
-  const target=players[0].location;
-  // Orbit and occasionally close distance; cycle all directions if obstructed.
-  const toward=Math.atan2(target.z-l.z,target.x-l.x),seq=s.moveIndex??0;s.moveIndex=seq+1;
-  const distance=Math.hypot(target.x-l.x,target.z-l.z),base=distance>9?toward:toward+(seq%2?1:-1)*Math.PI/2;
+  const target=players[0].location,seq=s.moveIndex??0;s.moveIndex=seq+1;
+  const toward=Math.atan2(target.z-l.z,target.x-l.x),distance=Math.hypot(target.x-l.x,target.z-l.z);
+  // Airborne forms alternate broad arcs and upward/downward sweeps.
+  const base=flying?toward+[Math.PI/2,-Math.PI/2,Math.PI,0][seq%4]:distance>9?toward:toward+(seq%2?1:-1)*Math.PI/2;
   for(let i=0;i<8;i++){
-   const a=base+i*Math.PI/4,dx=Math.cos(a),dz=Math.sin(a),end={x:l.x+dx*1.4,y:l.y,z:l.z+dz*1.4};
-   if(Math.abs(end.x)>12.5||Math.abs(end.z)>12.5||end.y<79.5||end.y>86)continue;
-   if(players.some(p=>Math.abs(p.location.y-end.y)<3&&Math.hypot(p.location.x-end.x,p.location.z-end.z)<2.2))continue;
+   const a=base+i*Math.PI/4,dx=Math.cos(a),dz=Math.sin(a),length=flying?3:1.4;
+   let dy=0;
+   if(flying){const altitude=l.y-(s.takeoffY??80);dy=altitude>4?-.32:altitude<1?.32:(seq%2?.3:-.3);}
    let clear=true;
-   for(let step=0;step<=1.4&&clear;step+=.35)for(const ox of [-.5,0,.5])for(const oz of [-.5,0,.5]){
-    const x=Math.floor(l.x+dx*step+ox),z=Math.floor(l.z+dz*step+oz),y=Math.floor(l.y);
-    if(!flying){const floor={x,y:y-1,z};const b=d.getBlock(floor);if(!d.isChunkLoaded(floor)||!b?.isSolid||b.isLiquid||/magma|cactus|campfire|powder_snow/.test(b.typeId)){clear=false;break;}}
-    for(let dy=0;dy<=2;dy++){const at={x,y:y+dy,z};if(!d.isChunkLoaded(at)||!d.getBlock(at)?.isAir){clear=false;break;}}
+   for(let step=0;step<=length+.001&&clear;step+=.35){
+    const f=step/length,x=l.x+dx*step+(v.x||0)*f*2,z=l.z+dz*step+(v.z||0)*f*2,y=l.y+dy*step+(v.y||0)*f*2;
+    if(Math.abs(x)>12.5||Math.abs(z)>12.5||y<79.8||y>85){clear=false;break;}
+    if(players.some(p=>Math.abs(p.location.y-y)<3&&Math.hypot(p.location.x-x,p.location.z-z)<2.2)){clear=false;break;}
+    for(const ox of [-.5,0,.5])for(const oz of [-.5,0,.5]){
+     const bx=Math.floor(x+ox),bz=Math.floor(z+oz),by=Math.floor(y);
+     if(!flying){const floor={x:bx,y:by-1,z:bz},b=d.getBlock(floor);if(!d.isChunkLoaded(floor)||!b?.isSolid||b.isLiquid||/magma|cactus|campfire|powder_snow/.test(b.typeId)){clear=false;break;}}
+     for(let h=0;h<=2;h++){const at={x:bx,y:by+h,z:bz};if(!d.isChunkLoaded(at)||!d.getBlock(at)?.isAir){clear=false;break;}}
+    }
    }
    if(!clear)continue;
-   const speed=flying?.12:.09;e.applyImpulse({x:dx*speed,y:0,z:dz*speed});return true;
+   const speed=flying?.23:.09;e.applyImpulse({x:dx*speed,y:flying?dy*.42:0,z:dz*speed});return true;
   }
  }catch{}
  return false;

@@ -113,7 +113,7 @@ export function setupWardenArena({world,system,num,property,notice,report,loaded
  async function open(p){
   if(!p.isValid||p.getGameMode()===GameMode.Spectator)return;
   if(p.dimension.id===WARDEN_DIMENSION){
-   const choice=await form(p,'§d時空の闘技場','§7現在のボスを倒した後は再戦できます。戻ると入口の元の場所へ帰ります。\n§b管理者の核＋時の結晶＋虹の欠片＋対応するネザライト防具・剣・斧・ツルハシを作業台で合わせると、対応する終刻装備を作れます。元の装備のエンチャント等は引き継ぎません。\n§e試作パリィ：予告範囲内で、直前にしゃがみ近接攻撃。スタミナ15が必要。三連撃は各回に予告。光の輪や弾・回る刃が動いて当たります。100パターンは試作で、全仕様は未実装です。',[
+   const choice=await form(p,'§d時空の闘技場','§7現在のボスを倒した後は再戦できます。戻ると入口の元の場所へ帰ります。\n§b管理者の核＋時の結晶＋虹の欠片＋対応するネザライト防具・剣・斧・ツルハシを作業台で合わせると、対応する終刻装備を作れます。元の装備のエンチャント等は引き継ぎません。\n§e試作パリィ：予告範囲内で、直前にしゃがみ近接攻撃。スタミナ15が必要。三連撃は各回に予告。光の輪や弾・回る刃が動いて当たります。最大2技を同時予告。形態別40パターン、第五形態は全200パターンを使用。いずれも試作です。',[
     ['§b元の場所へ戻る'],['§c時空の管理者に挑む'],['§8閉じる']]);
    if(choice===0&&p.isValid&&p.dimension.id===WARDEN_DIMENSION){if(!parsePoint(p,'warden_return'))return notice(p,'§e帰還地点がありません。帰還石をご利用ください');return returnNatural(p,'warden_return');}
    if(choice===1&&p.isValid)return summon(p);

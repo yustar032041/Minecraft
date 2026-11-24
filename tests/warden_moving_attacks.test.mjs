@@ -57,7 +57,7 @@ for(let phase=0;phase<5;phase++){
  const f=fixture();let started=0;for(let t=0;t<1500;t++){f.tick(t);if(f.messages.some(([,m])=>m.includes(WARDEN_MOVING[0][0].attack))){started=t;break;}}
  assert.ok(started);const q={...f.p,id:'q',sendMessage:()=>{},applyDamage:n=>f.hits.push(['q',n])};f.setPlayers([f.p,q]);f.hits.length=0;
  for(let t=started+1;t<=started+56;t++)f.tick(t);
- assert.deepEqual(f.hits,[['p',7*2.4]],'only warned player is hit, once');
+ assert.deepEqual(f.hits,[['p',10*2.4],['p',7*2.4]],'only warned player is hit by each overlapping attack');
 }
 // A melee counter during the moving move's warning cancels launch entirely.
 {
@@ -91,7 +91,7 @@ for(let phase=0;phase<5;phase++){
  const f=fixture();let started=0;for(let t=0;t<1500;t++){f.tick(t);if(f.messages.some(([,m])=>m.includes(WARDEN_MOVING[0][0].attack))){started=t;break;}}
  const spawn=f.d.spawnParticle.bind(f.d);f.d.spawnParticle=(id,p)=>{if(id==='hakkai:warning_marker')throw Error('warning unavailable');spawn(id,p);};f.hits.length=0;
  for(let t=started+1;t<=started+56;t++)f.tick(t);
- assert.deepEqual(f.hits,[]);assert.ok(!f.d.particles.some(([id])=>id.startsWith('hakkai:warden_front_')));
+ assert.deepEqual(f.hits,[['p',10*2.4]],'independently warned companion attack still resolves');assert.ok(!f.d.particles.some(([id])=>id.startsWith('hakkai:warden_front_')));
 }
 // Changing to peaceful mid-flight clears the whole moving front.
 {
@@ -108,7 +108,7 @@ for(let phase=0;phase<5;phase++){
  const ctrl=setupWardenBoss({world:f.world,system:f.sys,property:()=>{},report:(_,e)=>{throw e;},tryParry:p=>{if(p.id==='p'){parries++;return true;}return false;}});
  let started=0;for(let t=0;t<1500;t++){f.sys.currentTick=t;ctrl.tick(f.p,t);if(f.messages.some(([,m])=>m.includes(WARDEN_MOVING[0][0].attack))){started=t;break;}}
  parries=0;hits.length=0;for(let t=started+1;t<=started+56;t++){f.sys.currentTick=t;ctrl.tick(f.p,t);}
- assert.equal(parries,1);assert.deepEqual(hits,[7*2.4]);
+ assert.equal(parries,2);assert.deepEqual(hits,[10*2.4,7*2.4]);
 }
 console.log('Warden moving attacks: 15 variants, visual/collision sync, bounds, walls, failures, warnings, counters and multiplayer (mocked)');
 // Refused moving-front damage likewise does not apply a standalone effect.
@@ -116,5 +116,5 @@ console.log('Warden moving attacks: 15 variants, visual/collision sync, bounds, 
  const f=fixture();let calls=0;const effects=[];f.p.applyDamage=()=>{calls++;return false};f.p.addEffect=e=>effects.push(e);
  let started=0;for(let t=0;t<1500;t++){f.tick(t);if(f.messages.some(([,m])=>m.includes(WARDEN_MOVING[0][0].attack))){started=t;break;}}
  calls=0;effects.length=0;for(let t=started+1;t<=started+56;t++)f.tick(t);
- assert.equal(calls,1);assert.deepEqual(effects,[]);
+ assert.equal(calls,2);assert.deepEqual(effects,[]);
 }

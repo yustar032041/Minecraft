@@ -21,7 +21,7 @@ function fixture(){
  const f=fixture();f.health.currentValue=4500;f.ctrl.tick(f.p,0);f.ctrl.tick(f.p,40);
  assert.equal(f.health.currentValue,4524,'twelve HP per second');
  f.ctrl.tick(f.p,40);assert.equal(f.health.currentValue,4524,'no duplicate multiplayer ticks');
- f.ctrl.tick(f.p,80);assert.equal(f.particles.filter(([id])=>id==='hakkai:warning_marker').length,20);assert.equal(f.damage.length,0);
+ f.ctrl.tick(f.p,80);assert.equal(f.particles.filter(([id])=>id==='hakkai:warning_marker').length,64);assert.equal(f.damage.length,0);
  f.ctrl.tick(f.p,120);assert.deepEqual(f.damage,[9*WARDEN_DAMAGE_MULTIPLIER]);assert.equal(f.effects[0][0],'slowness');
 }
 for(let phase=0;phase<5;phase++){
@@ -135,8 +135,7 @@ for(let phase=0;phase<5;phase++){
 // the same fixed geometry used by the markers and damage checks.
 for(let phase=0;phase<4;phase++){
  const f=fixture();f.health.currentValue=[5000,3990,2990,1990,990][phase];
- f.ctrl.tick(f.p,0);f.ctrl.tick(f.p,80);f.ctrl.tick(f.p,120);
- f.ctrl.tick(f.p,240);
+ f.ctrl.tick(f.p,0);f.ctrl.tick(f.p,80);
  const a=WARDEN_ALTERNATES[phase];assert.ok(f.messages.some(m=>m.includes(a.attack)));
  assert.ok(f.particles.some(([id])=>id==='hakkai:warning_marker'));
  const aim={...f.p.location};
@@ -147,10 +146,10 @@ for(let phase=0;phase<4;phase++){
  }else{
   assert.equal(inWardenWarning(aim,aim,a),false);
   assert.ok(inWardenWarning({x:aim.x+3,y:aim.y,z:aim.z},aim,a));
-  f.p.location.x+=3;
+
  }
  assert.equal(inWardenWarning({x:aim.x,y:aim.y+4,z:aim.z},aim,a),false);
- f.ctrl.tick(f.p,280);assert.equal(f.damage.at(-1),a.damage*WARDEN_DAMAGE_MULTIPLIER);
+ f.p.location.x+=a.radius-.25;f.ctrl.tick(f.p,120);assert.equal(f.damage.at(-1),a.damage*WARDEN_DAMAGE_MULTIPLIER);
 }
 console.log('Prototype warden: phase boundaries, regeneration, warning/dodge, peaceful and completion OK (simulated)');
 // Refused damage and API errors must not leave a standalone debuff.
@@ -162,5 +161,5 @@ for(const fail of [()=>false,()=>{throw Error('not available');}]){
 {
  const f=fixture();for(let t=0;t<=200;t++)f.ctrl.tick(f.p,t);
  assert.ok(f.messages.some(m=>m.includes(WARDEN_ALTERNATES[0].attack)), 'second warning by tick 160');
- assert.deepEqual(f.damage,[9*WARDEN_DAMAGE_MULTIPLIER,8*WARDEN_DAMAGE_MULTIPLIER]);
+ assert.deepEqual(f.damage,[9*WARDEN_DAMAGE_MULTIPLIER,6*WARDEN_DAMAGE_MULTIPLIER]);
 }

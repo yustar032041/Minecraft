@@ -32,14 +32,14 @@ function fixture(){
  const tick=t=>{sys.currentTick=t;ctrl.tick(p,t);};return {p,e,d,health,particles,animations,hits,sounds,sys,ctrl,tick};
 }
 {
- const f=fixture();f.tick(0);f.tick(80);assert.equal(f.particles.filter(([id])=>id==='hakkai:warning_marker').length,20);assert.ok(f.animations.includes('animation.hakkai.warden_warning'));
+ const f=fixture();f.tick(0);f.tick(80);assert.equal(f.particles.filter(([id])=>id==='hakkai:warning_marker').length,64);assert.ok(f.animations.includes('animation.hakkai.warden_warning'));
  f.tick(100);f.tick(110);f.tick(120);assert.deepEqual(f.hits,[9*WARDEN_DAMAGE_MULTIPLIER]);assert.ok(f.animations.includes(anims[0]));assert.ok(f.sounds.includes('random.explode'));
  f.health.currentValue=3990;f.tick(121);assert.ok(f.animations.includes('animation.hakkai.warden_transform'));
 }
 {
- const f=fixture();for(const t of [0,80,120,220,260,360])f.tick(t);
+ const f=fixture();for(const t of [0,80,120,220])f.tick(t);
  const strikes=()=>f.animations.filter(a=>a===anims[0]).length,initial=strikes();
- for(const [t,n] of [[400,1],[420,2],[440,3]]){f.tick(t);assert.equal(strikes(),initial+n,'one impact animation per warned combo hit');}
+ for(const [t,n] of [[260,2],[280,3],[300,4]]){f.tick(t);assert.equal(strikes(),initial+n,'one impact animation per warned combo hit');}
  assert.deepEqual(f.hits.slice(-3),[6*WARDEN_DAMAGE_MULTIPLIER,6*WARDEN_DAMAGE_MULTIPLIER,6*WARDEN_DAMAGE_MULTIPLIER]);
 }
 {

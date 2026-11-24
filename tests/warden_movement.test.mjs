@@ -24,7 +24,7 @@ for(const reason of ['unloaded','blocked','no-floor','too-fast','idle','peaceful
 {
  const f=fixture();f.e.isOnGround=false;f.e.location.y=84;f.s.takeoffAt=0;
  assert.equal(steerWarden(f.e,f.s,1,0),true);assert.equal(steerWarden(f.e,f.s,1,5),false);assert.equal(steerWarden(f.e,f.s,1,6),true);
- assert.ok(f.impulses.every(v=>Math.hypot(v.x,v.z)<=.121));
+ assert.ok(f.impulses.every(v=>Math.hypot(v.x,v.z)<=.231));assert.ok(f.impulses.some(v=>v.y>0)&&f.impulses.some(v=>v.y<0));
 }
 {
  const f=fixture();updateWardenAppearance(f.e,f.s,1,0);updateWardenAppearance(f.e,f.s,1,100,{idle:true});
