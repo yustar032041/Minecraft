@@ -1,3 +1,4 @@
+import { friendlyResidentById, foundFriendlyResident, friendlySupportTick, friendlyTrade } from './friendly_residents.js';
 import { CULTURE_SITES, CULTURE_PEOPLE, cultureResidentIdentity, foundCultureResident, factoryResidentRole, factoryResidentBonus } from './realm_culture.js';
 import { FACTORY_VILLAGE_ID, foundFactoryResident } from './factory_village.js';
 import { farmStep } from './factory_farm.js';
@@ -2802,6 +2803,7 @@ const chapters=[
  ['はじめに','ガイド本は持ち物から「使う」で開きます。迷ったらこの本の章を順に読んでね。風見の帰還石を使うと、風見台・ベッド・登録地点・元の世界に帰れます。風見台で旅の地図を使い、まずは始まりの草原へ。'],
  ['世界の生成とシード','8つの界はそれぞれ別の空間です。到着すると、今いる場所を中心に周囲4チャンク分（最大9×9チャンク）の地形を先に準備します。地形の高さ・山脈・谷・島・地表素材はワールドシードと界ごとの計算で決まり、同じワールドの同じ座標なら同じ地形になります。各界には旧12種に加えて新5種ずつ、合計136種のスクリプト式シード地形帯があり、歩き続けるほど新しい地形帯が続きます。拠点・街道・既存建築のある区画は上書きしません。'],
  ['新しい地形帯と川','各界に5種類ずつ新しい地形帯を追加。界の土や植生、岩・結晶の景観が現れ、自然調査ノートにも記録されます。これはスクリプトで分類した地形帯で、エンジン本来のバイオーム変更ではありません。6界の谷では、地形条件が合えば短い川区画に水が入ります。氷の界は表面が凍ります。土手と床を確認して水を置くため川は区画ごとに途切れ、湖や海への連結はまだありません。生成済み区画は変更しません。'],
+ ['特別な友好住人','八界それぞれの名所に道案内・手当て係・物資係・見守り兵の4種類、合計32種類が現れます。通常村人とは別の友好モブで、姿と帽子は界と役割ごとに違います。近くの道案内は移動支援、手当て係は傷の手当て、物資係はエメラルドと品の交換、見守り兵は近くの敵対モブと戦います。直接話しかけると説明を読めます。自然生成はモブ生成が有効なとき、各名所で各役割1人だけ一度限りです。死亡・失敗時の補充や通常の村人交易・繁殖・就職はありません。動きや描画は実機未確認です。'],
  ['八界の暮らしと名所','八界の人々が残した風車・文庫・隊商の迷路・氷宮・鍛冶場・地下庭・空の観測庭・待合駅があります。名所にある記録石を使うと、その土地の約束と歴史を読み、旅の記録にも残せます。名所ではモブ生成が有効なら語り手が各2人まで一度だけ現れます。しゃがんで話しかけると土地の話、立って話しかけると通常の取引です。予定地は新規の空き区画に限られます。'],
  ['八界の大景観','新しい空き区画では、草原の風車の飾り・森の巨木・砂の石門や化石・氷晶塔・雷石の尖塔・地下の光る茸や天井の鍾乳状の石・空の雲の塔・時の時計飾りなどが現れます。各界の丘や地表の色も違います。飾りの風車や時計は動きません。シードと地形により出現しない場所もあり、旧地形や建物は改造しません。'],
  ['工場村と観測遺跡','風車工場村は草原の界、雷雲の観測遺跡は雷の界の新しい探索地です。手引きで選ぶと予定座標を表示します。工場村では鐘が動く間に住人が少しずつ現れます。破砕機と製材機の西側の樽に素材を入れ、東側の樽に空きを作ると、風力で加工し、成功した生産量が集落の備蓄に加わります。備蓄は住人の維持や成長に使います。生成条件が合わない場合は現れません。'],
@@ -5438,6 +5440,21 @@ safeSub('world','before','playerInteractWithEntity',e=>{
    if(index>=0&&index<8)menu(p,async()=>realmNpcConversation(p,index));
    return;
  }
+ const resident=friendlyResidentById.get(e.target.typeId);
+ if(resident){
+   e.cancel=true;const target=e.target;
+   menu(p,async()=>{
+     const near=()=>p.isValid&&target.isValid&&p.dimension.id===target.dimension.id&&dist(p.location,target.location)<6&&[GameMode.Survival,GameMode.Adventure,GameMode.Creative].includes(p.getGameMode());
+     if(!near())return;
+     const body=`${resident.lore}\n\n${resident.description}\n\nこの住人はバニラ村人ではなく、繁殖・通常交易・就職はしません。`;
+     if(resident.role!=='artisan')return simple(p,resident.name,body);
+     const ix=await form(p,resident.name,`${body}\n\nエメラルド1個 → ${resident.itemName} ${resident.count}個`,[['交換する'],['閉じる']]);
+     if(ix!==0||!near())return;
+     if(friendlyTrade(space(p),new ItemStack(resident.item,resident.count),report))notice(p,`§a${resident.itemName}を受け取りました`);
+     else notice(p,'§eエメラルド・空き容量を確認してください。処理失敗時は持ち物も確認してください');
+   });
+   return;
+ }
  if(p.isSneaking&&['minecraft:villager','minecraft:villager_v2'].includes(e.target.typeId)){
    const identity=cultureResidentIdentity(e.target);
    if(identity){
@@ -5751,6 +5768,10 @@ system.runInterval(()=>{
      }
      if(t>=(s.natureAt??0)){
        s.natureAt=t+40;
+       if(/^hakkai:realm_[0-7]$/.test(p.dimension.id)){
+         if(site?.kind==='culture')foundFriendlyResident({site,world,dimension:p.dimension,num,property,findFloor:safeNear,report});
+         if([GameMode.Survival,GameMode.Adventure].includes(p.getGameMode()))friendlySupportTick(p,s,t);
+       }
        let profile;try{profile=survey(p);}catch{}
        // Allow observing realm wildlife in creative too; keep vanilla-world behavior unchanged.
        if(!isCreative(p)||/^hakkai:realm_[0-7]$/.test(p.dimension.id))try{wildlifeTick(p,profile,site);}catch(err){if(t%200===0)report('生き物の出現',err);}
