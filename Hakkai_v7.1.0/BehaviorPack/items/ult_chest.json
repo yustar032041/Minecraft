@@ -2,10 +2,7 @@
   "format_version": "1.26.60",
   "minecraft:item": {
     "description": {
-      "identifier": "hakkai:ult_chest",
-      "menu_category": {
-        "category": "equipment"
-      }
+      "identifier": "hakkai:ult_chest"
     },
     "components": {
       "minecraft:display_name": {
@@ -15,14 +12,24 @@
       "minecraft:max_stack_size": 1,
       "minecraft:wearable": {
         "slot": "slot.armor.chest",
-        "protection": 8
+        "protection": 20
       },
       "minecraft:durability": {
-        "max_durability": 1000
+        "max_durability": 3600
       },
       "minecraft:enchantable": {
         "slot": "armor_torso",
         "value": 15
+      },
+      "minecraft:repairable": {
+        "repair_items": [
+          {
+            "items": [
+              "minecraft:netherite_scrap"
+            ],
+            "repair_amount": 900
+          }
+        ]
       }
     }
   }

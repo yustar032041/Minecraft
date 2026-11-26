@@ -15,10 +15,10 @@
         "item": "minecraft:hopper"
       },
       {
-        "item": "hakkai:crystal_3"
+        "item": "minecraft:redstone"
       },
       {
-        "item": "hakkai:crystal_4"
+        "item": "minecraft:redstone"
       }
     ],
     "result": {

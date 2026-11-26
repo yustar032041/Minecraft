@@ -23,6 +23,8 @@ def update(name,chest):
  path=attach/(name+'.json');obj=json.loads(path.read_text(encoding='utf8'));desc=obj['minecraft:attachable']['description']
  desc['scripts']['animate']=['offset'];desc['animations']={'offset':'animation.armor.leggings.offset'}
  path.write_text(json.dumps(obj,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+if __name__=='__main__' and '--allow-legacy-overwrite' not in __import__('sys').argv:
+ raise SystemExit('Legacy generator would overwrite current armor. Pass --allow-legacy-overwrite explicitly; rebuild current armor afterwards.')
 if __name__=='__main__':
  for i in range(11):update(f'series_leggings_{i:02}',f'gear_{10+16*i:03}')
  update('ult_leggings','ult_chest')

@@ -8,6 +8,7 @@ export const EntityDamageCause={entityAttack:'entityAttack',projectile:'projecti
 export const GameMode={Creative:'creative',Spectator:'spectator',Survival:'survival',Adventure:'adventure'};
 export const EquipmentSlot={Mainhand:'Mainhand',Offhand:'Offhand',Head:'Head',Chest:'Chest',Legs:'Legs',Feet:'Feet'};
 export const Difficulty={Peaceful:'peaceful',Normal:'normal'};
+export const LiquidType={Water:'Water'};
 export class ItemStack {constructor(typeId,amount=1){this.typeId=typeId;this.amount=amount;}}
 
 export const InputPermissionCategory={LateralMovement:4,MoveForward:9};

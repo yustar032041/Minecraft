@@ -3,7 +3,7 @@
   "minecraft:entity": {
     "description": {
       "identifier": "hakkai:eclipse_colossus",
-      "is_spawnable": false,
+      "is_spawnable": true,
       "is_summonable": true
     },
     "components": {
@@ -63,14 +63,11 @@
           }
         ]
       },
-      "minecraft:loot": {
-        "table": "loot_tables/hakkai/entities/eclipse_colossus.json"
-      },
       "minecraft:knockback_resistance": {
         "value": 1.0
       },
       "minecraft:attack": {
-        "damage": 52
+        "damage": 9
       },
       "minecraft:behavior.hurt_by_target": {
         "priority": 1
@@ -92,6 +89,9 @@
       "minecraft:pushable": {
         "is_pushable": false,
         "is_pushable_by_piston": false
+      },
+      "minecraft:experience_reward": {
+        "on_death": "query.last_hit_by_player ? 50 : 0"
       }
     }
   }

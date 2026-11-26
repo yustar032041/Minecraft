@@ -18,7 +18,9 @@ def pixels(path):
     if data[:8] != b'\x89PNG\r\n\x1a\n':
         raise AssertionError(f'{path}: not a PNG')
     width, height, depth, color, compression, filtering, interlace = struct.unpack_from('>IIBBBBB',data,16)
-    assert (width,height,depth,color,compression,filtering,interlace) == (128,128,8,6,0,0,0), path
+    bespoke_drops = {f'hakkai_drop_element_{p.stem}.png' for p in (root / 'art_sources/mob_drop_elements').glob('*.png') if p.stem.isdigit()}
+    expected = 1024 if path.name in {'hakkai_guide.png', 'hakkai_industrial_guide.png', 'hakkai_return_stone.png'} else 512 if path.name in bespoke_drops else 128
+    assert (width,height,depth,color,compression,filtering,interlace) == (expected,expected,8,6,0,0,0), path
     offset, compressed = 8, bytearray()
     while offset < len(data):
         size = struct.unpack_from('>I',data,offset)[0]
@@ -59,10 +61,11 @@ for name in progress['redrawn_existing'] + progress.get('derived_existing', []) 
     path = directory / ('hakkai_'+name+'.png')
     rows = pixels(path)
     visible = [(row[i],row[i+1],row[i+2]) for row in rows for i in range(0,len(row),4) if row[i+3]>=128]
-    assert 400 <= len(visible) < 14000, f'{name}: bad visible area {len(visible)}'
+    scale = len(rows) // 128
+    assert 400*scale*scale <= len(visible) < 14000*scale*scale, f'{name}: bad visible area {len(visible)}'
     assert len(set(visible)) > 60, f'{name}: insufficient detail'
-    assert all(rows[y][x*4+3] == 0 for x,y in ((0,0),(127,0),(0,127),(127,127))), f'{name}: opaque corners'
+    assert all(rows[y][x*4+3] == 0 for x,y in ((0,0),(len(rows)-1,0),(0,len(rows)-1),(len(rows)-1,len(rows)-1))), f'{name}: opaque corners'
     digest = hashlib.sha256(path.read_bytes()).digest()
     assert digest not in seen, f'duplicate art: {name} and {seen.get(digest)}'
     seen[digest] = name
-print(f'{len(seen)} tracked item icons: 128px RGBA, transparency, detail and distinct files OK')
+print(f'{len(seen)} tracked item icons: 128px or specified HD RGBA, transparency, detail and distinct files OK')

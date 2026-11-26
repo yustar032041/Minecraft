@@ -32,6 +32,15 @@ test('only nearby visible artificial lights suppress, not daylight or distant / 
  assert.equal(disallowHostileSpawn(invalid,p,ctx),false,'inspection failure does not suppress');
  assert.equal(disallowHostileSpawn(dimension(),pt(100,-50),ctx),true,'factory still protected');
 });
+test('the source block hit on a diagonal ray is not mistaken for a wall',()=>{
+ const p=pt(0,0),light=torch(3,88,3,'minecraft:sea_lantern'),d=dimension(undefined,[light]);
+ d.getBlockFromRay=()=>({block:{location:{x:3,y:88,z:3}}});
+ assert.equal(nearArtificialLight(d,p),true,'diagonal ray intersecting the sea lantern itself');
+ d.getBlockFromRay=()=>({block:{location:{x:1,y:88,z:1}}});
+ assert.equal(nearArtificialLight(d,p),false,'an intervening wall still blocks the ray');
+ d.getBlockFromRay=()=>({});
+ assert.equal(nearArtificialLight(d,p),false,'unknown ray hit is not treated as the light');
+});
 test('only Spawned listed hostiles in village or near lamps are removed',()=>{
  const entity=(type,dim,location)=>({typeId:type,dimension:dim,location,isValid:true,remove(){this.removed=true;}});
  for(const [cause,type,sources,where,want] of [

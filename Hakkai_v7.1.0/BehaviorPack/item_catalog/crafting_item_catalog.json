@@ -1,0 +1,494 @@
+{
+  "format_version": "1.21.60",
+  "minecraft:crafting_items_catalog": {
+    "categories": [
+      {
+        "category_name": "equipment",
+        "groups": [
+          {
+            "group_identifier": {
+              "name": "hakkai:armor_family_0",
+              "icon": "hakkai:gear_010"
+            },
+            "items": [
+              "hakkai:gear_011",
+              "hakkai:gear_010",
+              "hakkai:series_leggings_00",
+              "hakkai:gear_012",
+              "hakkai:gear_091",
+              "hakkai:gear_090",
+              "hakkai:series_leggings_05",
+              "hakkai:gear_092",
+              "hakkai:gear_171",
+              "hakkai:gear_170",
+              "hakkai:series_leggings_10",
+              "hakkai:gear_172"
+            ]
+          },
+          {
+            "group_identifier": {
+              "name": "hakkai:armor_family_1",
+              "icon": "hakkai:gear_026"
+            },
+            "items": [
+              "hakkai:gear_027",
+              "hakkai:gear_026",
+              "hakkai:series_leggings_01",
+              "hakkai:gear_028",
+              "hakkai:gear_107",
+              "hakkai:gear_106",
+              "hakkai:series_leggings_06",
+              "hakkai:gear_108"
+            ]
+          },
+          {
+            "group_identifier": {
+              "name": "hakkai:armor_family_2",
+              "icon": "hakkai:gear_042"
+            },
+            "items": [
+              "hakkai:gear_043",
+              "hakkai:gear_042",
+              "hakkai:series_leggings_02",
+              "hakkai:gear_044",
+              "hakkai:gear_123",
+              "hakkai:gear_122",
+              "hakkai:series_leggings_07",
+              "hakkai:gear_124"
+            ]
+          },
+          {
+            "group_identifier": {
+              "name": "hakkai:armor_family_3",
+              "icon": "hakkai:gear_058"
+            },
+            "items": [
+              "hakkai:gear_059",
+              "hakkai:gear_058",
+              "hakkai:series_leggings_03",
+              "hakkai:gear_060",
+              "hakkai:gear_139",
+              "hakkai:gear_138",
+              "hakkai:series_leggings_08",
+              "hakkai:gear_140"
+            ]
+          },
+          {
+            "group_identifier": {
+              "name": "hakkai:armor_family_4",
+              "icon": "hakkai:gear_074"
+            },
+            "items": [
+              "hakkai:gear_075",
+              "hakkai:gear_074",
+              "hakkai:series_leggings_04",
+              "hakkai:gear_076",
+              "hakkai:gear_155",
+              "hakkai:gear_154",
+              "hakkai:series_leggings_09",
+              "hakkai:gear_156"
+            ]
+          },
+          {
+            "group_identifier": {
+              "name": "hakkai:armor_nightwalker",
+              "icon": "hakkai:gear_186"
+            },
+            "items": [
+              "hakkai:nightwalker_armor_helmet",
+              "hakkai:gear_186",
+              "hakkai:gear_187",
+              "hakkai:nightwalker_armor_leggings",
+              "hakkai:nightwalker_armor_boots"
+            ]
+          },
+          {
+            "group_identifier": {
+              "name": "hakkai:armor_guardian_0",
+              "icon": "hakkai:gear_188"
+            },
+            "items": [
+              "hakkai:gear_188",
+              "hakkai:gear_196",
+              "hakkai:gear_204",
+              "hakkai:guardian_armor_0_helmet",
+              "hakkai:guardian_armor_0_leggings",
+              "hakkai:guardian_armor_0_boots"
+            ]
+          },
+          {
+            "group_identifier": {
+              "name": "hakkai:armor_guardian_1",
+              "icon": "hakkai:gear_189"
+            },
+            "items": [
+              "hakkai:gear_189",
+              "hakkai:gear_197",
+              "hakkai:gear_205",
+              "hakkai:guardian_armor_1_helmet",
+              "hakkai:guardian_armor_1_leggings",
+              "hakkai:guardian_armor_1_boots"
+            ]
+          },
+          {
+            "group_identifier": {
+              "name": "hakkai:armor_guardian_2",
+              "icon": "hakkai:gear_190"
+            },
+            "items": [
+              "hakkai:gear_190",
+              "hakkai:gear_198",
+              "hakkai:gear_206",
+              "hakkai:guardian_armor_2_helmet",
+              "hakkai:guardian_armor_2_leggings",
+              "hakkai:guardian_armor_2_boots"
+            ]
+          },
+          {
+            "group_identifier": {
+              "name": "hakkai:armor_guardian_3",
+              "icon": "hakkai:gear_191"
+            },
+            "items": [
+              "hakkai:gear_191",
+              "hakkai:gear_199",
+              "hakkai:gear_207",
+              "hakkai:guardian_armor_3_helmet",
+              "hakkai:guardian_armor_3_leggings",
+              "hakkai:guardian_armor_3_boots"
+            ]
+          },
+          {
+            "group_identifier": {
+              "name": "hakkai:armor_guardian_4",
+              "icon": "hakkai:gear_192"
+            },
+            "items": [
+              "hakkai:gear_192",
+              "hakkai:gear_200",
+              "hakkai:gear_208",
+              "hakkai:guardian_armor_4_helmet",
+              "hakkai:guardian_armor_4_leggings",
+              "hakkai:guardian_armor_4_boots"
+            ]
+          },
+          {
+            "group_identifier": {
+              "name": "hakkai:armor_guardian_5",
+              "icon": "hakkai:gear_193"
+            },
+            "items": [
+              "hakkai:gear_193",
+              "hakkai:gear_201",
+              "hakkai:gear_209",
+              "hakkai:guardian_armor_5_helmet",
+              "hakkai:guardian_armor_5_leggings",
+              "hakkai:guardian_armor_5_boots"
+            ]
+          },
+          {
+            "group_identifier": {
+              "name": "hakkai:armor_guardian_6",
+              "icon": "hakkai:gear_194"
+            },
+            "items": [
+              "hakkai:gear_194",
+              "hakkai:gear_202",
+              "hakkai:gear_210",
+              "hakkai:guardian_armor_6_helmet",
+              "hakkai:guardian_armor_6_leggings",
+              "hakkai:guardian_armor_6_boots"
+            ]
+          },
+          {
+            "group_identifier": {
+              "name": "hakkai:armor_guardian_7",
+              "icon": "hakkai:gear_195"
+            },
+            "items": [
+              "hakkai:gear_195",
+              "hakkai:gear_203",
+              "hakkai:gear_211",
+              "hakkai:guardian_armor_7_helmet",
+              "hakkai:guardian_armor_7_leggings",
+              "hakkai:guardian_armor_7_boots"
+            ]
+          },
+          {
+            "group_identifier": {
+              "name": "hakkai:armor_united",
+              "icon": "hakkai:gear_212"
+            },
+            "items": [
+              "hakkai:united_armor_helmet",
+              "hakkai:gear_212",
+              "hakkai:gear_213",
+              "hakkai:united_armor_leggings",
+              "hakkai:united_armor_boots"
+            ]
+          },
+          {
+            "group_identifier": {
+              "name": "hakkai:armor_ultimate",
+              "icon": "hakkai:ult_chest"
+            },
+            "items": [
+              "hakkai:ult_helmet",
+              "hakkai:ult_chest",
+              "hakkai:ult_leggings",
+              "hakkai:ult_boots"
+            ]
+          },
+          {
+            "group_identifier": {
+              "name": "hakkai:combat_aids",
+              "icon": "hakkai:dodge_scroll"
+            },
+            "items": [
+              "hakkai:dodge_scroll",
+              "hakkai:taunt_scroll",
+              "hakkai:war_horn"
+            ]
+          },
+          {
+            "group_identifier": {
+              "name": "hakkai:weapons_sword",
+              "icon": "hakkai:gear_016"
+            },
+            "items": [
+              "hakkai:gear_016",
+              "hakkai:gear_096",
+              "hakkai:gear_176",
+              "hakkai:gear_032",
+              "hakkai:gear_112",
+              "hakkai:gear_048",
+              "hakkai:gear_128",
+              "hakkai:gear_064",
+              "hakkai:gear_144",
+              "hakkai:gear_080",
+              "hakkai:gear_160"
+            ]
+          },
+          {
+            "group_identifier": {
+              "name": "hakkai:weapons_axe",
+              "icon": "hakkai:gear_001"
+            },
+            "items": [
+              "hakkai:gear_001",
+              "hakkai:gear_081",
+              "hakkai:gear_161",
+              "hakkai:gear_017",
+              "hakkai:gear_097",
+              "hakkai:gear_177",
+              "hakkai:gear_033",
+              "hakkai:gear_113",
+              "hakkai:gear_049",
+              "hakkai:gear_129",
+              "hakkai:gear_065",
+              "hakkai:gear_145"
+            ]
+          },
+          {
+            "group_identifier": {
+              "name": "hakkai:weapons_bow",
+              "icon": "hakkai:gear_002"
+            },
+            "items": [
+              "hakkai:gear_002",
+              "hakkai:gear_082",
+              "hakkai:gear_162",
+              "hakkai:gear_018",
+              "hakkai:gear_098",
+              "hakkai:gear_178",
+              "hakkai:gear_034",
+              "hakkai:gear_114",
+              "hakkai:gear_050",
+              "hakkai:gear_130",
+              "hakkai:gear_066",
+              "hakkai:gear_146"
+            ]
+          },
+          {
+            "group_identifier": {
+              "name": "hakkai:weapons_staff",
+              "icon": "hakkai:gear_003"
+            },
+            "items": [
+              "hakkai:gear_003",
+              "hakkai:gear_083",
+              "hakkai:gear_163",
+              "hakkai:gear_019",
+              "hakkai:gear_099",
+              "hakkai:gear_179",
+              "hakkai:gear_035",
+              "hakkai:gear_115",
+              "hakkai:gear_051",
+              "hakkai:gear_131",
+              "hakkai:gear_067",
+              "hakkai:gear_147"
+            ]
+          },
+          {
+            "group_identifier": {
+              "name": "hakkai:weapons_hammer",
+              "icon": "hakkai:gear_004"
+            },
+            "items": [
+              "hakkai:gear_004",
+              "hakkai:gear_084",
+              "hakkai:gear_164",
+              "hakkai:gear_020",
+              "hakkai:gear_100",
+              "hakkai:gear_180",
+              "hakkai:gear_036",
+              "hakkai:gear_116",
+              "hakkai:gear_052",
+              "hakkai:gear_132",
+              "hakkai:gear_068",
+              "hakkai:gear_148"
+            ]
+          },
+          {
+            "group_identifier": {
+              "name": "hakkai:weapons_spear",
+              "icon": "hakkai:gear_005"
+            },
+            "items": [
+              "hakkai:gear_005",
+              "hakkai:gear_085",
+              "hakkai:gear_165",
+              "hakkai:gear_021",
+              "hakkai:gear_101",
+              "hakkai:gear_181",
+              "hakkai:gear_037",
+              "hakkai:gear_117",
+              "hakkai:gear_053",
+              "hakkai:gear_133",
+              "hakkai:gear_069",
+              "hakkai:gear_149"
+            ]
+          },
+          {
+            "group_identifier": {
+              "name": "hakkai:weapons_shield",
+              "icon": "hakkai:gear_006"
+            },
+            "items": [
+              "hakkai:gear_006",
+              "hakkai:gear_086",
+              "hakkai:gear_166",
+              "hakkai:gear_022",
+              "hakkai:gear_102",
+              "hakkai:gear_182",
+              "hakkai:gear_038",
+              "hakkai:gear_118",
+              "hakkai:gear_054",
+              "hakkai:gear_134",
+              "hakkai:gear_070",
+              "hakkai:gear_150"
+            ]
+          },
+          {
+            "group_identifier": {
+              "name": "hakkai:weapons_fan",
+              "icon": "hakkai:gear_007"
+            },
+            "items": [
+              "hakkai:gear_007",
+              "hakkai:gear_087",
+              "hakkai:gear_167",
+              "hakkai:gear_023",
+              "hakkai:gear_103",
+              "hakkai:gear_183",
+              "hakkai:gear_039",
+              "hakkai:gear_119",
+              "hakkai:gear_055",
+              "hakkai:gear_135",
+              "hakkai:gear_071",
+              "hakkai:gear_151"
+            ]
+          },
+          {
+            "group_identifier": {
+              "name": "hakkai:weapons_ring",
+              "icon": "hakkai:gear_008"
+            },
+            "items": [
+              "hakkai:gear_008",
+              "hakkai:gear_088",
+              "hakkai:gear_168",
+              "hakkai:gear_024",
+              "hakkai:gear_104",
+              "hakkai:gear_184",
+              "hakkai:gear_040",
+              "hakkai:gear_120",
+              "hakkai:gear_056",
+              "hakkai:gear_136",
+              "hakkai:gear_072",
+              "hakkai:gear_152"
+            ]
+          },
+          {
+            "group_identifier": {
+              "name": "hakkai:weapons_necklace",
+              "icon": "hakkai:gear_009"
+            },
+            "items": [
+              "hakkai:gear_009",
+              "hakkai:gear_089",
+              "hakkai:gear_169",
+              "hakkai:gear_025",
+              "hakkai:gear_105",
+              "hakkai:gear_185",
+              "hakkai:gear_041",
+              "hakkai:gear_121",
+              "hakkai:gear_057",
+              "hakkai:gear_137",
+              "hakkai:gear_073",
+              "hakkai:gear_153"
+            ]
+          },
+          {
+            "group_identifier": {
+              "name": "hakkai:weapons_book",
+              "icon": "hakkai:gear_014"
+            },
+            "items": [
+              "hakkai:gear_014",
+              "hakkai:gear_094",
+              "hakkai:gear_174",
+              "hakkai:gear_030",
+              "hakkai:gear_110",
+              "hakkai:gear_046",
+              "hakkai:gear_126",
+              "hakkai:gear_062",
+              "hakkai:gear_142",
+              "hakkai:gear_078",
+              "hakkai:gear_158"
+            ]
+          },
+          {
+            "group_identifier": {
+              "name": "hakkai:weapons_stone",
+              "icon": "hakkai:gear_015"
+            },
+            "items": [
+              "hakkai:gear_015",
+              "hakkai:gear_095",
+              "hakkai:gear_175",
+              "hakkai:gear_031",
+              "hakkai:gear_111",
+              "hakkai:gear_047",
+              "hakkai:gear_127",
+              "hakkai:gear_063",
+              "hakkai:gear_143",
+              "hakkai:gear_079",
+              "hakkai:gear_159"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

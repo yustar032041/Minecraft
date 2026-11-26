@@ -2,10 +2,7 @@
   "format_version": "1.26.60",
   "minecraft:item": {
     "description": {
-      "identifier": "hakkai:series_leggings_10",
-      "menu_category": {
-        "category": "equipment"
-      }
+      "identifier": "hakkai:series_leggings_10"
     },
     "components": {
       "minecraft:display_name": {
@@ -15,14 +12,24 @@
       "minecraft:max_stack_size": 1,
       "minecraft:wearable": {
         "slot": "slot.armor.legs",
-        "protection": 2
+        "protection": 8
       },
       "minecraft:durability": {
-        "max_durability": 288
+        "max_durability": 440
       },
       "minecraft:enchantable": {
         "slot": "armor_legs",
         "value": 12
+      },
+      "minecraft:repairable": {
+        "repair_items": [
+          {
+            "items": [
+              "minecraft:netherite_scrap"
+            ],
+            "repair_amount": 110
+          }
+        ]
       }
     }
   }

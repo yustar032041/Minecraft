@@ -11,7 +11,8 @@ from render_extra_item_icons import recolor
 from import_item_art import save_with_maps
 
 GEAR={'ult_sword':'sword','ult_axe':'axe','ult_helmet':'helmet','ult_chest':'chest','ult_boots':'boots'}
-MAGIC={'magic_kaze':0,'magic_mizu':1,'magic_homura':2,'magic_hikari':5,'magic_tsuki':6,'magic_kizuna':9}
+# Retired standalone magic items must not be regenerated.
+MAGIC={'magic_tsuki':6}
 
 def render_all():
  result={}

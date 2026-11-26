@@ -16,7 +16,9 @@
         "controller.render.hakkai.beast"
       ],
       "animations": {
-        "walk": "animation.hakkai.hare.stride"
+        "walk": "animation.hakkai.wild_7_0_walk",
+        "creature_windup": "animation.hakkai.wild_7_0_windup",
+        "creature_strike": "animation.hakkai.wild_7_0_strike"
       },
       "scripts": {
         "animate": [

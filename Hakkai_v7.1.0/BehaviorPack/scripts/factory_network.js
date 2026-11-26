@@ -68,6 +68,27 @@ export function kineticPower(d,origin){return kineticNetwork(d,origin).status===
 // Each operation is a fixed recipe. Products are vanilla and no inventory
 // metadata is transformed unless the input is an ordinary named item type.
 export function factoryRecipe(kind,id){
+ // Storage compression remains useful from vanilla materials alone. The
+ // shard-to-crystal conversion is handled separately in the transfer loop.
+ if(kind==='mill'){
+  const m=/^(?:minecraft:raw_|hakkai:washed_)(iron|gold|copper)$/.exec(id);
+  if(m)return [`minecraft:${m[1]}_ingot`,1,1];
+ }
+ if(kind==='kiln'){
+  const outputs={'minecraft:sand':'minecraft:glass','minecraft:red_sand':'minecraft:glass','minecraft:potato':'minecraft:baked_potato','minecraft:beef':'minecraft:cooked_beef','minecraft:porkchop':'minecraft:cooked_porkchop','minecraft:chicken':'minecraft:cooked_chicken','minecraft:cod':'minecraft:cooked_cod','minecraft:salmon':'minecraft:cooked_salmon','minecraft:clay_ball':'minecraft:brick'};
+  if(outputs[id])return [outputs[id],1,1];
+ }
+ if(kind==='compressor'){
+  if(/^hakkai:shard_(?:[0-9]|1[0-9])$/.test(id))return [id.replace('shard_','crystal_'),2,1,'minecraft:amethyst_shard'];
+  const outputs={'minecraft:iron_ingot':'minecraft:iron_block','minecraft:gold_ingot':'minecraft:gold_block',
+   'minecraft:copper_ingot':'minecraft:copper_block','minecraft:diamond':'minecraft:diamond_block',
+   'minecraft:emerald':'minecraft:emerald_block','minecraft:coal':'minecraft:coal_block',
+   'minecraft:redstone':'minecraft:redstone_block'};
+  if(outputs[id])return [outputs[id],9,1];
+ }
+ // Basic sorter passes ores, ingots and industry products as well as realm
+ // crystals. Its caller must clone the selected item, not manufacture a copy.
+ if(kind==='sorter'&&(/^(minecraft:(raw_(iron|gold|copper)|(iron|gold|copper)_ingot)|hakkai:(crushed|washed)_(iron|gold|copper)|hakkai:(shard|crystal)_(?:[0-9]|1[0-9]))$/.test(id)))return [id,1,1];
  if(kind==='crusher'&&recycleProduct(id))return [recycleProduct(id),1,2];
  if(kind==='crusher'&&/^hakkai:crystal_(?:[0-9]|1[0-9])$/.test(id))return [id.replace('crystal_','shard_'),1,2];
  const ore=id.match(/^minecraft:raw_(iron|gold|copper)$/);

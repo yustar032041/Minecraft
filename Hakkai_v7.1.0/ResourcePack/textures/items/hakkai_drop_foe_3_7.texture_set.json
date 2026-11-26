@@ -1,8 +1,0 @@
-{
-  "format_version": "1.16.100",
-  "minecraft:texture_set": {
-    "color": "hakkai_drop_foe_3_7",
-    "normal": "hakkai_drop_foe_3_7_normal",
-    "metalness_emissive_roughness": "hakkai_drop_foe_3_7_mer"
-  }
-}

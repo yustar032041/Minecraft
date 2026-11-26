@@ -15,7 +15,8 @@ class FakeDimension{
  getPlayers(){return this.players??[];}
  getBlock(p){
   const k=key(p.x,p.y,p.z),type=this.blocks.get(k)??'minecraft:air';
-  return {typeId:type,isAir:type==='minecraft:air',isSolid:type!=='minecraft:air'&&type!=='minecraft:water',isLiquid:type==='minecraft:water',
+  return {typeId:type,isAir:type==='minecraft:air',...(this.noSolid?{}:{isSolid:type!=='minecraft:air'&&type!=='minecraft:water'}),isLiquid:type==='minecraft:water',isWaterlogged:false,
+   isLiquidBlocking:liquid=>{assert.equal(liquid,'Water');return type!=='minecraft:air'&&type!=='minecraft:water';},
    getComponent:(name)=>{if(type!=='minecraft:barrel'||name!=='minecraft:inventory')return undefined;
     if(!this.inventories.has(k))this.inventories.set(k,new Map());const items=this.inventories.get(k);
     return {container:{setItem:(slot,item)=>items.set(slot,item)}};}};
@@ -122,7 +123,7 @@ for(const [cx,cz] of [[2,0]]){
 {
  let found;
  for(let cx=100;cx<160&&!found;cx++){
-  const f=fixture(0,cx,100);f.generator.tick(f.player,20);f.run();
+  const f=fixture(0,cx,100);f.dimension.noSolid=true;f.generator.tick(f.player,20);f.run();
   const water=f.dimension.writes.filter(w=>w.type==='minecraft:water');
   if(water.length)found={f,water,cx};
  }
@@ -130,10 +131,10 @@ for(const [cx,cz] of [[2,0]]){
  const {f,water,cx}=found;
  for(const cell of water){
   const below=f.dimension.getBlock({x:cell.x,y:cell.y-1,z:cell.z});
-  assert.ok(below.isSolid||below.typeId==='minecraft:water','no unsupported water');
+  assert.ok(below.isLiquidBlocking('Water')||below.typeId==='minecraft:water','no unsupported water');
   for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){
    const side=f.dimension.getBlock({x:cell.x+dx,y:cell.y,z:cell.z+dz});
-   assert.ok(side.isSolid||side.typeId==='minecraft:water','pond wall contains fluid');
+   assert.ok(side.isLiquidBlocking('Water')||side.typeId==='minecraft:water','pond wall contains fluid');
   }
  }
  const test=fixture(0,cx,100);test.generator.tick(test.player,20);test.step(256);
@@ -308,9 +309,9 @@ console.log('New seeded building placement and late player block protection (moc
  // Find a fresh chunk with a real, fully contained water stream.
  const {hash,noise,height}=seedFunctions('731');let candidate;
  for(let cx=95;cx<125&&!candidate;cx++)for(let cz=95;cz<125;cz++){const p=streamPlan(0,cx,cz,hash,height,noise);if(p){candidate={cx,cz,p};break;}}
- assert.ok(candidate);const {cx,cz,p}=candidate,f=fixture(0,cx,cz,[],undefined,{biomes,families});f.generator.tick(f.player,20);f.run();assert.equal(f.reports.length,0);
- for(const cell of p.cells){assert.equal(f.dimension.getBlock({...cell,y:p.floor}).isSolid,true);for(let y=p.floor+1;y<=p.level;y++)assert.equal(f.dimension.getBlock({...cell,y}).typeId,'minecraft:water');}
- for(const cell of p.rim)for(let y=p.floor+1;y<=p.level;y++){const b=f.dimension.getBlock({...cell,y});assert.ok(b.isSolid&&!b.isLiquid,'intact rim');}
+ assert.ok(candidate);const {cx,cz,p}=candidate,f=fixture(0,cx,cz,[],undefined,{biomes,families});f.dimension.noSolid=true;f.generator.tick(f.player,20);f.run();assert.equal(f.reports.length,0);
+ for(const cell of p.cells){assert.equal(f.dimension.getBlock({...cell,y:p.floor}).isLiquidBlocking('Water'),true);for(let y=p.floor+1;y<=p.level;y++)assert.equal(f.dimension.getBlock({...cell,y}).typeId,'minecraft:water');}
+ for(const cell of p.rim)for(let y=p.floor+1;y<=p.level;y++){const b=f.dimension.getBlock({...cell,y});assert.ok(b.isLiquidBlocking('Water')&&!b.isLiquid,'intact rim');}
  assert.equal(f.props.get(`seed_extra_0_${cx}_${cz}_v1`),1);
  console.log('Actual generated stream contains real water within verified solid banks (mocked)');
 }
@@ -391,10 +392,10 @@ console.log('New seeded building placement and late player block protection (moc
  // Find a real suspended cavern formation with an intact roof and clear air.
  const {cavernHangingPlan}=await import('../Hakkai_v7.1.0/BehaviorPack/scripts/realm_spectacles.js');let hanging=false;
  for(let cx=100;cx<110&&!hanging;cx++)for(let cz=100;cz<110&&!hanging;cz++){
-  const cavern=fixture(5,cx,cz);cavern.generator.tick(cavern.player,20);cavern.run();
+  const cavern=fixture(5,cx,cz);cavern.dimension.noSolid=true;cavern.generator.tick(cavern.player,20);cavern.run();
   for(const p of cavernHangingPlan(cx,cz,hash)){
    const root=124+Math.round(noise(p.x,p.z,23,5,269)*4)-2;
-   if(cavern.dimension.getBlock({x:p.x,y:root,z:p.z}).isSolid&&cavern.dimension.getBlock({x:p.x,y:root-1,z:p.z}).typeId==='hakkai:abyssal_stone'&&cavern.dimension.getBlock({x:p.x,y:root-p.length,z:p.z}).typeId==='hakkai:glow_moss')hanging=true;
+   if(cavern.dimension.getBlock({x:p.x,y:root,z:p.z}).typeId==='minecraft:deepslate'&&cavern.dimension.getBlock({x:p.x,y:root-1,z:p.z}).typeId==='hakkai:abyssal_stone'&&cavern.dimension.getBlock({x:p.x,y:root-p.length,z:p.z}).typeId==='hakkai:glow_moss')hanging=true;
   }
  }
  assert.ok(hanging,'real hanging cave formation');
@@ -459,4 +460,21 @@ console.log('Deep realm: expanded envelope preserves old blocks, fresh sector ex
   assert.equal(f.props.get(`seed_decor_wait_0_${cx}_${cz}_v1`),undefined);
  }
  console.log('Near-player landmarks defer and safely retry; modified blocks remain protected (mocked)');
+}
+// A non-air bank alone does not prove water containment. Missing or rejecting
+// stable liquid-blocking data and waterlogging refuse the whole source.
+{
+ const {hash,noise,height}=seedFunctions('731');let c;
+ for(let cx=95;cx<125&&!c;cx++)for(let cz=95;cz<125;cz++){const p=streamPlan(0,cx,cz,hash,height,noise);if(p){c={cx,cz,p};break;}}
+ for(const mode of ['nonblocking','missing','throw','waterlogged']){
+  const f=fixture(0,c.cx,c.cz);f.dimension.noSolid=true;f.generator.tick(f.player,20);f.step(256);
+  const get=f.dimension.getBlock.bind(f.dimension),rim=c.p.rim[0],target={...rim,y:c.p.level};
+  f.dimension.getBlock=p=>{const b=get(p);if(p.x===target.x&&p.y===target.y&&p.z===target.z){
+   if(mode==='nonblocking')b.isLiquidBlocking=()=>false;
+   if(mode==='missing')delete b.isLiquidBlocking;
+   if(mode==='throw')b.isLiquidBlocking=()=>{throw Error('unavailable')};
+   if(mode==='waterlogged')b.isWaterlogged=true;
+  }return b;};
+  f.run();assert.equal(f.dimension.writes.filter(w=>w.type==='minecraft:water').length,0,mode);
+ }
 }

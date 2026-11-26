@@ -1,0 +1,29 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "hakkai:guardian_armor_5_helmet"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:diamond_helmet"
+      },
+      {
+        "item": "hakkai:crystal_5"
+      },
+      {
+        "item": "hakkai:shard_5"
+      },
+      {
+        "item": "minecraft:emerald"
+      }
+    ],
+    "result": {
+      "item": "hakkai:guardian_armor_5_helmet",
+      "count": 1
+    }
+  }
+}

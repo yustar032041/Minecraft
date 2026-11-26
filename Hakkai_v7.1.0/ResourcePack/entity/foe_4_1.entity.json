@@ -16,7 +16,12 @@
         "controller.render.hakkai.beast"
       ],
       "animations": {
-        "walk": "animation.hakkai.bird.stride"
+        "walk": "animation.hakkai.foe_4_1_walk",
+        "creature_windup": "animation.hakkai.foe_4_1_windup",
+        "creature_strike": "animation.hakkai.foe_4_1_strike",
+        "talent_windup": "animation.hakkai.foe_4_1_windup",
+        "talent_strike": "animation.hakkai.foe_4_1_strike",
+        "native_contact": "animation.hakkai.foe_4_1_contact"
       },
       "scripts": {
         "animate": [

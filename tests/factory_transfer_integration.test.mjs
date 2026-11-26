@@ -4,9 +4,10 @@ import assert from 'node:assert/strict';import fs from 'node:fs';import vm from 
 import {kineticNetwork,hasAdjacentWater,factoryRecipe} from '../Hakkai_v7.1.0/BehaviorPack/scripts/factory_network.js';
 import {findLineRecipe,filteredDestination} from '../Hakkai_v7.1.0/BehaviorPack/scripts/factory_lines.js';
 import {pipeEndpoints} from '../Hakkai_v7.1.0/BehaviorPack/scripts/factory_transport.js';
-import {fluidPumpStep,fluidBasinStep,fluidLoaderStep,adjacentWaterTank,tankState,consumeTankWater} from '../Hakkai_v7.1.0/BehaviorPack/scripts/factory_fluids.js';
+import {fluidPumpStep,fluidBasinStep,fluidLoaderStep,adjacentWaterTank,tankState,consumeTankWater,prepareTankChange} from '../Hakkai_v7.1.0/BehaviorPack/scripts/factory_fluids.js';
 import {farmStep} from '../Hakkai_v7.1.0/BehaviorPack/scripts/factory_farm.js';
 import {itemDuctStep} from '../Hakkai_v7.1.0/BehaviorPack/scripts/factory_ducts.js';
+import {MINER_DEPTH,miningPassable,miningResult} from '../Hakkai_v7.1.0/BehaviorPack/scripts/factory_mining.js';
 import {factoryTransaction} from '../Hakkai_v7.1.0/BehaviorPack/scripts/factory_transaction.js';
 class ItemStack {constructor(typeId,amount=1){Object.assign(this,{typeId,amount,maxAmount:64});}clone(){const c=new ItemStack(this.typeId,this.amount);c.nameTag=this.nameTag;return c;}isStackableWith(x){return this.typeId===x.typeId&&this.nameTag===x.nameTag;}}
 class Container {constructor(items){this.items=items;this.size=items.length;this.failOnce=false;}getItem(i){return this.items[i]?.clone();}setItem(i,v){this.items[i]=v?.clone();if(this.failOnce){this.failOnce=false;throw Error('write failed');}}}
@@ -20,7 +21,7 @@ function fixture(kind,inputs,outputs=[undefined,undefined]){
  d.getBlock=l=>l.y===80&&l.z===0&&l.x===-1?barrel(from):l.y===80&&l.z===0&&l.x===1?barrel(to):l.y===80&&l.z===0&&l.x===0?b:l.x===0&&l.z===0&&l.y<80?ore:{typeId:'minecraft:air'};
  const total=(c,id)=>c.items.reduce((a,v)=>a+(v?.typeId===id?v.amount:0),0);
  const room=(c,s)=>c.items.reduce((a,v)=>a+(!v?s.maxAmount:v.isStackableWith(s)?v.maxAmount-v.amount:0),0)>=s.amount;
- const ctx={ns:'hakkai:',world:{getTimeOfDay:()=>6000},currentWeather:new Map(),WeatherType:{Thunder:'thunder',Rain:'rain'},system:{currentTick:0},BlockPermutation:{resolve:id=>({id,withState:(k,v)=>({id,getState:x=>x===k?v:undefined})})},ItemStack,total,room,factoryTransaction,kineticNetwork,hasAdjacentWater,factoryRecipe,syncKineticVisual:()=>{},findLineRecipe,filteredDestination,pipeEndpoints,fluidPumpStep,fluidBasinStep,fluidLoaderStep,adjacentWaterTank,tankState,consumeTankWater,farmStep,itemDuctStep,farmCursors:new Map(),factoryCycleAt:new Map(),production:(_,n)=>produced.push(n),report:(...x)=>reports.push(x)};
+ const ctx={ns:'hakkai:',world:{getTimeOfDay:()=>6000},currentWeather:new Map(),WeatherType:{Thunder:'thunder',Rain:'rain'},system:{currentTick:0},BlockPermutation:{resolve:id=>({id,withState:(k,v)=>({id,getState:x=>x===k?v:undefined})})},ItemStack,total,room,factoryTransaction,MINER_DEPTH,miningPassable,miningResult,kineticNetwork,hasAdjacentWater,factoryRecipe,syncKineticVisual:()=>{},findLineRecipe,filteredDestination,pipeEndpoints,fluidPumpStep,fluidBasinStep,fluidLoaderStep,adjacentWaterTank,tankState,consumeTankWater,prepareTankChange,farmStep,itemDuctStep,farmCursors:new Map(),factoryCycleAt:new Map(),production:(_,n)=>produced.push(n),report:(...x)=>reports.push(x)};
  vm.createContext(ctx);vm.runInContext(src.slice(start,end),ctx);
  return {from,to,ore,b,ctx,reports,produced,run:()=>ctx.transfer(b)};
 }
@@ -115,7 +116,7 @@ for(const kind of ['factory_pipe','crusher']){
 // Mixer/assembly use actual crafting ingredients and stop without usable kinetic power.
 for(const [kind,inputs,output,amount] of [
  ['mixer',['minecraft:glass_bottle','minecraft:glow_berries','hakkai:crystal_1'],'hakkai:mana_tonic',1],
- ['assembler',['hakkai:cloth','hakkai:cloth','minecraft:paper'],'hakkai:bandage',2],
+ ['assembler',['minecraft:string','minecraft:string','minecraft:paper'],'hakkai:bandage',2],
 ]){
  const f=fixture(kind,inputs.map(x=>item(x))),before=snap(f.from);f.run();assert.deepEqual(snap(f.from),before);assert.deepEqual(snap(f.to),[undefined,undefined]);
  const get=f.b.dimension.getBlock;f.b.dimension.getBlock=p=>p.x===0&&p.y===81&&p.z===0?{typeId:'hakkai:wind_rotor',...p,location:p}:get(p);f.b.dimension.getBlockFromRay=()=>undefined;
@@ -139,7 +140,7 @@ for(const match of [true,false]){
  const result=match?f.to:reject;assert.equal(result.getItem(0).nameTag,'kept');assert.equal(result.getItem(0).amount,1);assert.equal(f.from.getItem(0).amount,1);assert.equal(samples.getItem(0).amount,1);assert.equal(f.produced.length,0);
 }
 {
- const f=fixture('crusher',[item('minecraft:coal'),item('hakkai:drop_foe_0_0')]);f.run();assert.deepEqual(snap(f.to),[['hakkai:shard_0',2],undefined]);
+ const f=fixture('crusher',[item('minecraft:coal'),item('hakkai:drop_element_0')]);f.run();assert.deepEqual(snap(f.to),[['hakkai:shard_0',2],undefined]);
 }
 console.log('Powered mixing, assembly, routing, rollback and mob-material recycling integration OK (simulated)');
 for(const problem of ['no_source','empty_filter','full_output','write_failure']){
@@ -195,7 +196,7 @@ const rotor=p=>({typeId:'hakkai:wind_rotor',...p,location:p});
  f.run();assert.equal(tankState(tank).n,1);f.run();assert.equal(tankState(tank).n,1,'tick throttling');f.ctx.system.currentTick=40;f.run();assert.equal(tankState(tank).n,2);
 }
 for(const [kind,input,expected,tankKind,tankLevel,remaining] of [['fluid_loader','minecraft:lava_bucket','minecraft:bucket',0,0,4],['fluid_basin','minecraft:bucket','minecraft:lava_bucket',2,4,0],['washer','hakkai:crushed_iron','hakkai:washed_iron',1,2,1]]){
- const f=fixture(kind,[item(input)]),tank=tankBlock(tankKind,tankLevel),get=f.b.dimension.getBlock;
+ const f=fixture(kind,[item(input)]),tank=tankBlock(tankKind,tankLevel),get=f.b.dimension.getBlock;tank.location={x:0,y:80,z:1};
  f.b.dimension.getBlock=p=>p.x===0&&p.y===80&&p.z===1?tank:p.x===0&&p.y===81&&p.z===0?rotor(p):get(p);f.b.dimension.getBlockFromRay=()=>undefined;
  f.run();assert.equal(f.to.getItem(0)?.typeId,expected,kind);assert.equal(tankState(tank).n,remaining,kind);
 }
@@ -215,7 +216,7 @@ console.log('Actual powered pump, loader, basin and tank-fed washer transfers OK
  f.run();assert.equal(lava.typeId,'minecraft:air');assert.deepEqual(tankState(tank),{n:4,kind:2});f.ctx.system.currentTick=40;f.run();assert.equal(tankState(tank).n,4);
 }
 {
- const f=fixture('fluid_basin',[undefined]),lava=tankBlock(2,4),water=tankBlock(1,1),get=f.b.dimension.getBlock;
+ const f=fixture('fluid_basin',[undefined]),lava=tankBlock(2,4),water=tankBlock(1,1),get=f.b.dimension.getBlock;lava.location={x:0,y:80,z:-1};water.location={x:0,y:80,z:1};
  f.b.dimension.getBlock=p=>p.x===0&&p.y===80&&p.z===-1?lava:p.x===0&&p.y===80&&p.z===1?water:p.x===0&&p.y===81&&p.z===0?rotor(p):get(p);f.b.dimension.getBlockFromRay=()=>undefined;
  f.run();assert.equal(f.to.getItem(0)?.typeId,'minecraft:obsidian');assert.equal(tankState(lava).n,0);assert.equal(tankState(water).n,0);
 }
@@ -227,7 +228,7 @@ const cropPerm=(state,age)=>({getState:k=>k===state?age:undefined,withState:(k,v
  f.run();assert.deepEqual(snap(f.to),[['hakkai:summer_corn_produce',2],undefined]);assert.equal(crop.permutation.getState('hakkai:age'),0);
 }
 {
- const f=fixture('farm_fertilizer',[item('minecraft:bone_meal')]),tank=tankBlock(1,2),get=f.b.dimension.getBlock;const crop={typeId:'minecraft:wheat',permutation:cropPerm('growth',3),setPermutation(p){this.permutation=p;}};
+ const f=fixture('farm_fertilizer',[item('minecraft:bone_meal')]),tank=tankBlock(1,2),get=f.b.dimension.getBlock;tank.location={x:0,y:81,z:0};const crop={typeId:'minecraft:wheat',permutation:cropPerm('growth',3),setPermutation(p){this.permutation=p;}};
  f.b.dimension.getBlock=p=>p.x===0&&p.y===81&&p.z===0?tank:p.x===0&&p.y===80&&p.z===-1?rotor(p):p.x===1&&p.y===80&&p.z===0?crop:p.x===1&&p.y===79&&p.z===0?{typeId:'minecraft:farmland'}:get(p);f.b.dimension.getBlockFromRay=()=>undefined;
  f.run();assert.equal(crop.permutation.getState('growth'),4);assert.equal(tankState(tank).n,1);assert.equal(f.from.getItem(0),undefined);
 }
@@ -282,4 +283,192 @@ for(const type of ['farm_harvester','farm_fertilizer','farm_planter','item_extra
  vm.runInContext(src.slice(src.indexOf('function production(b,count){'),src.indexOf('function gatherTown(')),f.ctx);
  f.run();assert.equal(town.data.goods,5);assert.equal(f.to.getItem(0).amount,1,'worker does not duplicate physical output');
  f.ctx.system.currentTick=50;f.to.failOnce=true;f.run();assert.equal(town.data.goods,5,'failed transaction adds no bonus');
+}
+// Compressor/sorter are useful with only vanilla materials; the sorter moves
+// the selected actual stack with its metadata rather than fabricating an item.
+for(const [input,output] of [['iron_ingot','iron_block'],['gold_ingot','gold_block'],['copper_ingot','copper_block'],['diamond','diamond_block'],['emerald','emerald_block'],['coal','coal_block'],['redstone','redstone_block']]){
+ const f=fixture('compressor',[item('minecraft:'+input,9)]);f.run();assert.deepEqual(snap(f.from),[undefined]);assert.deepEqual(snap(f.to),[['minecraft:'+output,1],undefined]);
+ const short=fixture('compressor',[item('minecraft:'+input,8)]);short.run();assert.deepEqual(snap(short.from),[['minecraft:'+input,8]]);assert.deepEqual(snap(short.to),[undefined,undefined]);
+}
+for(const id of ['minecraft:raw_iron','minecraft:gold_ingot','hakkai:crushed_copper','hakkai:washed_iron','hakkai:shard_2']){
+ const a=item(id,2);a.nameTag='kept name';const f=fixture('sorter',[a]);f.run();
+ assert.equal(f.from.getItem(0).amount,1);assert.equal(f.to.getItem(0).typeId,id);assert.equal(f.to.getItem(0).nameTag,'kept name');
+}
+{
+ const a=item('minecraft:raw_iron');a.nameTag='kept';const f=fixture('sorter',[a],[item('minecraft:stone',64)]);f.run();
+ assert.equal(f.from.getItem(0).nameTag,'kept');assert.equal(f.to.getItem(0).typeId,'minecraft:stone');
+}
+// Mining writes output first; if a callback replaces or unloads the ore,
+// undo the output and fuel but do not overwrite the new world state.
+for(const changed of ['replace','unloaded']){
+ const f=fixture('miner',[item('minecraft:coal')]),d=f.b.dimension,get=d.getBlock,set=f.to.setItem.bind(f.to);let changedNow=false;
+ d.getBlock=q=>changedNow&&changed==='replace'&&q.x===0&&q.y<80&&q.z===0?{typeId:'minecraft:diamond_block'}:get(q);
+ const loaded=d.isChunkLoaded;d.isChunkLoaded=q=>changedNow&&changed==='unloaded'&&q.x===0&&q.y<80&&q.z===0?false:loaded(q);
+ f.to.setItem=(i,v)=>{set(i,v);changedNow=true;};
+ f.run();assert.equal(f.from.getItem(0).amount,1);assert.equal(f.to.getItem(0),undefined);assert.equal(f.produced.length,0);assert.equal(f.ore.typeId,'hakkai:ore_3');if(changed==='replace')assert.equal(d.getBlock({x:0,y:79,z:0}).typeId,'minecraft:diamond_block');
+}
+// Recheck the fixed harvester's output position after writing the product.
+{
+ const f=fixture('farm_harvester',[]),get=f.b.dimension.getBlock,crop={typeId:'minecraft:wheat',permutation:cropPerm('growth',7),setPermutation(p){this.permutation=p;}},output={typeId:'minecraft:barrel',getComponent:()=>({container:f.to})};let replaced=false;
+ f.b.dimension.getBlock=p=>p.x===0&&p.y===81&&p.z===0?(replaced?{typeId:'minecraft:stone'}:output):p.x===0&&p.y===80&&p.z===-1?rotor(p):p.x===1&&p.y===80&&p.z===0?crop:p.x===1&&p.y===79&&p.z===0?{typeId:'minecraft:farmland'}:get(p);
+ f.b.dimension.getBlockFromRay=()=>undefined;const set=f.to.setItem.bind(f.to);f.to.setItem=(i,v)=>{set(i,v);replaced=true;};f.run();
+ assert.equal(f.to.getItem(0),undefined);assert.equal(crop.permutation.getState('growth'),7);assert.equal(f.produced.length,0);
+}
+{
+ const f=fixture('miner',[item('minecraft:coal')]),d=f.b.dimension,get=d.getBlock,set=f.to.setItem.bind(f.to);let replaced=false;
+ d.getBlock=q=>replaced&&q.x===1&&q.y===80&&q.z===0?{typeId:'minecraft:stone'}:get(q);f.to.setItem=(i,v)=>{set(i,v);replaced=true;};
+ f.run();assert.equal(f.ore.typeId,'hakkai:ore_3');assert.equal(f.to.getItem(0),undefined);assert.equal(f.from.getItem(0).amount,1);assert.equal(f.produced.length,0);
+}
+
+// A washer rechecks the live water and machine after inventory mutations.
+for(const fault of ['tank_changed','tank_replaced','tank_unloaded','tank_write','water_removed','machine_replaced','barrel_removed']){
+ const f=fixture('washer',[item('hakkai:crushed_iron')]),get=f.b.dimension.getBlock;
+ let water={typeId:'minecraft:water'},machine=f.b,barrelValid=true;
+ const tank=tankBlock(1,2);tank.location={x:0,y:80,z:1};if(fault==='tank_write'){let fail=true;tank.setPermutation=function(p){this.permutation=p;if(fail){fail=false;throw Error('tank write failed after mutation');}};}
+ const usesTank=fault.startsWith('tank_');
+ f.b.dimension.getBlock=p=>p.x===0&&p.y===81&&p.z===0?rotor(p):p.x===0&&p.y===80&&p.z===1?(usesTank?tank:water):p.x===0&&p.y===80&&p.z===0?machine:p.x===1&&p.y===80&&p.z===0&&!barrelValid?{typeId:'minecraft:air'}:get(p);
+ f.b.dimension.getBlockFromRay=()=>undefined;
+ const original=f.to.setItem.bind(f.to);let first=true;
+ f.to.setItem=(i,v)=>{original(i,v);if(!first)return;first=false;
+  if(fault==='tank_changed')tank.permutation=fluidPerm(1,7);
+  if(fault==='tank_replaced')tank.typeId='minecraft:stone';
+  if(fault==='tank_unloaded')f.b.dimension.isChunkLoaded=p=>!(p.x===0&&p.y===80&&p.z===1);
+  if(fault==='water_removed')water={typeId:'minecraft:air'};
+  if(fault==='machine_replaced')machine={typeId:'minecraft:stone'};
+  if(fault==='barrel_removed')barrelValid=false;
+ };
+ f.run();assert.deepEqual(snap(f.from),[['hakkai:crushed_iron',1]],fault);assert.deepEqual(snap(f.to),[undefined,undefined],fault);
+ if(fault==='tank_changed')assert.equal(tankState(tank).n,7);if(fault==='tank_replaced')assert.equal(tank.typeId,'minecraft:stone');
+ if(fault==='tank_write')assert.equal(tankState(tank).n,2);assert.ok(f.reports.length,fault);
+}
+
+for(const [kind,inputs] of [
+ ['factory_pipe',[item('minecraft:diamond',2)]],
+ ['mill',[item('minecraft:coal'),item('minecraft:raw_iron',2)]],
+ ['kiln',[item('minecraft:coal'),item('minecraft:sand',2)]],
+ ['crusher',[item('minecraft:coal'),item('minecraft:cobblestone')]],
+ ['mixer',[item('minecraft:glass_bottle'),item('minecraft:glow_berries'),item('hakkai:crystal_1')]],
+ ['assembler',[item('minecraft:string',2),item('minecraft:paper')]],
+ ['fluid_loader',[item('minecraft:water_bucket')]],
+ ['fluid_basin',[item('minecraft:dirt')]],
+])for(const fault of ['machine','input','output','unloaded']){
+ const f=fixture(kind,inputs),get=f.b.dimension.getBlock,tank=tankBlock(kind==='fluid_basin'?1:0,kind==='fluid_basin'?4:0);tank.location={x:0,y:80,z:1};
+ let changed=false;
+ f.b.dimension.getBlock=p=>{
+  if(changed&&fault==='machine'&&p.x===0&&p.y===80&&p.z===0)return {typeId:'minecraft:stone'};
+  if(changed&&fault==='input'&&p.x===-1&&p.y===80&&p.z===0)return {typeId:'minecraft:stone'};
+  if(changed&&fault==='output'&&p.x===1&&p.y===80&&p.z===0)return {typeId:'minecraft:stone'};
+  if(p.x===0&&p.y===81&&p.z===0)return rotor(p);
+  if(p.x===0&&p.y===80&&p.z===1&&(kind==='fluid_loader'||kind==='fluid_basin'))return tank;
+  return get(p);
+ };
+ f.b.dimension.getBlockFromRay=()=>undefined;
+ f.b.dimension.isChunkLoaded=p=>!(changed&&fault==='unloaded'&&p.x===-1&&p.y===80&&p.z===0);
+ const before=snap(f.from),write=f.to.setItem.bind(f.to);let first=true;
+ f.to.setItem=(i,v)=>{write(i,v);if(first){first=false;changed=true;}};
+ f.run();assert.deepEqual(snap(f.from),before,`${kind} ${fault}: input`);assert.deepEqual(snap(f.to),[undefined,undefined],`${kind} ${fault}: output`);
+ if(kind==='fluid_loader')assert.deepEqual(tankState(tank),{kind:0,n:0});
+ if(kind==='fluid_basin')assert.deepEqual(tankState(tank),{kind:1,n:4});
+ assert.ok(f.reports.length,`${kind} ${fault}: reported`);
+}
+for(const match of [true,false])for(const fault of ['filter','reject','accept','input','machine','unloaded']){
+ const named=item('minecraft:diamond',2);named.nameTag='kept';const f=fixture('filter_router',[named]);
+ const samples=new Container([item(match?'minecraft:diamond':'minecraft:stone')]),reject=new Container([undefined]);
+ const barrel=c=>({typeId:'minecraft:barrel',getComponent:()=>({container:c})}),get=f.b.dimension.getBlock;let changed=false;
+ f.b.dimension.getBlock=p=>{
+  const k=`${p.x},${p.y},${p.z}`;
+  if(changed&&({filter:'0,80,-1',reject:'0,80,1',accept:'1,80,0',input:'-1,80,0',machine:'0,80,0'})[fault]===k)return {typeId:'minecraft:stone'};
+  if(k==='0,81,0')return rotor(p);if(k==='0,80,-1')return barrel(samples);if(k==='0,80,1')return barrel(reject);return get(p);
+ };
+ f.b.dimension.isChunkLoaded=p=>!(changed&&fault==='unloaded'&&p.x===0&&p.y===80&&p.z===-1);
+ f.b.dimension.getBlockFromRay=()=>undefined;
+ const out=match?f.to:reject,write=out.setItem.bind(out);let first=true;out.setItem=(i,v)=>{write(i,v);if(first){first=false;changed=true;}};
+ f.run();assert.equal(f.from.getItem(0).amount,2,`${match} ${fault}`);assert.equal(f.from.getItem(0).nameTag,'kept');assert.equal(out.getItem(0),undefined);assert.ok(f.reports.length);
+}
+for(const match of [true,false])for(const fault of ['flip','empty']){
+ const named=item('minecraft:diamond',2);named.nameTag='kept';const f=fixture('filter_router',[named]);
+ const samples=new Container([item(match?'minecraft:diamond':'minecraft:stone')]),reject=new Container([undefined]);
+ const barrel=c=>({typeId:'minecraft:barrel',getComponent:()=>({container:c})}),get=f.b.dimension.getBlock;
+ f.b.dimension.getBlock=p=>p.x===0&&p.y===81&&p.z===0?rotor(p):p.x===0&&p.y===80&&p.z===-1?barrel(samples):p.x===0&&p.y===80&&p.z===1?barrel(reject):get(p);
+ f.b.dimension.getBlockFromRay=()=>undefined;const out=match?f.to:reject,write=out.setItem.bind(out);let first=true;
+ out.setItem=(i,v)=>{write(i,v);if(first){first=false;samples.items=[fault==='empty'?undefined:item(match?'minecraft:stone':'minecraft:diamond')];}};
+ f.run();assert.equal(f.from.getItem(0).amount,2,`${match} ${fault}`);assert.equal(f.from.getItem(0).nameTag,'kept');assert.equal(out.getItem(0),undefined);assert.ok(f.reports.length);
+}
+
+// The three fixed farms must not act after their machine is removed or
+// becomes unreadable during an inventory write. All use actual transfer().
+for(const kind of ['farm_planter','farm_harvester','farm_fertilizer'])for(const fault of ['replaced','unloaded']){
+ const f=fixture(kind,kind==='farm_planter'?[item('minecraft:wheat_seeds')]:kind==='farm_fertilizer'?[item('minecraft:bone_meal')]:[]);
+ const d=f.b.dimension,get=d.getBlock,loaded=d.isChunkLoaded;
+ const crop={typeId:kind==='farm_planter'?'minecraft:air':'minecraft:wheat',permutation:cropPerm('growth',kind==='farm_harvester'?7:3),setPermutation(p){this.permutation=p;this.typeId=p.id??this.typeId;}};
+ const tank=tankBlock(1,2);tank.location={x:0,y:81,z:0};const output={typeId:'minecraft:barrel',getComponent:()=>({container:f.to})};let changed=false;
+ d.getBlock=p=>p.x===0&&p.y===80&&p.z===0&&changed&&fault==='replaced'?{typeId:'minecraft:diamond_block'}:
+  p.x===0&&p.y===81&&p.z===0?(kind==='farm_harvester'?output:kind==='farm_fertilizer'?tank:rotor(p)):
+  p.x===0&&p.y===80&&p.z===-1?rotor(p):p.x===1&&p.y===80&&p.z===0?crop:p.x===1&&p.y===79&&p.z===0?{typeId:'minecraft:farmland'}:get(p);
+ d.isChunkLoaded=p=>changed&&fault==='unloaded'&&p.x===0&&p.y===80&&p.z===0?false:loaded(p);d.getBlockFromRay=()=>undefined;
+ const inventory=kind==='farm_harvester'?f.to:f.from, before=snap(inventory),set=inventory.setItem.bind(inventory);
+ inventory.setItem=(i,v)=>{set(i,v);changed=true;};f.run();
+ assert.deepEqual(snap(inventory),before,kind+' '+fault);assert.equal(crop.typeId,kind==='farm_planter'?'minecraft:air':'minecraft:wheat');
+ assert.equal(crop.permutation.getState('growth'),kind==='farm_harvester'?7:3);assert.equal(tankState(tank).n,2);assert.equal(f.produced.length,0);assert.ok(f.reports.length);
+}
+// A mutation can also happen after water has been consumed but before the
+// crop update. Restore water and fertilizer if the machine disappears then.
+{
+ const f=fixture('farm_fertilizer',[item('minecraft:bone_meal')]),d=f.b.dimension,get=d.getBlock,tank=tankBlock(1,2);tank.location={x:0,y:81,z:0};
+ const crop={typeId:'minecraft:wheat',permutation:cropPerm('growth',3),setPermutation(p){this.permutation=p;}},set=tank.setPermutation.bind(tank);let changed=false;
+ tank.setPermutation=p=>{set(p);changed=true;};
+ d.getBlock=p=>p.x===0&&p.y===80&&p.z===0&&changed?{typeId:'minecraft:stone'}:p.x===0&&p.y===81&&p.z===0?tank:p.x===0&&p.y===80&&p.z===-1?rotor(p):p.x===1&&p.y===80&&p.z===0?crop:p.x===1&&p.y===79&&p.z===0?{typeId:'minecraft:farmland'}:get(p);d.getBlockFromRay=()=>undefined;
+ f.run();assert.equal(f.from.getItem(0).amount,1);assert.equal(tankState(tank).n,2);assert.equal(crop.permutation.getState('growth'),3);assert.equal(f.produced.length,0);
+}
+// Changing the miner or the cells between it and a deeper ore after the
+// output write must abort. Restoring inventory never overwrites the changed
+// machine/path. A passable replacement may still be mined through.
+for(const fault of ['machine','machine_unloaded','path_blocked','nearer_ore','path_unloaded','path_passable']){
+ const f=fixture('miner',[item('minecraft:coal')]),d=f.b.dimension,get=d.getBlock,loaded=d.isChunkLoaded,set=f.to.setItem.bind(f.to);let changed=false;
+ const pathAfter=fault==='path_blocked'?'minecraft:diamond_block':fault==='nearer_ore'?'minecraft:iron_ore':'minecraft:deepslate';
+ d.getBlock=p=>p.x===0&&p.z===0&&p.y===80&&changed&&fault==='machine'?{typeId:'minecraft:stone'}:
+  p.x===0&&p.z===0&&p.y===79?{typeId:changed?pathAfter:'minecraft:stone'}:get(p);
+ d.isChunkLoaded=p=>changed&&p.x===0&&p.z===0&&((p.y===80&&fault==='machine_unloaded')||(p.y===79&&fault==='path_unloaded'))?false:loaded(p);
+ f.to.setItem=(i,v)=>{set(i,v);changed=true;};f.run();
+ if(fault==='path_passable'){assert.equal(f.ore.typeId,'minecraft:air');assert.equal(f.to.getItem(0).typeId,'hakkai:crystal_3');assert.equal(f.from.getItem(0),undefined);assert.equal(f.produced.length,1);}
+ else {assert.equal(f.ore.typeId,'hakkai:ore_3',fault);assert.equal(f.to.getItem(0),undefined,fault);assert.equal(f.from.getItem(0).amount,1,fault);assert.equal(f.produced.length,0,fault);assert.ok(f.reports.length,fault);}
+}
+
+// Run the actual miner transaction for every documented ore at every
+// supported depth. The guide and runtime share only the mapping, so this
+// separately verifies the path scan, inventory and world writes.
+for(const {block,out} of (await import('../Hakkai_v7.1.0/BehaviorPack/scripts/factory_mining.js')).miningGuideTargets(20))for(let depth=1;depth<=6;depth++){
+ const f=fixture('miner',[item('minecraft:coal')]),get=f.b.dimension.getBlock;f.ore.typeId=block;
+ f.b.dimension.getBlock=p=>p.x===0&&p.z===0&&p.y<80?(p.y===80-depth?f.ore:{typeId:'minecraft:stone'}):get(p);
+ f.run();assert.equal(f.ore.typeId,'minecraft:air',`${block} depth ${depth}`);assert.deepEqual(snap(f.to),[[out,1],undefined],`${block} depth ${depth}`);assert.equal(f.from.getItem(0),undefined);
+}
+for(const obstacle of ['minecraft:dirt','minecraft:diamond_ore','minecraft:nether_gold_ore','minecraft:water','hakkai:gantry_frame']){
+ const f=fixture('miner',[item('minecraft:coal')]),get=f.b.dimension.getBlock;
+ f.b.dimension.getBlock=p=>p.x===0&&p.z===0&&p.y===79?{typeId:obstacle}:get(p);f.run();
+ assert.equal(f.ore.typeId,'hakkai:ore_3',obstacle);assert.equal(f.from.getItem(0).amount,1);assert.equal(f.to.getItem(0),undefined);
+}
+{
+ // Stone and air are skipped, but depth seven is outside the actual scan.
+ const f=fixture('miner',[item('minecraft:coal')]),get=f.b.dimension.getBlock;
+ f.b.dimension.getBlock=p=>p.x===0&&p.z===0&&p.y<80?(p.y===73?f.ore:{typeId:'minecraft:air'}):get(p);f.run();
+ assert.equal(f.ore.typeId,'hakkai:ore_3');assert.equal(f.from.getItem(0).amount,1);assert.equal(f.to.getItem(0),undefined);
+}
+{
+ // A nearer supported ore wins even if another supported ore is below it.
+ const f=fixture('miner',[item('minecraft:coal')]),get=f.b.dimension.getBlock,near={typeId:'minecraft:iron_ore',permutation:{id:'iron'},setType(id){this.typeId=id;},setPermutation(){this.typeId='minecraft:iron_ore';}};
+ f.b.dimension.getBlock=p=>p.x===0&&p.z===0&&p.y===79?near:get(p);f.run();
+ assert.equal(near.typeId,'minecraft:air');assert.equal(f.ore.typeId,'hakkai:ore_3');assert.equal(f.to.getItem(0).typeId,'minecraft:raw_iron');
+}
+for(const fault of ['no_fuel','full','unloaded','night_skip','rain_skip']){
+ const f=fixture('miner',fault==='no_fuel'?[undefined]:[item('minecraft:coal')],fault==='full'?[item('minecraft:stone',64)]:[undefined,undefined]);
+ if(fault==='unloaded')f.b.dimension.isChunkLoaded=p=>p.y!==79;
+ if(fault==='night_skip'){f.ctx.world.getTimeOfDay=()=>14000;f.ctx.system.currentTick=30;}
+ if(fault==='rain_skip'){f.ctx.currentWeather.set('hakkai:realm_0','rain');f.ctx.system.currentTick=0;}
+ const before=snap(f.from),out=snap(f.to);f.run();assert.equal(f.ore.typeId,'hakkai:ore_3',fault);assert.deepEqual(snap(f.from),before,fault);assert.deepEqual(snap(f.to),out,fault);
+}
+{
+ // The miner can use a running mechanical network without a fuel item.
+ const f=fixture('miner',[undefined]),get=f.b.dimension.getBlock;
+ f.b.dimension.getBlock=p=>p.x===0&&p.y===80&&p.z===1?{typeId:'hakkai:water_wheel',...p,location:p}:p.x===0&&p.y===80&&p.z===2?{typeId:'minecraft:water'}:get(p);
+ f.run();assert.equal(f.ore.typeId,'minecraft:air');assert.equal(f.to.getItem(0).typeId,'hakkai:crystal_3');assert.equal(f.from.getItem(0),undefined);
 }

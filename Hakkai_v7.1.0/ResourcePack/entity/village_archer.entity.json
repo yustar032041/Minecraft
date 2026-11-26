@@ -16,12 +16,16 @@
         "controller.render.hakkai.beast"
       ],
       "animations": {
-        "walk": "animation.hakkai.brute.stride"
+        "walk": "animation.hakkai.brute.stride",
+        "patrol_shot": "animation.hakkai.patrol_shot"
       },
       "scripts": {
         "animate": [
           {
             "walk": "query.modified_move_speed > 0.01"
+          },
+          {
+            "patrol_shot": "variable.attack_time > 0.0"
           }
         ]
       }

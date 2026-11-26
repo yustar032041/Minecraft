@@ -4,12 +4,12 @@ import {setupRealmEnders,enderRealm,inEnderWarning,ENDER_ABILITIES} from '../Hak
 import {setupFushiSystem,CHIEF_ATTACKS} from '../Hakkai_v7.1.0/BehaviorPack/scripts/fushi_system.js';
 import {Difficulty,GameMode} from '@minecraft/server';
 function fixture(type){
- const effects=[],damage=[],messages=[],particles=[];
+ const effects=[],damage=[],messages=[],particles=[],animations=[];
  const dim={id:'hakkai:realm_7',getEntities:()=>[mob],spawnParticle:(...x)=>particles.push(x)};
  function player(id,x=0){return {id,typeId:'minecraft:player',isValid:true,location:{x,y:90,z:0},dimension:dim,getGameMode:()=>GameMode.Survival,sendMessage:s=>messages.push({id,s}),applyDamage:(n)=>damage.push({id,n}),addEffect:(id,duration)=>effects.push({id,duration})};}
- const p=player('p'),q=player('q');const mob={id:'mob',isValid:true,typeId:type,location:{x:3,y:90,z:0},dimension:dim};
+ const p=player('p'),q=player('q');const mob={id:'mob',isValid:true,typeId:type,location:{x:3,y:90,z:0},dimension:dim,playAnimation:id=>animations.push([system.currentTick,id])};
  const system={currentTick:0};const world={difficulty:Difficulty.Normal,getDifficulty(){return this.difficulty},getAllPlayers:()=>[p,q]};
- return {system,world,p,q,mob,dim,damage,effects,messages,particles};
+ return {system,world,p,q,mob,dim,damage,effects,messages,particles,animations};
 }
 for(let r=0;r<8;r++){
  const f=fixture(`hakkai:ender_${r}`),ctrl=setupRealmEnders({...f,report:()=>assert.fail('unexpected report')});
@@ -18,6 +18,7 @@ for(let r=0;r<8;r++){
  f.system.currentTick=40;ctrl.tick(f.p,40);assert.equal(f.messages.length,1);assert.equal(f.particles.length,16);
  ctrl.tick(f.q,40);assert.equal(f.messages.length,1,'no duplicate multiplayer warning');
  f.system.currentTick=80;ctrl.tick(f.p,80);assert.equal(f.damage.length,1);assert.equal(f.damage[0].n,ENDER_ABILITIES[r].damage);
+ assert.deepEqual(f.animations,[[40,`animation.hakkai.ender_${r}_windup`],[80,`animation.hakkai.ender_${r}_strike`]],'each traveler uses its own rig at the warned timing');
  assert.equal(f.effects[0].id,ENDER_ABILITIES[r].effect);
  ctrl.onDeath({deadEntity:f.mob});f.system.currentTick=240;ctrl.tick(f.p,240);assert.equal(f.messages.length,1);
 }
@@ -28,11 +29,13 @@ for(let r=0;r<8;r++){
 }
 for(const [type,setup] of [['hakkai:ender_0',setupRealmEnders],['hakkai:fushi_chief',setupFushiSystem]]){
  const f=fixture(type),ctrl=setup({...f,report:()=>assert.fail('unexpected report')});
- // Retargeting before a marked strike must not damage an unwarned player.
+ // Other attackers do not cancel a warning or become its unwarned target.
  ctrl.onHurt({hurtEntity:f.mob,damageSource:{damagingEntity:f.p}});f.system.currentTick=40;ctrl.tick(f.p,40);
  f.system.currentTick=41;ctrl.onHurt({hurtEntity:f.mob,damageSource:{damagingEntity:f.q}});
- f.system.currentTick=80;ctrl.tick(f.q,80);assert.equal(f.damage.length,0);
- assert.equal(f.messages.at(-1).id,'q');f.system.currentTick=120;ctrl.tick(f.q,120);assert.equal(f.damage[0].id,'q');
+ f.system.currentTick=80;ctrl.tick(f.q,80);
+ if(type==='hakkai:fushi_chief')assert.deepEqual(f.damage,[]); // no scheduler for charge
+ else{assert.equal(f.damage.length,1);assert.equal(f.damage[0].id,'p');}
+ assert.equal(f.messages.at(-1).id,'p');
  const peaceful=fixture(type);peaceful.world.difficulty=Difficulty.Peaceful;const safe=setup({...peaceful,report:()=>{}});
  safe.onHurt({hurtEntity:peaceful.mob,damageSource:{damagingEntity:peaceful.p}});safe.tick(peaceful.p,40);safe.tick(peaceful.p,80);
  assert.equal(peaceful.damage.length,0);assert.equal(peaceful.messages.length,0);
@@ -52,8 +55,19 @@ for(const [type,setup] of [['hakkai:ender_0',setupRealmEnders],['hakkai:fushi_ch
   let start=40+i*160;f.system.currentTick=start;ctrl.tick(f.p,start);
   f.system.currentTick=start+40;ctrl.tick(f.p,start+40);
  }
- assert.deepEqual(f.damage.map(d=>d.n),CHIEF_ATTACKS.map(a=>a.damage));
- assert.deepEqual(f.effects.map(e=>e.id),CHIEF_ATTACKS.map(a=>a.effect));
+ // No scheduler/raycast APIs: both moving attacks fail closed. Their actual
+ // flight and contact checks have dedicated integration suites.
+ assert.deepEqual(f.damage.map(d=>d.n),[CHIEF_ATTACKS[2].damage]);
+ assert.deepEqual(f.effects.map(e=>e.id),[CHIEF_ATTACKS[2].effect,CHIEF_ATTACKS[2].drowsiness.effect]);
+ assert.equal(f.messages.length,3);
+ assert.match(f.messages[0].s,/短く突進/);assert.match(f.messages[1].s,/弾を固定地点へ発射/);assert.match(f.messages[2].s,/鈍足と短い視界低下の霧（睡眠なし）/);
+ for(let i=0;i<3;i++){
+  assert.ok(f.messages[i].s.includes(CHIEF_ATTACKS[i].name)&&f.messages[i].s.includes('光の輪から離れよう')&&f.messages[i].s.includes('約2秒後'));
+  const offset=i*32; // charge and moon refresh their rings at launch
+  const marks=f.particles.filter(([id])=>id==='hakkai:warning_marker').slice(offset,offset+16);
+  assert.equal(marks.length,16);
+  for(const [,point] of marks)assert.ok(Math.abs(Math.hypot(point.x,point.z)-CHIEF_ATTACKS[i].radius)<1e-9);
+ }
 }
 for(const [type,setup] of [['hakkai:ender_0',setupRealmEnders],['hakkai:fushi_chief',setupFushiSystem]]){
  const f=fixture(type),ctrl=setup({...f,report:()=>{}});f.dim.spawnParticle=()=>{throw Error('marker missing')};
@@ -76,7 +90,7 @@ for(const [type,setup] of [['hakkai:ender_0',setupRealmEnders],['hakkai:fushi_ch
 for(const [type,setup] of [['hakkai:ender_0',setupRealmEnders],['hakkai:fushi_chief',setupFushiSystem]]){
  const f=fixture(type),calls=[],ctrl=setup({...f,report:()=>{},tryParry:(p,e)=>{calls.push([p.id,e.id]);return true;}});
  ctrl.onHurt({hurtEntity:f.mob,damageSource:{damagingEntity:f.p}});f.system.currentTick=40;ctrl.tick(f.p,40);f.system.currentTick=80;ctrl.tick(f.p,80);
- assert.deepEqual(calls,[['p','mob']]);assert.deepEqual(f.damage,[]);assert.deepEqual(f.effects,[]);
+ assert.deepEqual(calls,type==='hakkai:fushi_chief'?[]:[['p','mob']]);assert.deepEqual(f.damage,[]);assert.deepEqual(f.effects,[]);
  ctrl.stagger(f.mob,80);f.system.currentTick=110;ctrl.tick(f.p,110);assert.equal(f.messages.length,1,'stagger does not start a premature attack');
 }
 assert.equal(enderRealm('minecraft:enderman'),-1);assert.equal(enderRealm('hakkai:ender_8'),-1);

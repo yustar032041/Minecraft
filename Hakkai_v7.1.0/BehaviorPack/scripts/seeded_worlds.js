@@ -1,4 +1,4 @@
-import { BlockVolume, BlockPermutation, ItemStack } from '@minecraft/server';
+import { BlockVolume, BlockPermutation, ItemStack, LiquidType } from '@minecraft/server';
 import { repeatSitePlan, factoryVariant } from './seeded_repeat_sites.js';
 import { oreColumn } from './ore_distribution.js';
 import { placeMoonShrine } from './moon_shrine.js';
@@ -332,12 +332,14 @@ export function setupSeededWorlds(ctx){
   for(const p of cavernHangingPlan(cx,cz,hash)){
    const top=heightFor(5,p.x,p.z),roofY=124+Math.round(noise(p.x,p.z,23,5,269)*4),root=roofY-2;
    const roof=d.getBlock({x:p.x,y:root,z:p.z});
-   if(!roof?.isSolid||root-p.length<=top+2||playersNear(d,{x:p.x+.5,y:root-p.length/2,z:p.z+.5},7))continue;
+   // This generator creates the roof from deepslate. Do not infer support
+   // from arbitrary player-modified blocks or preview-only isSolid.
+   if(roof?.typeId!=='minecraft:deepslate'||root-p.length<=top+2||playersNear(d,{x:p.x+.5,y:root-p.length/2,z:p.z+.5},7))continue;
    let clear=true;for(let y=root-1;y>=root-p.length;y--)if(!d.getBlock({x:p.x,y,z:p.z})?.isAir){clear=false;break;}
    if(!clear)continue;
    for(let i=1;i<=p.length;i++){
     const at={x:p.x,y:root-i,z:p.z};
-    if(!d.getBlock({x:p.x,y:root,z:p.z})?.isSolid||!d.getBlock(at)?.isAir||playersNear(d,{x:at.x+.5,y:at.y,z:at.z+.5},3)||sceneryOccupied(d,at))break;
+    if(d.getBlock({x:p.x,y:root,z:p.z})?.typeId!=='minecraft:deepslate'||!d.getBlock(at)?.isAir||playersNear(d,{x:at.x+.5,y:at.y,z:at.z+.5},3)||sceneryOccupied(d,at))break;
     d.setBlockType(at,i===p.length?'hakkai:glow_moss':'hakkai:abyssal_stone');
     if(i%4===0)yield;
    }
@@ -373,7 +375,9 @@ export function setupSeededWorlds(ctx){
  }
  function placePond(d,plan){
   if(!plan||playersNear(d,{x:plan.x+.5,y:plan.level,z:plan.z+.5},8))return;
-  const solid=at=>{const block=d.getBlock(at);return Boolean(block&&block.isSolid&&!block.isLiquid);};
+  // isLiquidBlocking is the stable API's explicit flow-blocking check, not
+  // a collision/solid substitute. Missing data or API errors refuse water.
+  const solid=at=>{try{const b=d.getBlock(at);return Boolean(b&&b.isAir===false&&b.isLiquid===false&&b.isWaterlogged===false&&b.isLiquidBlocking(LiquidType.Water)===true);}catch{return false;}};
   // Verify the entire wall and bed after the multi-tick job. If someone
   // modified the basin during generation, do not place any fluid.
   for(const cell of plan.cells){

@@ -3,7 +3,7 @@ import {setupExpeditionRecords} from '../Hakkai_v7.1.0/BehaviorPack/scripts/expe
 const props=new Map(),notices=[],rewards=[];const world={};
 const num=(e,k)=>props.get(`${e.id??'world'}:${k}`)??0,property=(e,k,v)=>props.set(`${e.id??'world'}:${k}`,v);
 const frontierWorlds={siteCoords:(_r,i)=>i===3?[310,25]:[700+i*20,0],isGenerated:()=>true};
-const records=setupExpeditionRecords({ns:'hakkai:',world,places,num,property,frontierWorlds,notice:(p,s)=>notices.push([p.id,s]),give:(p,id)=>{rewards.push([p.id,id]);return true;},drop:()=>assert.fail(),form:()=>{},paged:()=>{},simple:()=>{}});
+const records=setupExpeditionRecords({ns:'hakkai:',world,places,num,property,frontierWorlds,notice:(p,s)=>notices.push([p.id,s]),claimDiscovery:(p,id,k,v)=>{rewards.push([p.id,id]);property(p,k,v);return 'ok';},form:()=>{},paged:()=>{},simple:()=>{}});
 const dim={id:'hakkai:realm_0',spawnParticle:()=>{}};
 const p={id:'p',dimension:dim,location:{x:118,y:88,z:0},playSound:()=>{}};
 records.tick(p,13);assert.equal(records.count(p),1,'discovery does not require a tick divisible by 20');assert.equal(rewards.length,1);

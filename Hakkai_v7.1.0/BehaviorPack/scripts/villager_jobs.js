@@ -4,11 +4,21 @@ const ROLE='hakkai:work_role_v1',CLAIM='hakkai:work_claim_v1_';
 export const jobBlock=role=>`hakkai:workstation_${role}`;
 const villagers=new Set(['minecraft:villager','minecraft:villager_v2']);
 const key=(dimension,at)=>`${CLAIM}${dimension.id}_${at.x}_${at.y}_${at.z}`;
-function parse(e){try{const j=JSON.parse(String(e.getDynamicProperty(ROLE)??''));return JOBS[j.role]&&typeof j.dim==='string'&&['x','y','z'].every(k=>Number.isInteger(j[k]))?j:undefined;}catch{return undefined;}}
+function parse(e){try{const j=JSON.parse(String(e.getDynamicProperty(ROLE)??''));return JOBS[j.role]&&typeof j.dim==='string'&&(j.source==='settlement'||['x','y','z'].every(k=>Number.isInteger(j[k])))?j:undefined;}catch{return undefined;}}
+// Village founders are ordinary villagers with an additive role, not a custom
+// model or a replacement. Their original name and vanilla trade state are kept.
+export function assignSettlementRole(e,role,home){
+ try{
+  if(!e?.isValid||!villagers.has(e.typeId)||!JOBS[role]||e.getDynamicProperty(ROLE)!==undefined)return false;
+  if(role==='builder')e.setDynamicProperty('hakkai:builder_home_v1',home);
+  e.setDynamicProperty(ROLE,JSON.stringify({role,dim:e.dimension.id,source:'settlement'}));return true;
+ }catch{return false;}
+}
 export function villagerJob(e,world){
  try{
   if(!e?.isValid||!villagers.has(e.typeId))return;
   const j=parse(e);if(!j||j.dim!==e.dimension.id)return;
+  if(j.source==='settlement')return j.role;
   const at={x:j.x,y:j.y,z:j.z},d=e.dimension;
   // A workplace in an unloaded chunk cannot be inspected. Keep the role until
   // its block can be checked, instead of destroying persistent job data.
@@ -49,5 +59,5 @@ export function releaseWorkstation(d,at,world,onRelease=()=>{}){
  }catch{return false;}
 }
 export function releaseDeadWorker(e,world){
- try{const j=parse(e);if(!j)return;const k=key(e.dimension,j);if(world.getDynamicProperty(k)===e.id)world.setDynamicProperty(k,undefined);}catch{}
+ try{const j=parse(e);if(!j||j.source==='settlement')return;const k=key(e.dimension,j);if(world.getDynamicProperty(k)===e.id)world.setDynamicProperty(k,undefined);}catch{}
 }

@@ -11,7 +11,7 @@ for kind,recipes in lines.items():
   for part in craft['ingredients']:ingredients[part['item']]=ingredients.get(part['item'],0)+1
   assert ingredients=={c['id']:c['count'] for c in recipe['costs']}
   assert recipe['output']==craft['result']['item'] and recipe['amount']==craft['result'].get('count',1)
-paths=list((r/'recipes').glob('recycle_drop_*.json'));assert len(paths)==len(recycle)==120
+paths=list((r/'recipes').glob('recycle_drop_*.json'));assert len(paths)==len(recycle)==20
 for p in paths:
  recipe=json.loads(p.read_text())['minecraft:recipe_shapeless'];assert recycle[recipe['ingredients'][0]['item']]==recipe['result']['item'];assert recipe['result']['count']==2
-print('Automated processing recipes and 120 material mappings match existing crafting recipes (static)')
+print('Automated processing recipes and 20 attribute material mappings match crafting recipes (static)')

@@ -28,24 +28,72 @@ export function collectStructure(d,anchor,maxBlocks=32){
  }
  return {parts};
 }
+// Compare all public block states. The API cannot identify a replacement
+// with exactly the same type and states, or guarantee atomic writes.
+function snapshot(permutation,id=permutation.type.id){
+ return {id,states:{...permutation.getAllStates()},permutation};
+}
+function same(block,expected){
+ if(block.typeId!==expected.id)return false;
+ // The intermediate empty block is compared by type; the actual empty
+ // permutation is captured after a successful clear for later rollback.
+ if(expected.states===null)return true;
+ const a=block.permutation.getAllStates(),b=expected.states,ak=Object.keys(a),bk=Object.keys(b);
+ return ak.length===bk.length&&ak.every(k=>Object.hasOwn(b,k)&&a[k]===b[k]);
+}
 // Destination must be empty or part of this structure. Never carry entities.
-// Best-effort rollback; a process crash or failed rollback is not atomic.
-export function moveStructure({d,parts,dest,commit,rollback,report=()=>{}}){
+// Revalidate before each write and undo only mutations still matching ours.
+// Best effort only: matching replacements, concurrent changes, unloaded blocks,
+// liquids, failed rollback and process crashes cannot be made atomic here.
+export function moveStructure({d,parts,dest,control,report=()=>{}}){
  const sourceKeys=new Set(parts.map(q=>key(q.p))),destinationKeys=new Set();
- for(const part of dest){const k=key(part.p);if(destinationKeys.has(k))return {ok:false,reason:'blocked'};destinationKeys.add(k);const block=loaded(d,part.p);if(!sourceKeys.has(k)&&block.typeId!=='minecraft:air')return {ok:false,reason:'blocked'};}
+ if(!control||sourceKeys.has(key(control.p)))return {ok:false,reason:'blocked'};
+ for(const part of dest){const k=key(part.p);if(k===key(control.p)||destinationKeys.has(k))return {ok:false,reason:'blocked'};destinationKeys.add(k);const block=loaded(d,part.p);if(!sourceKeys.has(k)&&block.typeId!=='minecraft:air')return {ok:false,reason:'blocked'};}
  const points=[...parts.map(x=>x.p),...dest.map(x=>x.p)];
  const min={x:Math.min(...points.map(x=>x.x))-2,y:Math.min(...points.map(x=>x.y))-2,z:Math.min(...points.map(x=>x.z))-2};
  const max={x:Math.max(...points.map(x=>x.x))+3,y:Math.max(...points.map(x=>x.y))+4,z:Math.max(...points.map(x=>x.z))+3};
  const center={x:(min.x+max.x)/2,y:(min.y+max.y)/2,z:(min.z+max.z)/2};const radius=Math.hypot(max.x-min.x,max.y-min.y,max.z-min.z)/2;
  if(d.getEntities({location:center,maxDistance:radius}).some(e=>e.typeId!=='hakkai:kinetic_visual'&&e.location.x>=min.x&&e.location.x<=max.x&&e.location.y>=min.y&&e.location.y<=max.y&&e.location.z>=min.z&&e.location.z<=max.z))return {ok:false,reason:'entity'};
- const originals=new Map();for(const q of points){const k=key(q);if(!originals.has(k))originals.set(k,{p:q,permutation:loaded(d,q).permutation});}
+ const expected=new Map();
+ for(const part of parts)expected.set(key(part.p),{p:part.p,...snapshot(part.permutation,part.id)});
+ for(const part of dest){const k=key(part.p);if(expected.has(k))continue;
+  const b=loaded(d,part.p);if(b.typeId!=='minecraft:air')return {ok:false,reason:'blocked'};
+  expected.set(k,{p:part.p,...snapshot(b.permutation,b.typeId)});
+ }
+ const controller={p:control.p,...snapshot(control.old,control.id)},controlKey=key(control.p);
+ expected.set(controlKey,controller);
+ const matches=(p,value)=>same(loaded(d,p),value);
+ // A source, destination, or controller may already have changed since the
+ // structure was selected or while the entity query was performed.
+ for(const value of expected.values())if(!matches(value.p,value))return {ok:false,reason:'changed'};
+ const writes=[];
+ function write(p,next,clear=false){
+  const k=key(p),before=expected.get(k);
+  if(!matches(control.p,expected.get(controlKey))||!matches(p,before))throw Error('structure changed before write');
+  // Push first: a native call may throw after applying the change.
+  writes.push({p,before,after:next});
+  const b=loaded(d,p);if(clear)b.setType('minecraft:air');else b.setPermutation(next.permutation);
+  if(!matches(p,next))throw Error('structure changed during write');
+  const actual=loaded(d,p);expected.set(k,{p,...snapshot(actual.permutation,actual.typeId)});
+ }
  try{
-  for(const part of parts)loaded(d,part.p).setType('minecraft:air');
-  for(const part of dest)loaded(d,part.p).setPermutation(part.permutation);
-  commit?.();return {ok:true,count:parts.length};
+  const air={id:'minecraft:air',states:null};
+  for(const part of parts)write(part.p,air,true);
+  for(const part of dest)write(part.p,snapshot(part.permutation));
+  // Detect changes to any already-written or pending position before the
+  // controller is advanced. This is bounded by the 32-block structure limit.
+  for(const value of expected.values())if(!matches(value.p,value))throw Error('structure changed before controller commit');
+  write(control.p,snapshot(control.next,control.id));
+  // The controller write itself can trigger updates elsewhere.
+  for(const value of expected.values())if(!matches(value.p,value))throw Error('structure changed after controller commit');
+  return {ok:true,count:parts.length};
  }catch(err){
-  let incomplete=false;for(const old of originals.values())try{loaded(d,old.p).setPermutation(old.permutation);}catch(e){incomplete=true;report('移動構造物の復旧失敗',e);}
-  if(rollback)try{rollback();}catch(e){incomplete=true;report('移動装置の復旧失敗',e);}
+  let incomplete=false;
+  for(const entry of writes.reverse())try{
+   const b=loaded(d,entry.p);
+   if(same(b,entry.after))b.setPermutation(entry.before.permutation);
+   else if(!same(b,entry.before)){incomplete=true;report('移動構造物の変更済み位置は復旧しません',Error('position changed'));}
+  }catch(e){incomplete=true;report('移動構造物の復旧失敗',e);}
   report(incomplete?'移動失敗（復旧要確認）':'移動失敗（復旧を試行）',err);return {ok:false,reason:incomplete?'rollback':'failed'};
  }
 }

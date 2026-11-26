@@ -72,8 +72,8 @@
         "speed_multiplier": 0.75,
         "within_radius": 12
       },
-      "minecraft:loot": {
-        "table": "loot_tables/hakkai/entities/fushi_chief.json"
+      "minecraft:experience_reward": {
+        "on_death": "query.last_hit_by_player ? 15 : 0"
       }
     },
     "component_groups": {

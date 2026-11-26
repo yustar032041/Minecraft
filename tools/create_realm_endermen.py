@@ -4,11 +4,16 @@
 Provisional procedural art: not a substitute for authored creature artwork or
 an in-game render test. Existing vanilla entities and textures are untouched.
 """
-import json, math, random
+from mob_experience import experience_reward
+import json, math, random, sys
 from pathlib import Path
 from PIL import Image, ImageDraw
 root=Path(__file__).resolve().parents[1]/'Hakkai_v7.1.0'
 bp=root/'BehaviorPack';rp=root/'ResourcePack'
+# Legacy generator overwrites client definitions and original 512px images.
+# Guard the individual traveler overhaul unless explicitly requested.
+if (rp/'models/entity/ender_0.geo.json').exists() and '--allow-legacy-overwrite' not in sys.argv:
+ raise SystemExit('Refusing to overwrite individual realm travelers; use --allow-legacy-overwrite only for intentional legacy regeneration')
 colors=[(142,219,151),(141,210,176),(246,165,85),(154,222,250),(238,184,78),(176,115,228),(184,211,255),(236,150,213)]
 names=['風','霧','砂','氷','雷','闇','空','時']
 english=['Wind','Mist','Sand','Frost','Thunder','Abyss','Sky','Time']
@@ -34,9 +39,9 @@ write(rp/'models/entity/realm_ender.geo.json',{'format_version':'1.12.0','minecr
 write(rp/'animations/realm_ender.animation.json',{'format_version':'1.8.0','animations':{'animation.hakkai.realm_ender.walk':{'loop':True,'animation_length':1,'bones':{'right_leg':{'rotation':['math.sin(query.anim_time * 360) * 24',0,0]},'left_leg':{'rotation':['math.sin(query.anim_time * 360 + 180) * 24',0,0]},'right_arm':{'rotation':['math.sin(query.anim_time * 360 + 180) * 16',0,0]},'left_arm':{'rotation':['math.sin(query.anim_time * 360) * 16',0,0]}}}}})
 for r,color in enumerate(colors):
  ident=f'ender_{r}'
- c={'minecraft:type_family':{'family':['mob','hakkai_realm_ender']},'minecraft:health':{'value':48+r*3,'max':48+r*3},'minecraft:collision_box':{'width':.65,'height':2.75},'minecraft:physics':{},'minecraft:movement':{'value':.20+r*.004},'minecraft:movement.basic':{},'minecraft:jump.static':{},'minecraft:navigation.walk':{'avoid_water':True,'avoid_damage_blocks':True},'minecraft:knockback_resistance':{'value':.5},'minecraft:loot':{'table':f'loot_tables/hakkai/entities/{ident}.json'},'minecraft:behavior.float':{'priority':0},'minecraft:behavior.hurt_by_target':{'priority':1},'minecraft:behavior.move_towards_target':{'priority':2,'speed_multiplier':1.0,'within_radius':16},'minecraft:behavior.random_stroll':{'priority':6,'speed_multiplier':.8},'minecraft:behavior.look_at_player':{'priority':7,'look_distance':12,'probability':.1},'minecraft:behavior.random_look_around':{'priority':8},'minecraft:nameable':{}}
+ c={'minecraft:type_family':{'family':['mob','hakkai_realm_ender']},'minecraft:health':{'value':48+r*3,'max':48+r*3},'minecraft:collision_box':{'width':.65,'height':2.75},'minecraft:physics':{},'minecraft:movement':{'value':.20+r*.004},'minecraft:movement.basic':{},'minecraft:jump.static':{},'minecraft:navigation.walk':{'avoid_water':True,'avoid_damage_blocks':True},'minecraft:knockback_resistance':{'value':.5},'minecraft:behavior.float':{'priority':0},'minecraft:behavior.hurt_by_target':{'priority':1},'minecraft:behavior.move_towards_target':{'priority':2,'speed_multiplier':1.0,'within_radius':16},'minecraft:behavior.random_stroll':{'priority':6,'speed_multiplier':.8},'minecraft:behavior.look_at_player':{'priority':7,'look_distance':12,'probability':.1},'minecraft:behavior.random_look_around':{'priority':8},'minecraft:nameable':{}}
+ c['minecraft:experience_reward']=experience_reward(ident)
  write(bp/f'entities/{ident}.json',{'format_version':'1.21.90','minecraft:entity':{'description':{'identifier':'hakkai:'+ident,'is_spawnable':True,'is_summonable':True},'components':c,'component_groups':{'hakkai:wild':{'minecraft:despawn':{'despawn_from_distance':{'min_distance':36,'max_distance':80}}}},'events':{'hakkai:wild':{'add':{'component_groups':['hakkai:wild']}}}}})
- write(bp/f'loot_tables/hakkai/entities/{ident}.json',{'pools':[{'rolls':1,'entries':[{'type':'item','name':f'hakkai:pearl_{r}'}]}]})
  write(bp/f'items/pearl_{r}.json',{'format_version':'1.26.0','minecraft:item':{'description':{'identifier':f'hakkai:pearl_{r}','menu_category':{'category':'items'}},'components':{'minecraft:display_name':{'value':f'item.hakkai:pearl_{r}.name'},'minecraft:icon':f'hakkai_pearl_{r}','minecraft:max_stack_size':16,'minecraft:glint':True,'hakkai:use':{},'minecraft:interact_button':'action.interact.hakkai.use'}}})
  write(rp/f'entity/{ident}.entity.json',{'format_version':'1.10.0','minecraft:client_entity':{'description':{'identifier':'hakkai:'+ident,'materials':{'default':'entity_alphatest'},'textures':{'default':f'textures/entity/hakkai_ender_r{r}'},'geometry':{'default':'geometry.hakkai.realm_ender'},'render_controllers':['controller.render.hakkai.beast'],'animations':{'walk':'animation.hakkai.realm_ender.walk'},'scripts':{'animate':[{'walk':'query.modified_move_speed > 0.01'}]},'spawn_egg':{'base_color':'#181526','overlay_color':'#%02x%02x%02x'%color}}}})
  # Coherent shaded cloth/stone with colored constellations; atlas cells correspond

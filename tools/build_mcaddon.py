@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build an explicitly labelled test addon. Completion requires in-game QA."""
+"""Build an explicitly labelled test addon. In-game operation is not verified."""
 import argparse
 import json
 import pathlib
@@ -20,9 +20,9 @@ def build(destination):
         raise ValueError('output must be outside the pack directories')
     manifests = [json.loads((PACK_ROOT / name / 'manifest.json').read_text(encoding='utf-8-sig')) for name in PACKS]
     for manifest in manifests:
-        if manifest['header']['version'] != [7, 1, 32]:
+        if manifest['header']['version'] != [7, 1, 57]:
             raise ValueError('unexpected pack version')
-    if not any(dep.get('uuid') == manifests[1]['header']['uuid'] and dep.get('version') == [7, 1, 32]
+    if not any(dep.get('uuid') == manifests[1]['header']['uuid'] and dep.get('version') == [7, 1, 57]
                for dep in manifests[0]['dependencies']):
         raise ValueError('resource pack dependency mismatch')
     paths = []

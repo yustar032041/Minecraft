@@ -33,11 +33,11 @@ for manifest in manifests:
         if value in seen:
             errors.append(f'duplicate manifest UUID: {value}')
         seen.add(value)
-        if part.get('version') != [7, 1, 32]:
+        if part.get('version') != [7, 1, 57]:
             errors.append(f'incorrect pack version: {part}')
-if not any(d.get('uuid') == manifests[1].get('header', {}).get('uuid') and d.get('version') == [7,1,32]
+if not any(d.get('uuid') == manifests[1].get('header', {}).get('uuid') and d.get('version') == [7,1,57]
            for d in manifests[0].get('dependencies', [])):
-    errors.append('BP does not reference RP at 7.1.32')
+    errors.append('BP does not reference RP at 7.1.57')
 
 declared_content = set()
 for directory in ('items', 'blocks', 'entities', 'recipes', 'features', 'feature_rules'):
@@ -126,8 +126,11 @@ for icon in sum((progress.get(group, []) for group in ('redrawn_existing', 'deri
         path = directory / (expected + '.png')
         try:
             header = path.read_bytes()[:24]
-            if header[:8] != b'\x89PNG\r\n\x1a\n' or struct.unpack('>II', header[16:24]) != (128, 128):
-                errors.append(f'{path}: expected 128x128 PNG')
+            source = root.parent / 'art_sources/mob_drop_elements' / (icon.removeprefix('drop_element_') + '.png')
+            bespoke_drop = icon.startswith('drop_element_') and source.is_file()
+            size = (1024, 1024) if icon in {'guide', 'industrial_guide', 'return_stone'} else (512, 512) if bespoke_drop else (128, 128)
+            if header[:8] != b'\x89PNG\r\n\x1a\n' or struct.unpack('>II', header[16:24]) != size:
+                errors.append(f'{path}: expected {size} PNG')
         except (OSError, struct.error) as exc:
             errors.append(f'{path}: {exc}')
 if errors:

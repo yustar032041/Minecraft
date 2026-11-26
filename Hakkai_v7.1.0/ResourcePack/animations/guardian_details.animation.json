@@ -1,0 +1,353 @@
+{
+  "format_version": "1.8.0",
+  "animations": {
+    "animation.hakkai.guardian_0_detail": {
+      "loop": true,
+      "bones": {
+        "g0_shin_0": {
+          "rotation": [
+            "math.cos(query.anim_time * 420 + 0) * 9 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "g0_shin_1": {
+          "rotation": [
+            "math.cos(query.anim_time * 420 + 180) * 9 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "g0_shin_2": {
+          "rotation": [
+            "math.cos(query.anim_time * 420 + 180) * 9 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "g0_shin_3": {
+          "rotation": [
+            "math.cos(query.anim_time * 420 + 0) * 9 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "g0_tail_detail_0": {
+          "rotation": [
+            0,
+            "math.sin(query.anim_time * 54) * 2",
+            0
+          ]
+        }
+      }
+    },
+    "animation.hakkai.guardian_1_detail": {
+      "loop": true,
+      "bones": {
+        "g1_shin_0": {
+          "rotation": [
+            "math.cos(query.anim_time * 420 + 0) * 9 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "g1_shin_1": {
+          "rotation": [
+            "math.cos(query.anim_time * 420 + 180) * 9 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "g1_shin_2": {
+          "rotation": [
+            "math.cos(query.anim_time * 420 + 180) * 9 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "g1_shin_3": {
+          "rotation": [
+            "math.cos(query.anim_time * 420 + 0) * 9 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "g1_tail_detail_0": {
+          "rotation": [
+            0,
+            "math.sin(query.anim_time * 58) * 3",
+            0
+          ]
+        }
+      }
+    },
+    "animation.hakkai.guardian_2_detail": {
+      "loop": true,
+      "bones": {
+        "g2_shin_0": {
+          "rotation": [
+            "math.cos(query.anim_time * 420 + 0) * 9 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "g2_shin_1": {
+          "rotation": [
+            "math.cos(query.anim_time * 420 + 180) * 9 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "g2_shin_2": {
+          "rotation": [
+            "math.cos(query.anim_time * 420 + 180) * 9 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "g2_shin_3": {
+          "rotation": [
+            "math.cos(query.anim_time * 420 + 0) * 9 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "g2_tail_detail_0": {
+          "rotation": [
+            0,
+            "math.sin(query.anim_time * 62) * 4",
+            0
+          ]
+        }
+      }
+    },
+    "animation.hakkai.guardian_3_detail": {
+      "loop": true,
+      "bones": {
+        "g3_shin_0": {
+          "rotation": [
+            "math.cos(query.anim_time * 420 + 0) * 9 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "g3_shin_1": {
+          "rotation": [
+            "math.cos(query.anim_time * 420 + 180) * 9 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "g3_shin_2": {
+          "rotation": [
+            "math.cos(query.anim_time * 420 + 180) * 9 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "g3_shin_3": {
+          "rotation": [
+            "math.cos(query.anim_time * 420 + 0) * 9 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "g3_tail_detail_0": {
+          "rotation": [
+            0,
+            "math.sin(query.anim_time * 66) * 2",
+            0
+          ]
+        }
+      }
+    },
+    "animation.hakkai.guardian_4_detail": {
+      "loop": true,
+      "bones": {
+        "g4_shin_0": {
+          "rotation": [
+            "math.cos(query.anim_time * 420 + 0) * 9 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "g4_shin_1": {
+          "rotation": [
+            "math.cos(query.anim_time * 420 + 180) * 9 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "g4_shin_2": {
+          "rotation": [
+            "math.cos(query.anim_time * 420 + 180) * 9 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "g4_shin_3": {
+          "rotation": [
+            "math.cos(query.anim_time * 420 + 0) * 9 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "g4_tail_detail_0": {
+          "rotation": [
+            0,
+            "math.sin(query.anim_time * 70) * 3",
+            0
+          ]
+        }
+      }
+    },
+    "animation.hakkai.guardian_5_detail": {
+      "loop": true,
+      "bones": {
+        "g5_shin_0": {
+          "rotation": [
+            "math.cos(query.anim_time * 420 + 0) * 9 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "g5_shin_1": {
+          "rotation": [
+            "math.cos(query.anim_time * 420 + 180) * 9 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "g5_shin_2": {
+          "rotation": [
+            "math.cos(query.anim_time * 420 + 180) * 9 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "g5_shin_3": {
+          "rotation": [
+            "math.cos(query.anim_time * 420 + 0) * 9 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "g5_tail_detail_0": {
+          "rotation": [
+            0,
+            "math.sin(query.anim_time * 74) * 4",
+            0
+          ]
+        }
+      }
+    },
+    "animation.hakkai.guardian_6_detail": {
+      "loop": true,
+      "bones": {
+        "g6_shin_0": {
+          "rotation": [
+            "math.cos(query.anim_time * 420 + 0) * 9 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "g6_shin_1": {
+          "rotation": [
+            "math.cos(query.anim_time * 420 + 180) * 9 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "g6_shin_2": {
+          "rotation": [
+            "math.cos(query.anim_time * 420 + 180) * 9 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "g6_shin_3": {
+          "rotation": [
+            "math.cos(query.anim_time * 420 + 0) * 9 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "g6_tail_detail_0": {
+          "rotation": [
+            0,
+            "math.sin(query.anim_time * 78) * 2",
+            0
+          ]
+        },
+        "g6_wing_l_detail_0": {
+          "rotation": [
+            0,
+            0,
+            "math.sin(query.anim_time * 85 + 0) * 2"
+          ]
+        },
+        "g6_wing_l_detail_1": {
+          "rotation": [
+            0,
+            0,
+            "math.sin(query.anim_time * 85 + 35) * 3"
+          ]
+        },
+        "g6_wing_r_detail_0": {
+          "rotation": [
+            0,
+            0,
+            "math.sin(query.anim_time * 85 + 0) * -2"
+          ]
+        },
+        "g6_wing_r_detail_1": {
+          "rotation": [
+            0,
+            0,
+            "math.sin(query.anim_time * 85 + 35) * -3"
+          ]
+        }
+      }
+    },
+    "animation.hakkai.guardian_7_detail": {
+      "loop": true,
+      "bones": {
+        "g7_shin_0": {
+          "rotation": [
+            "math.cos(query.anim_time * 420 + 0) * 9 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "g7_shin_1": {
+          "rotation": [
+            "math.cos(query.anim_time * 420 + 180) * 9 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "g7_shin_2": {
+          "rotation": [
+            "math.cos(query.anim_time * 420 + 180) * 9 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "g7_shin_3": {
+          "rotation": [
+            "math.cos(query.anim_time * 420 + 0) * 9 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "g7_tail_detail_0": {
+          "rotation": [
+            0,
+            "math.sin(query.anim_time * 82) * 3",
+            0
+          ]
+        }
+      }
+    }
+  }
+}

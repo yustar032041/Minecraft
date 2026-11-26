@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "guardian_armor_4_leggings",
+    "normal": "guardian_armor_4_leggings_n",
+    "metalness_emissive_roughness": "guardian_armor_4_leggings_mer"
+  }
+}

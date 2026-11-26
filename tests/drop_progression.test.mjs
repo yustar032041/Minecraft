@@ -17,7 +17,8 @@ for (const m of wildlife) {
  const table=read(creature.components['minecraft:loot'].table);
  const entries=table.pools.flatMap(p=>p.entries??[]);
  assert.ok(entries.some(e=>e.type==='item'&&e.name===profile.dropId),m.id+' missing loot');
- const salvage=recipe(`recycle_drop_${m.id}`);
+ assert.equal(profile.dropId,`hakkai:drop_element_${attr}`,m.id);
+ const salvage=recipe(`recycle_drop_element_${attr}`);
  assert.deepEqual(salvage.ingredients,[{item:profile.dropId}],m.id);
  assert.deepEqual(salvage.result,{item:`hakkai:shard_${attr}`,count:2},m.id);
  const forge=recipe(`forge_crystal_${attr}`);
@@ -26,6 +27,21 @@ for (const m of wildlife) {
  assert.deepEqual(forge.result,{item:`hakkai:crystal_${attr}`,count:1});
 }
 assert.equal(attributes.size,20);
+const materialFiles=fs.readdirSync(`${bp}/items`).filter(x=>/^drop_.*\.json$/.test(x));
+assert.deepEqual(new Set(materialFiles),new Set(Array.from({length:20},(_,i)=>`drop_element_${i}.json`)));
+for(const attr of attributes){
+ const item=read(`items/drop_element_${attr}.json`)['minecraft:item'];
+ assert.equal(item.description.identifier,`hakkai:drop_element_${attr}`);
+ assert.equal(item.components['minecraft:icon'],`hakkai_drop_element_${attr}`);
+}
+const oldIds=/drop_(?:wild|foe)_\d+_\d+/;
+for(const dir of ['scripts','loot_tables','recipes','items']){
+ for(const path of fs.readdirSync(`${bp}/${dir}`,{recursive:true,withFileTypes:true})){
+  if(!path.isFile()||!/[.](json|js)$/.test(path.name))continue;
+  const content=fs.readFileSync(`${path.parentPath}/${path.name}`,'utf8');
+  assert.ok(!oldIds.test(content),`${path.parentPath}/${path.name} references a removed drop`);
+ }
+}
 for(let realm=0;realm<8;realm++)for(let i=0;i<12;i++){
  const biome=`hakkai:seed_${realm}_${String(i).padStart(2,'0')}`;
  const profile=families[biomes[biome]];

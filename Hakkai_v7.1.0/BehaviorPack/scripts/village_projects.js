@@ -1,3 +1,4 @@
+import {safeBuilderGround} from './village_builders.js';
 // Village projects use only recorded builder plots and explicitly registered
 // barrels. They never clear or replace a non-air block.
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z);
@@ -28,8 +29,10 @@ export function repairPlotStep(worker,plot,site,{blueprint,resolve,report=()=>{}
   const below=get({x:missing.at.x,y:missing.at.y-1,z:missing.at.z});
   if(!below)return 'unloaded';
   if(missing.type==='minecraft:wheat'&&below.typeId!=='minecraft:farmland')return 'support';
-  if(['minecraft:barrel','minecraft:crafting_table','minecraft:composter','minecraft:lantern','minecraft:farmland','hakkai:crusher','hakkai:wind_rotor'].includes(missing.type)&&!below.isSolid)return 'support';
-  if(missing.y===0&&(!below.isSolid||below.isLiquid))return 'support';
+  // Fittings sit on the known full planks or, for festival lanterns,
+  // logs. Do not infer collision from arbitrary blocks or preview-only APIs.
+  if(['minecraft:barrel','minecraft:crafting_table','minecraft:composter','minecraft:lantern','minecraft:farmland','hakkai:crusher','hakkai:wind_rotor'].includes(missing.type)&&!['minecraft:oak_planks','minecraft:oak_log'].includes(below.typeId))return 'support';
+  if(missing.y===0&&!safeBuilderGround(below))return 'support';
   if(missing.type==='minecraft:water'){
    // Only the farm's original enclosed basin can receive water. Check the
    // entire floor, 24 farmland cells and complete outer wall, not merely the
@@ -57,11 +60,24 @@ export function validRoute(t,route){
 // Move exactly one unmodified item, preserving item components. Do not use
 // arbitrary containers; the only allowed types are normal food/building stock.
 const carryTypes=new Set(['minecraft:wheat','minecraft:bread','minecraft:oak_log','minecraft:oak_planks']);
-export function moveOne(input,output,report=()=>{}){
+// Non-stackable items cannot be reliably compared by isStackableWith; skip
+// them rather than overwriting special data we cannot verify. Counts are
+// compared separately because the API deliberately ignores stack size.
+function sameStack(a,b){
+ if(!a||!b)return !a&&!b;
+ return a.typeId===b.typeId&&a.amount===b.amount&&a.isStackableWith(b);
+}
+export function moveOne(input,output,report=()=>{},checks={}){
  if(!input||!output||input===output)return false;
- let oldIn,oldOut,source=-1,target=-1,nextIn,nextOut;
+ const inputPresent=checks.inputPresent??(()=>true),outputPresent=checks.outputPresent??(()=>true),validate=checks.validate??(()=>true);
+ let oldIn,oldOut,source=-1,target=-1,nextIn,nextOut;const writes=[];
  try{
-  for(let i=0;i<input.size;i++){const v=input.getItem(i);if(v&&carryTypes.has(v.typeId)){source=i;oldIn=v.clone();break;}}
+  if(!validate()||!inputPresent()||!outputPresent())throw Error('運搬経路を確認できません');
+  for(let i=0;i<input.size;i++){
+   const v=input.getItem(i);if(!v||!carryTypes.has(v.typeId))continue;
+   const candidate=v.clone();if(!sameStack(v,candidate))continue;
+   source=i;oldIn=candidate;break;
+  }
   if(source<0)return false;
   const unit=oldIn.clone();unit.amount=1;
   for(let i=0;i<output.size;i++){const v=output.getItem(i);if(v&&v.isStackableWith(unit)&&v.amount<v.maxAmount){target=i;oldOut=v.clone();break;}}
@@ -69,42 +85,33 @@ export function moveOne(input,output,report=()=>{}){
   if(target<0)return false;
   nextIn=oldIn.amount===1?undefined:oldIn.clone();if(nextIn)nextIn.amount--;
   nextOut=oldOut?.clone()??unit.clone();if(oldOut)nextOut.amount++;
-  // Neither side is overwritten until the full plan is known.
-  try{input.setItem(source,nextIn);output.setItem(target,nextOut);return true;}
-  catch(e){try{output.setItem(target,oldOut);}catch(x){report('運搬先の復旧失敗',x);}try{input.setItem(source,oldIn);}catch(x){report('運搬元の復旧失敗',x);}report('現物運搬の復旧を試行',e);return false;}
- }catch(e){report('現物運搬の確認',e);return false;}
+  const check=(expectedIn,expectedOut)=>{
+   if(!validate()||!inputPresent()||!outputPresent()||!sameStack(input.getItem(source),expectedIn)||!sameStack(output.getItem(target),expectedOut))throw Error('運搬中に経路または樽の中身が変化');
+  };
+  check(oldIn,oldOut);
+  writes.push({container:input,index:source,old:oldIn,next:nextIn,present:inputPresent});input.setItem(source,nextIn);
+  check(nextIn,oldOut);
+  writes.push({container:output,index:target,old:oldOut,next:nextOut,present:outputPresent});output.setItem(target,nextOut);
+  check(nextIn,nextOut);
+  return true;
+ }catch(e){
+  let incomplete=false,outputUncertain=false;
+  for(const w of writes.reverse())try{
+   // If the output might already have been received, restoring the source
+   // could duplicate it. Prefer a reported unresolved result to guessing.
+   if(w.container===input&&outputUncertain)throw Error('搬送先が不明なため元を戻しません');
+   if(!w.present())throw Error('樽を確認できません');
+   const current=w.container.getItem(w.index);
+   if(sameStack(current,w.old))continue; // write may have failed before mutation
+   if(!sameStack(current,w.next))throw Error('別の品へ変化');
+   w.container.setItem(w.index,w.old);
+   if(!sameStack(w.container.getItem(w.index),w.old))throw Error('復旧結果を確認できません');
+  }catch(x){if(w.container===output)outputUncertain=true;incomplete=true;report('現物運搬の復旧失敗',x);}
+  report(incomplete?'現物運搬失敗（復旧要確認）':'現物運搬の復旧を試行',e);return false;
+ }
 }
 const JOB='hakkai:carry_job_v1';
 export function readCarry(worker){try{const v=worker.getDynamicProperty(JOB);if(!v)return undefined;const j=JSON.parse(v);return coord(j.input)&&coord(j.output)&&typeof j.dimension==='string'&&typeof j.townKey==='string'&&['pickup','deliver'].includes(j.phase)?j:null;}catch{return null;}}
-// Cargo is held in the resident's one-slot entity inventory, not an abstract
-// counter. A saved route survives chunk reloads and route unregistration.
-export function carryStep(worker,route,{town,along,report=()=>{}}){
- try{
-  if(!worker?.isValid)return 'invalid';const d=worker.dimension,cargo=worker.getComponent('minecraft:inventory')?.container;
-  if(!cargo||cargo.size!==1)return 'no_inventory';
-  let job=readCarry(worker);if(job===null)return 'invalid';
-  if(!job){
-   if(cargo.getItem(0))return 'cargo_waiting';
-   if(!validRoute(town,route)||d.id!==town.d.id)return 'idle';
-   job={input:route.input,output:route.output,dimension:d.id,townKey:town.key,phase:'pickup'};worker.setDynamicProperty(JOB,JSON.stringify(job));
-  }
-  if(job.dimension!==d.id||job.townKey!==town.key)return 'dimension';
-  // Inventory is authoritative if interrupted between transfer and job save.
-  const carrying=!!cargo.getItem(0);job.phase=carrying?'deliver':'pickup';
-  const at=carrying?job.output:job.input;
-  if(!d.isChunkLoaded(at))return 'unloaded';
-  const barrel=d.getBlock(at);if(barrel?.typeId!=='minecraft:barrel')return 'barrel_missing';
-  if(distance(worker.location,at)>2.5){
-   if(!d.getEntities({families:['monster'],location:worker.location,maxDistance:9,closest:1}).length)along(worker,at.x+.5-worker.location.x,at.z+.5-worker.location.z,.13);
-   return 'walking';
-  }
-  const inv=barrel.getComponent('minecraft:inventory')?.container;if(!inv)return 'no_inventory';
-  if(carrying){if(!moveOne(cargo,inv,report))return 'output_full';worker.setDynamicProperty(JOB,undefined);return 'delivered';}
-  if(!route||!validRoute(town,route)||distance(route.input,job.input)>0||distance(route.output,job.output)>0){worker.setDynamicProperty(JOB,undefined);return 'cancelled';}
-  if(!moveOne(inv,cargo,report))return 'empty';
-  job.phase='deliver';worker.setDynamicProperty(JOB,JSON.stringify(job));return 'picked_up';
- }catch(e){report('住人の運搬',e);return 'error';}
-}
 export function festivalGameStart(day,realm,plot,player,course=0){
  if(![0,1].includes(course)||!plot||plot.kind!=='festival'||!coord(plot.at)||!player?.isValid||distance(player.location,plot.at)>8)return;
  return {day,realm,at:{...plot.at},dimension:player.dimension.id,course,step:0,expires:0};
@@ -118,11 +125,53 @@ export function festivalGameAdvance(game,player,day,tick){
  game.step++;return game.step===GAME_COURSES[game.course].length?'complete':'next';
 }
 
-// Recovery is available directly from the carrier even if the route was
-// removed or the destination disappeared; it never conjures a replacement.
-export function retrieveCargo(worker,inventory,report=()=>{}){
- try{const cargo=worker?.getComponent('minecraft:inventory')?.container;
-  if(!moveOne(cargo,inventory,report))return false;
-  worker.setDynamicProperty(JOB,undefined);return true;
- }catch(e){report('運搬品の受け取り',e);return false;}
+// Ordinary villagers' private inventory belongs to vanilla AI. Do not use it
+// as cargo: the item remains in the registered input barrel until the worker
+// reaches the output, then one real item is moved in a single guarded step.
+export function vanillaCarryStep(worker,route,{town,along,report=()=>{},currentRoute=()=>route}){
+ try{
+  if(!worker?.isValid)return 'invalid';const d=worker.dimension;
+  let job=readCarry(worker);if(job===null)return 'invalid';
+  if(job&&job.mode!=='barrel_transfer')return 'invalid';
+  if(!job){
+   if(!validRoute(town,route)||d.id!==town.d.id)return 'idle';
+   job={input:route.input,output:route.output,dimension:d.id,townKey:town.key,phase:'pickup',mode:'barrel_transfer'};
+   worker.setDynamicProperty(JOB,JSON.stringify(job));
+  }
+  if(job.dimension!==d.id||job.townKey!==town.key)return 'dimension';
+  // No cargo has left the input; changing or unregistering the route cancels.
+  if(!validRoute(town,route)||distance(route.input,job.input)>0||distance(route.output,job.output)>0){worker.setDynamicProperty(JOB,undefined);return 'cancelled';}
+  if(!d.isChunkLoaded(job.input)||!d.isChunkLoaded(job.output))return 'unloaded';
+  const input=d.getBlock(job.input),output=d.getBlock(job.output);
+  if(input?.typeId!=='minecraft:barrel'||output?.typeId!=='minecraft:barrel')return 'barrel_missing';
+  const target=job.phase==='pickup'?job.input:job.output;
+  if(distance(worker.location,target)>2.5){
+   if(!d.getEntities({families:['monster'],location:worker.location,maxDistance:9,closest:1}).length)along(worker,target.x+.5-worker.location.x,target.z+.5-worker.location.z,.13);
+   return 'walking';
+  }
+  if(job.phase==='pickup'){
+   const inv=input.getComponent('minecraft:inventory')?.container;if(!inv)return 'no_inventory';
+   let available=false;for(let i=0;i<inv.size;i++){const v=inv.getItem(i);if(v&&carryTypes.has(v.typeId)&&sameStack(v,v.clone())){available=true;break;}}
+   if(!available)return 'empty';job.phase='deliver';worker.setDynamicProperty(JOB,JSON.stringify(job));return 'ready';
+  }
+  const source=input.getComponent('minecraft:inventory')?.container,dest=output.getComponent('minecraft:inventory')?.container;
+  if(!source||!dest)return 'no_inventory';
+  // Clear the delivery job before touching items. If clearing throws (even
+  // after mutation), no item has moved; it cannot be delivered repeatedly.
+  worker.setDynamicProperty(JOB,undefined);
+  if(readCarry(worker)!==undefined)throw Error('運搬記録を解除できません');
+  const present=at=>()=>d.isChunkLoaded(at)&&d.getBlock(at)?.typeId==='minecraft:barrel';
+  const validate=()=>{
+   if(!worker.isValid||worker.dimension.id!==job.dimension||town.d.id!==job.dimension||distance(worker.location,job.output)>2.5||readCarry(worker)!==undefined)return false;
+   const fresh=currentRoute();return validRoute(town,fresh)&&distance(fresh.input,job.input)===0&&distance(fresh.output,job.output)===0;
+  };
+  let failed=false;
+  const ok=moveOne(source,dest,(...args)=>{failed=true;report(...args);},{validate,inputPresent:present(job.input),outputPresent:present(job.output)});
+  if(ok)return 'delivered';
+  // A full/empty inventory can wait. An uncertain write/recovery must stop,
+  // otherwise a subsequent tick might transfer another item after partial work.
+  if(failed)return 'error';
+  if(readCarry(worker)!==undefined)throw Error('運搬記録が変更されました');
+  worker.setDynamicProperty(JOB,JSON.stringify(job));return 'waiting';
+ }catch(e){report('普通村人の運搬',e);return 'error';}
 }

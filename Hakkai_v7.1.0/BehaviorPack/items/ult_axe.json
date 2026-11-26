@@ -47,6 +47,16 @@
             "speed": 10
           }
         ]
+      },
+      "minecraft:repairable": {
+        "repair_items": [
+          {
+            "items": [
+              "minecraft:netherite_scrap"
+            ],
+            "repair_amount": 625
+          }
+        ]
       }
     }
   }

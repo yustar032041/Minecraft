@@ -1,6 +1,6 @@
+import { assignSettlementRole } from './villager_jobs.js';
 import { residentSpot,villageIdentity,villageBuilt } from './resident_spawn.js';
-// Separate custom mobs: never replace or re-texture existing vanilla villagers.
-// Catalog order and IDs are stable; each realm has four different professions.
+// All new settlement founders are ordinary villagers with additive roles.
 const REALMS=[
  ['風車','風の粉と収穫を分ける草原の人々。','minecraft:bread','パン',2],
  ['霧森','手紙と灯りを守る森の人々。','minecraft:apple','リンゴ',2],
@@ -18,9 +18,8 @@ const JOBS=[
  {role:'guard',name:'見守り兵',description:'近くの敵対モブを見つけると守るため戦います。クリーパーは追いません。'}
 ];
 export const FRIENDLY_RESIDENTS=REALMS.flatMap(([prefix,lore,item,itemName,count],realm)=>JOBS.map((job,index)=>({
- ...job,id:`hakkai:resident_${realm}_${index}`,realm,index,name:`${prefix}の${job.name}`,lore,item,itemName,count
+ ...job,realm,index,name:`${prefix}の${job.name}`,lore,item,itemName,count
 })));
-export const friendlyResidentById=new Map(FRIENDLY_RESIDENTS.map(x=>[x.id,x]));
 // Independent marker: upgrades add new residents without changing previous
 // residents, buildings, trade data, or mob-spawning gamerules.
 export function foundFriendlyResident({site,world,dimension,num,property,findFloor,report}){
@@ -31,7 +30,9 @@ export function foundFriendlyResident({site,world,dimension,num,property,findFlo
   const at=residentSpot(dimension,{x:site.x+[-8,-4,4,8][i]+.5,y:88,z:site.z+8.5},findFloor);
   if(!at)return false;
   property(world,key,i+1); // reserve before spawn: uncertain failure never duplicates
-  dimension.spawnEntity(FRIENDLY_RESIDENTS[site.dim*4+i].id,at,{initialPersistence:true});
+  const spec=FRIENDLY_RESIDENTS[site.dim*4+i];
+  const entity=dimension.spawnEntity('minecraft:villager_v2',at,{initialPersistence:true});
+  if(!assignSettlementRole(entity,spec.role))throw Error('could not assign founder role');
   return true;
  }catch(err){report('八界の友好住人',err);return false;}
 }
@@ -40,9 +41,8 @@ export function foundFriendlyResident({site,world,dimension,num,property,findFlo
 export function friendlySupportTick(player,state,tick,extraRole=()=>undefined){
  if(tick<(state.friendlyScanAt??0))return;
  state.friendlyScanAt=tick+40;
- let nearby;try{nearby=player.dimension.getEntities({families:['hakkai_resident'],location:player.location,maxDistance:6,closest:12});}catch{return;}
- const jobs=new Set(nearby.filter(e=>e.isValid).map(e=>friendlyResidentById.get(e.typeId)?.role));
- try{for(const e of player.dimension.getEntities({families:['villager'],location:player.location,maxDistance:6,closest:12}))if(e.isValid)jobs.add(extraRole(e));}catch{}
+ const jobs=new Set();
+ try{for(const e of player.dimension.getEntities({families:['villager'],location:player.location,maxDistance:6,closest:12}))if(e.isValid)jobs.add(extraRole(e));}catch{return;}
  if(jobs.has('guide')&&tick>=(state.friendlyGuideAt??0))try{
   if(!player.getEffect('speed')){player.addEffect('speed',120,{amplifier:0,showParticles:false});state.friendlyGuideAt=tick+600;}
  }catch{}

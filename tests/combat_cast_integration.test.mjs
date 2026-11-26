@@ -18,7 +18,7 @@ const s={m:100,s:100,cd:new Map()},notice=(...v)=>notices.push(v);
 const combatResonance=setupCombatResonance({system,notice});
 for(const t of [0,10,20]){system.currentTick=t;combatResonance.onHurt(p,target,g,2);}
 assert.equal(combatResonance.level(p,g),3);system.currentTick=30;
-const context={system,combatResonance,notice,prepareWindRay,renderWindRay,state:()=>s,isCreative:()=>false,num:()=>0,property:(...v)=>props.push(v),home:[],aspect:()=>0,currentPlace:()=>undefined,world:{getTimeOfDay:()=>6000},enemies:()=>[target],visibleFrom:()=>true,hit:(...v)=>damage.push(v),effects:Array(20).fill('speed'),ns:'hakkai:',dist:()=>0,along:()=>{}};
+const context={system,combatResonance,notice,prepareWindRay,renderWindRay,state:()=>s,isCreative:()=>false,num:()=>0,property:(...v)=>props.push(v),home:[],aspect:()=>0,currentPlace:()=>undefined,world:{getTimeOfDay:()=>6000},enemies:()=>[target],visibleFrom:()=>true,hit:(...v)=>{damage.push(v);return true;},combatEffectAllowed:()=>true,effects:Array(20).fill('speed'),ns:'hakkai:',dist:()=>0,along:()=>{}};
 vm.createContext(context);vm.runInContext(code,context);
 s.m=0;context.cast(p,g);assert.equal(combatResonance.level(p,g),3,'insufficient resources must not consume charge');
 s.m=100;s.cd.set(g.id,31);context.cast(p,g);assert.equal(combatResonance.level(p,g),3,'cooldown must not consume charge');
@@ -82,4 +82,19 @@ console.log('Combat integration: real cast resource/cooldown checks, charge spen
  const hits=damage.length, visual=particles.length, notes=notices.length;let animations=0;
  p.addEffect=()=>{throw Error('effect rejected');};p.playAnimation=()=>animations++;
  context.cast(p,g);assert.equal(damage.length,hits+1);assert.ok(particles.length>visual);assert.ok(notices.length>notes);assert.equal(animations,1);
+}
+// Armor's displayed/worn defense was corrected without silently increasing
+// its active skill's resistance duration or granting an extra effect.
+{
+ const {catalog}=await import('../Hakkai_v7.1.0/BehaviorPack/scripts/data.js');
+ const affected=catalog.filter(item=>Object.hasOwn(item,'skillDefense'));assert.equal(affected.length,14);
+ let tick=1000;
+ for(const item of affected){
+  const applied=[];p.addEffect=(...args)=>applied.push(args);p.playAnimation=()=>{};
+  context.enemies=()=>[];system.currentTick=tick+=20;s.cd.clear();s.s=100;s.m=100;p.isSneaking=false;
+  context.cast(p,item);
+  const resist=applied.filter(v=>v[0]==='resistance');
+  assert.equal(resist.length,item.skillDefense>=5?1:0,item.id);
+  if(resist.length)assert.equal(resist[0][1],55+item.skillDefense*6,item.id);
+ }
 }

@@ -7,12 +7,11 @@ hand-painted assets, and small-game-scale legibility needs testing.
 import json
 from PIL import Image, ImageDraw, ImageChops
 from render_gear_icons import ROOT, PACK, ITEMS, TEMPLATES, draw_attribute
-from render_extra_item_icons import numbered, recolor, REALM_ATTRS
+from render_extra_item_icons import recolor
 from import_item_art import save_with_maps
 
-SAMPLES=[('antler','fur'),('feather','shell'),('fur','shell'),('fur','antler'),('feather','antler'),('mushroom','shell'),('feather','antler'),('fur','fur')]
 FISH={'festival_fish_0':11,'festival_fish_1':2,'festival_fish_2':12,'festival_fish_3':1}
-MEDALS={'barn_token':13,'festival_0':0,'festival_1':5,'festival_2':12,'festival_3':11,'fish_token':1,'village_badge':3,'wind_legacy_memorial':9}
+MEDALS={'festival_0':0,'festival_1':5,'festival_2':12,'festival_3':11,'fish_token':1,'village_badge':3,'wind_legacy_memorial':9}
 SCROLLS={'dodge_scroll':0,'taunt_scroll':2,'travel_pass':15}
 
 def painted_icon(base,attr,secondary=None,strength=.55):
@@ -25,10 +24,6 @@ def render_all():
     names=['fish','medal','scroll','meat','fur','feather','antler','shell','mushroom','horn','pumpkin','linen','tea','wrap','provisions','bento','herbs','blossom','corn','compass','berries','roots','fish_strip']
     art={n:Image.open(TEMPLATES/(n+'.png')).convert('RGBA') for n in names}
     result={}
-    for r in range(8):
-        for i in range(2):
-            name=f'drop_wild_{r}_{i}';base=art[SAMPLES[r][i]]
-            result[name]=numbered(recolor(base,REALM_ATTRS[r],.48),r,i+1,'W')
     for name,a in FISH.items():result[name]=painted_icon(art['fish'],a,strength=.7)
     for name,a in MEDALS.items():
         result[name]=painted_icon(art['medal'],a,strength=.35)
@@ -58,7 +53,7 @@ def render_all():
     result['ice_blossom_produce']=painted_icon(art['blossom'],11,strength=.85)
     result['spring_tulip_produce']=painted_icon(art['blossom'],0,strength=.05)
     result['summer_sunflower_produce']=painted_icon(art['blossom'],5,strength=.92)
-    for name,attr in {'cloth':3,'farm_fiber':13,'bandage':5}.items():
+    for name,attr in {'bandage':5}.items():
         im=painted_icon(art['linen'],attr,strength=.08)
         if name=='bandage':
             d=ImageDraw.Draw(im)

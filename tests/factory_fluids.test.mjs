@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {fluidPumpStep,fluidBasinStep,fluidLoaderStep,fluidRecipe,tankState,consumeTankWater} from '../Hakkai_v7.1.0/BehaviorPack/scripts/factory_fluids.js';
+import {fluidPumpStep,fluidBasinStep,fluidLoaderStep,fluidRecipe,tankState,consumeTankWater,FLUID_BASIN_RECIPES,FLUID_LOADER_RECIPES,FLUID_OBSIDIAN_RECIPE} from '../Hakkai_v7.1.0/BehaviorPack/scripts/factory_fluids.js';
 import {factoryTransaction} from '../Hakkai_v7.1.0/BehaviorPack/scripts/factory_transaction.js';
 class Item {constructor(typeId,amount=1){this.typeId=typeId;this.amount=amount;this.maxAmount=typeId.endsWith('_bucket')?1:64;}clone(){return Object.assign(new Item(this.typeId,this.amount),{nameTag:this.nameTag});}isStackableWith(o){return this.typeId===o.typeId&&this.nameTag===o.nameTag;}}
 class Container {constructor(items){this.items=items;this.size=items.length;}getItem(i){return this.items[i]?.clone();}setItem(i,v){this.items[i]=v?.clone();if(this.fail){this.fail=false;throw Error('failed after write');}}}
@@ -76,3 +76,80 @@ for(const fault of ['none','full','water_write','lava_write']){
  else{assert.equal(ok,false,fault);assert.equal(tankState(lava).n,4);assert.equal(tankState(water).n,1);if(fault!=='full')assert.equal(output.getItem(0),undefined);}
 }
 console.log('Dual-fluid obsidian, capacity and tank rollback OK (simulated)');
+
+// A callback from an inventory write can change or unload a tank between
+// preflight and commit. Those changes must not be overwritten by stale state.
+for(const method of ['loader','basin','obsidian'])for(const fault of ['changed','replaced','unloaded']){
+ const w=setup(),p=P(0,0,0),pos=P(0,1,0),tank=w.tank(pos,method==='loader'?0:method==='obsidian'?2:1,method==='loader'?0:4);
+ if(method==='obsidian'){tank.permutation=perm({'hakkai:fluid':2,'hakkai:level':4});w.tank(P(0,0,1),1,1);}
+ const input=new Container(method==='loader'?[new Item('minecraft:water_bucket')]:method==='basin'?[new Item('minecraft:dirt')]:[undefined]);
+ const output=new Container([undefined]);const original=output.setItem.bind(output);let once=true;
+ output.setItem=(i,v)=>{original(i,v);if(once){once=false;
+  if(fault==='changed')tank.permutation=perm({'hakkai:fluid':1,'hakkai:level':7});
+  if(fault==='replaced')w.put(pos,'minecraft:stone');
+  if(fault==='unloaded')w.d.unloaded=new Set([key(pos)]);
+ }};
+ const reports=[],args={dimension:w.d,p,input,output,ItemStack:Item,factoryTransaction,report:(...x)=>reports.push(x)};
+ assert.equal((method==='loader'?fluidLoaderStep:fluidBasinStep)(args),false,`${method} ${fault}`);
+ assert.equal(output.getItem(0),undefined,`${method} ${fault}: output restored`);
+ if(method!=='obsidian')assert.equal(input.getItem(0).typeId,method==='loader'?'minecraft:water_bucket':'minecraft:dirt');
+ if(fault==='changed')assert.deepEqual(tankState(tank),{kind:1,n:7});
+ if(fault==='replaced')assert.equal(w.d.getBlock(pos).typeId,'minecraft:stone');
+ if(method==='obsidian')assert.equal(tankState(w.d.getBlock(P(0,0,1))).n,1);
+ assert.ok(reports.length);
+}
+// A dual-tank second write may fail after mutation: both attempted tanks undo.
+{
+ const w=setup(),lava=w.tank(P(0,1,0),2,4),water=w.tank(P(0,0,1),1,1),output=new Container([undefined]);
+ water.fail=true;
+ assert.equal(fluidBasinStep({dimension:w.d,p:P(0,0,0),input:new Container([undefined]),output,ItemStack:Item,factoryTransaction}),false);
+ assert.deepEqual(tankState(lava),{kind:2,n:4});assert.deepEqual(tankState(water),{kind:1,n:1});assert.equal(output.getItem(0),undefined);
+}
+{
+ const w=setup(),lava=w.tank(P(0,1,0),2,4),water=w.tank(P(0,0,1),1,1),output=new Container([undefined]);
+ const write=lava.setPermutation.bind(lava);let once=true;lava.setPermutation=v=>{write(v);if(once){once=false;water.permutation=perm({'hakkai:fluid':1,'hakkai:level':7});}};
+ assert.equal(fluidBasinStep({dimension:w.d,p:P(0,0,0),input:new Container([undefined]),output,ItemStack:Item,factoryTransaction}),false);
+ assert.deepEqual(tankState(lava),{kind:2,n:4});assert.deepEqual(tankState(water),{kind:1,n:7});assert.equal(output.getItem(0),undefined);
+}
+
+for(const fault of ['destination_changed','destination_replaced','destination_unloaded','path_broken','path_unloaded','pump_replaced']){
+ const w=setup(),pump=w.put(P(0,0,0),'hakkai:fluid_pump'),source=w.tank(P(-1,0,0),1,3),pipe=w.put(P(1,0,0),'hakkai:fluid_pipe'),dest=w.tank(P(2,0,0));
+ const reports=[];const write=source.setPermutation.bind(source);let first=true;
+ source.setPermutation=v=>{write(v);if(!first)return;first=false;
+  if(fault==='destination_changed')dest.permutation=perm({'hakkai:fluid':1,'hakkai:level':5});
+  if(fault==='destination_replaced')w.put(P(2,0,0),'minecraft:stone');
+  if(fault==='destination_unloaded')w.d.unloaded=new Set([key(P(2,0,0))]);
+  if(fault==='path_broken')pipe.typeId='minecraft:stone';
+  if(fault==='path_unloaded')w.d.unloaded=new Set([key(P(1,0,0))]);
+  if(fault==='pump_replaced')pump.typeId='minecraft:stone';
+ };
+ assert.equal(fluidPumpStep(pump,(...x)=>reports.push(x)),false,fault);assert.deepEqual(tankState(source),{kind:1,n:3},fault);
+ if(fault==='destination_changed')assert.deepEqual(tankState(dest),{kind:1,n:5});
+ else if(fault==='destination_replaced')assert.equal(w.d.getBlock(P(2,0,0)).typeId,'minecraft:stone');
+ else assert.deepEqual(tankState(dest),{kind:0,n:0});assert.ok(reports.length,fault);
+}
+{
+ // The target scan can outlive the source snapshot: do not remove new liquid.
+ const w=setup(),pump=w.put(P(0,0,0),'hakkai:fluid_pump'),source=w.tank(P(-1,0,0),1,3),dest=w.tank(P(1,0,0));
+ const get=w.d.getBlock;let first=true;w.d.getBlock=p=>{if(key(p)===key(P(1,0,0))&&first){first=false;source.permutation=perm({'hakkai:fluid':2,'hakkai:level':4});}return get(p);};
+ assert.equal(fluidPumpStep(pump),false);assert.deepEqual(tankState(source),{kind:2,n:4});assert.deepEqual(tankState(dest),{kind:0,n:0});
+}
+{
+ // If another block replaces lava after removal, rollback must not overwrite it.
+ const w=setup(),pump=w.put(P(0,0,0),'hakkai:fluid_pump'),lava=w.put(P(-1,0,0),'minecraft:lava',{liquid_depth:0}),dest=w.tank(P(1,0,0)),reports=[];
+ lava.setType=()=>{lava.typeId='minecraft:stone';throw Error('failure after external replacement');};
+ assert.equal(fluidPumpStep(pump,(...x)=>reports.push(x)),false);assert.equal(lava.typeId,'minecraft:stone');assert.deepEqual(tankState(dest),{kind:0,n:0});assert.ok(reports.some(x=>String(x[0]).includes('復旧失敗')));
+}
+
+// Every catalogue row is executable through the actual processing helper.
+for(const r of FLUID_BASIN_RECIPES){
+ const w=setup(),tank=w.tank(P(0,1,0),r.kind,r.units),input=new Container([new Item(r.input)]),output=new Container([undefined]);
+ assert.equal(fluidBasinStep({dimension:w.d,p:P(0,0,0),input,output,ItemStack:Item,factoryTransaction}),true,`${r.input} ${r.kind}`);
+ assert.equal(input.getItem(0),undefined);assert.equal(output.getItem(0).typeId,r.output);assert.equal(output.getItem(0).amount,1);assert.deepEqual(tankState(tank),{kind:0,n:0});
+}
+for(const r of FLUID_LOADER_RECIPES){
+ const w=setup(),tank=w.tank(P(0,1,0)),input=new Container([new Item(r.input)]),output=new Container([undefined]);
+ assert.equal(fluidLoaderStep({dimension:w.d,p:P(0,0,0),input,output,ItemStack:Item,factoryTransaction}),true,r.input);
+ assert.equal(input.getItem(0),undefined);assert.equal(output.getItem(0).typeId,r.output);assert.deepEqual(tankState(tank),{kind:r.kind,n:r.units});
+}
+assert.deepEqual(FLUID_OBSIDIAN_RECIPE,{output:'minecraft:obsidian',lava:4,water:1});

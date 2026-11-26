@@ -11,7 +11,7 @@ for(const [kind,recipes] of Object.entries(LINE_RECIPES)){
   assert.ok(r.amount>=1&&r.costs.length>=1);
  }
 }
-assert.equal(Object.keys(RECYCLE_DROPS).length,120);
+assert.equal(Object.keys(RECYCLE_DROPS).length,20);
 for(const [key,value] of Object.entries(RECYCLE_DROPS)){assert.equal(recycleProduct(key),value);assert.match(value,/^hakkai:shard_\d+$/);}
 assert.equal(recycleProduct('hakkai:crystal_0'),undefined);
 const stack=(typeId,nameTag)=>({typeId,nameTag,amount:4,clone(){return {...this,clone:this.clone};}});
@@ -20,4 +20,4 @@ let route=filteredDestination(input,filter,accepted,rejected);assert.equal(route
 route=filteredDestination(input,inventory([stack('minecraft:stone')]),accepted,rejected);assert.equal(route.output,rejected);
 assert.equal(filteredDestination(input,inventory([undefined]),accepted,rejected),undefined);
 assert.equal(filteredDestination(input,{size:1,getItem(){throw Error('unloaded');}},accepted,rejected),undefined);
-console.log('Production line recipe priority, 120 mob materials and metadata-preserving filter planning OK');
+console.log('Production line recipe priority, 20 attribute materials and metadata-preserving filter planning OK');

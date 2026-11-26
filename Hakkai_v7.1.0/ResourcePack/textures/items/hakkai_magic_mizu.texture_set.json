@@ -1,8 +1,0 @@
-{
-  "format_version": "1.16.100",
-  "minecraft:texture_set": {
-    "color": "hakkai_magic_mizu",
-    "normal": "hakkai_magic_mizu_normal",
-    "metalness_emissive_roughness": "hakkai_magic_mizu_mer"
-  }
-}

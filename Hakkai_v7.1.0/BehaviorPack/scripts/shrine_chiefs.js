@@ -44,7 +44,9 @@ export function setupShrineChiefs({world,report=()=>{}}){
   for(let dx=-1;dx<=1;dx++)for(let dz=-1;dz<=1;dz++)for(let dy=0;dy<=3;dy++){
    const at={x:x+dx,y:y+dy,z:z+dz};if(!d.isChunkLoaded(at))return false;
    const b=d.getBlock(at);if(!b)return false;
-   if(dy===0){if(!b.isSolid||b.isLiquid||/magma|cactus|campfire|powder_snow/.test(b.typeId))return false;}
+   // The shrine is initially made only on grass; do not treat arbitrary
+   // partial blocks as safe just because they are non-air.
+   if(dy===0){if(b.typeId!=='minecraft:grass_block'||b.isLiquid||b.isWaterlogged)return false;}
    else if(!b.isAir)return false;
   }
   return true;

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {setupFushiTotem} from '../Hakkai_v7.1.0/BehaviorPack/scripts/combat_totem.js';
 function fixture(){
- const queue=[],effects=[],removed=[],particles=[],damage=[],slots={Mainhand:{typeId:'hakkai:fushi_totem'},Offhand:undefined};
+ const queue=[],effects=[],removed=[],particles=[],damage=[],slots={Mainhand:{typeId:'hakkai:fushi_totem',clone(){return {...this}}},Offhand:undefined};
  const h={currentValue:8,setCurrentValue(v){this.currentValue=v;return true;}};
  let inv={0:slots.Mainhand};
  const equip={getEquipment:s=>s==='Mainhand'?inv[p.selectedSlotIndex]:slots[s],setEquipment:(s,v)=>{slots[s]=v;return true;}};
@@ -12,7 +12,7 @@ function fixture(){
  return {p,h,inv,slots,equip,queue,effects,removed,particles,damage,controller,event,run:()=>queue.shift()?.()};
 }
 for(const hand of ['main','off']){
- const f=fixture();if(hand==='off'){f.inv[0]=undefined;f.slots.Offhand={typeId:'hakkai:fushi_totem'};}
+ const f=fixture();if(hand==='off'){f.inv[0]=undefined;f.slots.Offhand={typeId:'hakkai:fushi_totem',clone(){return {...this}}};}
  const e=f.event();assert.equal(f.controller.before(e),true);assert.equal(e.cancel,true);assert.equal(f.h.currentValue,8,'no world mutation in before event');
  const simultaneous=f.event();assert.equal(f.controller.before(simultaneous),true);assert.equal(f.queue.length,1,'single reservation');
  f.run();assert.equal(f.h.currentValue,1);assert.equal(hand==='main'?f.inv[0]:f.slots.Offhand,undefined);assert.deepEqual(f.removed,['poison','speed']);assert.equal(f.effects.length,3);assert.equal(f.particles.length,1);

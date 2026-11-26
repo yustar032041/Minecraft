@@ -1,0 +1,278 @@
+[
+  {
+    "id": "gear_100",
+    "prev": "gear_020",
+    "old": {
+      "damage": 5,
+      "durability": 275
+    },
+    "new": {
+      "damage": 27,
+      "durability": 429
+    }
+  },
+  {
+    "id": "gear_101",
+    "prev": "gear_021",
+    "old": {
+      "damage": 6,
+      "durability": 282
+    },
+    "new": {
+      "damage": 28,
+      "durability": 436
+    }
+  },
+  {
+    "id": "gear_102",
+    "prev": "gear_022",
+    "old": {
+      "damage": 7,
+      "durability": 289
+    },
+    "new": {
+      "damage": 29,
+      "durability": 443
+    }
+  },
+  {
+    "id": "gear_103",
+    "prev": "gear_023",
+    "old": {
+      "damage": 8,
+      "durability": 296
+    },
+    "new": {
+      "damage": 30,
+      "durability": 450
+    }
+  },
+  {
+    "id": "gear_104",
+    "prev": "gear_024",
+    "old": {
+      "damage": 9,
+      "durability": 303
+    },
+    "new": {
+      "damage": 31,
+      "durability": 457
+    }
+  },
+  {
+    "id": "gear_126",
+    "prev": "gear_046",
+    "old": {
+      "damage": 6,
+      "durability": 282
+    },
+    "new": {
+      "damage": 28,
+      "durability": 436
+    }
+  },
+  {
+    "id": "gear_127",
+    "prev": "gear_047",
+    "old": {
+      "damage": 7,
+      "durability": 289
+    },
+    "new": {
+      "damage": 29,
+      "durability": 443
+    }
+  },
+  {
+    "id": "gear_128",
+    "prev": "gear_048",
+    "old": {
+      "damage": 8,
+      "durability": 296
+    },
+    "new": {
+      "damage": 30,
+      "durability": 450
+    }
+  },
+  {
+    "id": "gear_129",
+    "prev": "gear_049",
+    "old": {
+      "damage": 9,
+      "durability": 303
+    },
+    "new": {
+      "damage": 31,
+      "durability": 457
+    }
+  },
+  {
+    "id": "gear_150",
+    "prev": "gear_070",
+    "old": {
+      "damage": 5,
+      "durability": 275
+    },
+    "new": {
+      "damage": 27,
+      "durability": 429
+    }
+  },
+  {
+    "id": "gear_151",
+    "prev": "gear_071",
+    "old": {
+      "damage": 6,
+      "durability": 282
+    },
+    "new": {
+      "damage": 28,
+      "durability": 436
+    }
+  },
+  {
+    "id": "gear_152",
+    "prev": "gear_072",
+    "old": {
+      "damage": 7,
+      "durability": 289
+    },
+    "new": {
+      "damage": 29,
+      "durability": 443
+    }
+  },
+  {
+    "id": "gear_153",
+    "prev": "gear_073",
+    "old": {
+      "damage": 8,
+      "durability": 296
+    },
+    "new": {
+      "damage": 30,
+      "durability": 450
+    }
+  },
+  {
+    "id": "gear_175",
+    "prev": "gear_095",
+    "old": {
+      "damage": 5,
+      "durability": 275
+    },
+    "new": {
+      "damage": 27,
+      "durability": 429
+    }
+  },
+  {
+    "id": "gear_176",
+    "prev": "gear_096",
+    "old": {
+      "damage": 6,
+      "durability": 282
+    },
+    "new": {
+      "damage": 28,
+      "durability": 436
+    }
+  },
+  {
+    "id": "gear_177",
+    "prev": "gear_097",
+    "old": {
+      "damage": 7,
+      "durability": 289
+    },
+    "new": {
+      "damage": 29,
+      "durability": 443
+    }
+  },
+  {
+    "id": "gear_178",
+    "prev": "gear_098",
+    "old": {
+      "damage": 8,
+      "durability": 296
+    },
+    "new": {
+      "damage": 30,
+      "durability": 450
+    }
+  },
+  {
+    "id": "gear_179",
+    "prev": "gear_099",
+    "old": {
+      "damage": 9,
+      "durability": 303
+    },
+    "new": {
+      "damage": 31,
+      "durability": 457
+    }
+  },
+  {
+    "id": "gear_180",
+    "prev": "gear_100",
+    "old": {
+      "damage": 10,
+      "durability": 310
+    },
+    "new": {
+      "damage": 29,
+      "durability": 443
+    }
+  },
+  {
+    "id": "gear_181",
+    "prev": "gear_101",
+    "old": {
+      "damage": 11,
+      "durability": 317
+    },
+    "new": {
+      "damage": 30,
+      "durability": 450
+    }
+  },
+  {
+    "id": "gear_182",
+    "prev": "gear_102",
+    "old": {
+      "damage": 12,
+      "durability": 324
+    },
+    "new": {
+      "damage": 31,
+      "durability": 457
+    }
+  },
+  {
+    "id": "gear_183",
+    "prev": "gear_103",
+    "old": {
+      "damage": 13,
+      "durability": 331
+    },
+    "new": {
+      "damage": 32,
+      "durability": 464
+    }
+  },
+  {
+    "id": "gear_184",
+    "prev": "gear_104",
+    "old": {
+      "damage": 14,
+      "durability": 338
+    },
+    "new": {
+      "damage": 33,
+      "durability": 471
+    }
+  }
+]

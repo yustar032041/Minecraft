@@ -1,0 +1,20 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "hakkai:recycle_drop_element_15"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "hakkai:drop_element_15"
+      }
+    ],
+    "result": {
+      "item": "hakkai:shard_15",
+      "count": 2
+    }
+  }
+}

@@ -2,17 +2,16 @@
   "format_version": "1.26.0",
   "minecraft:item": {
     "description": {
-      "identifier": "hakkai:dodge_scroll",
-      "menu_category": {
-        "category": "items"
-      }
+      "identifier": "hakkai:dodge_scroll"
     },
     "components": {
       "minecraft:display_name": {
         "value": "item.hakkai:dodge_scroll.name"
       },
       "minecraft:icon": "hakkai_dodge_scroll",
-      "minecraft:max_stack_size": 16
+      "minecraft:max_stack_size": 16,
+      "hakkai:use": {},
+      "minecraft:interact_button": "action.interact.hakkai.use"
     }
   }
 }

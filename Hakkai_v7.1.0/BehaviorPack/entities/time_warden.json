@@ -3,7 +3,7 @@
   "minecraft:entity": {
     "description": {
       "identifier": "hakkai:time_warden",
-      "is_spawnable": false,
+      "is_spawnable": true,
       "is_summonable": true,
       "properties": {
         "hakkai:form": {
@@ -71,9 +71,6 @@
       "minecraft:behavior.random_look_around": {
         "priority": 8
       },
-      "minecraft:loot": {
-        "table": "loot_tables/hakkai/entities/time_warden.json"
-      },
       "minecraft:persistent": {},
       "minecraft:nameable": {},
       "minecraft:damage_sensor": {
@@ -81,6 +78,9 @@
           "cause": "fall",
           "deals_damage": "no"
         }
+      },
+      "minecraft:experience_reward": {
+        "on_death": "query.last_hit_by_player ? 100 : 0"
       }
     }
   }

@@ -2,7 +2,7 @@
   "format_version": "1.16.100",
   "minecraft:texture_set": {
     "color": "gear_044",
-    "metalness_emissive_roughness": "gear_044_mer",
-    "normal": "gear_044_n"
+    "normal": "gear_044_n",
+    "metalness_emissive_roughness": "gear_044_mer"
   }
 }

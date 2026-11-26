@@ -11,7 +11,7 @@ progress=json.loads((root/'texture_progress.json').read_text(encoding='utf8'))
 misc=set(progress['provisional_misc_existing'])
 refined=render_all()
 assert set(refined)==set(progress['refined_misc_existing'])
-assert (set(mapping()) | {f'drop_wild_{r}_{i}' for r in range(8) for i in range(2)}) - set(refined) == misc
+assert set(mapping()) - set(refined) == misc
 for name,expected in refined.items():
  actual=Image.open(root/'Hakkai_v7.1.0/ResourcePack/textures/items'/f'hakkai_{name}.png').convert('RGBA')
  assert expected.tobytes()==actual.tobytes(),name

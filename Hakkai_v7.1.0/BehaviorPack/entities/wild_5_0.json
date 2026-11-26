@@ -20,8 +20,8 @@
         "max": 13
       },
       "minecraft:collision_box": {
-        "width": 0.53,
-        "height": 0.64
+        "width": 0.62,
+        "height": 0.52
       },
       "minecraft:physics": {},
       "minecraft:movement": {
@@ -65,6 +65,9 @@
       },
       "minecraft:loot": {
         "table": "loot_tables/hakkai/entities/wild_5_0.json"
+      },
+      "minecraft:experience_reward": {
+        "on_death": "query.last_hit_by_player ? 2 : 0"
       }
     },
     "component_groups": {

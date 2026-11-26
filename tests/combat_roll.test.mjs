@@ -3,7 +3,7 @@ import {setupCombatRoll} from '../Hakkai_v7.1.0/BehaviorPack/scripts/combat_roll
 import {EntityDamageCause as Cause,GameMode} from '@minecraft/server';
 function fixture(){
  const moves=[],animations=[],particles=[],notes=[],checks=[];let input={x:0,y:0};
- const d={id:'realm',isChunkLoaded:()=>true,getBlock:()=>({isAir:true}),spawnParticle:(...v)=>particles.push(v)};
+ const d={id:'realm',isChunkLoaded:()=>true,getBlock:()=>({isAir:true}),getBlockFromRay:({x,z})=>({block:{location:{x:Math.floor(x),y:79,z:Math.floor(z)}},face:'Up',faceLocation:{y:1}}),spawnParticle:(...v)=>particles.push(v)};
  const p={id:'p',typeId:'minecraft:player',isValid:true,isSneaking:true,isSwimming:false,isGliding:false,isFlying:false,isOnGround:true,
   dimension:d,location:{x:.5,y:80,z:.5},getGameMode:()=>GameMode.Survival,getComponent:()=>undefined,
   inputPermissions:{isPermissionCategoryEnabled:()=>true},inputInfo:{getMovementVector:()=>input},getViewDirection:()=>({x:1,y:.9,z:0}),
@@ -23,14 +23,18 @@ function tap(f,t){f.set(0,1);f.ctrl.tick(f.p,f.s,t);f.set(0,0);f.ctrl.tick(f.p,f
  f.ctrl.tick(f.p,f.s,22);assert.equal(f.moves.length,10,'held input never repeats');
 }
 {
- const f=fixture();tap(f,0);f.set(0,0);f.ctrl.tick(f.p,f.s,3);tap(f,4);assert.equal(f.s.s,30,'no cooldown: second double tap consumes stamina');assert.equal(f.animations.length,2);
+ const f=fixture();tap(f,0);f.set(0,0);f.ctrl.tick(f.p,f.s,3);tap(f,4);assert.equal(f.s.s,40,'retry during cooldown is free');assert.equal(f.animations.length,1);assert.equal(f.ctrl.evading(f.p,12),false,'blocked retry did not extend immunity');
+ f.set(0,0);f.ctrl.tick(f.p,f.s,7);tap(f,10);assert.equal(f.s.s,30,'at exactly ten ticks a new roll can start');assert.equal(f.animations.length,2);
 }
 {
  const f=fixture();f.set(0,1);f.ctrl.tick(f.p,f.s,0);f.set(0,0);f.ctrl.tick(f.p,f.s,1);f.set(0,1);f.ctrl.tick(f.p,f.s,10);
  assert.equal(f.moves.length,0,'double tap window expires');
 }
-for(const prepare of [f=>f.s.s=9,f=>f.d.isChunkLoaded=()=>false,f=>f.p.tryTeleport=()=>false,f=>f.p.clearVelocity=()=>{throw Error()},f=>f.p.getViewDirection=()=>({x:0,z:0})]){
+for(const prepare of [f=>f.s.s=9,f=>f.p.getViewDirection=()=>({x:0,z:0})]){
  const f=fixture();prepare(f);const before=f.s.s;tap(f,0);assert.equal(f.s.s,before);assert.equal(f.ctrl.evading(f.p,2),false,'failed roll grants no immunity');
+}
+for(const prepare of [f=>f.d.isChunkLoaded=()=>false,f=>f.p.tryTeleport=()=>false,f=>f.p.clearVelocity=()=>{throw Error()}]){
+ const f=fixture();prepare(f);tap(f,0);assert.equal(f.s.s,40);assert.equal(f.ctrl.evading(f.p,2),true,'blocked movement still activates in place');
 }
 for(const prepare of [f=>f.p.isSneaking=false,f=>f.p.isSwimming=true,f=>f.p.isGliding=true,f=>f.p.isFlying=true,f=>f.p.getComponent=()=>({}),f=>f.p.getGameMode=()=>GameMode.Spectator,f=>f.s.menu=true,f=>f.s.busy=true,f=>f.p.inputInfo.getMovementVector=()=>{throw Error()},f=>f.p.inputPermissions.isPermissionCategoryEnabled=()=>false]){
  const f=fixture();prepare(f);tap(f,0);assert.equal(f.moves.length,0);assert.equal(f.s.s,50);
@@ -41,4 +45,36 @@ for(const prepare of [f=>f.p.isSneaking=false,f=>f.p.isSwimming=true,f=>f.p.isGl
 {
  const f=fixture();f.p.getGameMode=()=>GameMode.Creative;f.s.s=0;tap(f,0);assert.equal(f.moves.length,1);assert.equal(f.s.s,0);assert.equal(f.ctrl.evading(f.p,2),true);
 }
-console.log('Roll: checked 24-block target, no cooldown, stamina, attack immunity and invalid contexts (mocked)');
+{
+ const f=fixture();f.p.isOnGround=false;tap(f,0);assert.equal(f.s.s,50);assert.equal(f.moves.length,0);assert.equal(f.ctrl.evading(f.p,2),false,'air cannot start a roll');
+ f.p.isOnGround=true;f.set(0,0);f.ctrl.tick(f.p,f.s,3);tap(f,4);assert.equal(f.s.s,40);assert.equal(f.ctrl.evading(f.p,6),true,'fresh grounded double tap works after landing');
+}
+{
+ const f=fixture();f.set(0,1);f.ctrl.tick(f.p,f.s,0);f.set(0,0);f.ctrl.tick(f.p,f.s,1);f.p.isOnGround=false;f.set(0,1);f.ctrl.tick(f.p,f.s,2);assert.equal(f.s.s,50,'leaving ground before second tap cancels activation');
+}
+{
+ const f=fixture();tap(f,0);const before=f.p.location.x;f.p.isOnGround=false;f.ctrl.tick(f.p,f.s,3);assert.ok(f.p.location.x>before,'already-started movement is not cancelled by a transient ground flag');
+}
+{
+ const a=fixture(),b=fixture();b.p.id='b';b.ctrl=a.ctrl;tap(a,0);tap(b,3);
+ assert.equal(a.s.s,40);assert.equal(b.s.s,40);assert.equal(b.ctrl.evading(b.p,5),true,'cooldown is per-player');
+ b.set(0,0);b.ctrl.tick(b.p,b.s,6);tap(b,7);assert.equal(b.s.s,40,'second player has their own cooldown');
+}
+{
+ const f=fixture();f.s.s=9;tap(f,0);f.s.s=20;f.set(0,0);f.ctrl.tick(f.p,f.s,3);tap(f,4);
+ assert.equal(f.s.s,10,'failed insufficient-stamina attempt starts no cooldown');
+}
+{
+ const f=fixture();f.p.getGameMode=()=>GameMode.Creative;tap(f,0);f.set(0,0);f.ctrl.tick(f.p,f.s,3);tap(f,4);
+ assert.equal(f.animations.length,1,'creative also observes cooldown');assert.equal(f.s.s,50);
+}
+{
+ const f=fixture();f.p.tryTeleport=()=>false;tap(f,0);f.set(0,0);f.ctrl.tick(f.p,f.s,3);tap(f,4);
+ assert.equal(f.s.s,40);assert.equal(f.animations.length,1,'stationary roll starts cooldown too');
+ f.set(0,0);f.ctrl.tick(f.p,f.s,7);tap(f,10);assert.equal(f.s.s,30);assert.equal(f.animations.length,2);
+}
+{
+ const f=fixture();tap(f,0);f.ctrl.clear(f.p.id);f.set(0,0);f.ctrl.tick(f.p,f.s,3);tap(f,4);
+ assert.equal(f.s.s,30,'explicit session cleanup clears local cooldown');
+}
+console.log('Roll: checked 24-block target, 10-tick cooldown, stamina, attack immunity and invalid contexts (mocked)');

@@ -2,10 +2,7 @@
   "format_version": "1.26.0",
   "minecraft:item": {
     "description": {
-      "identifier": "hakkai:gear_145",
-      "menu_category": {
-        "category": "items"
-      }
+      "identifier": "hakkai:gear_145"
     },
     "components": {
       "minecraft:display_name": {
@@ -27,6 +24,16 @@
       "minecraft:enchantable": {
         "slot": "axe",
         "value": 12
+      },
+      "minecraft:repairable": {
+        "repair_items": [
+          {
+            "items": [
+              "minecraft:diamond"
+            ],
+            "repair_amount": 104
+          }
+        ]
       }
     }
   }

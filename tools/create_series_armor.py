@@ -10,7 +10,7 @@ from import_item_art import save_with_maps
 from render_gear_icons import catalog
 from render_extra_item_icons import recolor
 ROOT=Path(__file__).resolve().parents[1];BP=ROOT/'Hakkai_v7.1.0/BehaviorPack';RP=ROOT/'Hakkai_v7.1.0/ResourcePack';EQ=RP/'textures/hakkai/equipment'
-NAMES=['霧銀の旅装','深影の黒曜甲','紅蓮の守護装','大地の古代装','雷光の紫電装','星輝の白銀装','夢幻の藤霞装','翠風の森装','蒼海の潮騎装','天空の白翼装','時環の覇者装']
+NAMES=['霧銀装 I','深影装 I','紅蓮装 I','大地装 I','雷光装 I','霧銀装 II','深影装 II','紅蓮装 II','大地装 II','雷光装 II','霧銀装 III']
 def write(path,obj):path.parent.mkdir(parents=True,exist_ok=True);path.write_text(json.dumps(obj,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
 def itemid(i):return f'series_leggings_{i:02}'
 def make_geometry(part):
@@ -66,5 +66,10 @@ def main():
   name='ult_'+part;update_attach(name,part);normals(Image.open(EQ/(name+'.png')).convert('RGBA')).save(EQ/(name+'_n.png'))
  write(atlas_path,atlas);write(prog_path,progress)
  for lang,lines in texts.items():(RP/'texts'/(lang+'.lang')).write_text('\n'.join(lines)+'\n',encoding='utf8')
+ # Restore the canonical grouped names and recipes after rebuilding art assets.
+ import subprocess,sys
+ subprocess.run([sys.executable,str(ROOT/'tools/organize_armor_series.py')],check=True)
  print('11 leggings, 11 series plus final armor raised geometry and non-flat normal maps created')
+if __name__=='__main__' and '--allow-legacy-overwrite' not in __import__('sys').argv:
+ raise SystemExit('Legacy generator would overwrite current armor. Pass --allow-legacy-overwrite explicitly; rebuild current armor afterwards.')
 if __name__=='__main__':main()

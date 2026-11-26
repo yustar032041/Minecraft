@@ -20,8 +20,8 @@
         "max": 27
       },
       "minecraft:collision_box": {
-        "width": 0.53,
-        "height": 0.64
+        "width": 0.55,
+        "height": 0.84
       },
       "minecraft:physics": {},
       "minecraft:movement": {
@@ -74,8 +74,11 @@
       },
       "minecraft:behavior.melee_attack": {
         "priority": 3,
-        "speed_multiplier": 1.12,
+        "speed_multiplier": 1.0,
         "track_target": true
+      },
+      "minecraft:experience_reward": {
+        "on_death": "query.last_hit_by_player ? 5 : 0"
       }
     },
     "component_groups": {

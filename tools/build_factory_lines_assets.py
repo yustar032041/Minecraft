@@ -8,9 +8,9 @@ def read(p):return json.loads(p.read_text(encoding='utf8'))
 def write(p,obj):p.write_text(json.dumps(obj,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
 atlas=rp/'textures/terrain_texture.json';atlasdata=read(atlas)
 for name,label,color,parts in [
- ('mixer','動力混合機','#628b8b',['minecraft:cauldron','minecraft:iron_ingot','hakkai:crystal_3']),
- ('assembler','動力組立機','#99674d',['minecraft:crafting_table','minecraft:piston','hakkai:crystal_0']),
- ('filter_router','見本式仕分け機','#668463',['minecraft:hopper','minecraft:comparator','hakkai:crystal_1'])]:
+ ('mixer','動力混合機','#628b8b',['minecraft:cauldron','minecraft:iron_ingot','minecraft:redstone']),
+ ('assembler','動力組立機','#99674d',['minecraft:crafting_table','minecraft:piston','minecraft:redstone']),
+ ('filter_router','見本式仕分け機','#668463',['minecraft:hopper','minecraft:comparator','minecraft:redstone'])]:
  im=Image.new('RGBA',(32,32),'#514132');d=ImageDraw.Draw(im);d.rectangle((2,2,29,29),fill=color,outline='#d8b77d',width=2);d.ellipse((7,7,25,25),fill='#343c3e',outline='#e4bf76',width=2)
  if name=='mixer':
   d.line((10,11,22,21),fill='#b6eff0',width=3);d.line((22,11,10,21),fill='#e8cd82',width=3)

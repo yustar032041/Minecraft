@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Prepare additional icon variants from reusable paintings. Requires Pillow.
 
-Numbers on monster cores identify the creature within its realm, the corner
-symbol identifies the realm and the badge identifies its animal model. These are provisional designs, not bespoke art.
+The old numbered monster-core helpers are retained for reference only. Creature
+materials now use separate attribute art from render_mob_drop_elements.py.
 """
 import json
 import re
@@ -101,15 +101,8 @@ def main():
             im=recolor(originals[kind],a,.84)
             im.alpha_composite(draw_attribute(a,23),(3,3))
             made[name]=im
-    # Core fragments: model badge + number identify the source.
-    models=wildlife_models()
-    for f in (PACK/'BehaviorPack/items').glob('drop_*.json'):
-        match=re.fullmatch(r'drop_(foe|wild)_(\d)_(\d+)',f.stem)
-        if not match:continue
-        category, realm, index=match.group(1),int(match.group(2)),int(match.group(3))
-        # The passive animals drop ecology materials, not core fragments.
-        if category=='wild' and index<2:continue
-        made[f.stem]=core_icon(images['core'],realm,index,category,models[f'{category}_{realm}_{index}'])
+    # Creature materials have been consolidated by attribute. Their bespoke
+    # art is maintained by render_mob_drop_elements.py, not this legacy renderer.
     bowls={
       'autumn_squash_potage':12,'camp_stew':3,'forest_trail_meal':13,
       'frost_blossom_tea':11,'spring_garden_soup':0,'summer_corn_stew':5,
@@ -132,7 +125,7 @@ def main():
     for name,im in made.items():
         assert (PACK/'BehaviorPack/items'/(name+'.json')).exists(),name
         save_with_maps(im,ITEMS/('hakkai_'+name+'.png'))
-    progress['derived_extra_existing']=sorted(made)
+    progress['derived_extra_existing']=sorted(set(progress['derived_extra_existing']) | set(made))
     progress_path.write_text(json.dumps(progress,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
     print(f'Rendered {len(made)} additional provisional icons')
 

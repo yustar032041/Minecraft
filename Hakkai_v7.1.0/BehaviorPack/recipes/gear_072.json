@@ -1,31 +1,23 @@
 {
   "format_version": "1.21.90",
-  "minecraft:recipe_shaped": {
+  "minecraft:recipe_shapeless": {
     "description": {
       "identifier": "hakkai:gear_072"
     },
     "tags": [
       "crafting_table"
     ],
-    "pattern": [
-      "FPP",
-      " C ",
-      " I "
-    ],
-    "key": {
-      "P": {
-        "item": "minecraft:paper"
+    "ingredients": [
+      {
+        "item": "minecraft:gold_nugget"
       },
-      "I": {
-        "item": "minecraft:iron_ingot"
-      },
-      "C": {
+      {
         "item": "hakkai:crystal_12"
       },
-      "F": {
+      {
         "item": "hakkai:shard_16"
       }
-    },
+    ],
     "result": {
       "item": "hakkai:gear_072",
       "count": 1

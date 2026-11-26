@@ -2,6 +2,7 @@
 """Create a provisional small FUSHI guide and neutral chief encounter.
 The geometry and UV atlas are authored for each other; art needs in-game review.
 """
+from mob_experience import experience_reward
 import json,random,math
 from pathlib import Path
 from PIL import Image,ImageDraw
@@ -21,8 +22,9 @@ for chief in (False,True):
  if chief:b.append({'name':'crown','pivot':[0,12,-7],'cubes':[cube([-4,11,-9],[8,2,4],gold),cube([-4,13,-9],[2,3,4],gold),cube([-1,13,-9],[2,4,4],gold),cube([2,13,-9],[2,3,4],gold)]})
  write(rp/f'models/entity/{name}.geo.json',{'format_version':'1.12.0','minecraft:geometry':[{'description':{'identifier':f'geometry.hakkai.{name}','texture_width':512,'texture_height':512,'visible_bounds_width':4,'visible_bounds_height':3,'visible_bounds_offset':[0,1,0]},'bones':b}]})
  c={'minecraft:type_family':{'family':['mob','animal','hakkai_fushi',*(['hakkai_boss'] if chief else ['hakkai_wildlife'])]},'minecraft:health':{'value':180 if chief else 24,'max':180 if chief else 24},'minecraft:collision_box':{'width':1.4 if chief else .8,'height':1.5 if chief else .85},'minecraft:physics':{},'minecraft:movement':{'value':.16 if chief else .12},'minecraft:movement.basic':{},'minecraft:jump.static':{},'minecraft:navigation.walk':{'avoid_water':True,'avoid_damage_blocks':True},'minecraft:behavior.float':{'priority':0},'minecraft:behavior.random_stroll':{'priority':6,'speed_multiplier':.55},'minecraft:behavior.look_at_player':{'priority':7,'look_distance':9,'probability':.1},'minecraft:behavior.random_look_around':{'priority':8},'minecraft:nameable':{}}
+ c['minecraft:experience_reward']=experience_reward(name)
  if not chief:c['minecraft:behavior.tempt']={'priority':3,'speed_multiplier':.8,'items':['minecraft:bamboo'],'within_radius':8,'stop_distance':2}
- if chief:c.update({'minecraft:scale':{'value':1.65},'minecraft:knockback_resistance':{'value':1.0},'minecraft:pushable':{'is_pushable':False,'is_pushable_by_piston':False},'minecraft:boss':{'name':'FUSHIのチーフ','hud_range':32,'should_darken_sky':False},'minecraft:behavior.hurt_by_target':{'priority':1},'minecraft:behavior.move_towards_target':{'priority':2,'speed_multiplier':.75,'within_radius':12},'minecraft:loot':{'table':'loot_tables/hakkai/entities/fushi_chief.json'}})
+ if chief:c.update({'minecraft:scale':{'value':1.65},'minecraft:knockback_resistance':{'value':1.0},'minecraft:pushable':{'is_pushable':False,'is_pushable_by_piston':False},'minecraft:boss':{'name':'FUSHIのチーフ','hud_range':32,'should_darken_sky':False},'minecraft:behavior.hurt_by_target':{'priority':1},'minecraft:behavior.move_towards_target':{'priority':2,'speed_multiplier':.75,'within_radius':12}})
  wild={'minecraft:despawn':{'despawn_from_distance':{'min_distance':36,'max_distance':80}}}
  write(bp/f'entities/{name}.json',{'format_version':'1.21.90','minecraft:entity':{'description':{'identifier':f'hakkai:{name}','is_spawnable':True,'is_summonable':True},'components':c,'component_groups':{'hakkai:wild':wild},'events':{'hakkai:wild':{'add':{'component_groups':['hakkai:wild']}}}}})
  write(rp/f'entity/{name}.entity.json',{'format_version':'1.10.0','minecraft:client_entity':{'description':{'identifier':f'hakkai:{name}','materials':{'default':'entity_alphatest'},'textures':{'default':f'textures/entity/hakkai_{name}'},'geometry':{'default':f'geometry.hakkai.{name}'},'render_controllers':['controller.render.hakkai.beast'],'animations':{'idle':'animation.hakkai.fushi.idle'},'scripts':{'animate':['idle']},'spawn_egg':{'base_color':'#dfd6f2','overlay_color':'#e8c46b' if chief else '#b9a5de'}}}})
@@ -49,7 +51,6 @@ for chief in (False,True):
  mer=Image.new('RGBA',(512,512),(0,0,210,255));md=ImageDraw.Draw(mer);md.ellipse((84,193,116,226),fill=(0,110,180,255));mer.save(folder/(file+'_mer.png'))
  write(folder/(file+'.texture_set.json'),{'format_version':'1.16.100','minecraft:texture_set':{'color':file,'normal':file+'_n','metalness_emissive_roughness':file+'_mer'}})
 write(rp/'animations/fushi.animation.json',{'format_version':'1.8.0','animations':{'animation.hakkai.fushi.idle':{'loop':True,'animation_length':2,'bones':{'head':{'rotation':[0,0,'math.sin(query.anim_time * 180) * 4']},'body':{'rotation':[0,0,'math.sin(query.anim_time * 180) * 1.5']}}}}})
-write(bp/'loot_tables/hakkai/entities/fushi_chief.json',{'pools':[{'rolls':1,'entries':[{'type':'item','name':'hakkai:crystal_7','functions':[{'function':'set_count','count':2}]}]},{'rolls':1,'entries':[{'type':'item','name':'hakkai:fushi_totem'}]}]})
 for lang in ('ja_JP','en_US'):
  path=rp/f'texts/{lang}.lang';s=path.read_text(encoding='utf8');lines=[]
  for key,val in [('entity.hakkai:fushi.name','FUSHI' if lang=='ja_JP' else 'FUSHI'),('entity.hakkai:fushi_chief.name','FUSHIのチーフ' if lang=='ja_JP' else 'FUSHI Chief')]:

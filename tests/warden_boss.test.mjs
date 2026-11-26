@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {wardenPhase,WARDEN_PHASES,WARDEN_ALTERNATES,WARDEN_DAMAGE_MULTIPLIER,inWardenWarning,setupWardenBoss} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_boss.js';
+import {wardenPhase,WARDEN_PHASES,WARDEN_ALTERNATES,WARDEN_DAMAGE_MULTIPLIER,WARDEN_COMBO_MULTIPLIER,inWardenWarning,setupWardenBoss} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_boss.js';
 import {Difficulty,GameMode} from '@minecraft/server';
 import {setupCombatGuard} from '../Hakkai_v7.1.0/BehaviorPack/scripts/combat_guard.js';
 import {setupCombatParry} from '../Hakkai_v7.1.0/BehaviorPack/scripts/combat_parry.js';
@@ -37,7 +37,7 @@ for(let phase=0;phase<5;phase++){
 }
 {
  const f=fixture();f.ctrl.onDeath({deadEntity:f.boss,damageSource:{damagingEntity:f.p}});
- assert.equal(f.props[0][1],'time_warden_clear');
+ assert.equal(f.props.length,0,'completion is recorded centrally for all participants');
 }
 // All explicitly warned players in the circle are affected, while failed
 // message delivery and people arriving after the warning remain safe.
@@ -161,5 +161,5 @@ for(const fail of [()=>false,()=>{throw Error('not available');}]){
 {
  const f=fixture();for(let t=0;t<=200;t++)f.ctrl.tick(f.p,t);
  assert.ok(f.messages.some(m=>m.includes(WARDEN_ALTERNATES[0].attack)), 'second warning by tick 160');
- assert.deepEqual(f.damage,[9*WARDEN_DAMAGE_MULTIPLIER,6*WARDEN_DAMAGE_MULTIPLIER,6*WARDEN_DAMAGE_MULTIPLIER]);
+ assert.deepEqual(f.damage,[9*WARDEN_DAMAGE_MULTIPLIER,6*WARDEN_COMBO_MULTIPLIER,6*WARDEN_COMBO_MULTIPLIER]);
 }

@@ -12,7 +12,9 @@
         "value": "item.hakkai:awaken_book.name"
       },
       "minecraft:icon": "hakkai_awaken_book",
-      "minecraft:max_stack_size": 4
+      "minecraft:max_stack_size": 4,
+      "hakkai:use": {},
+      "minecraft:interact_button": "action.interact.hakkai.use"
     }
   }
 }

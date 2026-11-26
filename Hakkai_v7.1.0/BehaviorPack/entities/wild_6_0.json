@@ -65,6 +65,9 @@
       },
       "minecraft:loot": {
         "table": "loot_tables/hakkai/entities/wild_6_0.json"
+      },
+      "minecraft:experience_reward": {
+        "on_death": "query.last_hit_by_player ? 2 : 0"
       }
     },
     "component_groups": {

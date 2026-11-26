@@ -1,0 +1,362 @@
+[
+  {
+    "label": "series 00",
+    "items": [
+      "gear_011",
+      "gear_010",
+      "series_leggings_00",
+      "gear_012"
+    ]
+  },
+  {
+    "label": "series 01",
+    "items": [
+      "gear_027",
+      "gear_026",
+      "series_leggings_01",
+      "gear_028"
+    ]
+  },
+  {
+    "label": "series 02",
+    "items": [
+      "gear_043",
+      "gear_042",
+      "series_leggings_02",
+      "gear_044"
+    ]
+  },
+  {
+    "label": "series 03",
+    "items": [
+      "gear_059",
+      "gear_058",
+      "series_leggings_03",
+      "gear_060"
+    ]
+  },
+  {
+    "label": "series 04",
+    "items": [
+      "gear_075",
+      "gear_074",
+      "series_leggings_04",
+      "gear_076"
+    ]
+  },
+  {
+    "label": "series 05",
+    "items": [
+      "gear_091",
+      "gear_090",
+      "series_leggings_05",
+      "gear_092"
+    ]
+  },
+  {
+    "label": "series 06",
+    "items": [
+      "gear_107",
+      "gear_106",
+      "series_leggings_06",
+      "gear_108"
+    ]
+  },
+  {
+    "label": "series 07",
+    "items": [
+      "gear_123",
+      "gear_122",
+      "series_leggings_07",
+      "gear_124"
+    ]
+  },
+  {
+    "label": "series 08",
+    "items": [
+      "gear_139",
+      "gear_138",
+      "series_leggings_08",
+      "gear_140"
+    ]
+  },
+  {
+    "label": "series 09",
+    "items": [
+      "gear_155",
+      "gear_154",
+      "series_leggings_09",
+      "gear_156"
+    ]
+  },
+  {
+    "label": "series 10",
+    "items": [
+      "gear_171",
+      "gear_170",
+      "series_leggings_10",
+      "gear_172"
+    ]
+  },
+  {
+    "label": "guardian 0 / awaken",
+    "items": [
+      "guardian_armor_0_helmet",
+      "gear_188",
+      "guardian_armor_0_leggings",
+      "guardian_armor_0_boots"
+    ]
+  },
+  {
+    "label": "guardian 0 / ascended",
+    "items": [
+      "guardian_armor_0_helmet",
+      "gear_196",
+      "guardian_armor_0_leggings",
+      "guardian_armor_0_boots"
+    ]
+  },
+  {
+    "label": "guardian 0 / legacy",
+    "items": [
+      "guardian_armor_0_helmet",
+      "gear_204",
+      "guardian_armor_0_leggings",
+      "guardian_armor_0_boots"
+    ]
+  },
+  {
+    "label": "guardian 1 / awaken",
+    "items": [
+      "guardian_armor_1_helmet",
+      "gear_189",
+      "guardian_armor_1_leggings",
+      "guardian_armor_1_boots"
+    ]
+  },
+  {
+    "label": "guardian 1 / ascended",
+    "items": [
+      "guardian_armor_1_helmet",
+      "gear_197",
+      "guardian_armor_1_leggings",
+      "guardian_armor_1_boots"
+    ]
+  },
+  {
+    "label": "guardian 1 / legacy",
+    "items": [
+      "guardian_armor_1_helmet",
+      "gear_205",
+      "guardian_armor_1_leggings",
+      "guardian_armor_1_boots"
+    ]
+  },
+  {
+    "label": "guardian 2 / awaken",
+    "items": [
+      "guardian_armor_2_helmet",
+      "gear_190",
+      "guardian_armor_2_leggings",
+      "guardian_armor_2_boots"
+    ]
+  },
+  {
+    "label": "guardian 2 / ascended",
+    "items": [
+      "guardian_armor_2_helmet",
+      "gear_198",
+      "guardian_armor_2_leggings",
+      "guardian_armor_2_boots"
+    ]
+  },
+  {
+    "label": "guardian 2 / legacy",
+    "items": [
+      "guardian_armor_2_helmet",
+      "gear_206",
+      "guardian_armor_2_leggings",
+      "guardian_armor_2_boots"
+    ]
+  },
+  {
+    "label": "guardian 3 / awaken",
+    "items": [
+      "guardian_armor_3_helmet",
+      "gear_191",
+      "guardian_armor_3_leggings",
+      "guardian_armor_3_boots"
+    ]
+  },
+  {
+    "label": "guardian 3 / ascended",
+    "items": [
+      "guardian_armor_3_helmet",
+      "gear_199",
+      "guardian_armor_3_leggings",
+      "guardian_armor_3_boots"
+    ]
+  },
+  {
+    "label": "guardian 3 / legacy",
+    "items": [
+      "guardian_armor_3_helmet",
+      "gear_207",
+      "guardian_armor_3_leggings",
+      "guardian_armor_3_boots"
+    ]
+  },
+  {
+    "label": "guardian 4 / awaken",
+    "items": [
+      "guardian_armor_4_helmet",
+      "gear_192",
+      "guardian_armor_4_leggings",
+      "guardian_armor_4_boots"
+    ]
+  },
+  {
+    "label": "guardian 4 / ascended",
+    "items": [
+      "guardian_armor_4_helmet",
+      "gear_200",
+      "guardian_armor_4_leggings",
+      "guardian_armor_4_boots"
+    ]
+  },
+  {
+    "label": "guardian 4 / legacy",
+    "items": [
+      "guardian_armor_4_helmet",
+      "gear_208",
+      "guardian_armor_4_leggings",
+      "guardian_armor_4_boots"
+    ]
+  },
+  {
+    "label": "guardian 5 / awaken",
+    "items": [
+      "guardian_armor_5_helmet",
+      "gear_193",
+      "guardian_armor_5_leggings",
+      "guardian_armor_5_boots"
+    ]
+  },
+  {
+    "label": "guardian 5 / ascended",
+    "items": [
+      "guardian_armor_5_helmet",
+      "gear_201",
+      "guardian_armor_5_leggings",
+      "guardian_armor_5_boots"
+    ]
+  },
+  {
+    "label": "guardian 5 / legacy",
+    "items": [
+      "guardian_armor_5_helmet",
+      "gear_209",
+      "guardian_armor_5_leggings",
+      "guardian_armor_5_boots"
+    ]
+  },
+  {
+    "label": "guardian 6 / awaken",
+    "items": [
+      "guardian_armor_6_helmet",
+      "gear_194",
+      "guardian_armor_6_leggings",
+      "guardian_armor_6_boots"
+    ]
+  },
+  {
+    "label": "guardian 6 / ascended",
+    "items": [
+      "guardian_armor_6_helmet",
+      "gear_202",
+      "guardian_armor_6_leggings",
+      "guardian_armor_6_boots"
+    ]
+  },
+  {
+    "label": "guardian 6 / legacy",
+    "items": [
+      "guardian_armor_6_helmet",
+      "gear_210",
+      "guardian_armor_6_leggings",
+      "guardian_armor_6_boots"
+    ]
+  },
+  {
+    "label": "guardian 7 / awaken",
+    "items": [
+      "guardian_armor_7_helmet",
+      "gear_195",
+      "guardian_armor_7_leggings",
+      "guardian_armor_7_boots"
+    ]
+  },
+  {
+    "label": "guardian 7 / ascended",
+    "items": [
+      "guardian_armor_7_helmet",
+      "gear_203",
+      "guardian_armor_7_leggings",
+      "guardian_armor_7_boots"
+    ]
+  },
+  {
+    "label": "guardian 7 / legacy",
+    "items": [
+      "guardian_armor_7_helmet",
+      "gear_211",
+      "guardian_armor_7_leggings",
+      "guardian_armor_7_boots"
+    ]
+  },
+  {
+    "label": "nightwalker / gear_186",
+    "items": [
+      "nightwalker_armor_helmet",
+      "gear_186",
+      "nightwalker_armor_leggings",
+      "nightwalker_armor_boots"
+    ]
+  },
+  {
+    "label": "nightwalker / gear_187",
+    "items": [
+      "nightwalker_armor_helmet",
+      "gear_187",
+      "nightwalker_armor_leggings",
+      "nightwalker_armor_boots"
+    ]
+  },
+  {
+    "label": "united / gear_212",
+    "items": [
+      "united_armor_helmet",
+      "gear_212",
+      "united_armor_leggings",
+      "united_armor_boots"
+    ]
+  },
+  {
+    "label": "united / gear_213",
+    "items": [
+      "united_armor_helmet",
+      "gear_213",
+      "united_armor_leggings",
+      "united_armor_boots"
+    ]
+  },
+  {
+    "label": "ultimate",
+    "items": [
+      "ult_helmet",
+      "ult_chest",
+      "ult_leggings",
+      "ult_boots"
+    ]
+  }
+]

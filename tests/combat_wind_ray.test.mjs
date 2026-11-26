@@ -25,6 +25,17 @@ for(const typeId of ['minecraft:player','minecraft:villager','hakkai:fushi']){
  d.getEntitiesFromRay=()=>[{entity:enemy,distance:4},{entity:friend,distance:2}];
  const ray=prepareWindRay(p,gear);assert.equal(ray.target,undefined);assert.equal(ray.distance,2,'friend absorbs ray');
 }
+// Result order must not allow a shot to pierce a friendly at the same
+// distance. Unknown distances fail closed, even if the wall is nearer.
+for(const reverse of [false,true]){
+ const {p,d,enemy}=fixture(),friend={id:'friend',typeId:'minecraft:villager',isValid:true,getComponent:()=>({hasTypeFamily:()=>false})};
+ const hits=[{entity:enemy,distance:2},{entity:friend,distance:2}];d.getEntitiesFromRay=()=>reverse?hits.reverse():hits;
+ const ray=prepareWindRay(p,gear);assert.equal(ray.target,undefined);assert.equal(ray.distance,2);assert.equal(ray.blocked,true);
+}
+{
+ const {p,d,enemy}=fixture();d.getEntitiesFromRay=()=>[{entity:enemy,distance:2},{entity:{id:'friend',typeId:'minecraft:villager',isValid:true},distance:NaN}];
+ assert.equal(prepareWindRay(p,gear),undefined);
+}
 {
  const {p,d,enemy}=fixture();d.getEntitiesFromRay=()=>[{entity:p,distance:0},{entity:enemy,distance:2}];
  assert.equal(prepareWindRay(p,gear).target,enemy,'caster does not block own ray');

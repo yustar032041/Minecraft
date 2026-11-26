@@ -88,11 +88,11 @@ def horn(c):
 
 def mapping():
  return {
- 'autumn_squash_produce':('pumpkin',12),'bandage':('bandage',5),'barn_token':('medal',13),
+ 'autumn_squash_produce':('pumpkin',12),'bandage':('bandage',5),
  'camp_herbal_tea':('tea',13),'camp_mushroom_wrap':('wrap',13),'camp_supply_pack':('pouch',3),
- 'chronicle_fragment':('fragment',7),'cloth':('cloth',3),'dodge_scroll':('scroll',0),
+ 'chronicle_fragment':('fragment',7),'dodge_scroll':('scroll',0),
  'dried_meat':('meat',2),'dried_sweet_berries':('berries',2),'expedition_bento':('bento',3),
- 'farm_fiber':('fiber',13),'festival_0':('medal',0),'festival_1':('medal',5),
+ 'festival_0':('medal',0),'festival_1':('medal',5),
  'festival_2':('medal',12),'festival_3':('medal',11),'festival_fish_0':('fish',0),
  'festival_fish_1':('fish',2),'festival_fish_2':('fish',5),'festival_fish_3':('fish',11),
  'fish_token':('medal',1),'forager_nut_mix':('pouch',13),'gathered_herb_bundle':('herb',13),

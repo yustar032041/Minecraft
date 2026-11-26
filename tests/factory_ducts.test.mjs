@@ -27,3 +27,13 @@ for(const [name,v] of Object.entries({item_extractor:[1,0,0],item_extractor_west
  src.items=[new Item('minecraft:wheat')];f.put(P(65,0,0),'hakkai:item_duct');const far=new Container([undefined]);f.put(P(66,0,0),'minecraft:barrel',far);assert.equal(f.run(),false);assert.equal(src.getItem(0).amount,1);assert.equal(far.getItem(0),undefined);
 }
 console.log('Six extractor directions, duct branches, metadata, full, chunks, cap and rollback OK (simulated)');
+for(const fault of ['extractor','source','destination','path','unloaded']){
+ const f=setup(),src=new Container([new Item('minecraft:diamond',2,'marked')]),dst=new Container([undefined]);
+ const source=f.put(P(-1,0,0),'minecraft:barrel',src),duct=f.put(P(1,0,0),'hakkai:item_duct'),destination=f.put(P(2,0,0),'minecraft:barrel',dst);
+ const write=dst.setItem.bind(dst);let first=true;dst.setItem=(i,v)=>{write(i,v);if(!first)return;first=false;
+  if(fault==='extractor')f.ext.typeId='minecraft:stone';if(fault==='source')source.typeId='minecraft:stone';
+  if(fault==='destination')destination.typeId='minecraft:stone';if(fault==='path')duct.typeId='minecraft:stone';
+  if(fault==='unloaded')f.d.unloaded=new Set([key(P(1,0,0))]);
+ };
+ assert.equal(f.run(),false,fault);assert.equal(src.getItem(0).amount,2,fault);assert.equal(src.getItem(0).nameTag,'marked');assert.equal(dst.getItem(0),undefined,fault);
+}

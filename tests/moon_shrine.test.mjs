@@ -3,7 +3,7 @@ import {placeMoonShrine} from '../Hakkai_v7.1.0/BehaviorPack/scripts/moon_shrine
 function fixture(){
  const blocks=new Map(),writes=[],spawns=[],errors=[];let player=false,existing=false,loaded=true,failed=false;
  const key=p=>`${p.x},${p.y},${p.z}`;
- const d={isChunkLoaded:()=>loaded,getBlock:p=>{const id=blocks.get(key(p))??(p.y===80?'minecraft:grass_block':'minecraft:air');return {typeId:id,isSolid:id!=='minecraft:air',isAir:id==='minecraft:air',isLiquid:false};},
+ const d={isChunkLoaded:()=>loaded,getBlock:p=>{const id=blocks.get(key(p))??(p.y===80?'minecraft:grass_block':'minecraft:air');return {typeId:id,isAir:id==='minecraft:air',isLiquid:false};},
  setBlockType(p,id){if(failed&&writes.length===2)throw Error('partial write');writes.push([p,id]);blocks.set(key(p),id);},getEntities:()=>existing?[{}]:[],spawnEntity:(id,at,opts)=>spawns.push([id,at,opts])};
  const args={dimension:d,cx:3,cz:-2,hash:()=>0,heightFor:()=>80,isGrove:()=>true,playersNear:()=>player,report:(_,e)=>errors.push(e)};
  return {args,d,blocks,writes,spawns,errors,setPlayer:x=>player=x,setExisting:x=>existing=x,setLoaded:x=>loaded=x,setFailed:x=>failed=x,key};
@@ -27,4 +27,10 @@ console.log('Moon shrine: bounded placement, ground and space preflight, chief c
 {
  const f=fixture(),registered=[];f.args.onChief=(e,h)=>registered.push([e,h]);
  assert.ok(placeMoonShrine(f.args));assert.equal(registered.length,1);assert.deepEqual(registered[0][1],{cx:3,cz:-2,y:80});
+}
+// Stable API has no isSolid; waterlogging and altered foundations still stop
+// the entire placement before any block is written.
+{
+ const f=fixture(),get=f.d.getBlock;f.d.getBlock=p=>({...get(p),isWaterlogged:p.y===80});
+ assert.equal(placeMoonShrine(f.args),false);assert.equal(f.writes.length,0);
 }

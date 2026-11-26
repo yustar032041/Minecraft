@@ -1,0 +1,20 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "hakkai:eclipse_core_to_time"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "hakkai:eclipse_core"
+      }
+    ],
+    "result": {
+      "item": "hakkai:crystal_7",
+      "count": 8
+    }
+  }
+}

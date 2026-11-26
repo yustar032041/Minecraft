@@ -17,7 +17,16 @@
       ],
       "animations": {
         "idle": "animation.hakkai.eclipse_colossus.idle",
-        "walk": "animation.hakkai.eclipse_colossus.walk"
+        "walk": "animation.hakkai.eclipse_colossus.walk",
+        "creature_windup": "animation.hakkai.creature_windup",
+        "creature_strike": "animation.hakkai.creature_strike",
+        "eclipse_cleave_windup": "animation.hakkai.eclipse_cleave_windup",
+        "eclipse_cleave_strike": "animation.hakkai.eclipse_cleave_strike",
+        "eclipse_cast_windup": "animation.hakkai.eclipse_cast_windup",
+        "eclipse_cast_strike": "animation.hakkai.eclipse_cast_strike",
+        "eclipse_wave_windup": "animation.hakkai.eclipse_wave_windup",
+        "eclipse_wave_strike": "animation.hakkai.eclipse_wave_strike",
+        "eclipse_cleave_contact": "animation.hakkai.eclipse_cleave_contact"
       },
       "scripts": {
         "animate": [
@@ -28,6 +37,10 @@
             "walk": "query.modified_move_speed > 0.01"
           }
         ]
+      },
+      "spawn_egg": {
+        "base_color": "#27132f",
+        "overlay_color": "#f06c69"
       }
     }
   }

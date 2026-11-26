@@ -76,8 +76,17 @@ export function wardenPhase(hp,max=5000){
  return 0;
 }
 export const WARDEN_HEAL_PER_SECOND=12;
-// Increase all scripted patterns without changing their warning geometry.
-export const WARDEN_DAMAGE_MULTIPLIER=16.8;
+// Warned damage, tuned assuming 20 armor points and no enchantments.
+// Separate attacks and repeated strikes can overlap; real mitigation and
+// time-to-kill remain subject to Bedrock testing.
+export const WARDEN_DAMAGE_MULTIPLIER=1.8;
+// Three separately warned strikes use half the single-strike multiplier, so
+// the full combo is not accidentally triple the damage of a single pattern.
+export const WARDEN_COMBO_MULTIPLIER=.9;
+export function wardenAttackDamage(attack,warded=false){
+ const multiplier=attack.strikes>1?WARDEN_COMBO_MULTIPLIER:WARDEN_DAMAGE_MULTIPLIER;
+ return attack.damage*multiplier*(warded?.5:1);
+}
 export const WARDEN_RECOVERY_TICKS=20;
 // Every fifth selection belongs to the same source form. Final starts with its
 // own attack, then alternates through forms 1–4 before repeating that order.
@@ -206,7 +215,7 @@ export function setupWardenBoss({world,system,property,report,isEvading=()=>fals
      if(hitThisTick.has(p.id))continue;
      hitThisTick.add(p.id);
      if(tryParry(p,e)){if((s.attackSerial??0)!==attackSerial)break;continue;}
-     let hit=false;try{hit=Boolean(p.applyDamage(m.attack.damage*WARDEN_DAMAGE_MULTIPLIER,{cause:EntityDamageCause.entityAttack,damagingEntity:e}));}catch{}
+     let hit=false;try{hit=Boolean(p.applyDamage(wardenAttackDamage(m.attack),{cause:EntityDamageCause.entityAttack,damagingEntity:e}));}catch{}
      if(hit)try{p.addEffect(m.attack.effect,60,{amplifier:0,showParticles:false});}catch{}
     }
     if(result.done)slot.active=undefined;
@@ -226,7 +235,7 @@ export function setupWardenBoss({world,system,property,report,isEvading=()=>fals
        hitThisTick.add(p.id);
        if(tryParry(p,e)){if((s.attackSerial??0)!==attackSerial)break;continue;}
        const warded=attack.totemWard&&hasFushiTotem(p);
-       let hit=false;try{hit=Boolean(p.applyDamage((warded?attack.damage/2:attack.damage)*WARDEN_DAMAGE_MULTIPLIER,{cause:EntityDamageCause.entityAttack,damagingEntity:e}));}catch{}
+       let hit=false;try{hit=Boolean(p.applyDamage(wardenAttackDamage(attack,warded),{cause:EntityDamageCause.entityAttack,damagingEntity:e}));}catch{}
        if(hit&&warded)try{p.sendMessage('§dFUSHIのトーテムが月光の審判を和らげた！');}catch{}
        if(hit)try{p.addEffect(attack.effect,60,{amplifier:0,showParticles:false});}catch{}
       }
@@ -300,8 +309,7 @@ export function setupWardenBoss({world,system,property,report,isEvading=()=>fals
  }
  function onDeath({deadEntity,damageSource}){
   if(deadEntity?.typeId!=='hakkai:time_warden')return;
-  states.delete(deadEntity.id);for(const [id,m] of music)if(m.boss===deadEntity.id)clearMusic(id);const p=damageSource?.damagingEntity;
-  if(valid(p))try{property(p,'time_warden_clear',1);p.sendMessage('§6時空の管理者を討伐。挑戦印かガイドから再戦できます。');}catch{}
+  states.delete(deadEntity.id);for(const [id,m] of music)if(m.boss===deadEntity.id)clearMusic(id);
  }
  return {tick,onDeath,onMeleeParry,stagger,clearMusic,musicActive};
 }

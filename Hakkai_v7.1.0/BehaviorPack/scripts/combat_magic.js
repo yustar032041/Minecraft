@@ -1,6 +1,6 @@
 import {GameMode} from '@minecraft/server';
 import {prepareCombatRay} from './combat_wind_ray.js';
-import {combatEnemies,applyCombatHit,isCombatTarget} from './combat_resonance.js';
+import {combatEnemies,applyCombatHit,isCombatTarget,combatEffectAllowed} from './combat_resonance.js';
 const COOLDOWN=120,delta=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z);
 export const MAGIC={
  light:{cost:5,index:13,name:'光の矢'},bond:{cost:20,index:14,name:'絆の灯'},
@@ -22,8 +22,8 @@ function lightProjectile(p,system,initial,stagger){
    if(!segment)return; // Chunk/raycast failure: never hit through it.
    for(let i=0;i<=4;i++){const n=segment.distance*i/4;try{dimension.spawnParticle('hakkai:wind_burst',{x:from.x+direction.x*n,y:from.y+direction.y*n,z:from.z+direction.z*n});}catch{}}
    if(segment.target){
-    const target=segment.target;applyCombatHit(p,target,5,5,-1,.2);
-    if(target.isValid&&!boss(target)){try{target.addEffect('slowness',30,{amplifier:1,showParticles:false});}catch{}try{stagger?.(target,30);}catch{}}
+    const target=segment.target,landed=applyCombatHit(p,target,5,5,-1,.2);
+    if(landed&&combatEffectAllowed(p,target)&&!boss(target)){try{target.addEffect('slowness',30,{amplifier:1,showParticles:false});}catch{}try{stagger?.(target,30);}catch{}}
     return;
    }
    if(segment.blocked)return; // wall or friendly entity, even at the endpoint
@@ -83,8 +83,7 @@ export function castNewMagic({p,s,system,kind,notice,mark,visibleFrom,stagger,co
    for(const e of targets){
     if(kind==='wind')applyCombatHit(p,e,3,0,-1,1.5);
     if(kind==='water'){
-     applyCombatHit(p,e,3,1,-1,.1);
-     try{e.addEffect('slowness',80,{amplifier:4,showParticles:true});}catch{}
+     if(applyCombatHit(p,e,3,1,-1,.1)&&combatEffectAllowed(p,e))try{e.addEffect('slowness',80,{amplifier:4,showParticles:true});}catch{}
     }
     if(kind==='fire')applyCombatHit(p,e,4,2,-1,.2);
    }

@@ -2,10 +2,7 @@
   "format_version": "1.26.0",
   "minecraft:item": {
     "description": {
-      "identifier": "hakkai:gear_129",
-      "menu_category": {
-        "category": "items"
-      }
+      "identifier": "hakkai:gear_129"
     },
     "components": {
       "minecraft:display_name": {
@@ -13,10 +10,10 @@
       },
       "minecraft:icon": "hakkai_gear_129",
       "minecraft:max_stack_size": 1,
-      "minecraft:damage": 9,
+      "minecraft:damage": 31,
       "minecraft:hand_equipped": true,
       "minecraft:durability": {
-        "max_durability": 303
+        "max_durability": 457
       },
       "minecraft:use_modifiers": {
         "use_duration": 15.0,
@@ -27,6 +24,16 @@
       "minecraft:enchantable": {
         "slot": "axe",
         "value": 12
+      },
+      "minecraft:repairable": {
+        "repair_items": [
+          {
+            "items": [
+              "minecraft:diamond"
+            ],
+            "repair_amount": 115
+          }
+        ]
       }
     }
   }

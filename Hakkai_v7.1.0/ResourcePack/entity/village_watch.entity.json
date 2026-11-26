@@ -16,7 +16,8 @@
         "controller.render.hakkai.beast"
       ],
       "animations": {
-        "walk": "animation.hakkai.brute.stride"
+        "walk": "animation.hakkai.brute.stride",
+        "patrol_strike": "animation.hakkai.patrol_strike"
       },
       "scripts": {
         "animate": [

@@ -4,7 +4,7 @@ const home={cx:3,cz:-2,y:80},stateKey='hakkai:shrine_chief_v1_3_-2';
 function fixture(){
  const data=new Map(),reports=[],spawned=[],players=[];let now=100,loaded=true,blocked=false,existing=[],failSpawn=false,seq=0;
  const dimension={id:'hakkai:realm_7',getPlayers:()=>players,getEntities:()=>existing,isChunkLoaded:()=>loaded,
-  getBlock:p=>({typeId:p.y===80?'minecraft:grass_block':blocked?'minecraft:stone':'minecraft:air',isSolid:p.y===80,isLiquid:false,isAir:p.y!==80&&!blocked}),
+  getBlock:p=>({typeId:p.y===80?'minecraft:grass_block':blocked?'minecraft:stone':'minecraft:air',isLiquid:false,isAir:p.y!==80&&!blocked}),
   spawnEntity:(type,at,options)=>{if(failSpawn)throw Error('spawn failed');const e=entity(`spawn-${++seq}`);spawned.push({e,type,at,options});return e;}};
  const p={id:'p',isValid:true,dimension,location:{x:88,y:81,z:-24}};
  const world={gameRules:{doMobSpawning:true},getAbsoluteTime:()=>now,getDynamicProperty:k=>data.get(k),setDynamicProperty:(k,v)=>data.set(k,v)};

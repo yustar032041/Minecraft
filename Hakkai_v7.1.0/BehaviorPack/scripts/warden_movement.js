@@ -1,3 +1,4 @@
+import {validWardenArenaFloor} from './warden_arena_floor.js';
 // Bounded steering: sample the entire prospective path and volume before
 // applying an impulse. Never teleport or change blocks or other entities.
 export function steerWarden(e,s,phase,t,{idle=true,peaceful=false}={}){
@@ -26,7 +27,7 @@ export function steerWarden(e,s,phase,t,{idle=true,peaceful=false}={}){
     if(players.some(p=>Math.abs(p.location.y-y)<3&&Math.hypot(p.location.x-x,p.location.z-z)<2.2)){clear=false;break;}
     for(const ox of [-.5,0,.5])for(const oz of [-.5,0,.5]){
      const bx=Math.floor(x+ox),bz=Math.floor(z+oz),by=Math.floor(y);
-     if(!flying){const floor={x:bx,y:by-1,z:bz},b=d.getBlock(floor);if(!d.isChunkLoaded(floor)||!b?.isSolid||b.isLiquid||/magma|cactus|campfire|powder_snow/.test(b.typeId)){clear=false;break;}}
+     if(!flying){const floor={x:bx,y:by-1,z:bz};if(!d.isChunkLoaded(floor)||!validWardenArenaFloor(d.getBlock(floor))){clear=false;break;}}
      for(let h=0;h<=2;h++){const at={x:bx,y:by+h,z:bz};if(!d.isChunkLoaded(at)||!d.getBlock(at)?.isAir){clear=false;break;}}
     }
    }

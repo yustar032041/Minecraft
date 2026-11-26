@@ -20,8 +20,8 @@
         "max": 32
       },
       "minecraft:collision_box": {
-        "width": 0.53,
-        "height": 0.64
+        "width": 0.64,
+        "height": 0.6
       },
       "minecraft:physics": {},
       "minecraft:movement": {
@@ -76,6 +76,9 @@
             "max_dist": 14
           }
         ]
+      },
+      "minecraft:experience_reward": {
+        "on_death": "query.last_hit_by_player ? 5 : 0"
       }
     },
     "component_groups": {

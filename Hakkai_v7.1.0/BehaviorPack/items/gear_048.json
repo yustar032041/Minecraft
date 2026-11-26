@@ -2,10 +2,7 @@
   "format_version": "1.26.0",
   "minecraft:item": {
     "description": {
-      "identifier": "hakkai:gear_048",
-      "menu_category": {
-        "category": "items"
-      }
+      "identifier": "hakkai:gear_048"
     },
     "components": {
       "minecraft:display_name": {
@@ -27,6 +24,16 @@
       "minecraft:enchantable": {
         "slot": "sword",
         "value": 12
+      },
+      "minecraft:repairable": {
+        "repair_items": [
+          {
+            "items": [
+              "minecraft:iron_ingot"
+            ],
+            "repair_amount": 109
+          }
+        ]
       }
     }
   }

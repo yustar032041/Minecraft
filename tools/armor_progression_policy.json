@@ -1,0 +1,618 @@
+[
+  {
+    "id": "gear_011",
+    "family": 0,
+    "rank": 1,
+    "slot": "head",
+    "old": {
+      "protection": 11,
+      "durability": 459
+    },
+    "new": {
+      "protection": 11,
+      "durability": 459
+    }
+  },
+  {
+    "id": "gear_010",
+    "family": 0,
+    "rank": 1,
+    "slot": "chest",
+    "old": {
+      "protection": 10,
+      "durability": 440
+    },
+    "new": {
+      "protection": 10,
+      "durability": 440
+    }
+  },
+  {
+    "id": "series_leggings_00",
+    "family": 0,
+    "rank": 1,
+    "slot": "legs",
+    "old": {
+      "protection": 8,
+      "durability": 440
+    },
+    "new": {
+      "protection": 8,
+      "durability": 440
+    }
+  },
+  {
+    "id": "gear_012",
+    "family": 0,
+    "rank": 1,
+    "slot": "feet",
+    "old": {
+      "protection": 0,
+      "durability": 250
+    },
+    "new": {
+      "protection": 2,
+      "durability": 250
+    }
+  },
+  {
+    "id": "gear_091",
+    "family": 0,
+    "rank": 2,
+    "slot": "head",
+    "old": {
+      "protection": 7,
+      "durability": 383
+    },
+    "new": {
+      "protection": 11,
+      "durability": 459
+    }
+  },
+  {
+    "id": "gear_090",
+    "family": 0,
+    "rank": 2,
+    "slot": "chest",
+    "old": {
+      "protection": 6,
+      "durability": 364
+    },
+    "new": {
+      "protection": 10,
+      "durability": 440
+    }
+  },
+  {
+    "id": "series_leggings_05",
+    "family": 0,
+    "rank": 2,
+    "slot": "legs",
+    "old": {
+      "protection": 6,
+      "durability": 364
+    },
+    "new": {
+      "protection": 8,
+      "durability": 440
+    }
+  },
+  {
+    "id": "gear_092",
+    "family": 0,
+    "rank": 2,
+    "slot": "feet",
+    "old": {
+      "protection": 8,
+      "durability": 402
+    },
+    "new": {
+      "protection": 8,
+      "durability": 402
+    }
+  },
+  {
+    "id": "gear_171",
+    "family": 0,
+    "rank": 3,
+    "slot": "head",
+    "old": {
+      "protection": 3,
+      "durability": 307
+    },
+    "new": {
+      "protection": 11,
+      "durability": 459
+    }
+  },
+  {
+    "id": "gear_170",
+    "family": 0,
+    "rank": 3,
+    "slot": "chest",
+    "old": {
+      "protection": 2,
+      "durability": 288
+    },
+    "new": {
+      "protection": 10,
+      "durability": 440
+    }
+  },
+  {
+    "id": "series_leggings_10",
+    "family": 0,
+    "rank": 3,
+    "slot": "legs",
+    "old": {
+      "protection": 2,
+      "durability": 288
+    },
+    "new": {
+      "protection": 8,
+      "durability": 440
+    }
+  },
+  {
+    "id": "gear_172",
+    "family": 0,
+    "rank": 3,
+    "slot": "feet",
+    "old": {
+      "protection": 4,
+      "durability": 326
+    },
+    "new": {
+      "protection": 8,
+      "durability": 402
+    }
+  },
+  {
+    "id": "gear_027",
+    "family": 1,
+    "rank": 1,
+    "slot": "head",
+    "old": {
+      "protection": 3,
+      "durability": 307
+    },
+    "new": {
+      "protection": 3,
+      "durability": 307
+    }
+  },
+  {
+    "id": "gear_026",
+    "family": 1,
+    "rank": 1,
+    "slot": "chest",
+    "old": {
+      "protection": 2,
+      "durability": 288
+    },
+    "new": {
+      "protection": 2,
+      "durability": 288
+    }
+  },
+  {
+    "id": "series_leggings_01",
+    "family": 1,
+    "rank": 1,
+    "slot": "legs",
+    "old": {
+      "protection": 2,
+      "durability": 288
+    },
+    "new": {
+      "protection": 2,
+      "durability": 288
+    }
+  },
+  {
+    "id": "gear_028",
+    "family": 1,
+    "rank": 1,
+    "slot": "feet",
+    "old": {
+      "protection": 4,
+      "durability": 326
+    },
+    "new": {
+      "protection": 4,
+      "durability": 326
+    }
+  },
+  {
+    "id": "gear_107",
+    "family": 1,
+    "rank": 2,
+    "slot": "head",
+    "old": {
+      "protection": 11,
+      "durability": 459
+    },
+    "new": {
+      "protection": 11,
+      "durability": 459
+    }
+  },
+  {
+    "id": "gear_106",
+    "family": 1,
+    "rank": 2,
+    "slot": "chest",
+    "old": {
+      "protection": 10,
+      "durability": 440
+    },
+    "new": {
+      "protection": 10,
+      "durability": 440
+    }
+  },
+  {
+    "id": "series_leggings_06",
+    "family": 1,
+    "rank": 2,
+    "slot": "legs",
+    "old": {
+      "protection": 8,
+      "durability": 440
+    },
+    "new": {
+      "protection": 8,
+      "durability": 440
+    }
+  },
+  {
+    "id": "gear_108",
+    "family": 1,
+    "rank": 2,
+    "slot": "feet",
+    "old": {
+      "protection": 0,
+      "durability": 250
+    },
+    "new": {
+      "protection": 4,
+      "durability": 326
+    }
+  },
+  {
+    "id": "gear_043",
+    "family": 2,
+    "rank": 1,
+    "slot": "head",
+    "old": {
+      "protection": 7,
+      "durability": 383
+    },
+    "new": {
+      "protection": 7,
+      "durability": 383
+    }
+  },
+  {
+    "id": "gear_042",
+    "family": 2,
+    "rank": 1,
+    "slot": "chest",
+    "old": {
+      "protection": 6,
+      "durability": 364
+    },
+    "new": {
+      "protection": 6,
+      "durability": 364
+    }
+  },
+  {
+    "id": "series_leggings_02",
+    "family": 2,
+    "rank": 1,
+    "slot": "legs",
+    "old": {
+      "protection": 6,
+      "durability": 364
+    },
+    "new": {
+      "protection": 6,
+      "durability": 364
+    }
+  },
+  {
+    "id": "gear_044",
+    "family": 2,
+    "rank": 1,
+    "slot": "feet",
+    "old": {
+      "protection": 8,
+      "durability": 402
+    },
+    "new": {
+      "protection": 8,
+      "durability": 402
+    }
+  },
+  {
+    "id": "gear_123",
+    "family": 2,
+    "rank": 2,
+    "slot": "head",
+    "old": {
+      "protection": 3,
+      "durability": 307
+    },
+    "new": {
+      "protection": 7,
+      "durability": 383
+    }
+  },
+  {
+    "id": "gear_122",
+    "family": 2,
+    "rank": 2,
+    "slot": "chest",
+    "old": {
+      "protection": 2,
+      "durability": 288
+    },
+    "new": {
+      "protection": 6,
+      "durability": 364
+    }
+  },
+  {
+    "id": "series_leggings_07",
+    "family": 2,
+    "rank": 2,
+    "slot": "legs",
+    "old": {
+      "protection": 2,
+      "durability": 288
+    },
+    "new": {
+      "protection": 6,
+      "durability": 364
+    }
+  },
+  {
+    "id": "gear_124",
+    "family": 2,
+    "rank": 2,
+    "slot": "feet",
+    "old": {
+      "protection": 4,
+      "durability": 326
+    },
+    "new": {
+      "protection": 8,
+      "durability": 402
+    }
+  },
+  {
+    "id": "gear_059",
+    "family": 3,
+    "rank": 1,
+    "slot": "head",
+    "old": {
+      "protection": 11,
+      "durability": 459
+    },
+    "new": {
+      "protection": 11,
+      "durability": 459
+    }
+  },
+  {
+    "id": "gear_058",
+    "family": 3,
+    "rank": 1,
+    "slot": "chest",
+    "old": {
+      "protection": 10,
+      "durability": 440
+    },
+    "new": {
+      "protection": 10,
+      "durability": 440
+    }
+  },
+  {
+    "id": "series_leggings_03",
+    "family": 3,
+    "rank": 1,
+    "slot": "legs",
+    "old": {
+      "protection": 8,
+      "durability": 440
+    },
+    "new": {
+      "protection": 8,
+      "durability": 440
+    }
+  },
+  {
+    "id": "gear_060",
+    "family": 3,
+    "rank": 1,
+    "slot": "feet",
+    "old": {
+      "protection": 0,
+      "durability": 250
+    },
+    "new": {
+      "protection": 2,
+      "durability": 250
+    }
+  },
+  {
+    "id": "gear_139",
+    "family": 3,
+    "rank": 2,
+    "slot": "head",
+    "old": {
+      "protection": 7,
+      "durability": 383
+    },
+    "new": {
+      "protection": 11,
+      "durability": 459
+    }
+  },
+  {
+    "id": "gear_138",
+    "family": 3,
+    "rank": 2,
+    "slot": "chest",
+    "old": {
+      "protection": 6,
+      "durability": 364
+    },
+    "new": {
+      "protection": 10,
+      "durability": 440
+    }
+  },
+  {
+    "id": "series_leggings_08",
+    "family": 3,
+    "rank": 2,
+    "slot": "legs",
+    "old": {
+      "protection": 6,
+      "durability": 364
+    },
+    "new": {
+      "protection": 8,
+      "durability": 440
+    }
+  },
+  {
+    "id": "gear_140",
+    "family": 3,
+    "rank": 2,
+    "slot": "feet",
+    "old": {
+      "protection": 8,
+      "durability": 402
+    },
+    "new": {
+      "protection": 8,
+      "durability": 402
+    }
+  },
+  {
+    "id": "gear_075",
+    "family": 4,
+    "rank": 1,
+    "slot": "head",
+    "old": {
+      "protection": 3,
+      "durability": 307
+    },
+    "new": {
+      "protection": 3,
+      "durability": 307
+    }
+  },
+  {
+    "id": "gear_074",
+    "family": 4,
+    "rank": 1,
+    "slot": "chest",
+    "old": {
+      "protection": 2,
+      "durability": 288
+    },
+    "new": {
+      "protection": 2,
+      "durability": 288
+    }
+  },
+  {
+    "id": "series_leggings_04",
+    "family": 4,
+    "rank": 1,
+    "slot": "legs",
+    "old": {
+      "protection": 2,
+      "durability": 288
+    },
+    "new": {
+      "protection": 2,
+      "durability": 288
+    }
+  },
+  {
+    "id": "gear_076",
+    "family": 4,
+    "rank": 1,
+    "slot": "feet",
+    "old": {
+      "protection": 4,
+      "durability": 326
+    },
+    "new": {
+      "protection": 4,
+      "durability": 326
+    }
+  },
+  {
+    "id": "gear_155",
+    "family": 4,
+    "rank": 2,
+    "slot": "head",
+    "old": {
+      "protection": 11,
+      "durability": 459
+    },
+    "new": {
+      "protection": 11,
+      "durability": 459
+    }
+  },
+  {
+    "id": "gear_154",
+    "family": 4,
+    "rank": 2,
+    "slot": "chest",
+    "old": {
+      "protection": 10,
+      "durability": 440
+    },
+    "new": {
+      "protection": 10,
+      "durability": 440
+    }
+  },
+  {
+    "id": "series_leggings_09",
+    "family": 4,
+    "rank": 2,
+    "slot": "legs",
+    "old": {
+      "protection": 8,
+      "durability": 440
+    },
+    "new": {
+      "protection": 8,
+      "durability": 440
+    }
+  },
+  {
+    "id": "gear_156",
+    "family": 4,
+    "rank": 2,
+    "slot": "feet",
+    "old": {
+      "protection": 0,
+      "durability": 250
+    },
+    "new": {
+      "protection": 4,
+      "durability": 326
+    }
+  }
+]

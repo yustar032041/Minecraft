@@ -48,7 +48,13 @@ export function nearArtificialLight(d,location){
    const v={x:p.x-at.x,y:p.y-at.y,z:p.z-at.z},len=Math.hypot(v.x,v.y,v.z);
    if(len>.01){
     const hit=d.getBlockFromRay({x:at.x+.5,y:at.y+.5,z:at.z+.5},{x:v.x/len,y:v.y/len,z:v.z/len},{maxDistance:Math.max(.01,len-.51)});
-    if(hit)continue;
+    // A diagonal ray can enter the light block more than half a block before
+    // its centre. That is the source itself, not an intervening wall.
+    // Unknown hit information remains conservative for this approximation.
+    if(hit){
+     const h=hit.block?.location;
+     if(!h||h.x!==p.x||h.y!==p.y||h.z!==p.z)continue;
+    }
    }
    return true;
   }

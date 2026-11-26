@@ -21,7 +21,7 @@
       },
       "minecraft:collision_box": {
         "width": 0.53,
-        "height": 0.64
+        "height": 0.56
       },
       "minecraft:physics": {},
       "minecraft:movement": {
@@ -76,6 +76,9 @@
         "priority": 3,
         "speed_multiplier": 1.12,
         "track_target": true
+      },
+      "minecraft:experience_reward": {
+        "on_death": "query.last_hit_by_player ? 5 : 0"
       }
     },
     "component_groups": {

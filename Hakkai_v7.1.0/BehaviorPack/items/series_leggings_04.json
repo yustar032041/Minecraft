@@ -2,10 +2,7 @@
   "format_version": "1.26.60",
   "minecraft:item": {
     "description": {
-      "identifier": "hakkai:series_leggings_04",
-      "menu_category": {
-        "category": "equipment"
-      }
+      "identifier": "hakkai:series_leggings_04"
     },
     "components": {
       "minecraft:display_name": {
@@ -23,6 +20,16 @@
       "minecraft:enchantable": {
         "slot": "armor_legs",
         "value": 12
+      },
+      "minecraft:repairable": {
+        "repair_items": [
+          {
+            "items": [
+              "minecraft:iron_ingot"
+            ],
+            "repair_amount": 72
+          }
+        ]
       }
     }
   }

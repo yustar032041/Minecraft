@@ -75,10 +75,10 @@ console.log('Season cycle, 32 festivals, shared requests/records, role-gated sto
  const a={x:0,y:88,z:0},b={x:2,y:88,z:0};let loaded=true,workers=[];
  const d={isChunkLoaded:()=>loaded,getBlock:p=>({typeId:'minecraft:barrel',getComponent:()=>({container:p.x===0?source:output})}),getEntities:()=>workers};
  const t={d,l:{x:0,y:88,z:0},factoryVillage:false},setup={input:a,output:b};
- const options={ItemStack:Item,factoryTransaction,factoryResidentRole:e=>e.role,friendlyResidentById:new Map([['hakkai:resident_0_2',{role:'artisan'}]])};
+ const options={ItemStack:Item,factoryTransaction,factoryResidentRole:e=>e.role,extraRole:e=>e.role};
  assert.ok(validWorkshop(t,setup));assert.equal(validWorkshop(t,{input:a,output:a}),false);assert.equal(validWorkshop(t,{input:a,output:{...b,x:5}}),false);
  assert.equal(workshopStep(t,setup,options),undefined,'no workers');
- workers=[{isValid:true,typeId:'hakkai:resident_0_2',location:{x:1,y:88,z:0}}];loaded=false;assert.equal(workshopStep(t,setup,options),undefined);loaded=true;
+ workers=[{isValid:true,typeId:'minecraft:villager_v2',role:'artisan',location:{x:1,y:88,z:0}}];loaded=false;assert.equal(workshopStep(t,setup,options),undefined);loaded=true;
  assert.ok(workshopStep(t,setup,options).includes('パン'));assert.deepEqual(snap(source),[['minecraft:wheat',3],['minecraft:oak_log',2]]);assert.deepEqual(snap(output),[['minecraft:bread',1],undefined]);
  workers=[{isValid:true,typeId:'minecraft:villager_v2',role:'saw',getComponent:()=>undefined,location:{x:1,y:88,z:0}}];
  assert.equal(workshopStep(t,setup,options),undefined,'saw belongs to factory village only');t.factoryVillage=true;
@@ -107,12 +107,12 @@ console.log('Season cycle, 32 festivals, shared requests/records, role-gated sto
 {
  const main=fs.readFileSync('Hakkai_v7.1.0/BehaviorPack/scripts/main.js','utf8'),code=main.slice(main.indexOf('function cultureTownForSite('),main.indexOf('async function townMenu('));
  const props=new Map(),mode={Survival:'survival',Adventure:'adventure',Creative:'creative'},source=inventory([new Item('minecraft:wheat',9)]),output=inventory([undefined]);
- let now=0;const worker={isValid:true,typeId:'hakkai:resident_0_2',location:{x:1,y:88,z:0}},input={x:0,y:88,z:0},out={x:2,y:88,z:0};
+ let now=0;const worker={isValid:true,typeId:'minecraft:villager_v2',role:'artisan',location:{x:1,y:88,z:0}},input={x:0,y:88,z:0},out={x:2,y:88,z:0};
  const d={id:'hakkai:realm_0',isChunkLoaded:()=>true,getBlock:p=>p.x===0&&p.y===87?{typeId:'hakkai:town_bell'}:{typeId:'minecraft:barrel',getComponent:()=>({container:p.x===0?source:output})},getEntities:q=>q.families?[]:[worker],spawnParticle(){}};
  const t={d,l:{x:0,y:87,z:0},key:'town',data:{goods:0,lifeFood:4,lifeWorkshop:{input,output:out}}},state={};
  const p={isValid:true,dimension:d,location:{x:0,y:88,z:0},getGameMode:()=>mode.Survival};
- const world={getAbsoluteTime:()=>now};
- const ctx={seasonAt,festivalAt,villageTier,requestStatus,contributeRequest,festivalJoin,donation,workDay,detectCrisis,recoverCrisis,addVillageMemory,depositToVillage,validWorkshop,workshopStep,ItemStack:Item,factoryTransaction,GameMode:mode,world,ns:'hakkai:',dimID:i=>`hakkai:realm_${i}`,expandedY:88,places:[],num:()=>0,property:(_,k,v)=>props.set(k,v),townRecord:t=>t.data,townNear:()=>t,townGet:()=>t,currentPlace:()=>undefined,seasonDay:()=>0,raining:()=>false,dist:(a,b)=>Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z),factoryResidentRole:()=>undefined,friendlyResidentById:new Map([['hakkai:resident_0_2',{role:'artisan'}]]),villagerJob:()=>undefined,BUILDER_IDS:[],state:()=>state,report:()=>{}};
+ worker.dimension=d;const world={getAbsoluteTime:()=>now,getDynamicProperty:k=>props.get(k.replace(/^hakkai:/,''))};
+ const ctx={seasonAt,festivalAt,villageTier,requestStatus,contributeRequest,festivalJoin,donation,workDay,detectCrisis,recoverCrisis,addVillageMemory,depositToVillage,validWorkshop,workshopStep,ItemStack:Item,factoryTransaction,GameMode:mode,world,ns:'hakkai:',dimID:i=>`hakkai:realm_${i}`,expandedY:88,places:[],num:()=>0,property:(_,k,v)=>props.set(k,v),townRecord:t=>t.data,townNear:()=>t,townGet:()=>t,currentPlace:()=>undefined,seasonDay:()=>0,raining:()=>false,dist:(a,b)=>Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z),factoryResidentRole:()=>undefined,villagerJob:e=>e.role,BUILDER_IDS:[],state:()=>state,report:()=>{}};
  vm.createContext(ctx);vm.runInContext(code,ctx);
  ctx.lifeTick(p,undefined,0);assert.equal(t.data.goods,3);assert.equal(t.data.lifeFood,2);assert.equal(output.items[0].amount,1);assert.equal(source.items[0].amount,6);
  now=200;ctx.lifeTick(p,undefined,200);assert.equal(output.items[0].amount,1,'workshop cooldown');
@@ -122,7 +122,7 @@ console.log('Season cycle, 32 festivals, shared requests/records, role-gated sto
  const input=inventory([new Item('minecraft:wheat',3)]),output=inventory([undefined]);
  const d={isChunkLoaded:()=>true,getBlock:p=>({typeId:'minecraft:barrel',getComponent:()=>({container:p.x?output:input})}),getEntities:()=>[{isValid:true,typeId:'artisan',location:{x:1,y:0,z:0}}]};
  const t={d,l:{x:0,y:0,z:0}},setup={input:{x:0,y:0,z:0},output:{x:2,y:0,z:0}};
- const o={ItemStack:Item,factoryTransaction,factoryResidentRole:()=>undefined,friendlyResidentById:new Map([['artisan',{role:'artisan'}]]),onCraft:()=>{throw Error('ledger failure');}};
+ const o={ItemStack:Item,factoryTransaction,factoryResidentRole:()=>undefined,extraRole:()=> 'artisan',onCraft:()=>{throw Error('ledger failure');},rollbackCraft:()=>{}};
  assert.equal(workshopStep(t,setup,o),undefined);assert.deepEqual(snap(input),[['minecraft:wheat',3]]);assert.deepEqual(snap(output),[undefined]);
  output.items[0]=new Item('minecraft:stone',64);assert.equal(workshopStep(t,setup,{...o,onCraft:()=>{throw Error('should not commit');}}),undefined);assert.deepEqual(snap(input),[['minecraft:wheat',3]]);
 }

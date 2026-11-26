@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "guardian_armor_5_helmet",
+    "normal": "guardian_armor_5_helmet_n",
+    "metalness_emissive_roughness": "guardian_armor_5_helmet_mer"
+  }
+}

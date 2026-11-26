@@ -34,9 +34,6 @@
       "minecraft:knockback_resistance": {
         "value": 0.5
       },
-      "minecraft:loot": {
-        "table": "loot_tables/hakkai/entities/ender_5.json"
-      },
       "minecraft:behavior.float": {
         "priority": 0
       },
@@ -60,7 +57,10 @@
       "minecraft:behavior.random_look_around": {
         "priority": 8
       },
-      "minecraft:nameable": {}
+      "minecraft:nameable": {},
+      "minecraft:experience_reward": {
+        "on_death": "query.last_hit_by_player ? 5 : 0"
+      }
     },
     "component_groups": {
       "hakkai:wild": {

@@ -19,11 +19,14 @@ export function prepareCombatRay(p,range,accept=isCombatTarget,from,aim){
    limit=Math.max(0,Math.min(range,length({x:block.x+f.x-origin.x,y:block.y+f.y-origin.y,z:block.z+f.z-origin.z})-.05));
   }
   const hits=d.getEntitiesFromRay(origin,direction,{maxDistance:range,ignoreBlockCollision:false});
-  const first=hits.filter(h=>h.entity?.isValid&&h.entity.id!==p.id&&Number.isFinite(h.distance)&&h.distance>=0&&h.distance<=limit)
-   .sort((a,b)=>a.distance-b.distance)[0];
-  // A player or friendly creature absorbs the ray harmlessly, rather than
-  // allowing damage to an enemy hidden behind them.
-  const target=first&&accept(first.entity)?first.entity:undefined;
+  const others=hits.filter(h=>h.entity?.isValid&&h.entity.id!==p.id);
+  // Unknown distances cannot establish that a friendly is behind a target.
+  if(others.some(h=>!Number.isFinite(h.distance)||h.distance<0))return undefined;
+  const ordered=others.filter(h=>h.distance<=limit).sort((a,b)=>a.distance-b.distance),first=ordered[0];
+  // A friendly at the same distance wins, independent of engine result order.
+  // Never strike through a player or friendly creature to an enemy behind it.
+  const tied=first?ordered.filter(h=>h.distance<=first.distance+1e-6):[];
+  const target=first&&tied.every(h=>accept(h.entity))?first.entity:undefined;
   return {origin,direction,distance:first?first.distance:limit,target,blocked:!!first||!!wall};
  }catch{return undefined;}
 }

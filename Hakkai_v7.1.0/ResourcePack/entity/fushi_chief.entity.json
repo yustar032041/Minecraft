@@ -16,7 +16,15 @@
         "controller.render.hakkai.beast"
       ],
       "animations": {
-        "idle": "animation.hakkai.fushi.idle"
+        "idle": "animation.hakkai.fushi.idle",
+        "creature_windup": "animation.hakkai.creature_windup",
+        "creature_strike": "animation.hakkai.creature_strike",
+        "chief_impact_windup": "animation.hakkai.fushi_chief_impact_windup",
+        "chief_impact_strike": "animation.hakkai.fushi_chief_impact_strike",
+        "chief_moon_windup": "animation.hakkai.fushi_chief_moon_windup",
+        "chief_moon_strike": "animation.hakkai.fushi_chief_moon_strike",
+        "chief_mist_windup": "animation.hakkai.fushi_chief_mist_windup",
+        "chief_mist_strike": "animation.hakkai.fushi_chief_mist_strike"
       },
       "scripts": {
         "animate": [

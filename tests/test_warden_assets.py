@@ -10,8 +10,9 @@ assert len(recipe['ingredients'])==9 and recipe['result']['item']=='hakkai:warde
 for item in ['fushi_totem','warden_sigil','warden_core']:
  ent=load(bp/f'items/{item}.json')['minecraft:item'];assert ent['description']['identifier']==f'hakkai:{item}'
  assert ent['components']['minecraft:icon']==f'hakkai_{item}'
-loot=load(bp/'loot_tables/hakkai/entities/fushi_chief.json')
-assert {e['name'] for pool in loot['pools'] for e in pool['entries']}=={'hakkai:fushi_totem','hakkai:crystal_7'}
+assert 'minecraft:loot' not in load(bp/'entities/fushi_chief.json')['minecraft:entity']['components']
+rewards=(bp/'scripts/boss_rewards.js').read_text()
+assert "'hakkai:fushi_totem',1" in rewards and "'hakkai:crystal_7',2" in rewards
 dimension=load(bp/'dimensions/warden_arena.json')['minecraft:dimension']
 assert dimension['description']['identifier']=='hakkai:warden_arena'
 assert dimension['components']['minecraft:generation']['generator_type']=='void'
@@ -20,8 +21,9 @@ assert entity['description']['identifier']=='hakkai:time_warden' and c['minecraf
 assert c['minecraft:boss']['name']=='時空の管理者' and c['minecraft:knockback_resistance']['value']==1
 assert c['minecraft:pushable']['is_pushable'] is False and 'minecraft:persistent' in c
 assert 'minecraft:behavior.melee_attack' not in c, 'attacks must use the warning system'
-loot=load(bp/c['minecraft:loot']['table']);drops={e['name'] for pool in loot['pools'] for e in pool['entries']}
-assert drops=={'hakkai:warden_core','hakkai:crystal_7'}
+assert 'minecraft:loot' not in c # rewards are distributed once per eligible player by script
+rewards=(bp/'scripts/boss_rewards.js').read_text()
+assert "'hakkai:warden_core',1" in rewards and "'hakkai:crystal_7',4" in rewards
 trade=load(bp/'recipes/warden_core_exchange.json')['minecraft:recipe_shapeless']
 assert trade['ingredients'][0]['item']=='hakkai:warden_core' and trade['result']=={'item':'hakkai:shard_9','count':8}
 client=load(rp/'entity/time_warden.entity.json')['minecraft:client_entity']['description']

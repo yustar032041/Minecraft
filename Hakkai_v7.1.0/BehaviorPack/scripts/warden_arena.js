@@ -32,17 +32,22 @@ export function setupWardenArena({world,system,num,property,notice,report,loaded
   try{
    // All checks and writes are synchronous; no existing non-air blocks or
    // players are touched. A partial failure is never automatically overwritten.
-   fill(d,{x:-16,y:79,z:-16},{x:16,y:79,z:16},'hakkai:clockstone');
-   fill(d,{x:-16,y:80,z:-16},{x:-16,y:95,z:16},'hakkai:clockstone');
-   fill(d,{x:16,y:80,z:-16},{x:16,y:95,z:16},'hakkai:clockstone');
-   fill(d,{x:-15,y:80,z:-16},{x:15,y:95,z:-16},'hakkai:clockstone');
-   fill(d,{x:-15,y:80,z:16},{x:15,y:95,z:16},'hakkai:clockstone');
-   fill(d,{x:-16,y:96,z:-16},{x:16,y:96,z:16},'hakkai:clockstone');
-   for(const x of [-12,12])for(const z of [-12,12])d.setBlockType({x,y:95,z},'minecraft:sea_lantern');
+   fill(d,{x:-16,y:79,z:-16},{x:16,y:79,z:16},'hakkai:warden_arena_stone');
+   fill(d,{x:-16,y:80,z:-16},{x:-16,y:95,z:16},'hakkai:warden_arena_stone');
+   fill(d,{x:16,y:80,z:-16},{x:16,y:95,z:16},'hakkai:warden_arena_stone');
+   fill(d,{x:-15,y:80,z:-16},{x:15,y:95,z:-16},'hakkai:warden_arena_stone');
+   fill(d,{x:-15,y:80,z:16},{x:15,y:95,z:16},'hakkai:warden_arena_stone');
+   fill(d,{x:-16,y:96,z:-16},{x:16,y:96,z:16},'hakkai:warden_arena_stone');
+   for(const x of [-12,12])for(const z of [-12,12])d.setBlockType({x,y:95,z},'hakkai:warden_arena_light');
    property(world,BUILT,1);return true;
   }finally{building=false;}
  }
- function arenaUnlocked(p){return total(space(p),'hakkai:warden_sigil')>0||Boolean(parsePoint(p,'warden_return'));}
+ // A player who has safely entered can let nearby friends join from their
+ // own safe locations without each crafting another sigil. Recheck on entry.
+ function arenaUnlocked(p){
+  if(p.getGameMode()===GameMode.Creative||total(space(p),'hakkai:warden_sigil')>0||parsePoint(p,'warden_return'))return true;
+  try{return world.getDimension(WARDEN_DIMENSION).getPlayers().some(other=>other.isValid&&other.getGameMode()!==GameMode.Spectator&&Boolean(parsePoint(other,'warden_return')));}catch{return false;}
+ }
  async function enter(p){
   if(!p.isValid||p.getGameMode()===GameMode.Spectator||!arenaUnlocked(p))return false;
   let d;
@@ -113,16 +118,16 @@ export function setupWardenArena({world,system,num,property,notice,report,loaded
  async function open(p){
   if(!p.isValid||p.getGameMode()===GameMode.Spectator)return;
   if(p.dimension.id===WARDEN_DIMENSION){
-   const choice=await form(p,'§d時空の闘技場','§7現在のボスを倒した後は再戦できます。戻ると入口の元の場所へ帰ります。\n§b管理者の核＋時の結晶＋虹の欠片＋対応するネザライト防具・剣・斧・ツルハシを作業台で合わせると、対応する終刻装備を作れます。元の装備のエンチャント等は引き継ぎません。\n§e試作パリィ：予告範囲内で、直前にしゃがみ近接攻撃。スタミナ15が必要。三連撃は各回に予告。光の輪や弾・回る刃が動いて当たります。最大2技を同時予告。形態別40パターン、第五形態は全200パターンを使用。いずれも試作です。',[
+   const choice=await form(p,'§d時空の闘技場','§7闘技場の床・壁・天井と照明は壊せません。自分で置いたブロックは撤去できます。現在のボスを倒した後は再戦できます。戻ると自分の入口の元の場所へ帰ります。仲間が闘技場にいる間は、挑戦印のない人もガイドから入場できます。\n過去5分に攻撃し、討伐時に同じディメンションの64ブロック以内にいる参加者それぞれに管理者の核1個と時の結晶4個。観戦・未攻撃者は対象外。満杯分は足元に落ち、他の人も拾えます。参加記録は再起動で消えます。クリエイティブのスポーンエッグは闘技場の床上で試してください。闘技場以外では固有技が動作しません。\n§b管理者の核＋時の結晶＋虹の欠片＋対応するネザライト防具・剣・斧・ツルハシを作業台で合わせると、対応する終刻装備を作れます。元の装備のエンチャント等は引き継ぎません。\n§c管理者の連撃や同時攻撃は、防具があっても危険です。食料を用意し、予告を避けよう。\n§e試作パリィ：予告範囲内で、直前にしゃがみ近接攻撃。スタミナ15が必要。三連撃は各回に予告。光の輪や弾・回る刃が動いて当たります。最大2技を同時予告。第一〜第四形態は各42パターン、第五形態は全210パターンを使用。形・方向などの異なる変種を含み、すべてが独立した仕組みではありません。いずれも試作です。',[
     ['§b元の場所へ戻る'],['§c時空の管理者に挑む'],['§8閉じる']]);
    if(choice===0&&p.isValid&&p.dimension.id===WARDEN_DIMENSION){if(!parsePoint(p,'warden_return'))return notice(p,'§e帰還地点がありません。帰還石をご利用ください');return returnNatural(p,'warden_return');}
    if(choice===1&&p.isValid)return summon(p);
    return;
   }
   if(!arenaUnlocked(p)){
-   return form(p,'§d時空の闘技場',`${challengeMaterialText(p,space,total)}\n\n§7各界のエンダーマンからパール、チーフとの交換・友好などでトーテムを入手。8種とトーテムを作業台で合わせて挑戦印を作ります。素材は消費されるため、帰還に使うパールは別に確保してください。\n§eトーテムの復活は試作・実機未検証です。`,[['閉じる']]);
+   return form(p,'§d時空の闘技場',`${challengeMaterialText(p,space,total)}\n\n§7各界のエンダーマンからパール、チーフとの交換・友好などでトーテムを入手。8種とトーテムを作業台で合わせて挑戦印を作ります。素材は消費されるため、帰還に使うパールは別に確保してください。挑戦印を持つ仲間が先に入場していれば、自分は挑戦印なしでガイドから参加できます。クリエイティブでも挑戦印なしで入場できます。\n§eトーテムの復活は試作・実機未検証です。`,[['閉じる']]);
   }
-  const choice=await form(p,'§d時空の闘技場','§7安全な現在地を帰還先に記録して入場します。死亡後はこのガイドから再入場できます。\n§e管理者と闘技場は試作です。',[['§d闘技場へ入る'],['§8閉じる']]);
+  const choice=await form(p,'§d時空の闘技場','§7安全な現在地を自分の帰還先に記録して入場します。仲間が闘技場にいる間は挑戦印がなくても入れます。死亡後はこのガイドから再入場できます。\n§e管理者と闘技場は試作です。',[['§d闘技場へ入る'],['§8閉じる']]);
   if(choice===0&&p.isValid&&p.dimension.id!==WARDEN_DIMENSION)return enter(p);
  }
  return {open,enter,summon,rescuePlayer,clearPlayer};

@@ -72,13 +72,27 @@ export function combatEnemies(p,r,cap=6,{players=true}={}){
  }).slice(0,cap);
 }
 
-// Each optional status/knockback operation may be rejected independently by a
-// boss. A failed visual or knockback must not silently suppress its damage.
+// Recheck after synchronous damage callbacks: a target may become invalid or
+// player protection may be enabled while the attack is being processed.
+export function combatEffectAllowed(p,e){
+ try{return !!e?.isValid&&!!p?.dimension?.id&&e.dimension?.id===p.dimension.id&&(e.typeId!=='minecraft:player'||isPlayerOpponent(p,e));}catch{return false;}
+}
+// Only a damage accepted by the engine can produce hit-dependent effects.
+// Optional effects are independent: failure of one never cancels the hit or
+// the others. Damage callbacks can move or invalidate a target synchronously.
 export function applyCombatHit(p,e,str,a,mod,push){
- if(!e.isValid||e.typeId==='minecraft:player'&&!isPlayerOpponent(p,e))return;
- try{if(a===2||mod===2)e.setOnFire(3,true);}catch{}
- try{if([7,10,11,16].includes(a)||[7,10,11,16].includes(mod))e.addEffect('slowness',65,{amplifier:a===7?3:1,showParticles:false});}catch{}
- const anchored=e.typeId==='hakkai:time_warden'||e.typeId==='hakkai:eclipse_colossus'||e.typeId==='hakkai:fushi_chief'||/^hakkai:guardian_[0-7]$/.test(e.typeId??'');
- if(!anchored)try{const dx=e.location.x-p.location.x,dz=e.location.z-p.location.z,d=Math.hypot(dx,dz)||1;e.applyKnockback({x:push*dx/d,z:push*dz/d},.15);}catch{}
- try{e.applyDamage(str,{cause:EntityDamageCause.magic,damagingEntity:p});}catch{}
+ try{
+  if(!e?.isValid||e.typeId==='minecraft:player'&&!isPlayerOpponent(p,e))return false;
+  let vector;
+  try{const dx=e.location.x-p.location.x,dz=e.location.z-p.location.z,d=Math.hypot(dx,dz)||1;vector={x:push*dx/d,z:push*dz/d};}catch{}
+  const anchored=e.typeId==='hakkai:time_warden'||e.typeId==='hakkai:eclipse_colossus'||e.typeId==='hakkai:fushi_chief'||/^hakkai:guardian_[0-7]$/.test(e.typeId??'');
+  if(!e.applyDamage(str,{cause:EntityDamageCause.magic,damagingEntity:p}))return false;
+  try{
+   if(!combatEffectAllowed(p,e))return true;
+   try{if(a===2||mod===2)e.setOnFire(3,true);}catch{}
+   try{if([7,10,11,16].includes(a)||[7,10,11,16].includes(mod))e.addEffect('slowness',65,{amplifier:a===7?3:1,showParticles:false});}catch{}
+   if(!anchored&&vector)try{e.applyKnockback(vector,.15);}catch{}
+  }catch{}
+  return true;
+ }catch{return false;}
 }

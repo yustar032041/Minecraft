@@ -37,3 +37,8 @@ console.log('Rare encounter spawn: local cap, unloaded/occupied space, 3-block h
 const outside=fushiThresholds(false,false),grove=fushiThresholds(true,false),night=fushiThresholds(true,true);
 assert.ok(outside.chief<grove.chief&&grove.chief<night.chief);
 assert.ok(outside.normal<grove.normal&&grove.normal<night.normal&&night.normal<1);
+{
+ const f=fixture();let calls=0;f.d.getEntities=opts=>{calls++;return opts.location===f.p.location?[]:[{}]};
+ assert.equal(spawnRareEncounter(f.p,'hakkai:ender_0',0,f.safe,{family:'hakkai_realm_ender'}),false);
+ assert.equal(calls,2);assert.equal(f.spawned.length,0,'candidate local cap blocks overlap with other players encounters');
+}

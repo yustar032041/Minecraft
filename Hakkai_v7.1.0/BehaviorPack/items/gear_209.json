@@ -2,10 +2,7 @@
   "format_version": "1.26.0",
   "minecraft:item": {
     "description": {
-      "identifier": "hakkai:gear_209",
-      "menu_category": {
-        "category": "equipment"
-      }
+      "identifier": "hakkai:gear_209"
     },
     "components": {
       "minecraft:display_name": {
@@ -29,6 +26,16 @@
       "minecraft:enchantable": {
         "slot": "armor_torso",
         "value": 12
+      },
+      "minecraft:repairable": {
+        "repair_items": [
+          {
+            "items": [
+              "minecraft:netherite_scrap"
+            ],
+            "repair_amount": 419
+          }
+        ]
       }
     }
   }

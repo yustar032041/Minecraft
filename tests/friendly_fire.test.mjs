@@ -11,7 +11,7 @@ const properties=new Map(),world={getDynamicProperty:k=>properties.get(k),setDyn
 configureFriendlyFire(world);assert.equal(friendlyFireEnabled(),false);
 const hits=[],effects=[],jobs=[];
 const dim={id:'realm',getEntities:()=>[],getPlayers:()=>[p,q],getEntitiesFromRay:()=>[{entity:q,distance:1}],getBlockFromRay:()=>undefined,isChunkLoaded:()=>true,spawnParticle:()=>{}};
-const player=(id,x)=>({id,name:id,typeId:'minecraft:player',isValid:true,dimension:dim,location:{x,y:0,z:0},selectedSlotIndex:0,isSneaking:false,getGameMode:()=> 'survival',getHeadLocation(){return {...this.location,y:1}},getViewDirection:()=>({x:1,y:0,z:0}),getComponent:()=>undefined,applyDamage:n=>hits.push([id,n]),addEffect:e=>effects.push([id,e]),setOnFire:()=>effects.push([id,'fire']),applyKnockback:()=>effects.push([id,'knockback']),playAnimation:()=>{},playSound:()=>{},sendMessage:()=>{}});
+const player=(id,x)=>({id,name:id,typeId:'minecraft:player',isValid:true,dimension:dim,location:{x,y:0,z:0},selectedSlotIndex:0,isSneaking:false,getGameMode:()=> 'survival',getHeadLocation(){return {...this.location,y:1}},getViewDirection:()=>({x:1,y:0,z:0}),getComponent:()=>undefined,applyDamage:n=>{hits.push([id,n]);return true;},addEffect:e=>effects.push([id,e]),setOnFire:()=>effects.push([id,'fire']),applyKnockback:()=>effects.push([id,'knockback']),playAnimation:()=>{},playSound:()=>{},sendMessage:()=>{}});
 const p=player('p',0),q=player('q',2);
 const arrow={getComponent:()=>({owner:p})};
 assert.equal(protectsPlayer(q,{cause:'entityAttack',damagingEntity:p}),true);

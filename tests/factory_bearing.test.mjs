@@ -3,12 +3,12 @@ import {bearingState,setBearingMode,bearingStep,bearingAutoTick,armBearing} from
 import {gantryStep} from '../Hakkai_v7.1.0/BehaviorPack/scripts/factory_gantry.js';
 import {PAYLOAD} from '../Hakkai_v7.1.0/BehaviorPack/scripts/factory_motion.js';
 const key=p=>`${p.x},${p.y},${p.z}`,P=(x,y,z)=>({x,y,z});
-const perm=(typeId,states={})=>({typeId,type:{id:typeId},states,getState:k=>states[k],withState:(k,v)=>perm(typeId,{...states,[k]:v})});
+const perm=(typeId,states={})=>({typeId,type:{id:typeId},states,getAllStates:()=>({...states}),getState:k=>states[k],withState:(k,v)=>perm(typeId,{...states,[k]:v})});
 function fixture(type='bearing'){
  const cells=new Map(),entities=[];let calls=0,failAt=0;
  const d={id:'d',isChunkLoaded:p=>!d.unloaded?.has(key(p)),getEntities:()=>entities,getBlock:p=>{
   const k=key(p);if(!cells.has(k))cells.set(k,perm('minecraft:air'));
-  return {...p,location:p,dimension:d,get typeId(){return cells.get(k).typeId;},get permutation(){return cells.get(k);},setPermutation(v){calls++;cells.set(k,v);if(calls===failAt)throw Error('after set');},setType(v){calls++;cells.set(k,perm(v));if(calls===failAt)throw Error('after set');}};
+  return {...p,location:p,dimension:d,get typeId(){return cells.get(k).typeId;},get permutation(){return cells.get(k);},setPermutation(v){calls++;cells.set(k,v);if(calls===failAt)throw Error('after set');d.onWrite?.(p,v);},setType(v){calls++;cells.set(k,perm(v));if(calls===failAt)throw Error('after set');d.onWrite?.(p,perm(v));}};
  }};
  const put=(p,id,states={})=>cells.set(key(p),perm(id,states)),get=p=>d.getBlock(p),ctrl=P(0,20,0);
  put(ctrl,'hakkai:'+type,type==='bearing'?{'hakkai:angle':0,'hakkai:motion':0}:{'hakkai:offset':0,'hakkai:motion':0});
@@ -51,4 +51,23 @@ console.log('Bearing rotation, joint direction, payload/tank state, abort, rollb
 }
 for(const id of ['minecraft:deepslate','minecraft:quartz_block']){
  const f=fixture();f.put(P(0,21,0),'hakkai:gantry_joint');f.put(P(1,21,0),id,{pillar_axis:'x'});assert.equal(f.step(1).ok,true);assert.equal(f.get(P(0,21,1)).permutation.getState('pillar_axis'),'z');assert.equal(f.step(-1).ok,true);assert.equal(f.get(P(1,21,0)).permutation.getState('pillar_axis'),'x');
+}
+
+{
+ const f=fixture(),cycles=new Map();f.put(P(0,21,0),'hakkai:gantry_frame');setBearingMode(f.get(f.ctrl),1);armBearing(f.get(f.ctrl),cycles,0);let once=false;
+ f.d.onWrite=(p,v)=>{if(!once&&key(p)===key(P(0,21,0))&&v.typeId==='minecraft:air'){once=true;f.put(f.ctrl,'hakkai:bearing',{'hakkai:angle':0,'hakkai:motion':2});}};
+ bearingAutoTick(f.get(f.ctrl),{kineticNetwork:f.net,resolve:id=>perm(id),cycleAt:cycles,tick:80,report:()=>{}});
+ assert.deepEqual(bearingState(f.get(f.ctrl)),{angle:0,mode:2});assert.equal(f.get(P(0,21,0)).typeId,'hakkai:gantry_frame');
+ bearingAutoTick(f.get(f.ctrl),{kineticNetwork:f.net,resolve:id=>perm(id),cycleAt:cycles,tick:120,report:()=>{}});assert.deepEqual(bearingState(f.get(f.ctrl)),{angle:0,mode:2});
+}
+
+{
+ const f=fixture();f.put(P(0,21,0),'hakkai:gantry_frame');
+ const n=()=>{f.put(f.ctrl,'hakkai:bearing',{'hakkai:angle':0,'hakkai:motion':2});return {status:'running',rpm:16};};
+ assert.equal(bearingStep(f.get(f.ctrl),1,{kineticNetwork:n,resolve:id=>perm(id)}).reason,'changed');assert.equal(bearingState(f.get(f.ctrl)).mode,2);assert.equal(f.get(P(0,21,0)).typeId,'hakkai:gantry_frame');
+}
+{
+ const f=fixture(),cycles=new Map();f.put(P(0,21,0),'hakkai:gantry_frame');setBearingMode(f.get(f.ctrl),1);armBearing(f.get(f.ctrl),cycles,0);
+ const n=()=>{f.put(f.ctrl,'hakkai:bearing',{'hakkai:angle':0,'hakkai:motion':2});return {status:'no_source'};};
+ bearingAutoTick(f.get(f.ctrl),{kineticNetwork:n,resolve:id=>perm(id),cycleAt:cycles,tick:80,report:()=>{}});assert.equal(bearingState(f.get(f.ctrl)).mode,2);
 }

@@ -27,7 +27,8 @@ for name,label in names.items():
   for xy in [(40,66,52,78),(68,51,80,65),(79,75,94,87)]:d.rectangle(xy,fill=highlight)
   if stage=='washed':
    d.arc((18,18,113,113),190,330,fill='#64d9f3',width=7);d.polygon([(21,41),(29,28),(36,41),(29,49)],fill='#b8f4ff')
- icon.save(rp/f'textures/items/hakkai_{name}.png',optimize=True)
+ # The guide has independent HD artwork; never overwrite it with the old sketch.
+ if name!='industrial_guide':icon.save(rp/f'textures/items/hakkai_{name}.png',optimize=True)
  atlas['texture_data']['hakkai_'+name]={'textures':f'textures/items/hakkai_{name}'}
 for lang in ('ja_JP','en_US'):
  p=rp/f'texts/{lang}.lang';s=p.read_text(encoding='utf8').rstrip()

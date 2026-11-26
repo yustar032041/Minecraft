@@ -2,10 +2,7 @@
   "format_version": "1.26.0",
   "minecraft:item": {
     "description": {
-      "identifier": "hakkai:gear_183",
-      "menu_category": {
-        "category": "items"
-      }
+      "identifier": "hakkai:gear_183"
     },
     "components": {
       "minecraft:display_name": {
@@ -13,17 +10,27 @@
       },
       "minecraft:icon": "hakkai_gear_183",
       "minecraft:max_stack_size": 1,
-      "minecraft:damage": 13,
+      "minecraft:damage": 32,
       "minecraft:hand_equipped": true,
       "minecraft:durability": {
-        "max_durability": 331
+        "max_durability": 464
       },
       "minecraft:use_modifiers": {
         "use_duration": 1.2,
         "movement_modifier": 0.85
       },
       "hakkai:use": {},
-      "minecraft:interact_button": "action.interact.hakkai.use"
+      "minecraft:interact_button": "action.interact.hakkai.use",
+      "minecraft:repairable": {
+        "repair_items": [
+          {
+            "items": [
+              "minecraft:netherite_scrap"
+            ],
+            "repair_amount": 116
+          }
+        ]
+      }
     }
   }
 }

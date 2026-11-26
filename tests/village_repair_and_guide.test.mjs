@@ -58,7 +58,7 @@ for(const [stage,plan] of BLUEPRINTS.entries())for(const q of blueprint(plan.id)
 }
 {
  assert.ok(VILLAGE_GUIDE_CHAPTERS.length>=10);for(const [title,body] of VILLAGE_GUIDE_CHAPTERS){assert.ok(title&&body.length>75);}
- const combined=VILLAGE_GUIDE_CHAPTERS.map(x=>x.join(' ')).join('\n');for(const word of ['16日','しゃがんで','空の新品','改装前','未検証','四隅めぐり','運搬中の品'])assert.ok(combined.includes(word),word);
+ const combined=VILLAGE_GUIDE_CHAPTERS.map(x=>x.join(' ')).join('\n');for(const word of ['16日','しゃがんで','空の新品','改装前','未検証','四隅めぐり','元の樽'])assert.ok(combined.includes(word),word);
  const src=fs.readFileSync('Hakkai_v7.1.0/BehaviorPack/scripts/main.js','utf8');const a=src.indexOf('async function villageGuide('),z=src.indexOf('async function dispatchGuide(',a);assert.ok(a>=0&&z>a);
  let choices=[3,6,1],seen=[];const p={isValid:true};const ctx={VILLAGE_GUIDE_CHAPTERS,checkEightRealmMemory:()=>0,realmRankUpdate:()=>0,realmRanks:[['','new']],era:()=>'',realmEchoCount:()=>0,places:[],visited:()=>false,currentPlace:()=>undefined,GUIDE_SECTIONS:[],itemTexture:x=>x,form:async(_p,title,body,rows)=>{seen.push({title,body,rows});return choices.shift();}};
  ctx.guideSelect=(p,title,body,rows)=>selectGuidePage(p,title,body,rows,ctx.form);

@@ -46,12 +46,18 @@ function staffFixture(){
  const d={id:'d',spawnParticle:(id,pos)=>particles.push([id,pos]),isChunkLoaded:()=>loaded,getBlockFromRay:()=>block?{block:{location:{x:at+1,y:1,z:0}},faceLocation:{x:0,y:0,z:0}}:undefined,getEntitiesFromRay:(pos)=>{at=pos.x;if(friend&&pos.x>=4)return [{entity:enemy(d,'cow',5,'minecraft:cow'),distance:1}];if(pos.x>=10)return [{entity:target,distance:1}];return [];},getEntities:()=>[]};
  const target=enemy(d,'z',11);target.applyDamage=n=>hits.push(n);const p=mkPlayer(d),s={s:50};let selectedId='hakkai:'+g.id;
  const ctrl=setupWeaponTrace({system,gear:new Map([[selectedId,g]]),selected:()=>({typeId:selectedId}),state:()=>s,visibleFrom:()=>true,report:(...x)=>assert.fail(String(x))});
- return {g,ctrl,p,target,s,hits,particles,jobs,swing:()=>ctrl.swing({player:p,heldItemStack:{typeId:selectedId},swingSource:'Attack'}),step:()=>jobs.shift()?.(),setBlock:v=>block=v,setFriend:v=>friend=v,setLoaded:v=>loaded=v};
+ return {g,ctrl,p,d,target,s,hits,particles,jobs,swing:()=>ctrl.swing({player:p,heldItemStack:{typeId:selectedId},swingSource:'Attack'}),step:()=>jobs.shift()?.(),setBlock:v=>block=v,setFriend:v=>friend=v,setLoaded:v=>loaded=v};
 }
 {
  const f=staffFixture();f.swing();f.step();assert.equal(f.hits.length,0,'not instant');while(f.jobs.length)f.step();assert.deepEqual(f.hits,[f.g.damage]);assert.ok(f.particles.some(([id,pos])=>id==='hakkai:wind_trace'&&pos.x>8));
 }
 for(const stop of [f=>f.setBlock(true),f=>f.setFriend(true),f=>f.setLoaded(false),f=>f.ctrl.clear(f.p.id)]){const f=staffFixture();f.swing();stop(f);while(f.jobs.length)f.step();assert.equal(f.hits.length,0);}
+// The flying staff also uses the shared ray: a tied friendly blocks it.
+for(const reverse of [false,true]){
+ const f=staffFixture(),friend=enemy(f.d,'cow',11,'minecraft:cow');
+ f.d.getEntitiesFromRay=()=>{const hits=[{entity:f.target,distance:1},{entity:friend,distance:1}];return reverse?hits.reverse():hits};
+ f.swing();while(f.jobs.length)f.step();assert.deepEqual(f.hits,[]);
+}
 {
  const f=staffFixture();f.swing();f.ctrl.record(f.p,f.target);while(f.jobs.length)f.step();assert.equal(f.hits.length,0,'native hit consumes staff shot');
 }

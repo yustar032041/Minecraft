@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {wardenTransition,wardenCharge,wardenImpact,wardenParried} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_visuals.js';
-import {WARDEN_PHASES,WARDEN_ALTERNATES,WARDEN_EXTRA,WARDEN_DAMAGE_MULTIPLIER,inWardenWarning,setupWardenBoss} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_boss.js';
+import {WARDEN_PHASES,WARDEN_ALTERNATES,WARDEN_EXTRA,WARDEN_DAMAGE_MULTIPLIER,WARDEN_COMBO_MULTIPLIER,inWardenWarning,setupWardenBoss} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_boss.js';
 import {Difficulty,GameMode} from '@minecraft/server';
 const ids=['time','sky','earth','thunder','moon'].map(n=>`hakkai:warden_${n}`);
 const anims=['slash','sky_cast','slam','thunder_cast','moon_cast'].map(n=>`animation.hakkai.warden_${n}`);
@@ -40,7 +40,7 @@ function fixture(){
  const f=fixture();for(const t of [0,80,120,220])f.tick(t);
  const strikes=()=>f.animations.filter(a=>a===anims[0]).length,initial=strikes();
  for(const [t,n] of [[260,2],[280,3],[300,4]]){f.tick(t);assert.equal(strikes(),initial+n,'one impact animation per warned combo hit');}
- assert.deepEqual(f.hits.slice(-3),[6*WARDEN_DAMAGE_MULTIPLIER,6*WARDEN_DAMAGE_MULTIPLIER,6*WARDEN_DAMAGE_MULTIPLIER]);
+ assert.deepEqual(f.hits.slice(-3),[6*WARDEN_COMBO_MULTIPLIER,6*WARDEN_COMBO_MULTIPLIER,6*WARDEN_COMBO_MULTIPLIER]);
 }
 {
  const f=fixture();f.d.fail='hakkai:warden_time';f.tick(0);f.tick(80);f.tick(100);f.tick(110);f.tick(120);assert.deepEqual(f.hits,[9*WARDEN_DAMAGE_MULTIPLIER],'cosmetic failure does not block combat');

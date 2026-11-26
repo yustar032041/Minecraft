@@ -1,0 +1,2428 @@
+{
+  "format_version": "1.8.0",
+  "animations": {
+    "animation.hakkai.ender_0_walk": {
+      "loop": true,
+      "animation_length": 1,
+      "bones": {
+        "e0_right_leg": {
+          "rotation": [
+            "math.sin(query.anim_time * 360) * 24",
+            0,
+            0
+          ]
+        },
+        "e0_left_leg": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 180) * 24",
+            0,
+            0
+          ]
+        },
+        "e0_right_arm": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 180) * 16",
+            0,
+            0
+          ]
+        },
+        "e0_left_arm": {
+          "rotation": [
+            "math.sin(query.anim_time * 360) * 16",
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.hakkai.ender_0_windup": {
+      "animation_length": 1.9,
+      "bones": {
+        "e0_body": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.45": [
+              -6,
+              0,
+              0
+            ],
+            "1.9": [
+              -13,
+              0,
+              0
+            ]
+          }
+        },
+        "e0_head": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.45": [
+              -5,
+              0,
+              0
+            ],
+            "1.9": [
+              -9,
+              0,
+              0
+            ]
+          }
+        },
+        "e0_right_arm": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.45": [
+              -8.4,
+              0.0,
+              5.04
+            ],
+            "1.9": [
+              -20,
+              0,
+              12
+            ]
+          }
+        },
+        "e0_left_arm": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.45": [
+              -8.4,
+              0.0,
+              -5.04
+            ],
+            "1.9": [
+              -20,
+              0,
+              -12
+            ]
+          }
+        },
+        "e0_right_arm_lower": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "1.9": [
+              -6,
+              0,
+              0
+            ]
+          }
+        },
+        "e0_left_arm_lower": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "1.9": [
+              -6,
+              0,
+              0
+            ]
+          }
+        }
+      }
+    },
+    "animation.hakkai.ender_0_strike": {
+      "animation_length": 0.38,
+      "bones": {
+        "e0_body": {
+          "rotation": {
+            "0.0": [
+              -13,
+              0,
+              0
+            ],
+            "0.12": [
+              18,
+              0,
+              0
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "e0_head": {
+          "rotation": {
+            "0.0": [
+              -9,
+              0,
+              0
+            ],
+            "0.12": [
+              22,
+              0,
+              0
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "e0_right_arm": {
+          "rotation": {
+            "0.0": [
+              -20,
+              0,
+              12
+            ],
+            "0.12": [
+              18,
+              0,
+              -18
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "e0_left_arm": {
+          "rotation": {
+            "0.0": [
+              -20,
+              0,
+              -12
+            ],
+            "0.12": [
+              18,
+              0,
+              18
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "e0_right_arm_lower": {
+          "rotation": {
+            "0.0": [
+              -6,
+              0,
+              0
+            ],
+            "0.12": [
+              4,
+              0,
+              0
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "e0_left_arm_lower": {
+          "rotation": {
+            "0.0": [
+              -6,
+              0,
+              0
+            ],
+            "0.12": [
+              4,
+              0,
+              0
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      }
+    },
+    "animation.hakkai.ender_0_detail": {
+      "loop": true,
+      "bones": {
+        "e0_right_arm_lower": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 180) * 7 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "e0_left_arm_lower": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 0) * 7 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "e0_right_leg_lower": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 0) * 7 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "e0_left_leg_lower": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 180) * 7 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "e0_body_detail_5": {
+          "rotation": [
+            "math.sin(query.anim_time * 55 + 0) * 3",
+            0,
+            0
+          ]
+        },
+        "e0_body_detail_6": {
+          "rotation": [
+            "math.sin(query.anim_time * 55 + 120) * 3",
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.hakkai.ender_1_walk": {
+      "loop": true,
+      "animation_length": 1,
+      "bones": {
+        "e1_right_leg": {
+          "rotation": [
+            "math.sin(query.anim_time * 360) * 24",
+            0,
+            0
+          ]
+        },
+        "e1_left_leg": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 180) * 24",
+            0,
+            0
+          ]
+        },
+        "e1_right_arm": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 180) * 16",
+            0,
+            0
+          ]
+        },
+        "e1_left_arm": {
+          "rotation": [
+            "math.sin(query.anim_time * 360) * 16",
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.hakkai.ender_1_windup": {
+      "animation_length": 1.9,
+      "bones": {
+        "e1_body": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.45": [
+              -6,
+              0,
+              0
+            ],
+            "1.9": [
+              -13,
+              0,
+              0
+            ]
+          }
+        },
+        "e1_head": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.45": [
+              -5,
+              0,
+              0
+            ],
+            "1.9": [
+              -9,
+              0,
+              0
+            ]
+          }
+        },
+        "e1_right_arm": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.45": [
+              -6.72,
+              0.0,
+              3.36
+            ],
+            "1.9": [
+              -16,
+              0,
+              8
+            ]
+          }
+        },
+        "e1_left_arm": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.45": [
+              -11.34,
+              0.0,
+              -2.1
+            ],
+            "1.9": [
+              -27,
+              0,
+              -5
+            ]
+          }
+        },
+        "e1_right_arm_lower": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "1.9": [
+              -6,
+              0,
+              0
+            ]
+          }
+        },
+        "e1_left_arm_lower": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "1.9": [
+              -6,
+              0,
+              0
+            ]
+          }
+        }
+      }
+    },
+    "animation.hakkai.ender_1_strike": {
+      "animation_length": 0.38,
+      "bones": {
+        "e1_body": {
+          "rotation": {
+            "0.0": [
+              -13,
+              0,
+              0
+            ],
+            "0.12": [
+              18,
+              0,
+              0
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "e1_head": {
+          "rotation": {
+            "0.0": [
+              -9,
+              0,
+              0
+            ],
+            "0.12": [
+              22,
+              0,
+              0
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "e1_right_arm": {
+          "rotation": {
+            "0.0": [
+              -16,
+              0,
+              8
+            ],
+            "0.12": [
+              13,
+              0,
+              -10
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "e1_left_arm": {
+          "rotation": {
+            "0.0": [
+              -27,
+              0,
+              -5
+            ],
+            "0.12": [
+              23,
+              0,
+              9
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "e1_right_arm_lower": {
+          "rotation": {
+            "0.0": [
+              -6,
+              0,
+              0
+            ],
+            "0.12": [
+              4,
+              0,
+              0
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "e1_left_arm_lower": {
+          "rotation": {
+            "0.0": [
+              -6,
+              0,
+              0
+            ],
+            "0.12": [
+              4,
+              0,
+              0
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      }
+    },
+    "animation.hakkai.ender_1_detail": {
+      "loop": true,
+      "bones": {
+        "e1_right_arm_lower": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 180) * 7 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "e1_left_arm_lower": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 0) * 7 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "e1_right_leg_lower": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 0) * 7 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "e1_left_leg_lower": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 180) * 7 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "e1_body_detail_6": {
+          "rotation": [
+            "math.sin(query.anim_time * 58 + 23) * 3",
+            0,
+            0
+          ]
+        },
+        "e1_body_detail_7": {
+          "rotation": [
+            "math.sin(query.anim_time * 58 + 143) * 3",
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.hakkai.ender_2_walk": {
+      "loop": true,
+      "animation_length": 1,
+      "bones": {
+        "e2_right_leg": {
+          "rotation": [
+            "math.sin(query.anim_time * 360) * 24",
+            0,
+            0
+          ]
+        },
+        "e2_left_leg": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 180) * 24",
+            0,
+            0
+          ]
+        },
+        "e2_right_arm": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 180) * 16",
+            0,
+            0
+          ]
+        },
+        "e2_left_arm": {
+          "rotation": [
+            "math.sin(query.anim_time * 360) * 16",
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.hakkai.ender_2_windup": {
+      "animation_length": 1.9,
+      "bones": {
+        "e2_body": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.45": [
+              -6,
+              0,
+              0
+            ],
+            "1.9": [
+              -13,
+              0,
+              0
+            ]
+          }
+        },
+        "e2_head": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.45": [
+              -5,
+              0,
+              0
+            ],
+            "1.9": [
+              -9,
+              0,
+              0
+            ]
+          }
+        },
+        "e2_right_arm": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.45": [
+              -12.6,
+              3.36,
+              1.26
+            ],
+            "1.9": [
+              -30,
+              8,
+              3
+            ]
+          }
+        },
+        "e2_left_arm": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.45": [
+              -5.04,
+              -3.36,
+              -5.04
+            ],
+            "1.9": [
+              -12,
+              -8,
+              -12
+            ]
+          }
+        },
+        "e2_right_arm_lower": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "1.9": [
+              -6,
+              0,
+              0
+            ]
+          }
+        },
+        "e2_left_arm_lower": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "1.9": [
+              -6,
+              0,
+              0
+            ]
+          }
+        }
+      }
+    },
+    "animation.hakkai.ender_2_strike": {
+      "animation_length": 0.38,
+      "bones": {
+        "e2_body": {
+          "rotation": {
+            "0.0": [
+              -13,
+              0,
+              0
+            ],
+            "0.12": [
+              18,
+              0,
+              0
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "e2_head": {
+          "rotation": {
+            "0.0": [
+              -9,
+              0,
+              0
+            ],
+            "0.12": [
+              22,
+              0,
+              0
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "e2_right_arm": {
+          "rotation": {
+            "0.0": [
+              -30,
+              8,
+              3
+            ],
+            "0.12": [
+              22,
+              -5,
+              -10
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "e2_left_arm": {
+          "rotation": {
+            "0.0": [
+              -12,
+              -8,
+              -12
+            ],
+            "0.12": [
+              13,
+              5,
+              12
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "e2_right_arm_lower": {
+          "rotation": {
+            "0.0": [
+              -6,
+              0,
+              0
+            ],
+            "0.12": [
+              4,
+              0,
+              0
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "e2_left_arm_lower": {
+          "rotation": {
+            "0.0": [
+              -6,
+              0,
+              0
+            ],
+            "0.12": [
+              4,
+              0,
+              0
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      }
+    },
+    "animation.hakkai.ender_2_detail": {
+      "loop": true,
+      "bones": {
+        "e2_right_arm_lower": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 180) * 7 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "e2_left_arm_lower": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 0) * 7 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "e2_right_leg_lower": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 0) * 7 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "e2_left_leg_lower": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 180) * 7 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "e2_body_detail_4": {
+          "rotation": [
+            "math.sin(query.anim_time * 61 + 46) * 3",
+            0,
+            0
+          ]
+        },
+        "e2_body_detail_5": {
+          "rotation": [
+            "math.sin(query.anim_time * 61 + 166) * 3",
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.hakkai.ender_3_walk": {
+      "loop": true,
+      "animation_length": 1,
+      "bones": {
+        "e3_right_leg": {
+          "rotation": [
+            "math.sin(query.anim_time * 360) * 24",
+            0,
+            0
+          ]
+        },
+        "e3_left_leg": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 180) * 24",
+            0,
+            0
+          ]
+        },
+        "e3_right_arm": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 180) * 16",
+            0,
+            0
+          ]
+        },
+        "e3_left_arm": {
+          "rotation": [
+            "math.sin(query.anim_time * 360) * 16",
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.hakkai.ender_3_windup": {
+      "animation_length": 1.9,
+      "bones": {
+        "e3_body": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.45": [
+              -6,
+              0,
+              0
+            ],
+            "1.9": [
+              -13,
+              0,
+              0
+            ]
+          }
+        },
+        "e3_head": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.45": [
+              -5,
+              0,
+              0
+            ],
+            "1.9": [
+              -9,
+              0,
+              0
+            ]
+          }
+        },
+        "e3_right_arm": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.45": [
+              -13.44,
+              0.0,
+              4.2
+            ],
+            "1.9": [
+              -32,
+              0,
+              10
+            ]
+          }
+        },
+        "e3_left_arm": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.45": [
+              -13.44,
+              0.0,
+              -4.2
+            ],
+            "1.9": [
+              -32,
+              0,
+              -10
+            ]
+          }
+        },
+        "e3_right_arm_lower": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "1.9": [
+              -6,
+              0,
+              0
+            ]
+          }
+        },
+        "e3_left_arm_lower": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "1.9": [
+              -6,
+              0,
+              0
+            ]
+          }
+        }
+      }
+    },
+    "animation.hakkai.ender_3_strike": {
+      "animation_length": 0.38,
+      "bones": {
+        "e3_body": {
+          "rotation": {
+            "0.0": [
+              -13,
+              0,
+              0
+            ],
+            "0.12": [
+              18,
+              0,
+              0
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "e3_head": {
+          "rotation": {
+            "0.0": [
+              -9,
+              0,
+              0
+            ],
+            "0.12": [
+              22,
+              0,
+              0
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "e3_right_arm": {
+          "rotation": {
+            "0.0": [
+              -32,
+              0,
+              10
+            ],
+            "0.12": [
+              20,
+              0,
+              4
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "e3_left_arm": {
+          "rotation": {
+            "0.0": [
+              -32,
+              0,
+              -10
+            ],
+            "0.12": [
+              20,
+              0,
+              -4
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "e3_right_arm_lower": {
+          "rotation": {
+            "0.0": [
+              -6,
+              0,
+              0
+            ],
+            "0.12": [
+              4,
+              0,
+              0
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "e3_left_arm_lower": {
+          "rotation": {
+            "0.0": [
+              -6,
+              0,
+              0
+            ],
+            "0.12": [
+              4,
+              0,
+              0
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      }
+    },
+    "animation.hakkai.ender_3_detail": {
+      "loop": true,
+      "bones": {
+        "e3_right_arm_lower": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 180) * 7 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "e3_left_arm_lower": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 0) * 7 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "e3_right_leg_lower": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 0) * 7 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "e3_left_leg_lower": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 180) * 7 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.hakkai.ender_4_walk": {
+      "loop": true,
+      "animation_length": 1,
+      "bones": {
+        "e4_right_leg": {
+          "rotation": [
+            "math.sin(query.anim_time * 360) * 24",
+            0,
+            0
+          ]
+        },
+        "e4_left_leg": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 180) * 24",
+            0,
+            0
+          ]
+        },
+        "e4_right_arm": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 180) * 16",
+            0,
+            0
+          ]
+        },
+        "e4_left_arm": {
+          "rotation": [
+            "math.sin(query.anim_time * 360) * 16",
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.hakkai.ender_4_windup": {
+      "animation_length": 1.9,
+      "bones": {
+        "e4_body": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.45": [
+              -6,
+              0,
+              0
+            ],
+            "1.9": [
+              -13,
+              0,
+              0
+            ]
+          }
+        },
+        "e4_head": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.45": [
+              -5,
+              0,
+              0
+            ],
+            "1.9": [
+              -9,
+              0,
+              0
+            ]
+          }
+        },
+        "e4_right_arm": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.45": [
+              -15.96,
+              0.0,
+              5.88
+            ],
+            "1.9": [
+              -38,
+              0,
+              14
+            ]
+          }
+        },
+        "e4_left_arm": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.45": [
+              -5.04,
+              0.0,
+              -2.52
+            ],
+            "1.9": [
+              -12,
+              0,
+              -6
+            ]
+          }
+        },
+        "e4_right_arm_lower": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "1.9": [
+              -6,
+              0,
+              0
+            ]
+          }
+        },
+        "e4_left_arm_lower": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "1.9": [
+              -6,
+              0,
+              0
+            ]
+          }
+        }
+      }
+    },
+    "animation.hakkai.ender_4_strike": {
+      "animation_length": 0.38,
+      "bones": {
+        "e4_body": {
+          "rotation": {
+            "0.0": [
+              -13,
+              0,
+              0
+            ],
+            "0.12": [
+              18,
+              0,
+              0
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "e4_head": {
+          "rotation": {
+            "0.0": [
+              -9,
+              0,
+              0
+            ],
+            "0.12": [
+              22,
+              0,
+              0
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "e4_right_arm": {
+          "rotation": {
+            "0.0": [
+              -38,
+              0,
+              14
+            ],
+            "0.12": [
+              24,
+              0,
+              -16
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "e4_left_arm": {
+          "rotation": {
+            "0.0": [
+              -12,
+              0,
+              -6
+            ],
+            "0.12": [
+              12,
+              0,
+              8
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "e4_right_arm_lower": {
+          "rotation": {
+            "0.0": [
+              -6,
+              0,
+              0
+            ],
+            "0.12": [
+              4,
+              0,
+              0
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "e4_left_arm_lower": {
+          "rotation": {
+            "0.0": [
+              -6,
+              0,
+              0
+            ],
+            "0.12": [
+              4,
+              0,
+              0
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      }
+    },
+    "animation.hakkai.ender_4_detail": {
+      "loop": true,
+      "bones": {
+        "e4_right_arm_lower": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 180) * 7 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "e4_left_arm_lower": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 0) * 7 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "e4_right_leg_lower": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 0) * 7 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "e4_left_leg_lower": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 180) * 7 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.hakkai.ender_5_walk": {
+      "loop": true,
+      "animation_length": 1,
+      "bones": {
+        "e5_right_leg": {
+          "rotation": [
+            "math.sin(query.anim_time * 360) * 24",
+            0,
+            0
+          ]
+        },
+        "e5_left_leg": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 180) * 24",
+            0,
+            0
+          ]
+        },
+        "e5_right_arm": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 180) * 16",
+            0,
+            0
+          ]
+        },
+        "e5_left_arm": {
+          "rotation": [
+            "math.sin(query.anim_time * 360) * 16",
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.hakkai.ender_5_windup": {
+      "animation_length": 1.9,
+      "bones": {
+        "e5_body": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.45": [
+              -6,
+              0,
+              0
+            ],
+            "1.9": [
+              -13,
+              0,
+              0
+            ]
+          }
+        },
+        "e5_head": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.45": [
+              -5,
+              0,
+              0
+            ],
+            "1.9": [
+              -9,
+              0,
+              0
+            ]
+          }
+        },
+        "e5_right_arm": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.45": [
+              -10.08,
+              4.2,
+              0.84
+            ],
+            "1.9": [
+              -24,
+              10,
+              2
+            ]
+          }
+        },
+        "e5_left_arm": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.45": [
+              -10.08,
+              -4.2,
+              -0.84
+            ],
+            "1.9": [
+              -24,
+              -10,
+              -2
+            ]
+          }
+        },
+        "e5_right_arm_lower": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "1.9": [
+              -6,
+              0,
+              0
+            ]
+          }
+        },
+        "e5_left_arm_lower": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "1.9": [
+              -6,
+              0,
+              0
+            ]
+          }
+        }
+      }
+    },
+    "animation.hakkai.ender_5_strike": {
+      "animation_length": 0.38,
+      "bones": {
+        "e5_body": {
+          "rotation": {
+            "0.0": [
+              -13,
+              0,
+              0
+            ],
+            "0.12": [
+              18,
+              0,
+              0
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "e5_head": {
+          "rotation": {
+            "0.0": [
+              -9,
+              0,
+              0
+            ],
+            "0.12": [
+              22,
+              0,
+              0
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "e5_right_arm": {
+          "rotation": {
+            "0.0": [
+              -24,
+              10,
+              2
+            ],
+            "0.12": [
+              20,
+              -6,
+              -4
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "e5_left_arm": {
+          "rotation": {
+            "0.0": [
+              -24,
+              -10,
+              -2
+            ],
+            "0.12": [
+              20,
+              6,
+              4
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "e5_right_arm_lower": {
+          "rotation": {
+            "0.0": [
+              -6,
+              0,
+              0
+            ],
+            "0.12": [
+              4,
+              0,
+              0
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "e5_left_arm_lower": {
+          "rotation": {
+            "0.0": [
+              -6,
+              0,
+              0
+            ],
+            "0.12": [
+              4,
+              0,
+              0
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      }
+    },
+    "animation.hakkai.ender_5_detail": {
+      "loop": true,
+      "bones": {
+        "e5_right_arm_lower": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 180) * 7 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "e5_left_arm_lower": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 0) * 7 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "e5_right_leg_lower": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 0) * 7 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "e5_left_leg_lower": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 180) * 7 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.hakkai.ender_6_walk": {
+      "loop": true,
+      "animation_length": 1,
+      "bones": {
+        "e6_right_leg": {
+          "rotation": [
+            "math.sin(query.anim_time * 360) * 24",
+            0,
+            0
+          ]
+        },
+        "e6_left_leg": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 180) * 24",
+            0,
+            0
+          ]
+        },
+        "e6_right_arm": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 180) * 16",
+            0,
+            0
+          ]
+        },
+        "e6_left_arm": {
+          "rotation": [
+            "math.sin(query.anim_time * 360) * 16",
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.hakkai.ender_6_windup": {
+      "animation_length": 1.9,
+      "bones": {
+        "e6_body": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.45": [
+              -6,
+              0,
+              0
+            ],
+            "1.9": [
+              -13,
+              0,
+              0
+            ]
+          }
+        },
+        "e6_head": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.45": [
+              -5,
+              0,
+              0
+            ],
+            "1.9": [
+              -9,
+              0,
+              0
+            ]
+          }
+        },
+        "e6_right_arm": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.45": [
+              -6.3,
+              0.0,
+              10.08
+            ],
+            "1.9": [
+              -15,
+              0,
+              24
+            ]
+          }
+        },
+        "e6_left_arm": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.45": [
+              -6.3,
+              0.0,
+              -10.08
+            ],
+            "1.9": [
+              -15,
+              0,
+              -24
+            ]
+          }
+        },
+        "e6_right_arm_lower": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "1.9": [
+              -6,
+              0,
+              0
+            ]
+          }
+        },
+        "e6_left_arm_lower": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "1.9": [
+              -6,
+              0,
+              0
+            ]
+          }
+        }
+      }
+    },
+    "animation.hakkai.ender_6_strike": {
+      "animation_length": 0.38,
+      "bones": {
+        "e6_body": {
+          "rotation": {
+            "0.0": [
+              -13,
+              0,
+              0
+            ],
+            "0.12": [
+              18,
+              0,
+              0
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "e6_head": {
+          "rotation": {
+            "0.0": [
+              -9,
+              0,
+              0
+            ],
+            "0.12": [
+              22,
+              0,
+              0
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "e6_right_arm": {
+          "rotation": {
+            "0.0": [
+              -15,
+              0,
+              24
+            ],
+            "0.12": [
+              15,
+              0,
+              -18
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "e6_left_arm": {
+          "rotation": {
+            "0.0": [
+              -15,
+              0,
+              -24
+            ],
+            "0.12": [
+              15,
+              0,
+              18
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "e6_right_arm_lower": {
+          "rotation": {
+            "0.0": [
+              -6,
+              0,
+              0
+            ],
+            "0.12": [
+              4,
+              0,
+              0
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "e6_left_arm_lower": {
+          "rotation": {
+            "0.0": [
+              -6,
+              0,
+              0
+            ],
+            "0.12": [
+              4,
+              0,
+              0
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      }
+    },
+    "animation.hakkai.ender_6_detail": {
+      "loop": true,
+      "bones": {
+        "e6_right_arm_lower": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 180) * 7 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "e6_left_arm_lower": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 0) * 7 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "e6_right_leg_lower": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 0) * 7 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "e6_left_leg_lower": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 180) * 7 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "e6_body_detail_6": {
+          "rotation": [
+            "math.sin(query.anim_time * 73 + 138) * 3",
+            0,
+            0
+          ]
+        },
+        "e6_body_detail_7": {
+          "rotation": [
+            "math.sin(query.anim_time * 73 + 258) * 3",
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.hakkai.ender_7_walk": {
+      "loop": true,
+      "animation_length": 1,
+      "bones": {
+        "e7_right_leg": {
+          "rotation": [
+            "math.sin(query.anim_time * 360) * 24",
+            0,
+            0
+          ]
+        },
+        "e7_left_leg": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 180) * 24",
+            0,
+            0
+          ]
+        },
+        "e7_right_arm": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 180) * 16",
+            0,
+            0
+          ]
+        },
+        "e7_left_arm": {
+          "rotation": [
+            "math.sin(query.anim_time * 360) * 16",
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.hakkai.ender_7_windup": {
+      "animation_length": 1.9,
+      "bones": {
+        "e7_body": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.45": [
+              -6,
+              0,
+              0
+            ],
+            "1.9": [
+              -13,
+              0,
+              0
+            ]
+          }
+        },
+        "e7_head": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.45": [
+              -5,
+              0,
+              0
+            ],
+            "1.9": [
+              -9,
+              0,
+              0
+            ]
+          }
+        },
+        "e7_right_arm": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.45": [
+              -12.6,
+              2.1,
+              2.1
+            ],
+            "1.9": [
+              -30,
+              5,
+              5
+            ]
+          }
+        },
+        "e7_left_arm": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.45": [
+              -7.56,
+              -2.1,
+              -2.1
+            ],
+            "1.9": [
+              -18,
+              -5,
+              -5
+            ]
+          }
+        },
+        "e7_right_arm_lower": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "1.9": [
+              -6,
+              0,
+              0
+            ]
+          }
+        },
+        "e7_left_arm_lower": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "1.9": [
+              -6,
+              0,
+              0
+            ]
+          }
+        }
+      }
+    },
+    "animation.hakkai.ender_7_strike": {
+      "animation_length": 0.38,
+      "bones": {
+        "e7_body": {
+          "rotation": {
+            "0.0": [
+              -13,
+              0,
+              0
+            ],
+            "0.12": [
+              18,
+              0,
+              0
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "e7_head": {
+          "rotation": {
+            "0.0": [
+              -9,
+              0,
+              0
+            ],
+            "0.12": [
+              22,
+              0,
+              0
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "e7_right_arm": {
+          "rotation": {
+            "0.0": [
+              -30,
+              5,
+              5
+            ],
+            "0.12": [
+              12,
+              -5,
+              -4
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "e7_left_arm": {
+          "rotation": {
+            "0.0": [
+              -18,
+              -5,
+              -5
+            ],
+            "0.12": [
+              25,
+              5,
+              4
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "e7_right_arm_lower": {
+          "rotation": {
+            "0.0": [
+              -6,
+              0,
+              0
+            ],
+            "0.12": [
+              4,
+              0,
+              0
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "e7_left_arm_lower": {
+          "rotation": {
+            "0.0": [
+              -6,
+              0,
+              0
+            ],
+            "0.12": [
+              4,
+              0,
+              0
+            ],
+            "0.38": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      }
+    },
+    "animation.hakkai.ender_7_detail": {
+      "loop": true,
+      "bones": {
+        "e7_right_arm_lower": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 180) * 7 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "e7_left_arm_lower": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 0) * 7 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "e7_right_leg_lower": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 0) * 7 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "e7_left_leg_lower": {
+          "rotation": [
+            "math.sin(query.anim_time * 360 + 180) * 7 * math.min(query.modified_move_speed * 4, 1)",
+            0,
+            0
+          ]
+        },
+        "e7_body_detail_8": {
+          "rotation": [
+            "math.sin(query.anim_time * 76 + 161) * 2",
+            0,
+            0
+          ]
+        }
+      }
+    }
+  }
+}

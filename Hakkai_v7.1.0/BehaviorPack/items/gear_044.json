@@ -2,10 +2,7 @@
   "format_version": "1.26.0",
   "minecraft:item": {
     "description": {
-      "identifier": "hakkai:gear_044",
-      "menu_category": {
-        "category": "equipment"
-      }
+      "identifier": "hakkai:gear_044"
     },
     "components": {
       "minecraft:display_name": {
@@ -29,6 +26,16 @@
       "minecraft:enchantable": {
         "slot": "armor_feet",
         "value": 12
+      },
+      "minecraft:repairable": {
+        "repair_items": [
+          {
+            "items": [
+              "minecraft:iron_ingot"
+            ],
+            "repair_amount": 101
+          }
+        ]
       }
     }
   }

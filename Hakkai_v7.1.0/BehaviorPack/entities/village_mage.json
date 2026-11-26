@@ -83,7 +83,10 @@
           "target": "self"
         }
       },
-      "minecraft:nameable": {}
+      "minecraft:nameable": {},
+      "minecraft:experience_reward": {
+        "on_death": "query.last_hit_by_player ? 2 : 0"
+      }
     },
     "component_groups": {
       "hakkai:expired": {

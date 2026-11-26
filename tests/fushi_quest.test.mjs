@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict';import {setupFushiQuest} from '../Hakkai_v7.1.0/BehaviorPack/scripts/fushi_quest.js';import {setupMoonBamboo} from '../Hakkai_v7.1.0/BehaviorPack/scripts/moon_bamboo.js';import {GameMode} from '@minecraft/server';
 const data=new Map(),messages=[];let room=false,awards=0,now=26000,phase=0;
 const p={isValid:true,dimension:{id:'hakkai:realm_7'},getGameMode:()=>GameMode.Survival,getDynamicProperty:k=>data.get(k),setDynamicProperty:(k,v)=>v===undefined?data.delete(k):data.set(k,v)};
-const quest=setupFushiQuest({give:()=>{if(!room)return false;awards++;return true;},notice:(_,m)=>messages.push(m)});
+const quest=setupFushiQuest({claimReward:p=>{if(!room)return 'full';p.setDynamicProperty('hakkai:fushi_quest_claimed',1);awards++;return 'ok';},notice:(_,m)=>messages.push(m)});
 const moon=setupMoonBamboo({world:{getTimeOfDay:()=>14000,getMoonPhase:()=>phase,getAbsoluteTime:()=>now},isMoonGrove:()=>true,random:()=>1,onEligibleBreak:quest.progress});
 const event={player:p,block:{location:{x:0,y:80,z:0}},brokenBlockPermutation:{type:{id:'minecraft:bamboo'}}};
 for(let i=0;i<16;i++)moon.onBreak(event);assert.deepEqual(quest.status(p),{bamboo:16,nights:1,claimed:false});assert.equal(quest.claim(p),false);
 phase=4;now+=24000;moon.onBreak(event);assert.equal(quest.status(p).nights,1,'new moon cannot count');phase=0;moon.onBreak(event);assert.equal(quest.status(p).nights,2);
 assert.equal(quest.claim(p),false,'full inventory');assert.equal(quest.status(p).claimed,false);
 room=true;assert.equal(quest.claim(p),true);assert.equal(awards,1);assert.equal(quest.claim(p),false);assert.equal(awards,1);
-const again=setupFushiQuest({give:()=>{awards++;return true;},notice:()=>{}});assert.equal(again.claim(p),false,'claim persists across reload');
+const again=setupFushiQuest({claimReward:()=>{awards++;return 'ok';},notice:()=>{}});assert.equal(again.claim(p),false,'claim persists across reload');
 console.log('Fushi quest: bamboo on two moonlit nights, persisted progress, full inventory and once-only reward (mocked)');

@@ -14,11 +14,11 @@
         ]
       },
       "minecraft:health": {
-        "value": 24,
-        "max": 24
+        "value": 192,
+        "max": 192
       },
       "minecraft:attack": {
-        "damage": 6
+        "damage": 3
       },
       "minecraft:collision_box": {
         "width": 0.7,
@@ -82,6 +82,9 @@
       "minecraft:pushable": {
         "is_pushable": false,
         "is_pushable_by_piston": false
+      },
+      "minecraft:experience_reward": {
+        "on_death": "query.last_hit_by_player ? 12 : 0"
       }
     }
   }

@@ -9,22 +9,16 @@
     ],
     "ingredients": [
       {
-        "item": "minecraft:paper"
-      },
-      {
-        "item": "minecraft:paper"
-      },
-      {
-        "item": "minecraft:iron_ingot"
-      },
-      {
-        "item": "hakkai:crystal_8"
-      },
-      {
-        "item": "hakkai:shard_4"
-      },
-      {
         "item": "hakkai:gear_028"
+      },
+      {
+        "item": "hakkai:crystal_6"
+      },
+      {
+        "item": "hakkai:shard_6"
+      },
+      {
+        "item": "minecraft:diamond"
       }
     ],
     "result": {

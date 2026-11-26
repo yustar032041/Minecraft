@@ -1,0 +1,16 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:fog_settings": {
+    "description": {
+      "identifier": "hakkai:realm_ambient_5_morning"
+    },
+    "distance": {
+      "air": {
+        "fog_start": 0.12,
+        "fog_end": 0.78,
+        "fog_color": "#7A788C",
+        "render_distance_type": "render"
+      }
+    }
+  }
+}

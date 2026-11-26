@@ -2,10 +2,7 @@
   "format_version": "1.26.0",
   "minecraft:item": {
     "description": {
-      "identifier": "hakkai:gear_176",
-      "menu_category": {
-        "category": "items"
-      }
+      "identifier": "hakkai:gear_176"
     },
     "components": {
       "minecraft:display_name": {
@@ -13,10 +10,10 @@
       },
       "minecraft:icon": "hakkai_gear_176",
       "minecraft:max_stack_size": 1,
-      "minecraft:damage": 6,
+      "minecraft:damage": 28,
       "minecraft:hand_equipped": true,
       "minecraft:durability": {
-        "max_durability": 282
+        "max_durability": 436
       },
       "minecraft:use_modifiers": {
         "use_duration": 15.0,
@@ -27,6 +24,16 @@
       "minecraft:enchantable": {
         "slot": "sword",
         "value": 12
+      },
+      "minecraft:repairable": {
+        "repair_items": [
+          {
+            "items": [
+              "minecraft:netherite_scrap"
+            ],
+            "repair_amount": 109
+          }
+        ]
       }
     }
   }

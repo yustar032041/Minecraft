@@ -2,10 +2,7 @@
   "format_version": "1.26.0",
   "minecraft:item": {
     "description": {
-      "identifier": "hakkai:gear_108",
-      "menu_category": {
-        "category": "equipment"
-      }
+      "identifier": "hakkai:gear_108"
     },
     "components": {
       "minecraft:display_name": {
@@ -15,10 +12,10 @@
       "minecraft:max_stack_size": 1,
       "minecraft:wearable": {
         "slot": "slot.armor.feet",
-        "protection": 0
+        "protection": 4
       },
       "minecraft:durability": {
-        "max_durability": 250
+        "max_durability": 326
       },
       "minecraft:use_modifiers": {
         "use_duration": 1.2,
@@ -29,6 +26,16 @@
       "minecraft:enchantable": {
         "slot": "armor_feet",
         "value": 12
+      },
+      "minecraft:repairable": {
+        "repair_items": [
+          {
+            "items": [
+              "minecraft:diamond"
+            ],
+            "repair_amount": 82
+          }
+        ]
       }
     }
   }

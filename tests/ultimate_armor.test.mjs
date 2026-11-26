@@ -12,12 +12,31 @@ console.log('Final armor: exact slots, positive recovery bonus, parry healing ca
 // Exercise the real regeneration block copied verbatim from main.js.
 {
  const fs=await import('node:fs'),vm=await import('node:vm');const src=fs.readFileSync('Hakkai_v7.1.0/BehaviorPack/scripts/main.js','utf8');
- const start=src.indexOf('     if(isCreative(p)){s.s=max;s.m=max;}else{',src.indexOf('const guarding=combatGuard?.tick'));
+ const start=src.indexOf('     if(isCreative(p)){s.s=max;s.m=max;}else{',src.indexOf('const guarding=shieldStance'));
  const end=src.indexOf('     // The trial dimension',start);assert.ok(start>0&&end>start);
  const s={s:50,m:50,campResting:false},player={...p,isSwimming:false,isSprinting:false};const ctx={p:player,s,max:100,guarding:false,isCreative:()=>false,bounds:(n,a,b)=>Math.max(a,Math.min(b,n)),hasUltimateArmor,ultimateRegen};
  vm.createContext(ctx);vm.runInContext(src.slice(start,end),ctx);assert.equal(s.s,53);assert.ok(Math.abs(s.m-51.32)<1e-10);
  player.isSprinting=true;ctx.guarding=true;vm.runInContext(src.slice(start,end),ctx);assert.equal(s.s,53,'paid guard still blocks stamina regeneration');assert.ok(Math.abs(s.m-52.64)<1e-10);
- ctx.guarding=false;vm.runInContext(src.slice(start,end),ctx);assert.equal(s.s,51.6,'sprint drain remains unchanged');
+ ctx.guarding=false;vm.runInContext(src.slice(start,end),ctx);assert.equal(s.s,56,'sprint regenerates with the final set');
+ player.isSwimming=true;vm.runInContext(src.slice(start,end),ctx);assert.equal(s.s,54.6,'swimming drain remains unchanged');
  assert.ok(src.includes('if(parried)ultimateParryHeal(p);'),'warden parry hook');
  assert.match(src,/onSuccess:\(\{p,attacker,near,at\}\)=>\{\s*ultimateParryHeal\(p\);/,'deferred guard-release parry hook');
+}
+// Set buffs refresh independently, never overwrite stronger/longer effects,
+// never strip other sources when the set is removed, and isolate API errors.
+{
+ const {applyUltimateArmorBonus,ULTIMATE_BUFFS,ULTIMATE_BUFF_DURATION}=await import('../Hakkai_v7.1.0/BehaviorPack/scripts/ultimate_armor.js');
+ const effects=new Map([['strength',{amplifier:4,duration:10}],['speed',{amplifier:1,duration:200}],['haste',{amplifier:0,duration:10}]]),calls=[];
+ const player={isValid:true,getComponent:()=>({getEquipment:slot=>gear.get(slot)}),getEffect:id=>effects.get(id),addEffect(id,duration,opts){calls.push([id,duration,opts]);if(id==='regeneration')throw Error('unsupported');effects.set(id,{amplifier:opts.amplifier,duration});return {};}};
+ gear.set(EquipmentSlot.Legs,{typeId:'hakkai:ult_leggings'});
+ assert.equal(ULTIMATE_BUFFS.length,9);assert.equal(applyUltimateArmorBonus(player),6);assert.equal(effects.get('strength').amplifier,4);assert.equal(effects.get('speed').duration,200);assert.equal(effects.get('haste').amplifier,1);assert.equal(effects.get('resistance').amplifier,2);assert.equal(effects.get('health_boost').amplifier,2);
+ assert.ok(calls.every(([,duration,opts])=>duration===ULTIMATE_BUFF_DURATION&&opts.showParticles===false));
+ gear.delete(EquipmentSlot.Feet);const n=calls.length;assert.equal(applyUltimateArmorBonus(player),0);assert.equal(calls.length,n);assert.ok(effects.has('resistance'),'do not strip existing effects');
+ assert.equal(applyUltimateArmorBonus({isValid:false}),0);gear.set(EquipmentSlot.Feet,{typeId:'hakkai:ult_boots'});
+ const src=(await import('node:fs')).readFileSync('Hakkai_v7.1.0/BehaviorPack/scripts/main.js','utf8');assert.match(src,/if\(t%100===0\)\{[^\n]*applyUltimateArmorBonus\(p\)/);
+}
+{
+ const {applyUltimateArmorBonus}=await import('../Hakkai_v7.1.0/BehaviorPack/scripts/ultimate_armor.js');
+ const player={isValid:true,getComponent:()=>({getEquipment:slot=>gear.get(slot)}),getEffect:()=>undefined,addEffect:()=>undefined};
+ assert.equal(applyUltimateArmorBonus(player),9,'undefined returns count submitted non-throwing calls');
 }

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {steerWarden} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_movement.js';
 import {updateWardenAppearance} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_appearance.js';
 function fixture(){
- const impulses=[],effects=[],removed=[],solid={typeId:'minecraft:stone',isSolid:true,isAir:false,isLiquid:false},air={typeId:'minecraft:air',isSolid:false,isAir:true};
+ const impulses=[],effects=[],removed=[],solid={typeId:'hakkai:clockstone',isAir:false,isLiquid:false,isWaterlogged:false},air={typeId:'minecraft:air',isAir:true,isLiquid:false,isWaterlogged:false};
  const p={id:'p',typeId:'minecraft:player',isValid:true,location:{x:0,y:80,z:8}};
  const dim={id:'hakkai:warden_arena',isChunkLoaded:()=>true,getBlock:q=>Math.floor(q.y)===79?solid:air,getPlayers:()=>[p]};
  const e={isValid:true,location:{x:0,y:80,z:0},dimension:dim,isOnGround:true,getVelocity:()=>({x:0,y:0,z:0}),applyImpulse:v=>impulses.push(v),setProperty:()=>{},addEffect:(...v)=>effects.push(v),removeEffect:id=>removed.push(id)};
@@ -33,3 +33,14 @@ for(const reason of ['unloaded','blocked','no-floor','too-fast','idle','peaceful
  f.e.location.y=85.6;updateWardenAppearance(f.e,f.s,1,114,{idle:true});assert.ok(f.removed.includes('levitation'),'ascent bounded below ceiling');
 }
 console.log('Warden movement: directional steering, frequency, obstacle/player bounds, two-form low/high flight (mocked)');
+// Stable API has no isSolid: arena floor may be checked by its known full
+// block identity, but arbitrary partial or waterlogged blocks remain unsafe.
+for(const floor of [
+ {typeId:'minecraft:stone_slab',isAir:false,isLiquid:false,isWaterlogged:false},
+ {typeId:'hakkai:clockstone',isAir:false,isLiquid:false,isWaterlogged:true},
+ {typeId:'hakkai:clockstone',isAir:false,isLiquid:false},
+ {typeId:'hakkai:clockstone',isAir:false,isLiquid:true,isWaterlogged:false}
+]){
+ const f=fixture(),original=f.dim.getBlock;f.dim.getBlock=q=>q.y===79?floor:original(q);
+ assert.equal(steerWarden(f.e,f.s,0,0),false);assert.equal(f.impulses.length,0);
+}

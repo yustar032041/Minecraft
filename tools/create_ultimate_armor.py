@@ -3,6 +3,11 @@
 Requires Pillow. Existing icon templates are retained; all textures are original
 pack assets recolored for a consistent violet/gold endgame set.
 """
+# Historical generator: it replaces current item art and/or wearable assets.
+import sys
+if __name__ == '__main__' and '--allow-legacy-overwrite' not in sys.argv:
+ raise SystemExit('Legacy generator would overwrite current armor. Pass --allow-legacy-overwrite explicitly; rebuild current armor afterwards.')
+
 from pathlib import Path
 import json
 from PIL import Image, ImageDraw
@@ -11,7 +16,7 @@ from create_series_armor import normals
 root=Path(__file__).resolve().parents[1];bp=root/'Hakkai_v7.1.0/BehaviorPack';rp=root/'Hakkai_v7.1.0/ResourcePack'
 def write(path,value):
  path.parent.mkdir(parents=True,exist_ok=True);path.write_text(json.dumps(value,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
-parts={'helmet':('head','armor_head',4,750,'gear_011','helmet'),'chest':('chest','armor_torso',8,1000,'gear_186','chestplate'),'leggings':('legs','armor_legs',6,950,'gear_186','leggings'),'boots':('feet','armor_feet',4,850,'gear_012','boots')}
+parts={'helmet':('head','armor_head',11,750,'gear_011','helmet'),'chest':('chest','armor_torso',20,3600,'gear_186','chestplate'),'leggings':('legs','armor_legs',8,950,'gear_186','leggings'),'boots':('feet','armor_feet',8,850,'gear_012','boots')}
 # Draw a distinct inventory icon for the formerly unfinished leggings.
 im=Image.new('RGBA',(128,128),(0,0,0,0));d=ImageDraw.Draw(im)
 d.polygon([(24,22),(104,22),(99,53),(90,109),(68,111),(64,68),(60,111),(38,109),(29,53)],fill=(42,27,73,255),outline=(230,186,91,255),width=4)

@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "united_armor_helmet",
+    "normal": "united_armor_helmet_n",
+    "metalness_emissive_roughness": "united_armor_helmet_mer"
+  }
+}

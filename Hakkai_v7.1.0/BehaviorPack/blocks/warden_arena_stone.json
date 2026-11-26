@@ -1,0 +1,29 @@
+{
+  "format_version": "1.26.60",
+  "minecraft:block": {
+    "description": {
+      "identifier": "hakkai:warden_arena_stone"
+    },
+    "components": {
+      "minecraft:display_name": "tile.hakkai:warden_arena_stone.name",
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "hakkai_clockstone",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:map_color": "#5c657d",
+      "minecraft:sound": {
+        "sound": "stone"
+      },
+      "minecraft:destructible_by_mining": false,
+      "minecraft:destructible_by_explosion": false,
+      "minecraft:light_dampening": 1,
+      "minecraft:light_emission": 4,
+      "minecraft:movable": {
+        "movement_type": "immovable"
+      }
+    }
+  }
+}

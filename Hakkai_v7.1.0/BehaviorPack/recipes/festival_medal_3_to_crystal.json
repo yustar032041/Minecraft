@@ -1,0 +1,20 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "hakkai:festival_medal_3_to_crystal"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "hakkai:festival_3"
+      }
+    ],
+    "result": {
+      "item": "hakkai:crystal_11",
+      "count": 2
+    }
+  }
+}

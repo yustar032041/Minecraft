@@ -12,14 +12,14 @@ let healing=0;
 let selectedItem={typeId:'hakkai:gear_001'},parry=false,handler;
 const context={protectsPlayer,weaponTrace:undefined,isTraceWeapon:()=>true,GameMode:{Spectator:'spectator'},ultimateParryHeal:()=>healing++,airStrike:undefined,safeSub:(scope,when,event,fn)=>handler=fn,isCreative:()=>false,wardenBoss:{onMeleeParry:()=>{if(parry){s.s-=15;return true;}return false;}},report:()=>assert.fail(),state:()=>s,gear:new Map([[selectedItem.typeId,g]]),selected:()=>selectedItem,system:{currentTick:100},_melee:/_(sword|axe)$/,num:()=>0,growAffinity:()=>{},cast:(...args)=>casts.push(args),ns:'hakkai:'};
 vm.createContext(context);vm.runInContext(code,context);assert.equal(typeof handler,'function');
-handler({damagingEntity:p,hitEntity:target});assert.equal(s.s,47,'supported weak attack costs three');assert.equal(casts.length,0);
+handler({damagingEntity:p,hitEntity:target});assert.equal(s.s,50,'supported ordinary melee is free');assert.equal(casts.length,0);
 p.isSneaking=true;parry=true;s.s=30;handler({damagingEntity:p,hitEntity:target});
-assert.equal(s.s,12,'parry and melee both cost stamina');assert.equal(healing,1,'warden parry triggers final set heal once');assert.equal(casts.length,0,'successful parry suppresses automatic skill');
-parry=false;s.s=30;handler({damagingEntity:p,hitEntity:target});assert.equal(s.s,27);assert.equal(casts.length,1,'non-parry crouching hit retains old skill behavior');
-selectedItem={typeId:'minecraft:iron_sword',getDynamicProperty:()=>undefined};p.isSneaking=false;s.s=30;handler({damagingEntity:p,hitEntity:target});assert.equal(s.s,26,'other equipment retains original melee cost');
+assert.equal(s.s,15,'only parry costs stamina');assert.equal(healing,1,'warden parry triggers final set heal once');assert.equal(casts.length,0,'successful parry suppresses automatic skill');
+parry=false;s.s=30;handler({damagingEntity:p,hitEntity:target});assert.equal(s.s,30);assert.equal(casts.length,1,'non-parry crouching hit retains old skill behavior');
+selectedItem={typeId:'minecraft:iron_sword',getDynamicProperty:()=>undefined};p.isSneaking=false;s.s=30;handler({damagingEntity:p,hitEntity:target});assert.equal(s.s,30,'vanilla melee is free');
 {
  selectedItem={typeId:'hakkai:gear_001'};p.isSneaking=true;s.useTick=0;s.s=30;context.isCreative=()=>true;
  handler({damagingEntity:p,hitEntity:target});assert.equal(casts.length,2,'creative crouch-hit previews skill');assert.equal(s.s,30);
  p.isSneaking=false;handler({damagingEntity:p,hitEntity:target});assert.equal(s.s,30,'creative does not spend melee stamina');
 }
-console.log('Melee event: supported costs, regular attacks, parry and skill coexistence OK (mocked)');
+console.log('Melee event: free ordinary attacks, parry and skill coexistence OK (mocked)');

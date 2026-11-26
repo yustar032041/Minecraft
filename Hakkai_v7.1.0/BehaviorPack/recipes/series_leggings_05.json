@@ -9,13 +9,16 @@
     ],
     "ingredients": [
       {
-        "item": "minecraft:iron_leggings"
+        "item": "hakkai:series_leggings_00"
       },
       {
         "item": "hakkai:crystal_10"
       },
       {
-        "item": "hakkai:shard_5"
+        "item": "hakkai:shard_10"
+      },
+      {
+        "item": "minecraft:diamond"
       }
     ],
     "result": {

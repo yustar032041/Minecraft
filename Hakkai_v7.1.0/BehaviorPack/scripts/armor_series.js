@@ -1,22 +1,13 @@
 import {EquipmentSlot} from '@minecraft/server';
-// The cloak remains an optional compatibility route for existing players;
-// the new four-slot outfit does not require possessing it.
-export function legacyMantle(leggings){
- const match=/^series_leggings_(\d\d)$/.exec(leggings??'');if(!match)return undefined;
- const i=Number(match[1]);return i<11?`gear_${String(13+16*i).padStart(3,'0')}`:undefined;
-}
-export function equippedSeries(p,ids,owns){
+// All four pieces must be worn in their matching slots.
+export function equippedSeries(p,ids){
  try{
-  const eq=p.getComponent('minecraft:equippable');if(!eq)return {equipped:0,mantle:false,active:false};
+  if(!Array.isArray(ids)||ids.length!==4)return {equipped:0,active:false};
+  const eq=p.getComponent('minecraft:equippable');if(!eq)return {equipped:0,active:false};
   const slots=[EquipmentSlot.Chest,EquipmentSlot.Head,EquipmentSlot.Feet,EquipmentSlot.Legs];
   const matches=ids.map((id,i)=>eq.getEquipment(slots[i])?.typeId===`hakkai:${id}`),equipped=matches.filter(Boolean).length;
-  const mantle=legacyMantle(ids[3]);const legacy=matches.slice(0,3).every(Boolean)&&!!mantle&&owns(mantle);
-  return {equipped,mantle:legacy,active:matches.every(Boolean)||legacy};
- }catch{return {equipped:0,mantle:false,active:false};}
-}
-// Collection/trial completion accepts old cloaks, preserving existing saves.
-export function ownsSeriesPiece(id,owns){
- if(owns(id))return true;const mantle=legacyMantle(id);return !!mantle&&owns(mantle);
+  return {equipped,active:matches.every(Boolean)};
+ }catch{return {equipped:0,active:false};}
 }
 // Reserve a dedicated slot for the unstackable armor before assessing emeralds.
 export function trialRewardSlot(container,emerald){
@@ -31,7 +22,7 @@ export function trialRewardSlot(container,emerald){
 }
 // Legs follow only the chest's existing in-catalog evolution chain. A later
 // chest without a matching four-piece series is intentionally terminal.
-const LEG_NAMES=['霧銀の旅装','深影の黒曜甲','紅蓮の守護装','大地の古代装','雷光の紫電装','星輝の白銀装','夢幻の藤霞装','翠風の森装','蒼海の潮騎装','天空の白翼装','時環の覇者装'];
+const LEG_NAMES=['霧銀装 I','深影装 I','紅蓮装 I','大地装 I','雷光装 I','霧銀装 II','深影装 II','紅蓮装 II','大地装 II','雷光装 II','霧銀装 III'];
 export function seriesLegUpgrade(id,catalog){
  const match=/^series_leggings_(\d\d)$/.exec(id??'');if(!match)return undefined;
  const i=Number(match[1]);if(i>=LEG_NAMES.length)return undefined;

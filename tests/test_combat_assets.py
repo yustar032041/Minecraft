@@ -15,7 +15,7 @@ for token in ['combatResonance?.onHurt','combatResonance?.consume','combatResona
  assert token in main,token
 assert main.index("s.m<cost||s.s<effort")<main.index('combatResonance?.consume(p,g)')
 assert 'g&&!parried&&(!weaponTrace?.enabled()||!isTraceWeapon(g))&&p.isSneaking' in main
-for token in ('combatGuard?.tick','combatGuard?.scale','combatGuard?.invalidate','combatGuard?.clear','spendParry:', 'prepareWindRay(p,g)', 'renderWindRay(p,beam)', 'combatResonance?.consumeCombo(p,g)', '二連終撃', 'combatRoll?.tick', 'combatRoll?.blocks', 'combatRoll?.clear', 'combatParry?.tick', 'combatParry?.tryHit', 'combatParry?.isStaggered', 'combatParry?.flush', 'animation.hakkai.parry_rebound', 'airDash?.tick', 'airDash?.clear', 'setupAirDash({notice})','airStrike?.tick','airStrike?.onHurt','airStrike?.chargeMelee','airStrike?.clear','castNewMagic({p,s:state(p)' ):
+for token in ('combatGuard?.tick','combatGuard?.scale','combatGuard?.invalidate','combatGuard?.clear','spendParry:', 'prepareWindRay(p,g)', 'renderWindRay(p,beam)', 'combatResonance?.consumeCombo(p,g)', '二連終撃', 'combatRoll?.tick', 'combatRoll?.blocks', 'combatRoll?.clear', 'combatParry?.tick', 'combatParry?.tryHit', 'combatParry?.isStaggered', 'combatParry?.flush', 'animation.hakkai.parry_rebound', 'airDash?.tick', 'airDash?.clear', 'setupAirDash({notice})','airStrike?.tick','airStrike?.onHurt','airStrike?.beginSwing','airStrike?.clear','castNewMagic({p,s:state(p)' ):
  assert token in main,token
 assert main.index('prepareWindRay(p,g)')<main.index('s.m-=cost')<main.index('combatResonance?.consume(p,g)')
 assert 'combatResonance?.clear(playerId)' in main and 'combatResonance?.clear(p.id)' in main

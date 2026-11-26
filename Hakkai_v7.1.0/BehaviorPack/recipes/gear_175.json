@@ -9,13 +9,7 @@
     ],
     "ingredients": [
       {
-        "item": "minecraft:paper"
-      },
-      {
-        "item": "minecraft:paper"
-      },
-      {
-        "item": "minecraft:iron_ingot"
+        "item": "hakkai:gear_095"
       },
       {
         "item": "hakkai:crystal_15"
@@ -24,7 +18,7 @@
         "item": "hakkai:shard_5"
       },
       {
-        "item": "hakkai:gear_095"
+        "item": "minecraft:netherite_ingot"
       }
     ],
     "result": {

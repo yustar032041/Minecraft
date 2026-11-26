@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "hakkai_united_armor_boots",
+    "normal": "hakkai_united_armor_boots_normal",
+    "metalness_emissive_roughness": "hakkai_united_armor_boots_mer"
+  }
+}

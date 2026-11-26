@@ -1,3 +1,4 @@
+import {workshopTransaction} from './workshop_transaction.js';
 // Small bounded shared village ledger. No direct block/entity creation here.
 export const SEASON_NAMES=['春','夏','秋','冬'];
 const REALM_NAMES=['草原','霧森','砂路','鏡湖','雷炉','地下庭','雲渡り','時結び'];
@@ -84,7 +85,7 @@ export function recoverCrisis(data,day,{monsters=0,rain=false}={},name){
 // Deduct a small exact amount from the player's actual inventory and save the
 // shared ledger without yielding. Failed writes are rolled back best-effort;
 // a crash/native failure cannot be guaranteed atomic across both stores.
-export function depositToVillage(container,itemId,count,commit,report=()=>{}){
+export function depositToVillage(container,itemId,count,commit,report=()=>{},rollback=undefined){
  if(!container||!Number.isInteger(count)||count<1)return false;
  let old,next,changed=[];
  try{
@@ -92,8 +93,14 @@ export function depositToVillage(container,itemId,count,commit,report=()=>{}){
   for(let i=0;i<next.length&&left;i++)if(next[i]?.typeId===itemId){const n=Math.min(left,next[i].amount);left-=n;changed.push(i);if(n===next[i].amount)next[i]=undefined;else next[i].amount-=n;}
   if(left)return false;
  }catch(e){report('村の寄付の事前確認',e);return false;}
- const writes=[];try{for(const i of changed){writes.push(i);container.setItem(i,next[i]);}commit();return true;}
- catch(e){let incomplete=false;for(const i of writes.reverse())try{container.setItem(i,old[i]);}catch(err){incomplete=true;report('村の寄付の復旧失敗',err);}report(incomplete?'村の寄付失敗（復旧要確認）':'村の寄付失敗（復旧を試行）',e);return false;}
+ const writes=[];let committed=false;
+ try{for(const i of changed){writes.push(i);container.setItem(i,next[i]);}committed=true;commit();return true;}
+ catch(e){
+  let incomplete=false;
+  if(committed&&rollback)try{rollback();}catch(err){incomplete=true;report('村の寄付記録の復旧失敗',err);}
+  for(const i of writes.reverse())try{container.setItem(i,old[i]);}catch(err){incomplete=true;report('村の寄付の復旧失敗',err);}
+  report(incomplete?'村の寄付失敗（復旧要確認）':'村の寄付失敗（復旧を試行）',e);return false;
+ }
 }
 // Explicitly registered village barrels only: no search of arbitrary player
 // inventories and no block edits. Workers must actually be near both barrels.
@@ -103,20 +110,40 @@ export function validWorkshop(t,setup){
  const distance=(u,v)=>Math.hypot(u.x-v.x,u.y-v.y,u.z-v.z),limit=t.factoryVillage?50:28;
  return distance(a,b)<=4&&distance(t.l,a)<=limit&&distance(t.l,b)<=limit;
 }
-export function workshopStep(t,setup,{ItemStack,factoryTransaction,factoryResidentRole,friendlyResidentById,extraRole=()=>undefined,onCraft=()=>{},report=()=>{}}){
+export function workshopStep(t,setup,{ItemStack,factoryResidentRole,extraRole=()=>undefined,onCraft=()=>{},rollbackCraft=undefined,currentWorkshop=()=>setup,recordValid=()=>true,recordCommitted=()=>true,report=()=>{}}){
  if(!validWorkshop(t,setup))return undefined;
- const d=t.d,a=setup.input,b=setup.output;
+ const d=t.d,a={...setup.input},b={...setup.output};
  try{
   if(!d.isChunkLoaded(a)||!d.isChunkLoaded(b))return undefined;
   const west=d.getBlock(a),east=d.getBlock(b);if(west?.typeId!=='minecraft:barrel'||east?.typeId!=='minecraft:barrel')return undefined;
   const input=west.getComponent('minecraft:inventory')?.container,output=east.getComponent('minecraft:inventory')?.container;
   if(!input||!output||input===output)return undefined;
-  const workers=d.getEntities({location:a,maxDistance:6,closest:32}).filter(e=>e.isValid&&Math.hypot(e.location.x-b.x,e.location.y-b.y,e.location.z-b.z)<=6);
-  const artisan=workers.some(e=>friendlyResidentById.get(e.typeId)?.role==='artisan'||extraRole(e)==='artisan');
-  const saw=t.factoryVillage&&workers.some(e=>e.typeId==='minecraft:villager_v2'&&factoryResidentRole(e)==='saw'&&!e.getComponent('minecraft:is_baby'));
+  const workers=d.getEntities({location:a,maxDistance:6,closest:32});
+  const dist=(p,q)=>Math.hypot(p.x-q.x,p.y-q.y,p.z-q.z);
+  const role=(e,kind)=>{
+   if(!e?.isValid||e.dimension?.id!==d.id)return false;
+   const from=dist(e.location,a),to=dist(e.location,b);if(!Number.isFinite(from)||!Number.isFinite(to)||from>6||to>6)return false;
+   return kind==='artisan'?extraRole(e)==='artisan':t.factoryVillage&&e.typeId==='minecraft:villager_v2'&&factoryResidentRole(e)==='saw'&&!e.getComponent('minecraft:is_baby');
+  };
+  const artisan=workers.find(e=>role(e,'artisan')),saw=workers.find(e=>role(e,'saw'));
   const candidates=[];
-  if(artisan)candidates.push({cost:'minecraft:wheat',need:3,product:'minecraft:bread',amount:1,label:'物資係が小麦3個からパン1個を作った'});
-  if(saw)candidates.push({cost:'minecraft:oak_log',need:1,product:'minecraft:oak_planks',amount:4,label:'製材係が原木1個から板材4個を作った'});
-  for(const r of candidates)if(factoryTransaction({input,output,costs:[{id:r.cost,count:r.need}],product:new ItemStack(r.product,r.amount),commitExternal:()=>onCraft(r.label),report}))return r.label;
+  if(artisan)candidates.push({worker:artisan,kind:'artisan',cost:'minecraft:wheat',need:3,product:'minecraft:bread',amount:1,label:'物資係が小麦3個からパン1個を作った'});
+  if(saw)candidates.push({worker:saw,kind:'saw',cost:'minecraft:oak_log',need:1,product:'minecraft:oak_planks',amount:4,label:'製材係が原木1個から板材4個を作った'});
+  const present=at=>()=>d.isChunkLoaded(at)&&d.getBlock(at)?.typeId==='minecraft:barrel';
+  for(const r of candidates){
+   let failed=false,commitAttempted=false;
+   const validate=()=>{
+    const current=currentWorkshop();
+    return validWorkshop(t,current)&&dist(current.input,a)===0&&dist(current.output,b)===0&&present(a)()&&present(b)()&&role(r.worker,r.kind);
+   };
+   const ok=workshopTransaction({input,output,cost:r.cost,need:r.need,product:new ItemStack(r.product,r.amount),validate,inputPresent:present(a),outputPresent:present(b),
+    commit:()=>{if(!recordValid())throw Error('工房の村記録が変化');commitAttempted=true;onCraft(r.label);},
+    verifyCommit:()=>{if(!recordCommitted())throw Error('工房の村記録を確認できません');},
+    rollback:()=>{if(commitAttempted){if(!rollbackCraft)throw Error('村記録を復旧できません');rollbackCraft();}},
+    report:(label,error)=>{failed=true;report(label,error);}});
+   if(ok)return r.label;
+   // A write or validation failure is not merely missing ingredients or full.
+   if(failed)return undefined;
+  }
  }catch(e){report('住人の共同工房',e);}
 }

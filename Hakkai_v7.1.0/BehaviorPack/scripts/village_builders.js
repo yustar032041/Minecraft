@@ -1,10 +1,8 @@
 import { world as jobWorld } from '@minecraft/server';
-import { villagerJob } from './villager_jobs.js';
+import { villagerJob, assignSettlementRole } from './villager_jobs.js';
 import { residentSpot,villageIdentity,villageBuilt } from './resident_spawn.js';
 // Autonomous, bounded construction on vacant village plots. It never clears blocks.
-export const BUILDER_IDS=Array.from({length:8},(_,r)=>`hakkai:builder_${r}`);
 export function builderRealm(builder){
- const i=BUILDER_IDS.indexOf(builder?.typeId);if(i>=0)return i;
  if(villagerJob(builder,jobWorld)!=='builder')return -1;
  const m=/^hakkai:realm_([0-7])$/.exec(builder.dimension.id);return m?Number(m[1]):-1;
 }
@@ -85,7 +83,9 @@ export function readBuilderProject(builder){
 const save=(builder,job)=>builder.setDynamicProperty(KEY,JSON.stringify(job));
 // Never treat containers, mechanisms or decorative player flooring as a lot.
 const NATURAL_GROUND=new Set(['minecraft:grass_block','minecraft:dirt','minecraft:stone','minecraft:gravel','minecraft:moss_block','minecraft:sandstone','minecraft:snow_block','minecraft:tuff','minecraft:deepslate','hakkai:cloudstone','hakkai:clockstone']);
-const safeGround=b=>Boolean(b&&b.isSolid&&!b.isLiquid&&NATURAL_GROUND.has(b.typeId));
+// These are specifically chosen full-block foundations, not a general
+// replacement for the unsupported stable-API Block.isSolid property.
+export const safeBuilderGround=b=>Boolean(b&&NATURAL_GROUND.has(b.typeId)&&!b.isLiquid&&!b.isWaterlogged);
 export function startBuilderProject(builder,kind,at,homeId,stage){
  if(!builder?.isValid||builderRealm(builder)<0||readBuilderProject(builder)!==undefined||!blueprint(kind).length||!['x','y','z'].every(k=>Number.isSafeInteger(at?.[k])))return 'invalid';
  const d=builder.dimension;
@@ -94,7 +94,7 @@ export function startBuilderProject(builder,kind,at,homeId,stage){
   // The floor stays untouched. Require a 7x7x5 work volume plus a
   // one-block air buffer; never force-load or clear terrain/buildings.
   for(let x=-4;x<=4;x++)for(let z=-4;z<=4;z++){
-   if(Math.abs(x)<=3&&Math.abs(z)<=3){const floor=point(at,x,-1,z);if(!d.isChunkLoaded(floor)||!safeGround(d.getBlock(floor)))return 'floor';}
+   if(Math.abs(x)<=3&&Math.abs(z)<=3){const floor=point(at,x,-1,z);if(!d.isChunkLoaded(floor)||!safeBuilderGround(d.getBlock(floor)))return 'floor';}
    for(let y=0;y<=5;y++){const p=point(at,x,y,z);if(!d.isChunkLoaded(p)||!d.getBlock(p)?.isAir)return 'blocked';}
   }
   save(builder,{v:1,kind,at:{...at},i:0,pending:false,done:false,homeId,stage});return 'ok';
@@ -136,11 +136,12 @@ export function stepBuilderProject(builder,{resolve,report=()=>{},completed=()=>
    const neighbor=d.getBlock(q);if(!neighbor)return 'unloaded';
    if(!neighbor.isAir&&neighbor.typeId!==prior.get(`${rx},${ry},${rz}`))return 'blocked';
   }
-  if(b.y===0){const floor=point(at,0,-1,0);if(!d.isChunkLoaded(floor)||!safeGround(d.getBlock(floor)))return 'floor';}
+  if(b.y===0){const floor=point(at,0,-1,0);if(!d.isChunkLoaded(floor)||!safeBuilderGround(d.getBlock(floor)))return 'floor';}
   if(b.type==='minecraft:wheat'){const below=point(at,0,-1,0);if(!d.isChunkLoaded(below)||d.getBlock(below)?.typeId!=='minecraft:farmland')return 'floor';}
   if(b.type==='minecraft:water'){
    for(const [x,y,z] of [[0,-1,0],[1,0,0],[-1,0,0],[0,0,1],[0,0,-1]]){
-    const q=point(at,x,y,z);if(!d.isChunkLoaded(q)||!d.getBlock(q)?.isSolid)return 'water_guard';
+    const q=point(at,x,y,z),expected=y===-1?'minecraft:oak_planks':'minecraft:farmland';
+    if(!d.isChunkLoaded(q)||d.getBlock(q)?.typeId!==expected)return 'water_guard';
    }
   }
   j.pending=true;save(builder,j);
@@ -155,7 +156,8 @@ export function foundBuilder({site,world,dimension,num,property,findFloor,report
  try{
   const at=residentSpot(dimension,{x:site.x+12.5,y:88,z:site.z+8.5},findFloor);
   if(!at)return false;
-  property(world,key,1);const e=dimension.spawnEntity(BUILDER_IDS[site.dim],at,{initialPersistence:true});e.setDynamicProperty(HOME,villageIdentity(site));return true;
+  property(world,key,1);const e=dimension.spawnEntity('minecraft:villager_v2',at,{initialPersistence:true});
+  if(!assignSettlementRole(e,'builder',villageIdentity(site)))throw Error('could not assign builder role');return true;
  }catch(err){report('建築係の生成',err);return false;}
 }
 

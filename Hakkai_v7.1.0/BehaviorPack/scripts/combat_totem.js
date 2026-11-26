@@ -4,19 +4,36 @@ const BYPASS=new Set(['void','selfDestruct','override']);
 // Script approximation, not native death protection. Before callbacks are
 // read-only: reserve in JS and cancel, then debit in normal execution. If the
 // item has vanished or the debit fails, reapply the original damage instead.
-export function setupFushiTotem({system,notice}){
+export function setupFushiTotem({system,notice,report=()=>{}}){
  const pending=new Map(),replaying=new Set();
  function consume(p,slot,selectedSlot){
   const equip=p.getComponent('minecraft:equippable');
   if(!equip)return false;
+  let item,write,restore;
   if(slot===EquipmentSlot.Offhand){
-   if(equip.getEquipment(slot)?.typeId!==ID)return false;
-   return equip.setEquipment(slot,undefined)===true;
+   item=equip.getEquipment(slot);
+   if(item?.typeId!==ID)return false;
+   write=()=>equip.setEquipment(slot,undefined)===true;
+   restore=original=>equip.setEquipment(slot,original)===true;
+  }else{
+   // The originally selected hotbar slot may no longer be selected.
+   const container=p.getComponent('minecraft:inventory')?.container;
+   item=container?.getItem(selectedSlot);
+   if(item?.typeId!==ID)return false;
+   write=()=>{container.setItem(selectedSlot,undefined);return true;};
+   restore=original=>{container.setItem(selectedSlot,original);return true;};
   }
-  // The originally selected hotbar slot may no longer be selected.
-  const container=p.getComponent('minecraft:inventory')?.container;
-  if(!container||container.getItem(selectedSlot)?.typeId!==ID)return false;
-  container.setItem(selectedSlot,undefined);return true;
+  // If the engine mutates then throws or rejects the write, restore the exact
+  // stack before replaying damage. Neither restoration nor damage replay is
+  // guaranteed if the entity unloads, the server stops, or the API fails.
+  const original=item.clone();
+  try{if(!write())throw Error('totem write rejected');return true;}
+  catch(err){
+   try{if(!restore(original))throw Error('totem restore rejected');}
+   catch(recovery){try{report('復活トーテムの復旧失敗',recovery);}catch{}}
+   try{report('復活トーテムの消費失敗',err);}catch{}
+   return false;
+  }
  }
  function replay(p,q){
   if(!p.isValid)return;

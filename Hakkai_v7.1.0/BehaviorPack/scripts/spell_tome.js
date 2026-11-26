@@ -26,3 +26,38 @@ export function tomeCrouchTick(p,s,held,advance){
  s.tomeSneaking=sneaking;
  if(was===false&&sneaking&&held==='hakkai:element_tome'&&!s.busy&&!s.menu)advance();
 }
+
+// Keep tome visits separate from the existing site/discovery progression.
+// Realm 0 includes the hub, so merely reaching the realm is sufficient.
+export function tomeRealm(dimensionId){
+ const m=/^hakkai:realm_([0-7])$/.exec(dimensionId??'');return m?Number(m[1]):-1;
+}
+// Only unsaved visit bits live here. This is session memory, not durable
+// storage; the leave event must clear it. No player object is retained.
+const pendingTomeVisits=new Map();
+const playerKey=player=>{try{return typeof player?.id==='string'&&player.id?player.id:undefined;}catch{return undefined;}};
+export function clearTomePending(playerId){if(typeof playerId==='string')pendingTomeVisits.delete(playerId);}
+export function hasPendingTomeVisits(player){const key=playerKey(player);return !!(key&&pendingTomeVisits.get(key));}
+export function recordTomeRealm(player,dimensionId){
+ const key=playerKey(player);
+ if(dimensionId===undefined){try{dimensionId=player?.dimension?.id;}catch{}}
+ const r=tomeRealm(dimensionId),bit=r<0?0:1<<r;
+ let pending=(key?pendingTomeVisits.get(key):0)||0;pending|=bit;
+ if(!pending)return false;
+ if(key)pendingTomeVisits.set(key,pending);
+ try{
+  const old=Number(player.getDynamicProperty('hakkai:tome_realms_v1'))||0;
+  const next=old|pending;
+  if(next!==old)player.setDynamicProperty('hakkai:tome_realms_v1',next);
+  // Remove only bits processed by this attempt, even if a callback were to
+  // add more during the write. A write that throws is retried idempotently.
+  if(key){const remaining=(pendingTomeVisits.get(key)||0)&~pending;if(remaining)pendingTomeVisits.set(key,remaining);else pendingTomeVisits.delete(key);}
+  return next!==old;
+ }catch{return false;}
+}
+export function hasTomeRealm(player,realm){
+ if(!Number.isInteger(realm)||realm<0||realm>7)return false;
+ try{if(tomeRealm(player?.dimension?.id)===realm)return true;}catch{}
+ const key=playerKey(player);if(key&&((pendingTomeVisits.get(key)||0)&(1<<realm)))return true;
+ try{return Boolean((Number(player.getDynamicProperty('hakkai:tome_realms_v1'))||0)&(1<<realm));}catch{return false;}
+}

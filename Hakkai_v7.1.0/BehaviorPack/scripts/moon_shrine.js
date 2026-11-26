@@ -9,7 +9,9 @@ export function placeMoonShrine({dimension:d,cx,cz,hash,heightFor,isGrove,player
   for(let dx=-4;dx<=4;dx++)for(let dz=-4;dz<=4;dz++){
    const px=x+dx,pz=z+dz,top=heightFor(7,px,pz);
    if(!Number.isFinite(top)||Math.abs(top-y)>1||!isGrove(px,pz)||!d.isChunkLoaded({x:px,y:top,z:pz}))return false;
-   const ground=d.getBlock({x:px,y:top,z:pz});if(!ground?.isSolid||ground.isLiquid||ground.typeId!=='minecraft:grass_block')return false;
+   // The exact vanilla full-block grass surface is required, not an
+   // approximation of arbitrary solid blocks via the preview-only API.
+   const ground=d.getBlock({x:px,y:top,z:pz});if(ground?.typeId!=='minecraft:grass_block'||ground.isLiquid||ground.isWaterlogged)return false;
    floor.set(`${dx},${dz}`,top);
   }
   // The intended boss area must be level and clear, with adequate headroom.

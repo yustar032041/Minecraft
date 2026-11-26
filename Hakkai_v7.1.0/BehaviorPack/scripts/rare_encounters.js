@@ -23,6 +23,9 @@ export function spawnRareEncounter(player,type,tick,safe,{family,chief=false}={}
       if(!d.isChunkLoaded(p)||!safe(d,p)||!d.getBlock({x:x+dx,y:at.y+2,z:z+dz})?.isAir)clear=false;
      }
      if(!clear)continue;
+     // Recheck at the destination so two players with overlapping encounter
+     // areas cannot each create a rare mob beside an existing one.
+     if(d.getEntities({...cap,location:at,maxDistance:chief?56:48,closest:1}).length)return false;
      d.spawnEntity(type,at,{spawnEvent:'hakkai:wild',initialPersistence:false});return true;
     }catch{}
    }

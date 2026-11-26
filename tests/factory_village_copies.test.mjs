@@ -5,6 +5,7 @@ import {repeatSitePlan,placeRepeatSite} from '../Hakkai_v7.1.0/BehaviorPack/scri
 import {setupSeededWorlds} from '../Hakkai_v7.1.0/BehaviorPack/scripts/seeded_worlds.js';
 import {foundFactoryResident} from '../Hakkai_v7.1.0/BehaviorPack/scripts/factory_village.js';
 import {foundFriendlyResident} from '../Hakkai_v7.1.0/BehaviorPack/scripts/friendly_residents.js';
+import {villagerJob} from '../Hakkai_v7.1.0/BehaviorPack/scripts/villager_jobs.js';
 import {foundBuilder,builderHome,autoBuilderPlan,readBuilderProject} from '../Hakkai_v7.1.0/BehaviorPack/scripts/village_builders.js';
 import {residentSpot} from '../Hakkai_v7.1.0/BehaviorPack/scripts/resident_spawn.js';
 import {seedFunctions} from './seed_terrain_helpers.mjs';
@@ -52,8 +53,8 @@ for(const site of [selected,other,unique]){
  assert.equal(foundBuilder(args),true);assert.equal(foundBuilder(args),false);
 }
 assert.equal(spawned.length,87);assert.ok(spawned.every(x=>x.options.initialPersistence===true));
-for(const role of [0,1,2,3])assert.equal(spawned.filter(x=>x.e.typeId===`hakkai:resident_0_${role}`).length,3);
-const workers=spawned.filter(x=>x.e.typeId==='hakkai:builder_0').map(x=>x.e);
+for(const role of ['guide','healer','artisan','guard','builder'])assert.equal(spawned.filter(x=>villagerJob(x.e,world)===role).length,3);
+const workers=spawned.filter(x=>villagerJob(x.e,world)==='builder').map(x=>x.e);
 assert.deepEqual(workers.map(builderHome),[selected.repeatKey,other.repeatKey,59]);
 marks.set(`builder_stage_${other.repeatKey}_v1`,4);
 assert.equal(autoBuilderPlan(workers[0],{sites:[unique,selected,other],world,num,property}),'started');
@@ -76,9 +77,7 @@ console.log('Factory copies: four seeded structures, safe slots, persistent resi
  const context={seededWorlds:{repeatSiteAt:()=>selected},p:{dimension:d,location:{x:selected.x,y:88,z:selected.z}},site:undefined,ns:'hakkai:',expandedY:88,world:w,num:(_e,k)=>m.get(k)??0,property:(_e,k,v)=>m.set(k,v),findFloor,report,safeNear:findFloor,foundFactoryResident,foundFriendlyResident,foundBuilder};
  vm.createContext(context);const run=vm.runInContext(`(function(){${source.slice(start,end)}})`,context);
  for(let i=0;i<24;i++)run();
- assert.equal(seen.filter(([id])=>id==='minecraft:villager_v2').length,24);
- assert.equal(seen.filter(([id])=>id.startsWith('hakkai:resident_0_')).length,4);
- assert.equal(seen.filter(([id])=>id==='hakkai:builder_0').length,1);
+ assert.equal(seen.filter(([id])=>id==='minecraft:villager_v2').length,29);
  assert.ok(seen.every(([,opts])=>opts.initialPersistence===true));
 }
 // The real town registry recognises a copied bell and routes village-stage

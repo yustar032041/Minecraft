@@ -1,0 +1,36 @@
+{
+  "format_version": "1.26.60",
+  "minecraft:item": {
+    "description": {
+      "identifier": "hakkai:united_armor_helmet"
+    },
+    "components": {
+      "minecraft:display_name": {
+        "value": "item.hakkai:united_armor_helmet.name"
+      },
+      "minecraft:icon": "hakkai_united_armor_helmet",
+      "minecraft:max_stack_size": 1,
+      "minecraft:wearable": {
+        "slot": "slot.armor.head",
+        "protection": 3
+      },
+      "minecraft:durability": {
+        "max_durability": 500
+      },
+      "minecraft:enchantable": {
+        "slot": "armor_head",
+        "value": 12
+      },
+      "minecraft:repairable": {
+        "repair_items": [
+          {
+            "items": [
+              "minecraft:netherite_scrap"
+            ],
+            "repair_amount": 125
+          }
+        ]
+      }
+    }
+  }
+}

@@ -4,13 +4,13 @@ export const GUIDE_ENTRIES=[
  '旅の地図','風記の手引き','装備とレシピ図鑑','依頼帳','水辺の釣り',
  '設定・帰還地点','ガイド本と帰還石の再発行','旅の記録を読む','自然調査ノート','時の列車',
  '季節の収穫市','港の市と停泊船','村の集落台帳','バニラの遺跡と風の道','醸造と属性刻印',
- '八属性と合成魔法の図鑑','装備を見つける・注文する','サバイバルの追加レシピ','季節の菜園','八界の発見記録',
+ '八属性と合成魔法の図鑑','装備の作り方と試練','サバイバルの追加レシピ','季節の菜園','八界の発見記録',
  '八界記念頁','八界の宝物庫','八界の探索試練','八界の秘密遺跡','八界の記憶断章',
  '八界の余韻と記録','八界の記念品交換所','冒険者記録帳','八界の記念品図鑑','冒険者ランクと称号',
  '八界の展示コーナー設計帳','八界の記念碑と特別称号','展示館の秘密記録','八界総合大図鑑','大記念館・最後の頁',
  '八界の幻影闘技場','幻影闘技場・戦術図鑑','幻影闘技場の優勝記念展示','八界の巡礼・旅先イベント','八界の四季巡礼と物語',
- '八界の甲冑展示室','八界の装備収集・進化','八界の伝説装備クエスト','八界の甲冑図鑑・収集記録','風記の装備進化年鑑',
- '終章・夜渡りの鎧 覚醒試練','八界の覚醒装備・継承試練','八界の覚醒鎧・極進化','八界の守護核・収集年鑑','守護核継承工房・八界統合装備',
+ '八界の甲冑展示室','八界の装備収集とレシピ','八界の伝説装備クエスト','八界の甲冑図鑑・収集記録','装備の段階と製作案内',
+ '夜渡り装・終章の鎧 覚醒試練','八界の覚醒装備・継承試練','八界の覚醒鎧・極進化','八界の守護核・収集年鑑','守護核継承工房・八界統合装備',
  '八界統合・終章の大記念館','大遠征地・72地点の記録','サバイバル実践ガイド','生き物・素材・技図鑑','終焉の八界王'
 ];
 // Distinct thumbnails help users recognise destinations within each chapter.
@@ -25,7 +25,7 @@ export const GUIDE_ICONS=[
  'gear_048','gear_006','festival_1','guide','festival_0',
  'gear_010','gear_010','gear_187','gear_010','gear_010',
  'gear_187','gear_188','gear_196','guardian_core_0','gear_204',
- 'wind_legacy_memorial','chronicle_fragment','trail_ration','drop_wild_0_0','eclipse_core'
+ 'wind_legacy_memorial','chronicle_fragment','trail_ration','drop_element_0','eclipse_core'
 ];
 export const GUIDE_SECTIONS=[
  {title:'旅と探索', hint:'地図・列車・遺跡・遠征', icon:'return_stone', ids:[0,9,11,13,19,22,23,38,39,51]},
@@ -73,9 +73,26 @@ export async function selectGuidePage(player,title,body,rows,show,startPage=0){
 export function gearKinds(catalog){
  return [...new Set(catalog.map(gear=>gear.kind))];
 }
+// Weapons and held magic tools have original +80 progression families. Number and
+// attribute searches keep their original order; this sort is for kind browsing.
+const COMBAT_KINDS=new Set(['剣','斧','弓','杖','ハンマー','槍','盾','扇','指輪','首飾り','本','石']);
+export function sortCombatFamilies(entries){
+ if(!entries.length||!COMBAT_KINDS.has(entries[0].kind))return entries;
+ return [...entries].sort((a,b)=>((Number(a.number)-1)%80)-((Number(b.number)-1)%80)||(a.rank-b.rank));
+}
+
 export function filterGear(catalog,mode,value){
  if(mode==='kind')return catalog.filter(gear=>gear.kind===value);
  if(mode==='attribute')return catalog.filter(gear=>gear.a===value||gear.modifier===value);
- if(mode==='number')return catalog.slice(value*12,value*12+12);
+ if(mode==='number')return catalog.filter(gear=>Number(gear.number)>value*12&&Number(gear.number)<=(value+1)*12);
  return [];
+}
+
+// Literal, bounded, case-insensitive search; all words must match the visible
+// name/ID. No regular expressions are constructed from player input.
+export function searchGuideEntries(entries,query,labelIndex=1){
+ if(typeof query!=='string'||!Array.isArray(entries))return [];
+ const words=query.normalize('NFKC').trim().slice(0,64).toLowerCase().split(/\s+/).filter(Boolean);
+ if(!words.length)return [];
+ return entries.filter(row=>typeof row?.[labelIndex]==='string'&&words.every(word=>row[labelIndex].normalize('NFKC').toLowerCase().includes(word)));
 }

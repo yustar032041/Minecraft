@@ -34,7 +34,7 @@ assert.deepEqual(await selectGuidePage(p,'title','body',entries,makeShow([9])),{
 assert.deepEqual(await selectGuidePage(p,'title','body',entries,makeShow([undefined])),{closed:true,page:0});
 assert.deepEqual(await selectGuidePage(p,'title','body',[],makeShow([0])),{back:true,page:0});
 assert.deepEqual(await selectGuidePage({isValid:false},'title','body',entries,()=>{throw Error('must not open');}),{closed:true,page:0});
-assert.equal(gearKinds(catalog).length,16);
+assert.equal(gearKinds(catalog).length,15);
 for (const g of catalog){
  assert.ok(filterGear(catalog,'kind',g.kind).includes(g));
  assert.ok(filterGear(catalog,'attribute',g.a).includes(g));
@@ -50,4 +50,13 @@ for(let realm=0;realm<8;realm++){
  for(const {profile,index} of list){assert.equal(profile.realm,realm);assert.equal(mobContentList[index],profile);covered.add(index);}
 }
 assert.equal(covered.size,120);assert.deepEqual(creatureEntriesByRealm(mobContentList,99),[]);
-console.log('Guide: all 55 routes, category icons, pagination/back/cancel, 186 gear filters and 120 realm-filtered creature entries OK (mocked/static)');
+console.log('Guide: all 55 routes, category icons, pagination/back/cancel, 175 gear filters and 120 realm-filtered creature entries OK (mocked/static)');
+{
+ const {searchGuideEntries}=await import('../Hakkai_v7.1.0/BehaviorPack/scripts/guide_navigation.js');
+ const entries=[[0,'鉄の剣（hakkai:gear_010）'],[1,'鉄の斧（hakkai:gear_011）'],[2,'紙（minecraft:paper）']];
+ assert.deepEqual(searchGuideEntries(entries,'鉄 GEAR_010'),[entries[0]]);
+ assert.deepEqual(searchGuideEntries(entries,'ＰＡＰＥＲ'),[entries[2]]);
+ assert.deepEqual(searchGuideEntries(entries,'鉄'),entries.slice(0,2));
+ assert.deepEqual(searchGuideEntries(entries,'['),[],'literal, not regular expression');
+ assert.deepEqual(searchGuideEntries(entries,'  '),[]);assert.deepEqual(searchGuideEntries(entries,null),[]);
+}

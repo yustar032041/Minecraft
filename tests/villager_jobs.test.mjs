@@ -58,5 +58,35 @@ test('production guard loop damages only visible hostile mobs, not creepers or p
  const ctx={villagerJob:()=> 'guard',world:{},permit:()=>true,VANILLA_HOSTILES:new Set(['minecraft:creeper','minecraft:zombie']),wildlifeById:new Map([['hakkai:wild_0_0',{temper:'passive'}]]),visibleFrom:()=>true,EntityDamageCause:{entityAttack:'entityAttack'}};
  vm.createContext(ctx);vm.runInContext(source.slice(source.indexOf('function villagerGuardTick('),source.indexOf('function builderWorkTick(')),ctx);
  ctx.villagerGuardTick({dimension,location:guard.location},40);
- assert.equal(attacks.length,1);assert.equal(attacks[0][0],3);assert.equal(attacks[0][1].cause,'entityAttack');assert.equal(attacks[0][1].damagingEntity,guard);
+ assert.equal(attacks.length,1);assert.equal(attacks[0][0],4);assert.equal(attacks[0][1].cause,'entityAttack');assert.equal(attacks[0][1].damagingEntity,guard);
+});
+
+test('settlement role keeps normal villager data and builder home, without workplace claim',async()=>{
+ const {assignSettlementRole}=await import('../Hakkai_v7.1.0/BehaviorPack/scripts/villager_jobs.js');
+ for(const role of Object.keys(JOBS)){
+  const f=fixture(role),e=f.person();e.setDynamicProperty('custom:trade','kept');
+  assert.equal(assignSettlementRole(e,role,59),true);
+  assert.equal(villagerJob(e,f.world),role);assert.equal(e.nameTag,'Original name');
+  assert.equal(e.getDynamicProperty('custom:trade'),'kept');assert.equal(f.data.size,0);
+  assert.equal(e.getDynamicProperty('hakkai:builder_home_v1'),role==='builder'?59:undefined);
+  assert.equal(assignSettlementRole(e,'guard'),false);
+  assert.equal(workstationTick(f.block,f.world),false);
+  releaseDeadWorker(e,f.world);assert.equal(f.data.size,0);
+ }
+});
+
+test('production interaction preserves standing vanilla trade and opens each additive role only while sneaking',async()=>{
+ const fs=await import('node:fs'),vm=await import('node:vm');
+ const src=fs.readFileSync('Hakkai_v7.1.0/BehaviorPack/scripts/main.js','utf8');
+ const start=src.indexOf("safeSub('world','before','playerInteractWithEntity',e=>{"),end=src.indexOf(" if(e.target.typeId===ns+'fushi'",start);assert.ok(start>0&&end>start);
+ let handler,opened=0;const ctx={safeSub:(_a,_b,_c,f)=>handler=f,world:{},villagerJob:e=>e.role,menu:()=>opened++,cultureResidentIdentity:()=>undefined};
+ vm.createContext(ctx);vm.runInContext(src.slice(start,end)+'});',ctx);
+ for(const role of ['guide','healer','artisan','guard','builder']){
+  const target={typeId:'minecraft:villager_v2',nameTag:'',role};
+  const standing={player:{isSneaking:false},target,cancel:false};handler(standing);assert.equal(standing.cancel,false,role+' standing trade');
+  const sneaking={player:{isSneaking:true},target,cancel:false};handler(sneaking);assert.equal(sneaking.cancel,true,role+' extra role');
+ }
+ const target={typeId:'minecraft:villager_v2',nameTag:'§d風記の案内人§r｜0｜案内'};
+ const standing={player:{isSneaking:false},target,cancel:false};handler(standing);assert.equal(standing.cancel,false,'named guide standing trade');
+ const sneaking={player:{isSneaking:true},target,cancel:false};handler(sneaking);assert.equal(sneaking.cancel,true,'named guide extra menu');assert.equal(opened,6);
 });

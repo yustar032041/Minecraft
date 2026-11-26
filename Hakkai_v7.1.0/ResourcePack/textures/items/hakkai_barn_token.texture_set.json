@@ -1,8 +1,0 @@
-{
-  "format_version": "1.16.100",
-  "minecraft:texture_set": {
-    "color": "hakkai_barn_token",
-    "normal": "hakkai_barn_token_normal",
-    "metalness_emissive_roughness": "hakkai_barn_token_mer"
-  }
-}

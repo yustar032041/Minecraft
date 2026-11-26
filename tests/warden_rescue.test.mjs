@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';import {rescueWarden} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_rescue.js';
 function fixture(){let nearby=false,loaded=true,blocked=false,teleportOK=true;const dest=[];
- const d={getPlayers:()=>nearby?[{}]:[],isChunkLoaded:()=>loaded,getBlock:p=>({typeId:p.y===79?'minecraft:stone':'minecraft:air',isSolid:p.y===79,isLiquid:false,isAir:p.y!==79&&!blocked})};
+ const d={getPlayers:()=>nearby?[{}]:[],isChunkLoaded:()=>loaded,getBlock:p=>({typeId:p.y===79?'hakkai:clockstone':'minecraft:air',isLiquid:false,isWaterlogged:false,isAir:p.y!==79&&!blocked})};
  const e={dimension:d,location:{x:0,y:60,z:0},tryTeleport:(p,opts)=>{dest.push([p,opts]);return teleportOK;}};
  return {e,d,dest,setNearby:v=>nearby=v,setLoaded:v=>loaded=v,setBlocked:v=>blocked=v,setTeleport:v=>teleportOK=v};
 }
@@ -27,4 +27,28 @@ console.log('Warden rescue: out-of-bounds only, safe loaded landing, players, ob
  ctrl.tick(p,0);ctrl.tick(p,80);assert.ok(messages.some(m=>m.includes('（約2秒）')));
  f.e.location.y=60;ctrl.tick(p,81);ctrl.tick(p,120);assert.deepEqual(hits,[],'no stale attack when safe return is occupied');
  f.e.location.y=80;ctrl.tick(p,121);ctrl.tick(p,220);assert.ok(messages.filter(m=>m.includes('（約2秒）')).length>=2);
+}
+for(const floor of [
+ {typeId:'minecraft:stone_slab',isAir:false,isLiquid:false,isWaterlogged:false},
+ {typeId:'hakkai:clockstone',isAir:false,isLiquid:false,isWaterlogged:true},
+ {typeId:'hakkai:clockstone',isAir:false,isLiquid:false}
+]){
+ const f=fixture(),get=f.d.getBlock;f.d.getBlock=p=>p.y===79?floor:get(p);
+ assert.equal(rescueWarden(f.e),false);assert.equal(f.dest.length,0);
+}
+
+// The central pad can be occupied or obstructed in multiplayer. Try a second
+// verified 3x3 pad instead of keeping the out-of-bounds boss inert.
+{
+ const f=fixture(),get=f.d.getBlock;
+ f.d.getPlayers=({location})=>location.x===.5?[{}]:[];
+ assert.equal(rescueWarden(f.e),true);assert.deepEqual(f.dest[0][0],{x:-7.5,y:80,z:-6.5});
+ f.dest.length=0;f.d.getPlayers=()=>[];
+ f.d.getBlock=p=>p.y===80&&p.x===0&&p.z===-7?{isAir:false}:get(p);
+ assert.equal(rescueWarden(f.e),true);assert.deepEqual(f.dest[0][0],{x:-7.5,y:80,z:-6.5});
+}
+// A pad with an unloaded cell is skipped, never force-loaded or built upon.
+{
+ const f=fixture();f.d.isChunkLoaded=p=>!(p.x===0&&p.z===-7);
+ assert.equal(rescueWarden(f.e),true);assert.deepEqual(f.dest[0][0],{x:-7.5,y:80,z:-6.5});
 }

@@ -1,5 +1,5 @@
 import {GameMode} from '@minecraft/server';
-import {combatEnemies,applyCombatHit,isCombatTarget} from './combat_resonance.js';
+import {combatEnemies,applyCombatHit,isCombatTarget,combatEffectAllowed} from './combat_resonance.js';
 import {isTraceWeapon} from './combat_weapon_trace.js';
 const COOLDOWN=600,DURATION=20;
 const excluded=new Set(['void','selfDestruct','override']);
@@ -37,8 +37,8 @@ export function setupCombatUltimate({system,notice,visibleFrom}){
    if(!targets.length){notice(p,'§e見通せる敵が近くにいません');return false;}
    if(p.getGameMode()!==GameMode.Creative){if(weapon){s.s-=20;s.m-=10;}else s.s=0;}entries.set(p.id,{dim:p.dimension.id,until:t+DURATION,ready:t+COOLDOWN});
    for(const target of targets){
-    applyCombatHit(p,target,20,2,-1,1.2);
-    if(!/^(?:hakkai:(?:time_warden|eclipse_colossus|fushi_chief|guardian_[0-7])|minecraft:(?:wither|ender_dragon|warden))$/.test(target.typeId??''))try{target.addEffect('slowness',40,{amplifier:1,showParticles:false});}catch{}
+    const landed=applyCombatHit(p,target,20,2,-1,1.2);
+    if(landed&&combatEffectAllowed(p,target)&&!/^(?:hakkai:(?:time_warden|eclipse_colossus|fushi_chief|guardian_[0-7])|minecraft:(?:wither|ender_dragon|warden))$/.test(target.typeId??''))try{target.addEffect('slowness',40,{amplifier:1,showParticles:false});}catch{}
     try{p.dimension.spawnParticle('hakkai:wind_burst',{...target.location,y:target.location.y+1});}catch{}
    }
    if(weapon)try{p.dimension.spawnParticle(`hakkai:${weapon.visualId??weapon.id}`,{...p.location,y:p.location.y+1});}catch{}

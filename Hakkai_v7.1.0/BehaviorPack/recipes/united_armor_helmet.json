@@ -1,0 +1,29 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "hakkai:united_armor_helmet"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:netherite_helmet"
+      },
+      {
+        "item": "hakkai:crystal_7"
+      },
+      {
+        "item": "hakkai:chronicle_fragment"
+      },
+      {
+        "item": "minecraft:emerald"
+      }
+    ],
+    "result": {
+      "item": "hakkai:united_armor_helmet",
+      "count": 1
+    }
+  }
+}

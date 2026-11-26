@@ -2,10 +2,7 @@
   "format_version": "1.26.0",
   "minecraft:item": {
     "description": {
-      "identifier": "hakkai:gear_006",
-      "menu_category": {
-        "category": "items"
-      }
+      "identifier": "hakkai:gear_006"
     },
     "components": {
       "minecraft:display_name": {
@@ -24,7 +21,17 @@
         "movement_modifier": 0.85
       },
       "hakkai:use": {},
-      "minecraft:interact_button": "action.interact.hakkai.use"
+      "minecraft:interact_button": "action.interact.hakkai.use",
+      "minecraft:repairable": {
+        "repair_items": [
+          {
+            "items": [
+              "minecraft:iron_ingot"
+            ],
+            "repair_amount": 80
+          }
+        ]
+      }
     }
   }
 }

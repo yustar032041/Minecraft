@@ -1,8 +1,0 @@
-{
-  "format_version": "1.16.100",
-  "minecraft:texture_set": {
-    "color": "hakkai_island_stone",
-    "normal": "hakkai_island_stone_normal",
-    "metalness_emissive_roughness": "hakkai_island_stone_mer"
-  }
-}

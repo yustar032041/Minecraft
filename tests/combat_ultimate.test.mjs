@@ -3,7 +3,7 @@ import {setupCombatUltimate} from '../Hakkai_v7.1.0/BehaviorPack/scripts/combat_
 function fixture(){
  const dmg=[],knock=[];const d={id:'realm',getEntities:()=>[],spawnParticle:()=>{}};
  const p={id:'p',typeId:'minecraft:player',isValid:true,dimension:d,location:{x:0,y:0,z:0},getGameMode:()=> 'survival',playAnimation:()=>{},playSound:()=>{}};
- const enemy=(id,x=2,type='minecraft:zombie')=>({id,typeId:type,isValid:true,dimension:d,location:{x,y:0,z:0},getHeadLocation(){return this.location},applyDamage:n=>dmg.push([id,n]),applyKnockback:()=>knock.push(id),addEffect:()=>{},setOnFire:()=>{}});
+ const enemy=(id,x=2,type='minecraft:zombie')=>({id,typeId:type,isValid:true,dimension:d,location:{x,y:0,z:0},getHeadLocation(){return this.location},applyDamage:n=>{dmg.push([id,n]);return true;},applyKnockback:()=>knock.push(id),addEffect:()=>{},setOnFire:()=>{}});
  const s={s:20,m:20},system={currentTick:100},ctrl=setupCombatUltimate({system,notice:()=>{},visibleFrom:(_,pos)=>pos.x!==3});
  return {p,d,s,system,ctrl,enemy,dmg,knock};
 }

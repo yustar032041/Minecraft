@@ -1,6 +1,6 @@
 export * from './minecraft_server.mjs';
 export const WeatherType={Rain:'rain',Thunder:'thunder'};
-export const LiquidType={Water:'water'};
+export const LiquidType={Water:'Water'};
 const listeners=new Map();
 const events=(prefix)=>new Proxy({}, {get:(_target,key)=>({subscribe:fn=>{listeners.set(prefix+'.'+key,fn);}})});
 let ready=false;const data=new Map();

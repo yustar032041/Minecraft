@@ -52,6 +52,10 @@
             "halo": "query.property('hakkai:form') == 4"
           }
         ]
+      },
+      "spawn_egg": {
+        "base_color": "#24395e",
+        "overlay_color": "#e3be5c"
       }
     }
   }

@@ -5,3 +5,7 @@
 **/__pycache__/
 *.py[cod]
 /*.mcaddon
+
+# Test archives are delivered as release assets, not new Git objects.
+/downloads/*.mcaddon
+/downloads/*.mcpack

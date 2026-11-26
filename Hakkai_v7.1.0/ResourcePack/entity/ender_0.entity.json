@@ -10,19 +10,23 @@
         "default": "textures/entity/hakkai_ender_r0"
       },
       "geometry": {
-        "default": "geometry.hakkai.realm_ender"
+        "default": "geometry.hakkai.ender_0"
       },
       "render_controllers": [
         "controller.render.hakkai.beast"
       ],
       "animations": {
-        "walk": "animation.hakkai.realm_ender.walk"
+        "walk": "animation.hakkai.ender_0_walk",
+        "creature_windup": "animation.hakkai.ender_0_windup",
+        "creature_strike": "animation.hakkai.ender_0_strike",
+        "traveler_detail": "animation.hakkai.ender_0_detail"
       },
       "scripts": {
         "animate": [
           {
             "walk": "query.modified_move_speed > 0.01"
-          }
+          },
+          "traveler_detail"
         ]
       },
       "spawn_egg": {

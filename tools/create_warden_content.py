@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Generate an early, explicitly incomplete time-warden encounter and items."""
+from mob_experience import experience_reward
 import json
 from pathlib import Path
 from PIL import Image,ImageDraw
@@ -12,9 +13,9 @@ for name in ('fushi_totem','warden_sigil','warden_core'):
 write(bp/'recipes/warden_sigil.json',{'format_version':'1.21.90','minecraft:recipe_shapeless':{'description':{'identifier':'hakkai:warden_sigil'},'tags':['crafting_table'],'ingredients':[{'item':f'hakkai:pearl_{i}'} for i in range(8)]+[{'item':'hakkai:fushi_totem'}],'result':{'item':'hakkai:warden_sigil','count':1}}})
 write(bp/'recipes/warden_core_exchange.json',{'format_version':'1.21.90','minecraft:recipe_shapeless':{'description':{'identifier':'hakkai:warden_core_exchange'},'tags':['crafting_table'],'ingredients':[{'item':'hakkai:warden_core'}],'result':{'item':'hakkai:shard_9','count':8}}})
 write(bp/'dimensions/warden_arena.json',{'format_version':'1.26.50','minecraft:dimension':{'description':{'identifier':'hakkai:warden_arena'},'components':{'minecraft:dimension_height':{'min_y':-64,'height_range':384},'minecraft:generation':{'generator_type':'void'},'minecraft:default_biome':{'biome':'hakkai:realm_time'},'minecraft:clouds':{'height':68}}}})
-components={'minecraft:type_family':{'family':['mob','hakkai_boss','hakkai_warden']},'minecraft:health':{'value':5000,'max':5000},'minecraft:collision_box':{'width':1,'height':2.75},'minecraft:physics':{},'minecraft:movement':{'value':.18},'minecraft:movement.basic':{},'minecraft:jump.static':{},'minecraft:navigation.walk':{'avoid_water':True,'avoid_damage_blocks':True},'minecraft:knockback_resistance':{'value':1.0},'minecraft:pushable':{'is_pushable':False,'is_pushable_by_piston':False},'minecraft:boss':{'name':'時空の管理者','hud_range':60,'should_darken_sky':True},'minecraft:behavior.float':{'priority':0},'minecraft:behavior.look_at_player':{'priority':7,'look_distance':20,'probability':.1},'minecraft:behavior.random_look_around':{'priority':8},'minecraft:loot':{'table':'loot_tables/hakkai/entities/time_warden.json'},'minecraft:persistent':{},'minecraft:nameable':{}}
-write(bp/'entities/time_warden.json',{'format_version':'1.21.90','minecraft:entity':{'description':{'identifier':'hakkai:time_warden','is_spawnable':False,'is_summonable':True},'components':components}})
-write(bp/'loot_tables/hakkai/entities/time_warden.json',{'pools':[{'rolls':1,'entries':[{'type':'item','name':'hakkai:warden_core'}]},{'rolls':1,'entries':[{'type':'item','name':'hakkai:crystal_7','functions':[{'function':'set_count','count':4}]}]}]})
+components={'minecraft:type_family':{'family':['mob','hakkai_boss','hakkai_warden']},'minecraft:health':{'value':5000,'max':5000},'minecraft:collision_box':{'width':1,'height':2.75},'minecraft:physics':{},'minecraft:movement':{'value':.18},'minecraft:movement.basic':{},'minecraft:jump.static':{},'minecraft:navigation.walk':{'avoid_water':True,'avoid_damage_blocks':True},'minecraft:knockback_resistance':{'value':1.0},'minecraft:pushable':{'is_pushable':False,'is_pushable_by_piston':False},'minecraft:boss':{'name':'時空の管理者','hud_range':60,'should_darken_sky':True},'minecraft:behavior.float':{'priority':0},'minecraft:behavior.look_at_player':{'priority':7,'look_distance':20,'probability':.1},'minecraft:behavior.random_look_around':{'priority':8},'minecraft:persistent':{},'minecraft:nameable':{}}
+components['minecraft:experience_reward']=experience_reward('time_warden')
+write(bp/'entities/time_warden.json',{'format_version':'1.21.90','minecraft:entity':{'description':{'identifier':'hakkai:time_warden','is_spawnable':True,'is_summonable':True},'components':components}})
 # Give the warden its own mesh, headpiece and UV atlas. This is intentionally
 # a prototype and is not presented as final bespoke 512px art.
 geo=json.loads((rp/'models/entity/realm_ender.geo.json').read_text(encoding='utf8'))
@@ -22,7 +23,7 @@ geo['minecraft:geometry'][0]['description']['identifier']='geometry.hakkai.time_
 uv={face:{'uv':[256,0],'uv_size':[96,96]} for face in ('north','south','east','west','up','down')}
 geo['minecraft:geometry'][0]['bones'].append({'name':'crown','pivot':[0,44,0],'cubes':[{'origin':[-5,43,-5],'size':[10,2,10],'uv':uv},{'origin':[-5,45,-5],'size':[2,4,10],'uv':uv},{'origin':[3,45,-5],'size':[2,4,10],'uv':uv}]})
 write(rp/'models/entity/time_warden.geo.json',geo)
-write(rp/'entity/time_warden.entity.json',{'format_version':'1.10.0','minecraft:client_entity':{'description':{'identifier':'hakkai:time_warden','materials':{'default':'entity_alphatest'},'textures':{'default':'textures/entity/hakkai_time_warden'},'geometry':{'default':'geometry.hakkai.time_warden'},'render_controllers':['controller.render.hakkai.beast'],'animations':{'walk':'animation.hakkai.realm_ender.walk','warning':'animation.hakkai.warden_warning',**{k:'animation.hakkai.warden_'+k for k in ('slash','sky_cast','slam','thunder_cast','moon_cast','transform','recoil')}},'scripts':{'animate':[{'walk':'query.modified_move_speed > 0.01'}]}}}})
+write(rp/'entity/time_warden.entity.json',{'format_version':'1.10.0','minecraft:client_entity':{'description':{'identifier':'hakkai:time_warden','materials':{'default':'entity_alphatest'},'textures':{'default':'textures/entity/hakkai_time_warden'},'geometry':{'default':'geometry.hakkai.time_warden'},'render_controllers':['controller.render.hakkai.beast'],'spawn_egg':{'base_color':'#24395e','overlay_color':'#e3be5c'},'animations':{'walk':'animation.hakkai.realm_ender.walk','warning':'animation.hakkai.warden_warning',**{k:'animation.hakkai.warden_'+k for k in ('slash','sky_cast','slam','thunder_cast','moon_cast','transform','recoil')}},'scripts':{'animate':[{'walk':'query.modified_move_speed > 0.01'}]}}}})
 image=Image.open(rp/'textures/entity/hakkai_ender_r7.png').convert('RGBA');d=ImageDraw.Draw(image)
 d.rectangle((256,0,352,96),fill=(106,76,40,255));d.rectangle((263,6,345,88),outline=(235,194,91,255),width=5)
 d.polygon([(304,16),(327,42),(304,70),(281,42)],outline=(246,222,150,255),width=5)
@@ -37,6 +38,8 @@ for lang,values in langs.items():
  for k in ('fushi_totem','warden_sigil','warden_core','entity'):
   key='entity.hakkai:time_warden.name' if k=='entity' else f'item.hakkai:{k}.name'
   if not any(line.startswith(key+'=') for line in s.splitlines()):lines.append(key+'='+values[k])
+ egg='item.spawn_egg.entity.hakkai:time_warden.name'
+ if not any(line.startswith(egg+'=') for line in s.splitlines()):lines.append(egg+'='+('時空の管理者のスポーンエッグ' if lang=='ja_JP' else 'Time Warden Spawn Egg'))
  if lines:path.write_text(s.rstrip()+'\n'+'\n'.join(lines)+'\n',encoding='utf8')
 # Reapply the maintained five-form humanoid model and entity properties.
 import runpy

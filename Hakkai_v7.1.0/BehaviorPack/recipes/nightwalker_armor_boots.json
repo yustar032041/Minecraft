@@ -1,0 +1,29 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "hakkai:nightwalker_armor_boots"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:diamond_boots"
+      },
+      {
+        "item": "hakkai:crystal_6"
+      },
+      {
+        "item": "hakkai:shard_18"
+      },
+      {
+        "item": "minecraft:emerald"
+      }
+    ],
+    "result": {
+      "item": "hakkai:nightwalker_armor_boots",
+      "count": 1
+    }
+  }
+}

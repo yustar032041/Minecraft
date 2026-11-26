@@ -2,15 +2,21 @@
 // and does not replace the chief's repeatable trade or combat reward.
 const COUNT='hakkai:fushi_quest_bamboo',NIGHTS='hakkai:fushi_quest_nights',DAY='hakkai:fushi_quest_day',CLAIMED='hakkai:fushi_quest_claimed';
 const read=(p,key)=>{const v=p.getDynamicProperty(key);return Number.isFinite(v)?v:0;};
-export function setupFushiQuest({give,notice,report=()=>{}}){
+// claimReward must atomically plan the item and claimed property, with
+// best-effort rollback on write failures; it returns the transaction result.
+export function setupFushiQuest({claimReward,notice,report=()=>{}}){
  function progress(p,now){
   try{
    if(read(p,CLAIMED))return;
    const n=read(p,COUNT);if(n<16)p.setDynamicProperty(COUNT,n+1);
-   const day=Math.floor(now/24000),old=p.getDynamicProperty(DAY),nights=read(p,NIGHTS);
-   // Store day first; a failed night count write cannot credit the same night twice.
+   const day=Math.floor(now/24000),old=p.getDynamicProperty(DAY),oldNights=p.getDynamicProperty(NIGHTS),nights=Number.isFinite(oldNights)?oldNights:0;
    if(nights<2&&(!Number.isFinite(old)||day>old)){
-    p.setDynamicProperty(DAY,day);p.setDynamicProperty(NIGHTS,nights+1);
+    try{p.setDynamicProperty(DAY,day);p.setDynamicProperty(NIGHTS,nights+1);}
+    catch(err){
+     // A write can mutate then throw. Try both snapshots even if one restore fails.
+     for(const [key,value] of [[DAY,old],[NIGHTS,oldNights]])try{p.setDynamicProperty(key,value);}catch(restore){report('FUSHIの夜数復旧失敗',restore);}
+     throw err;
+    }
    }
   }catch(err){report('FUSHIの友好記録',err);}
  }
@@ -23,10 +29,10 @@ export function setupFushiQuest({give,notice,report=()=>{}}){
    const s=status(p);
    if(s.claimed){notice(p,'§e友好の贈り物は受け取り済みです');return false;}
    if(s.bamboo<16||s.nights<2){notice(p,'§e月竹を16本採り、2夜の月夜を過ごそう');return false;}
-   // Reserve before payout. A failure to save the claim cannot duplicate items.
-   p.setDynamicProperty(CLAIMED,1);
-   let paid=false;try{paid=give(p,'hakkai:fushi_totem',1);}catch(err){report('FUSHIの友好報酬',err);}
-   if(!paid){try{p.setDynamicProperty(CLAIMED,undefined);}catch{}notice(p,'§e持ち物に空きを作ってね');return false;}
+   const result=claimReward(p);
+   if(result!=='ok'){
+    notice(p,result==='full'?'§e持ち物に空きを作ってね':'§e友好報酬を受け取れません。持ち物と記録を確認してね');return false;
+   }
    notice(p,'§dFUSHIのチーフから友好のトーテムを受け取った！');return true;
   }catch(err){report('FUSHIの友好報酬',err);return false;}
  }

@@ -12,7 +12,7 @@
         "enchanted": "textures/misc/enchanted_actor_glint"
       },
       "geometry": {
-        "default": "geometry.player.armor.chestplate"
+        "default": "geometry.hakkai.icon_armor_chest"
       },
       "scripts": {
         "parent_setup": "variable.chest_layer_visible = 0.0;",
