@@ -3,6 +3,7 @@ import hashlib
 import io
 import json
 from pathlib import Path
+import subprocess
 import sys
 import tempfile
 import zipfile
@@ -13,8 +14,10 @@ from build_mcaddon import build
 
 with tempfile.TemporaryDirectory() as tmp:
     first, second = Path(tmp) / 'first.mcaddon', Path(tmp) / 'second.mcaddon'
-    count = build(first)
-    assert build(second) == count
+    # Internal-only bypass exercises archive construction while sources are
+    # intentionally newer than published v7.1.64. Never distribute these files.
+    count = build(first, _test_allow_published_mismatch=True)
+    assert build(second, _test_allow_published_mismatch=True) == count
     assert hashlib.sha256(first.read_bytes()).digest() == hashlib.sha256(second.read_bytes()).digest()
     with zipfile.ZipFile(first) as bundle:
         assert bundle.testzip() is None
@@ -47,4 +50,28 @@ with tempfile.TemporaryDirectory() as tmp:
         raise AssertionError('should reject an invalid suffix')
     except ValueError:
         pass
-print('Deterministic mcaddon with two root-manifest mcpacks, full source hashes and CRCs OK (no Bedrock import test)')
+    # Even test mode must not overwrite the actual release file.
+    published = root / 'downloads/Hakkai-v7.1.64.mcaddon'
+    before = hashlib.sha256(published.read_bytes()).digest()
+    try:
+        build(published, _test_allow_published_mismatch=True)
+        raise AssertionError('should protect published archive')
+    except ValueError as exc:
+        assert 'refusing to overwrite' in str(exc)
+    assert hashlib.sha256(published.read_bytes()).digest() == before
+    # An ordinary build must refuse changed sources with the published identity.
+    forbidden = Path(tmp) / 'unversioned.mcaddon'
+    try:
+        build(forbidden)
+        raise AssertionError('changed pack cannot reuse published UUID/version')
+    except ValueError as exc:
+        assert 'assign a new pack version' in str(exc)
+    assert not forbidden.exists()
+    # The legacy command-line flag must not bypass the identity guard either.
+    cli = subprocess.run([sys.executable, str(root / 'tools/build_mcaddon.py'),
+                          '--output', str(forbidden), '--allow-unfinished'],
+                         capture_output=True, text=True)
+    assert cli.returncode != 0, cli.stdout
+    assert 'assign a new pack version' in cli.stderr, cli.stderr
+    assert not forbidden.exists()
+print('Deterministic temporary test archives and published identity protections OK (no Bedrock import test)')
