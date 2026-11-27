@@ -2,7 +2,7 @@
 
 ## v7.1.58 配布版
 
-[ダウンロード：Hakkai-v7.1.58.mcaddon](https://github.com/yustar032041/Minecraft/releases/download/v7.1.58/Hakkai-v7.1.58.mcaddon)
+[ダウンロード：Hakkai-v7.1.58.mcaddon](https://github.com/yustar032041/Minecraft/raw/refs/tags/v7.1.58/downloads/Hakkai-v7.1.58.mcaddon)
 
 Minecraft Bedrockのパックです。ファイルを開いてインポートし、ワールドのビヘイビアパックとリソースパックを有効にしてください。manifest上の最低エンジン指定は 1.26.60、スクリプト依存は `@minecraft/server` 2.11.0、`@minecraft/server-ui` 2.3.0 です。対応環境であっても実動作を保証するものではありません。既存ワールドはバックアップし、新規ワールドからお試しください。
 
