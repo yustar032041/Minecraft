@@ -10,9 +10,19 @@ assert vanilla['revision']=='15701fa9c13923f12662984c32c124327e40e3d3'
 # JSON atlas registries are intentionally merged with vanilla. New identifiers
 # must not overwrite vanilla entries, including under case-insensitive lookup.
 for filename,fixture in (('terrain_texture.json','terrain_keys'),('item_texture.json','items_keys')):
-    addon=json.loads((rp/'textures'/filename).read_text(encoding='utf8'))['texture_data']
+    atlas=json.loads((rp/'textures'/filename).read_text(encoding='utf8'))
+    addon=atlas['texture_data']
     common={k.casefold() for k in addon}&{k.casefold() for k in vanilla[fixture]}
     assert not common,(filename,common)
+    # These are shared atlas-level settings, rather than namespaced entries.
+    # Keep the observed 26.0–26.60 vanilla values; this does not simulate
+    # the engine's pack merging or prove a rendering bug is fixed.
+    if filename == 'terrain_texture.json':
+        assert atlas.get('texture_name') == 'atlas.terrain'
+        assert atlas.get('padding') == 8 and atlas.get('num_mip_levels') == 4
+    else:
+        assert atlas.get('texture_name') == 'atlas.items'
+        assert 'padding' not in atlas and 'num_mip_levels' not in atlas
 
 # The addon language keys should not silently replace vanilla translations.
 for lang in ('ja_JP','en_US'):
