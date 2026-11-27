@@ -88,3 +88,57 @@ def neutral_wild_contact(strike, bones, prefix, realm):
         peak = 6 if n % 2 == 0 else -6
         contact['bones'][name] = {'rotation': {'0.0': [0, 0, 0], '0.12': [0, peak, 0], '0.38': [0, 0, 0]}}
     return contact
+
+# Secondary bones introduced by the subsequent static anatomy pass. Explicit
+# per-rig mapping avoids giving decorative parts the wrong motion. Angles are
+# deliberately small; the pre-existing limb animations remain authoritative.
+REFINED_JOINTS = {
+ (0,10):'forearm_l forearm_r',
+ (1,3):'foot_0 foot_1 foot_2 foot_3 foot_4 foot_5',
+ (1,7):'hock_2 hock_3', (1,11):'fang_l fang_r',
+ (2,1):'hock_2 hock_3', (2,4):'pad_0 pad_1 pad_2 pad_3',
+ (2,6):'jaw_l jaw_r', (2,7):'hock_2 hock_3', (2,8):'jaw',
+ (2,9):'paw_0 paw_1 paw_2 paw_3', (3,0):'talon_0 talon_1',
+ (3,3):'chisel', (3,6):'jaw_l jaw_r', (3,7):'hock_2 hock_3',
+ (4,0):'foot_0 foot_1', (4,6):'electrode', (4,7):'hock_2 hock_3',
+ (4,9):'talon_0 talon_1', (4,11):'hock_2 hock_3',
+ (5,3):'mandible_l mandible_r', (5,7):'hock_2 hock_3',
+ (5,11):'talon_0 talon_1', (6,0):'hock_2 hock_3',
+ (6,7):'hock_2 hock_3', (6,11):'hock_2 hock_3', (7,7):'hock_2 hock_3',
+}
+
+def add_refined_joints(anims, prefixed_bones, prefix, realm, index):
+    """Add explicit small walk/attack tracks for the newly articulated parts.
+
+    Strikes start at the windup endpoint; separate native-contact copies start
+    at zero because they have no warning phase. These tracks do not alter AI,
+    collision, damage, or claim to model Bedrock's animation blending.
+    """
+    names=REFINED_JOINTS.get((realm,index),'').split()
+    for name in names:
+        if prefix+name not in prefixed_bones:
+            raise ValueError(f'missing refined joint {prefix+name}')
+        if any(name in anims[p]['bones'] for p in ('walk','windup','strike')):
+            raise ValueError(f'pre-authored refined joint {prefix+name}')
+        if name.startswith(('foot_','hock_','pad_','paw_','talon_')):
+            n=int(name.rsplit('_',1)[1]);sign=1 if n%2==0 else -1
+            anims['walk']['bones'][name]={'rotation':[f'math.cos(query.anim_time * 300 + {n%2*180}) * 3',0,0]}
+            end=[-4*sign,0,0]
+        elif name.startswith('forearm_'):
+            phase=0 if name.endswith('_l') else 180
+            anims['walk']['bones'][name]={'rotation':[f'math.cos(query.anim_time * 300 + {phase}) * 3',0,0]}
+            end=[-5,0,0]
+        elif name.startswith(('jaw_','fang_','mandible_')):
+            end=[0,0,5 if name.endswith('_l') else -5]
+        elif name in ('jaw','chisel'):
+            end=[-5,0,0]
+        elif name=='electrode':
+            end=[0,0,4]
+        else:raise ValueError(f'unknown refined joint {name}')
+        impact=[round(-x*.6,2) for x in end]
+        anims['windup']['bones'][name]={'rotation':{'0.0':[0,0,0],'1.9':end}}
+        anims['strike']['bones'][name]={'rotation':{'0.0':end,'0.12':impact,'0.38':[0,0,0]}}
+
+def neutral_refined_contact(anims, realm, index):
+    for name in REFINED_JOINTS.get((realm,index),'').split():
+        anims['contact']['bones'][name]['rotation']['0.0']=[0,0,0]

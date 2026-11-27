@@ -1,0 +1,42 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "hakkai:warden_sword_4",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/hakkai_warden_sword_4"
+      },
+      "geometry": {
+        "default": "geometry.hakkai.warden_sword_4"
+      },
+      "animations": {
+        "idle": "animation.hakkai.warden_sword_4.idle",
+        "windup": "animation.hakkai.warden_sword_4.windup",
+        "strike": "animation.hakkai.warden_sword_4.strike",
+        "held": "animation.hakkai.warden_sword_4.held"
+      },
+      "scripts": {
+        "animate": [
+          {
+            "idle": "!query.property('hakkai:held') && query.property('hakkai:blade_state') == 0"
+          },
+          {
+            "windup": "!query.property('hakkai:held') && query.property('hakkai:blade_state') == 1"
+          },
+          {
+            "strike": "!query.property('hakkai:held') && query.property('hakkai:blade_state') == 2"
+          },
+          {
+            "held": "query.property('hakkai:held')"
+          }
+        ]
+      },
+      "render_controllers": [
+        "controller.render.hakkai.warden_sword"
+      ]
+    }
+  }
+}

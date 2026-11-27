@@ -1,0 +1,41 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "hakkai:king_guardian_0",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/guardian_0"
+      },
+      "geometry": {
+        "default": "geometry.hakkai.guardian_0"
+      },
+      "render_controllers": [
+        "controller.render.hakkai.beast"
+      ],
+      "animations": {
+        "walk": "animation.hakkai.guardian_0_walk",
+        "creature_windup": "animation.hakkai.guardian_0_windup",
+        "creature_strike": "animation.hakkai.guardian_0_strike",
+        "guardian_brace_windup": "animation.hakkai.guardian_0_brace_windup",
+        "guardian_brace_strike": "animation.hakkai.guardian_0_brace_strike",
+        "guardian_lunge_windup": "animation.hakkai.guardian_0_lunge_windup",
+        "guardian_lunge_strike": "animation.hakkai.guardian_0_lunge_strike",
+        "guardian_cast_windup": "animation.hakkai.guardian_0_cast_windup",
+        "guardian_cast_strike": "animation.hakkai.guardian_0_cast_strike",
+        "guardian_detail": "animation.hakkai.guardian_0_detail",
+        "native_contact": "animation.hakkai.guardian_0_contact"
+      },
+      "scripts": {
+        "animate": [
+          {
+            "walk": "query.modified_move_speed > 0.01"
+          },
+          "guardian_detail"
+        ]
+      }
+    }
+  }
+}

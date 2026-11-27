@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
-import {wardenPhase,WARDEN_PHASES,WARDEN_ALTERNATES,WARDEN_DAMAGE_MULTIPLIER,WARDEN_COMBO_MULTIPLIER,inWardenWarning,setupWardenBoss} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_boss.js';
+import {WARDEN_HEAL_PER_SECOND,wardenPhase,WARDEN_PHASES,WARDEN_ALTERNATES,WARDEN_DAMAGE_MULTIPLIER,WARDEN_COMBO_MULTIPLIER,inWardenWarning,setupWardenBoss as realSetupWardenBoss} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_boss.js';
+import {legacyWardenDecision} from './warden_legacy_decision.mjs';
+const setupWardenBoss=options=>realSetupWardenBoss({...options,decision:legacyWardenDecision()});
 import {Difficulty,GameMode} from '@minecraft/server';
 import {setupCombatGuard} from '../Hakkai_v7.1.0/BehaviorPack/scripts/combat_guard.js';
 import {setupCombatParry} from '../Hakkai_v7.1.0/BehaviorPack/scripts/combat_parry.js';
@@ -19,8 +21,8 @@ function fixture(){
 }
 {
  const f=fixture();f.health.currentValue=4500;f.ctrl.tick(f.p,0);f.ctrl.tick(f.p,40);
- assert.equal(f.health.currentValue,4524,'twelve HP per second');
- f.ctrl.tick(f.p,40);assert.equal(f.health.currentValue,4524,'no duplicate multiplayer ticks');
+ assert.equal(f.health.currentValue,4500+2*WARDEN_HEAL_PER_SECOND,'configured healing per second');
+ f.ctrl.tick(f.p,40);assert.equal(f.health.currentValue,4500+2*WARDEN_HEAL_PER_SECOND,'no duplicate multiplayer ticks');
  f.ctrl.tick(f.p,80);assert.equal(f.particles.filter(([id])=>id==='hakkai:warning_marker').length,64);assert.equal(f.damage.length,0);
  f.ctrl.tick(f.p,120);assert.deepEqual(f.damage,[9*WARDEN_DAMAGE_MULTIPLIER]);assert.equal(f.effects[0][0],'slowness');
 }
@@ -81,7 +83,7 @@ for(let phase=0;phase<5;phase++){
  f.ctrl.tick(f.p,120);assert.equal(f.damage.length,0);
  for(const t of [160,200,240,280,312,320])f.ctrl.tick(f.p,t);
  assert.equal(f.health.currentValue,hp,'no healing during the ten second window');
- f.ctrl.tick(f.p,340);assert.equal(f.health.currentValue,hp+12,'healing resumes without a burst');
+ f.ctrl.tick(f.p,340);assert.equal(f.health.currentValue,hp+WARDEN_HEAL_PER_SECOND,'healing resumes without a burst');
  assert.ok(f.messages.some(m=>m.includes('パリィ成功')));
 }
 {

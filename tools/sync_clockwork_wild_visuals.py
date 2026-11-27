@@ -16,6 +16,7 @@ def main():
   walk=copy.deepcopy(src[f'animation.hakkai.{walkname}.stride'])
   if i==0:
    for side,phase in (('l',0),('r',40)):walk['bones'][f'ear_{side}']={'rotation':[f'math.cos(query.anim_time * 300 + {phase}) * 4',0,0]}
+   for leg in (2,3):walk['bones'][f'hock_{leg}']={'rotation':[f'math.cos(query.anim_time * 300 + {leg%2*180}) * 3',0,0]}
   if i==1:
    walk['bones']['tail']={'rotation':[0,'math.cos(query.anim_time * 270) * 6',0]}
    walk['bones']['tail_plate']={'rotation':[0,'math.cos(query.anim_time * 270 - 40) * 7',0]}

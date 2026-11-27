@@ -12,13 +12,13 @@ function fixture(realm=4){
 test('current realm remains usable while persisted records cannot be read or written',()=>{
  for(let realm=0;realm<8;realm++){
   const f=fixture(realm);assert.doesNotThrow(()=>f.ctx.castTome(f.p));
-  assert.deepEqual(f.casts[0],[[0,3,2,1,4,6,5,7][realm],-1],`realm ${realm}`);
+  assert.deepEqual(f.casts[0],[0,-1],`no visits needed in realm ${realm}`);
  }
 });
 test('temporary choice can advance during failure then persist after recovery',()=>{
  const f=fixture(0);f.ctx.castTome(f.p);assert.deepEqual(f.casts.at(-1),[0,-1]);
- f.ctx.advanceTome(f.p);assert.match(f.notices.at(-1),/土/);f.ctx.castTome(f.p);assert.deepEqual(f.casts.at(-1),[3,-1]);
- f.recover();f.ctx.castTome(f.p);assert.deepEqual(f.casts.at(-1),[3,-1]);assert.equal(f.data.get('hakkai:tome_spell_v1'),3);
+ f.ctx.advanceTome(f.p);assert.match(f.notices.at(-1),/水/);f.ctx.castTome(f.p);assert.deepEqual(f.casts.at(-1),[1,-1]);
+ f.recover();f.ctx.castTome(f.p);assert.deepEqual(f.casts.at(-1),[1,-1]);assert.equal(f.data.get('hakkai:tome_spell_v1'),1);
 });
 test('unsaved choices are player-specific and are cleared when player leaves',()=>{
  const f=fixture(0),other={...f.p,id:'other'};f.ctx.advanceTome(f.p);f.ctx.castTome(other);assert.deepEqual(f.casts.at(-1),[0,-1]);

@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-"""Build an explicitly labelled test addon. In-game operation is not verified."""
+"""Build a deterministic addon archive. In-game operation is not verified."""
 import argparse
 import json
 import pathlib
 import sys
 import tempfile
 import zipfile
+
+from sync_crafting_unlocks import run as check_crafting_unlocks
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 PACK_ROOT = ROOT / 'Hakkai_v7.1.0'
@@ -18,11 +20,13 @@ def build(destination):
         raise ValueError('output must end in .mcaddon')
     if destination.is_relative_to(PACK_ROOT.resolve()):
         raise ValueError('output must be outside the pack directories')
+    if not check_crafting_unlocks():
+        raise ValueError('crafting recipes are missing unlock data; run tools/sync_crafting_unlocks.py --apply')
     manifests = [json.loads((PACK_ROOT / name / 'manifest.json').read_text(encoding='utf-8-sig')) for name in PACKS]
     for manifest in manifests:
-        if manifest['header']['version'] != [7, 1, 57]:
+        if manifest['header']['version'] != [7, 1, 58]:
             raise ValueError('unexpected pack version')
-    if not any(dep.get('uuid') == manifests[1]['header']['uuid'] and dep.get('version') == [7, 1, 57]
+    if not any(dep.get('uuid') == manifests[1]['header']['uuid'] and dep.get('version') == [7, 1, 58]
                for dep in manifests[0]['dependencies']):
         raise ValueError('resource pack dependency mismatch')
     paths = []
@@ -75,12 +79,10 @@ def build(destination):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', required=True, help='destination ending in .mcaddon')
-    parser.add_argument('--allow-unfinished', action='store_true', help='acknowledge that this is an unverified test build')
+    parser.add_argument('--allow-unfinished', action='store_true', help='legacy compatibility flag; runtime remains unverified')
     args = parser.parse_args()
-    if not args.allow_unfinished:
-        parser.error('the addon is unfinished; pass --allow-unfinished for a test build')
     count = build(args.output)
-    print(f'Unfinished test build: {args.output} ({count} files); Bedrock import and gameplay have not been verified')
+    print(f'Addon built: {args.output} ({count} files); Bedrock import and gameplay have not been verified')
 
 
 if __name__ == '__main__':

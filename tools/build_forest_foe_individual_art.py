@@ -7,6 +7,7 @@ authored rigs and procedural surface studies. No combat or behavior edits.
 import argparse
 from PIL import ImageDraw
 from build_forest_wild_art import c,bone,bake,PALETTE,surface,tint
+from refine_mob_anatomy import refine_baked
 PALETTE.update({
  'shade_fox_fur':(54,67,72),'shade_fox_ruff':(101,119,119),'shade_fox_muzzle':(149,165,156),'shade_fox_dark':(35,44,52),'shade_fox_tail':(72,91,94),'shade_fox_tip':(154,186,178),
  'spore_body':(73,105,86),'spore_head':(102,132,102),'spore_cap':(153,123,158),'spore_edge':(205,178,193),'spore_feather':(144,172,141),'spore_leg':(69,79,62),
@@ -70,7 +71,9 @@ def paint(mat,w,h,seed,face,part,ci):
   for x in (.3,.7):d.polygon([(w*(x-.1),h*.35),(w*(x+.1),h*.39),(w*(x+.08),h*.48),(w*(x-.08),h*.45)],fill=(185,219,164,255))
  return image
 
-def build(i):return bake(f'foe_1_{i}',f'f1_{i}_',DESIGNS[i](),paint)
+def build(i):
+ name=f'foe_1_{i}'
+ return refine_baked(name,bake(name,f'f1_{i}_',DESIGNS[i](),paint))
 def main():
  p=argparse.ArgumentParser();p.add_argument('--write',action='store_true');p.add_argument('--check',action='store_true');a=p.parse_args()
  if a.write==a.check:p.error('choose exactly one of --write or --check')

@@ -1,0 +1,24 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {setupWardenBoss} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_boss.js';
+import {chooseWardenTarget} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_ai.js';
+import {Difficulty,GameMode} from '@minecraft/server';
+test('actual boss hurt event changes target priority and expires after loading gap',()=>{
+ const chosen=[],seen=[];let players;
+ const d={id:'hakkai:warden_arena',getPlayers:()=>players,getEntities:()=>[boss],spawnParticle:()=>{},getBlock:()=>({isAir:true}),isChunkLoaded:()=>true,getBlockFromRay:()=>undefined};
+ const mk=(id,z)=>({id,isValid:true,typeId:'minecraft:player',location:{x:0,y:80,z},dimension:d,getGameMode:()=>GameMode.Survival,sendMessage:()=>{},applyDamage:()=>{},addEffect:()=>{}});
+ const a=mk('a',4),b=mk('b',-4);players=[a,b];
+ const health={currentValue:5000,effectiveMax:5000,setCurrentValue(v){this.currentValue=v;}};
+ const boss={id:'boss',typeId:'hakkai:time_warden',isValid:true,location:{x:0,y:80,z:0},dimension:d,getComponent:()=>health,getDynamicProperty:()=>undefined,setDynamicProperty:()=>{},setProperty:()=>{},playAnimation:()=>{}};
+ const sys={currentTick:0},world={getDifficulty:()=>Difficulty.Normal,getAllPlayers:()=>players};
+ const decision={target:(brain,situation,targets,slot)=>{seen.push(situation.profiles.map(p=>({id:p.player.id,threat:p.threat,ranged:p.ranged})));const selected=chooseWardenTarget(brain,situation);chosen.push(selected?.id);return selected;}};
+ const ctrl=setupWardenBoss({world,system:sys,decision,report:(_,e)=>{throw e;}});
+ const tick=t=>{sys.currentTick=t;ctrl.tick(a,t);};tick(0);
+ sys.currentTick=2;for(let i=0;i<5;i++)ctrl.onHurt({hurtEntity:boss,damageSource:{damagingProjectile:{getComponent:()=>({owner:b})},cause:'projectile'},damage:20});
+ for(let t=1;t<=80;t++)tick(t);
+ assert.equal(chosen[0],'b');assert.ok(seen[0].find(p=>p.id==='b').ranged);assert.ok(seen[0].find(p=>p.id==='b').threat>0);
+ tick(500);for(let t=501;t<=580;t++)tick(t);
+ assert.equal(seen.at(-1).find(p=>p.id==='b').threat,0,'long absence resets the transient observations');
+ ctrl.onDeath({deadEntity:boss});
+ assert.doesNotThrow(()=>ctrl.onHurt({hurtEntity:boss,damageSource:{damagingEntity:b,cause:'projectile'},damage:NaN}));
+});

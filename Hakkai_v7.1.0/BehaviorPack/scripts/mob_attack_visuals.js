@@ -44,7 +44,7 @@ export function setupNativeMobStrikes(mobContent){
   if(!damagingEntity?.isValid||!hitEntity?.isValid||!Number.isFinite(tick))return false;
   const id=damagingEntity.typeId;
   const profile=mobContent.get(id);
-  if((!profile||profile.temper==='passive')&&!/^hakkai:guardian_[0-7]$/.test(id)&&id!=='hakkai:eclipse_colossus'&&!PATROL_MELEE.has(id))return false;
+  if((!profile||profile.temper==='passive')&&!/^hakkai:(?:king_)?guardian_[0-7]$/.test(id)&&id!=='hakkai:eclipse_colossus'&&!PATROL_MELEE.has(id))return false;
   const key=damagingEntity.id;if(!key||tick<(next.get(key)??0))return false;
   if(next.size>=512){for(const [k,v] of next)if(v<=tick)next.delete(k);if(next.size>=512)return false;}
   next.set(key,tick+8);
@@ -58,7 +58,7 @@ export function setupNativeMobStrikes(mobContent){
    // Native contacts have no scripted windup. Keep their existing poses on
    // separate tracks while warned specials join windup and strike keyframes.
    const foe=/^hakkai:(foe_[0-7]_(?:[0-9]|1[01])|wild_[0-7]_[12])$/.exec(id);
-   const guardian=/^hakkai:(guardian_[0-7])$/.exec(id);
+   const guardian=/^hakkai:(?:king_)?(guardian_[0-7])$/.exec(id);
    const animation=id==='hakkai:eclipse_colossus'?'animation.hakkai.eclipse_cleave_contact':foe?`animation.hakkai.${foe[1]}_contact`:guardian?`animation.hakkai.${guardian[1]}_contact`:defaultVisual(damagingEntity,'strike');
    animate(damagingEntity,animation);
    try{const l=hitEntity.location;if(l&&[l.x,l.y,l.z].every(Number.isFinite))damagingEntity.dimension.spawnParticle('hakkai:mob_impact',{x:l.x,y:l.y+.6,z:l.z});}catch{}

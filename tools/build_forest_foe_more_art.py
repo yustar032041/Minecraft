@@ -6,6 +6,7 @@ Only geometry/color/MER/normal are written; combat and collision are untouched.
 import argparse
 from PIL import ImageDraw
 from build_forest_wild_art import c,bone,bake,PALETTE,surface,tint
+from refine_mob_anatomy import refine_baked
 PALETTE.update({
  'king_hide':(72,91,70),'king_shell':(66,99,69),'king_moss':(109,145,83),'king_horn':(158,160,110),'king_dark':(44,59,50),
  'indigo_fur':(48,55,89),'indigo_head':(62,69,110),'indigo_tail':(67,75,122),'indigo_mark':(153,174,194),'indigo_dark':(34,39,65),
@@ -148,7 +149,9 @@ def paint(mat,w,h,seed,face,part,ci):
   d.polygon([(w*.22,h*.3),(w*.63,h*.34),(w*.57,h*.46),(w*.3,h*.45)],fill=col)
  return im
 
-def build(i):return bake(f'foe_1_{i}',f'f1_{i}_',DESIGNS[i](),paint)
+def build(i):
+ name=f'foe_1_{i}'
+ return refine_baked(name,bake(name,f'f1_{i}_',DESIGNS[i](),paint))
 def main():
  p=argparse.ArgumentParser();p.add_argument('--write',action='store_true');p.add_argument('--check',action='store_true');a=p.parse_args()
  if a.write==a.check:p.error('choose exactly one of --write or --check')

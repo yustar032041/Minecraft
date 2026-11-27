@@ -58,7 +58,7 @@ function lineClear(d,from,to){
 export function advanceChiefCharge(e,target,charge,t){
  if(!e?.isValid||!target?.isValid||!charge||t!==charge.next)return {done:true};
  try{
-  const d=e.dimension,from={...e.location},p=target.location;
+  const d=e.dimension,from={...e.location},p={...target.location};
   if(e.isOnGround!==true||!finite(from)||!finite(p)||dist(from,charge.position)>.25||Math.abs(from.y-charge.position.y)>.1)return {done:true};
   const nearby=d.getEntities({location:from,maxDistance:5});
   if(!Array.isArray(nearby))return {done:true};
@@ -72,8 +72,8 @@ export function advanceChiefCharge(e,target,charge,t){
   if(!clearGround(d,from,cache)||!free(from))return {done:true};
   if(contact(from)){
    if(!lineClear(d,from,p))return {done:true};
-   d.spawnParticle('hakkai:mob_impact',{x:from.x,y:from.y+.8,z:from.z});
-   return {done:true,contact:true};
+   try{d.spawnParticle('hakkai:mob_impact',{x:from.x,y:from.y+.8,z:from.z});}catch{}
+   return {done:true,contact:true,targetPosition:p,sourcePosition:from};
   }
   const length=Math.min(SPEED,charge.remaining);if(length<=1e-6)return {done:true};
   let next=from,travel=0,nearContact=false;
@@ -87,12 +87,12 @@ export function advanceChiefCharge(e,target,charge,t){
    if(step===length)break;
   }
   if(!travel&&!nearContact)return {done:true};
-  // Visual failure cancels movement as well as damage. Native AI movement can
-  // interfere between ticks; unexpected displacement cancels the next step.
-  d.spawnParticle('hakkai:mob_impact',{x:next.x,y:next.y+.35,z:next.z});
+  // Native AI movement can interfere between ticks; unexpected displacement
+  // cancels the next step. Particle failures do not control physics.
+  try{d.spawnParticle('hakkai:mob_impact',{x:next.x,y:next.y+.35,z:next.z});}catch{}
   if(travel){e.clearVelocity();if(!e.tryTeleport(next,{checkForBlocks:true}))return {done:true};}
   charge.position=next;charge.remaining-=travel;charge.next=t+1;
-  if(nearContact)return {done:true,contact:lineClear(d,next,p)};
+  if(nearContact)return {done:true,contact:lineClear(d,next,p),targetPosition:p,sourcePosition:next};
   return {done:charge.remaining<=1e-6};
  }catch{return {done:true};}
 }

@@ -10,7 +10,7 @@ for(let r=0;r<8;r++){
 assert.equal(hasTomeRealm(p,-1),false);assert.equal(hasTomeRealm(p,8),false);
 const spells=tomeSpells(attrs,pairs);assert.ok(spells.every(s=>tomeUnlocked(s,a=>hasTomeRealm(p,home.findIndex(x=>x.includes(a))))));
 props.set('hakkai:tome_realms_v1',1);assert.ok(tomeUnlocked(spells[0],a=>hasTomeRealm(p,home.findIndex(x=>x.includes(a)))));
-assert.equal(tomeUnlocked(spells[8],a=>hasTomeRealm(p,home.findIndex(x=>x.includes(a)))),false);
+assert.equal(tomeUnlocked(spells[8],a=>hasTomeRealm(p,home.findIndex(x=>x.includes(a)))),true,'visit history no longer locks combination spells');
 console.log('Tome: separate persisted visits, realm bounds, all attributes and combined spell gating (mocked)');
 // An event can report a realm already left again before our handler runs.
 props.clear();p.dimension.id='minecraft:overworld';assert.equal(recordTomeRealm(p,'hakkai:realm_2'),true);assert.equal(hasTomeRealm(p,2),true);

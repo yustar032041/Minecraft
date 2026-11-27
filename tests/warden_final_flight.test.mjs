@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import {updateWardenAppearance} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_appearance.js';
-import {setupWardenBoss} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_boss.js';
+import {setupWardenBoss as realSetupWardenBoss} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_boss.js';
+import {legacyWardenDecision} from './warden_legacy_decision.mjs';
+const setupWardenBoss=options=>realSetupWardenBoss({...options,decision:legacyWardenDecision()});
 import {WARDEN_MOVING} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_moving_attacks.js';
 import {GameMode,Difficulty} from '@minecraft/server';
 function fixture(){

@@ -14,7 +14,7 @@ function fixture(){
  function enemy(id='z',result=true){return {id,typeId:'minecraft:zombie',isValid:true,dimension:d,location:{x:2,y:0,z:0},getHeadLocation(){return {x:this.location.x,y:1,z:this.location.z}},getComponent:()=>({hasTypeFamily:k=>k==='monster'}),
   applyDamage:n=>{hits.push([id,n]);if(result==='throw')throw Error('rejected');return result},addEffect:(...a)=>effects.push([id,...a]),setOnFire:(...a)=>fires.push([id,...a]),applyKnockback:(...a)=>pushes.push([id,...a])};}
  const s={m:100,s:100,cd:new Map()},system={currentTick:100,runTimeout:f=>queue.push(f)};
- const magic=kind=>castNewMagic({p,s,system,kind,notice:()=>{},mark:(_,__,i)=>marks.push(i),visibleFrom:()=>true,stagger:(e,n)=>effects.push([e.id,'stagger',n]),consumeTotem:()=>true});
+ const magic=kind=>castNewMagic({p,s,system,kind,notice:()=>{},mark:(_,__,i)=>marks.push(i),visibleFrom:()=>true,stagger:(e,n)=>effects.push([e.id,'stagger',n]),hasTotem:()=>true});
  const run=()=>{while(queue.length)queue.shift()()};
  return {p,h,d,s,system,enemy,hits,effects,pushes,fires,particles,queue,marks,magic,run};
 }

@@ -3,6 +3,9 @@ import { WARDEN_DIMENSION } from './warden_arena.js';
 import { rescueWarden,isOutsideWardenArena } from './warden_rescue.js';
 import { updateWardenAppearance,cancelWardenFlight } from './warden_appearance.js';
 import { steerWarden } from './warden_movement.js';
+import { setupWardenSwords } from './warden_swords.js';
+import { setupWardenModes } from './warden_modes.js';
+import {createWardenBrain,observeWarden,wardenSituation,recordWardenHurt,recordWardenParry,chooseWardenTarget,chooseWardenAttack,rememberWardenAttack} from './warden_ai.js';
 import { WARDEN_EXTRA_PATTERNS } from './warden_extra_patterns.js';
 import { WARDEN_ADVANCED } from './warden_advanced_attacks.js';
 import { WARDEN_MOVING,startMoving,advanceMoving } from './warden_moving_attacks.js';
@@ -75,14 +78,12 @@ export function wardenPhase(hp,max=5000){
  if(ratio<=.8)return 1;
  return 0;
 }
-export const WARDEN_HEAL_PER_SECOND=12;
-// Warned damage, tuned assuming 20 armor points and no enchantments.
-// Separate attacks and repeated strikes can overlap; real mitigation and
-// time-to-kill remain subject to Bedrock testing.
-export const WARDEN_DAMAGE_MULTIPLIER=1.8;
-// Three separately warned strikes use half the single-strike multiplier, so
-// the full combo is not accidentally triple the damage of a single pattern.
-export const WARDEN_COMBO_MULTIPLIER=.9;
+export const WARDEN_HEAL_PER_SECOND=8;
+// Endgame design values: weaker gear can be lethal. Separate attacks and
+// strikes may overlap; Bedrock mitigation and real TTK remain unmeasured.
+export const WARDEN_DAMAGE_MULTIPLIER=3;
+// Three separately warned strikes use half the single-strike multiplier.
+export const WARDEN_COMBO_MULTIPLIER=1.5;
 export function wardenAttackDamage(attack,warded=false){
  const multiplier=attack.strikes>1?WARDEN_COMBO_MULTIPLIER:WARDEN_DAMAGE_MULTIPLIER;
  return attack.damage*multiplier*(warded?.5:1);
@@ -98,7 +99,7 @@ export function wardenPatterns(phase){
  return all;
 }
 const MUSIC_TICKS=[937,1372,613,1325,747];
-export function setupWardenBoss({world,system,property,report,isEvading=()=>false,tryParry=()=>false,spendParry=()=>false,musicMuted=()=>false}){
+export function setupWardenBoss({world,system,property,report,isEvading=()=>false,tryParry=()=>false,spendParry=()=>false,musicMuted=()=>false,decision}){
  const states=new Map(),music=new Map();
  function clearMusic(id){const m=music.get(id);if(!m)return;try{m.sound?.stop();}catch{}music.delete(id);}
  function musicActive(id){return music.has(id);}
@@ -118,6 +119,8 @@ export function setupWardenBoss({world,system,property,report,isEvading=()=>fals
   }
  }
  const valid=p=>p?.isValid&&p.typeId==='minecraft:player'&&p.getGameMode()!==GameMode.Creative&&p.getGameMode()!==GameMode.Spectator;
+ const swords=setupWardenSwords({world,validPlayer:valid,isEvading,damageCause:EntityDamageCause.entityAttack});
+ const modes=setupWardenModes({validPlayer:valid,isEvading,damageCause:EntityDamageCause.entityAttack,swords,decision});
  function telegraph(d,aim,attack){
   let ok=true;const dot=(x,z)=>{try{d.spawnParticle('hakkai:warning_marker',{x:aim.x+x,y:aim.y+.15,z:aim.z+z});}catch{ok=false;}};
   const circle=radius=>{for(let i=0;i<20;i++){const a=i*Math.PI/10;dot(Math.cos(a)*radius,Math.sin(a)*radius);}};
@@ -167,16 +170,18 @@ export function setupWardenBoss({world,system,property,report,isEvading=()=>fals
   if(!s){
    let saved=-1;
    for(const read of [()=>e.getDynamicProperty('hakkai:warden_phase'),()=>e.getProperty('hakkai:form')])try{const v=read();if(Number.isInteger(v)&&v>=0&&v<5)saved=Math.max(saved,v);}catch{}
-   s={lastTick:-1,lastHeal:t,nextAt:t+80,phase:saved,phaseDirty:saved>=0,index:0,stopHealUntil:0};states.set(e.id,s);
+   const seed=String(e.id).split('').reduce((n,c)=>(Math.imul(n,31)+c.charCodeAt(0))>>>0,5381);
+   s={lastTick:-1,lastHeal:t,nextAt:t+80,phase:saved,phaseDirty:saved>=0,index:0,stopHealUntil:0,brain:createWardenBrain(seed)};states.set(e.id,s);
   }
   if(s.lastTick===t)return;s.lastTick=t;
   if(isOutsideWardenArena(e)){
    // Never resolve or begin a damaging attack while the boss is out of bounds,
    // even when safe relocation fails. No catch-up healing on eventual return.
    clearAttacks(s);s.nextAt=t+100;s.lastHeal=t;
+   modes.reset(e,t);swords.tick(e,s.phase,t,{paused:true});
    cancelWardenFlight(e,s,t);rescueWarden(e);return;
   }
-  if(world.getDifficulty()===Difficulty.Peaceful){clearAttacks(s);s.lastHeal=t;cancelWardenFlight(e,s,t);updateWardenAppearance(e,s,Math.max(0,s.phase),t,{peaceful:true});return;}
+  if(world.getDifficulty()===Difficulty.Peaceful){clearAttacks(s);s.lastHeal=t;modes.reset(e,t);swords.tick(e,s.phase,t,{peaceful:true});cancelWardenFlight(e,s,t);updateWardenAppearance(e,s,Math.max(0,s.phase),t,{peaceful:true});return;}
   const h=e.getComponent('minecraft:health');if(!h)return;
   const phase=Math.max(s.phase,wardenPhase(h.currentValue,h.effectiveMax));
   if(phase!==s.phase){
@@ -185,9 +190,15 @@ export function setupWardenBoss({world,system,property,report,isEvading=()=>fals
    if(previous>=0)wardenTransition(e,phase);
    for(const p of e.dimension.getPlayers({location:e.location,maxDistance:45}))try{p.sendMessage(`§d時空の管理者：${WARDEN_PHASES[phase].name}`);}catch{}
   }
+  let participants=[];try{participants=e.dimension.getPlayers({location:e.location,maxDistance:45}).filter(valid);}catch{}
+  observeWarden(s.brain,e,participants,t,{isEvading});
+  const situation=wardenSituation(s.brain,e,participants,t);
+  s.situation=situation;
+  const mode=modes.tick(e,s,phase,t,{busy:busy(s),paused:t<(s.stopHealUntil??0)});
+  swords.tick(e,phase,t,{paused:t<(s.stopHealUntil??0),brain:s.brain,situation});
   // Retry a failed write rather than losing an irreversible transition on reload.
   if(s.phaseDirty&&t>=(s.phaseSaveRetry??0)){try{e.setDynamicProperty('hakkai:warden_phase',phase);s.phaseDirty=false;}catch{s.phaseSaveRetry=t+20;}}
-  const flightBusy=updateWardenAppearance(e,s,phase,t,{idle:!busy(s)});
+  const flightBusy=updateWardenAppearance(e,s,phase,t,{idle:!busy(s)&&!mode.enabled,controlledFlight:mode.flying});
   if(s.takeoffAt===t&&(phase===1||phase===4))s.nextAt=Math.min(s.nextAt,t+20);
   try{if(s.takeoffAt!==undefined&&e.isOnGround===false&&(t-s.takeoffAt)%12===0)wardenFlightAura(e,phase);}catch{}
   // If a flight begun attack goes too high for a close counter, stop it rather
@@ -195,7 +206,7 @@ export function setupWardenBoss({world,system,property,report,isEvading=()=>fals
   if(s.flightUnsafe&&[s,s.extra].some(slot=>slot?.pending?.airborne||slot?.active?.airborne)){
    clearAttacks(s);s.nextAt=t+100;
   }
-  steerWarden(e,s,phase,t,{idle:!busy(s)});
+  steerWarden(e,s,phase,t,{idle:!busy(s)&&!mode.active,brain:s.brain,situation});
   // Tick-driven healing stops when no player is loading the boss; never grant
   // a large burst when a chunk reloads after a long absence.
   const seconds=Math.min(2,Math.floor((t-Math.max(s.lastHeal,s.stopHealUntil))/20));
@@ -248,14 +259,19 @@ export function setupWardenBoss({world,system,property,report,isEvading=()=>fals
    if((s.attackSerial??0)!==attackSerial)break;
   }
   if(!busy(s)&&s.hadAttack){s.hadAttack=false;s.extra=undefined;s.nextAt=t+WARDEN_RECOVERY_TICKS;}
-  if(!busy(s)&&!flightBusy&&t>=s.nextAt){
+  if(!busy(s)&&!flightBusy&&!mode.active&&t>=s.nextAt){
    const targets=e.dimension.getPlayers({location:e.location,maxDistance:45}).filter(valid);
    targets.sort((a,b)=>Math.hypot(a.location.x-e.location.x,a.location.z-e.location.z)-Math.hypot(b.location.x-e.location.x,b.location.z-e.location.z));
    if(!targets.length){s.nextAt=t+40;return;}
    const patterns=wardenPatterns(phase);
+   let firstTarget;
    for(let n=0;n<2;n++){
-   const p=targets[n%targets.length];
-   const attack=patterns[s.index++%patterns.length],aim={...p.location};
+   const p=decision?.target?.(s.brain,situation,targets,n)??chooseWardenTarget(s.brain,situation,{avoidId:n?firstTarget:undefined});
+   if(!p||!targets.some(x=>x.id===p.id))continue;
+   if(n===0)firstTarget=p.id;
+   const attack=decision?.attack?.(s.brain,patterns,situation,p)??chooseWardenAttack(s.brain,patterns,situation,p);
+   if(!attack||!patterns.includes(attack))continue;
+   const aim={...p.location};
    const instruction=attack.motion==='wave'?(attack.reverse?'光の輪が外から中心へ収束する':'光の輪が中心から外へ広がる'):
     attack.motion==='twinwave'?(attack.reverse?'二つの輪が外から中心へ収束する':'二つの輪から光が広がる'):
     attack.motion==='cross'?(attack.reverse?'十字の光が外から中心へ収束する':'十字の光が中心から広がる'):
@@ -271,6 +287,7 @@ export function setupWardenBoss({world,system,property,report,isEvading=()=>fals
    }catch{}
    if(!warned.includes(p.id))continue;
    if(!telegraph(e.dimension,aim,attack))continue;
+   rememberWardenAttack(s.brain,attack);
    wardenCharge(e,phase,0);
    const slot=n===0?s:(s.extra={});
    slot.pending={warned,aim,attack,phase,airborne:(phase===1||phase===4)&&s.takeoffAt!==undefined,at:t+40,remaining:attack.strikes??1};s.hadAttack=true;
@@ -281,12 +298,13 @@ export function setupWardenBoss({world,system,property,report,isEvading=()=>fals
  function tick(p,t){
   if(p.dimension.id!==WARDEN_DIMENSION){clearMusic(p.id);return;}
   try{
+   if(t%40===0)swords.sweep(p.dimension);
    const bosses=p.dimension.getEntities({type:'hakkai:time_warden',location:p.location,maxDistance:60,closest:1});
    const e=bosses[0];if(e)tickEntity(e,t);
    const near=e&&e.isValid&&Math.hypot(e.location.x-p.location.x,e.location.y-p.location.y,e.location.z-p.location.z)<=45?e:undefined;
    updateMusic(p,near,t);
   }catch(err){clearMusic(p.id);if(t%200===0)report('時空の管理者',err);}
-  for(const [id,s] of states)if(t-s.lastTick>2400)states.delete(id);
+  for(const [id,s] of states)if(t-s.lastTick>2400){states.delete(id);swords.forget(id);modes.forget(id);}
  }
  // A close-range counter, not a generic damage cancel: only the warned,
  // endangered player can parry the scripted attack during its last 8 ticks.
@@ -298,18 +316,27 @@ export function setupWardenBoss({world,system,property,report,isEvading=()=>fals
   const pending=[s.pending,s.extra?.pending].find(q=>q&&t>=q.at-8&&t<q.at&&q.warned.includes(p.id)&&inWardenWarning(p.location,q.aim,q.attack));
   if(!pending)return false;
   try{if(!spendParry(p,15))return false;}catch{return false;}
-  clearAttacks(s);s.hadAttack=false;s.nextAt=t+40;s.stopHealUntil=t+200;s.lastHeal=t;cancelWardenFlight(e,s,t);
+  recordWardenParry(s.brain,p,t);
+  clearAttacks(s);s.hadAttack=false;s.nextAt=t+40;s.stopHealUntil=t+200;s.lastHeal=t;modes.reset(e,t);cancelWardenFlight(e,s,t);
   for(const player of e.dimension.getPlayers({location:e.location,maxDistance:45}))try{player.sendMessage('§bパリィ成功！ 攻撃を中断し、回復を10秒止めた。');}catch{}
   wardenParried(e,s.phase);
   return true;
  }
  function stagger(e,t){
   const s=states.get(e?.id);if(!s||e.typeId!=='hakkai:time_warden')return;
-  clearAttacks(s);s.hadAttack=false;s.nextAt=Math.max(s.nextAt,t+40);s.stopHealUntil=Math.max(s.stopHealUntil,t+200);s.lastHeal=t;cancelWardenFlight(e,s,t);
+  clearAttacks(s);s.hadAttack=false;s.nextAt=Math.max(s.nextAt,t+40);s.stopHealUntil=Math.max(s.stopHealUntil,t+200);s.lastHeal=t;modes.reset(e,t);cancelWardenFlight(e,s,t);
+ }
+ function onHurt({hurtEntity:e,damageSource,damage}){
+  if(e?.typeId!=='hakkai:time_warden'||!e.isValid)return;
+  const s=states.get(e.id);let p=damageSource?.damagingEntity;
+  try{if(p?.typeId!=='minecraft:player')p=damageSource?.damagingProjectile?.getComponent('minecraft:projectile')?.owner;}catch{return;}
+  if(!s||!valid(p)||p.dimension?.id!==e.dimension?.id)return;
+  recordWardenHurt(s.brain,p,damage,system.currentTick,damageSource?.cause);
  }
  function onDeath({deadEntity,damageSource}){
   if(deadEntity?.typeId!=='hakkai:time_warden')return;
+  modes.onDeath(deadEntity);swords.onDeath(deadEntity);
   states.delete(deadEntity.id);for(const [id,m] of music)if(m.boss===deadEntity.id)clearMusic(id);
  }
- return {tick,onDeath,onMeleeParry,stagger,clearMusic,musicActive};
+ return {tick,onDeath,onHurt,onMeleeParry,stagger,clearMusic,musicActive};
 }

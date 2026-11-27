@@ -36,7 +36,7 @@ for(let index=0;index<attacks.length;index++){
  tick(start+40);
  // Phase 3 raw amounts, taken from the running controller rather than a
  // duplicate-only balance spreadsheet. The summon is tested separately.
- const phase3=[38,36,16,30,32,null,24,20,22];
+ const phase3=[57,54,24,45,48,null,36,30,33];
  assert.equal(hits.find(h=>h[0]==='primary')?.[1],phase3[index],label);
  for(const id of ['upper','lower']){
   assert.ok(parries.includes(id),`${label}/${id}: inside complete cylinder reached parry`);

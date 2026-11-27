@@ -22,6 +22,8 @@ def main():
   if i==0:
    for side,phase in (('l',0),('r',40)):
     walk['bones'][f'ear_{side}']={'rotation':[f'math.cos(query.anim_time * 300 + {phase}) * 4',0,0]}
+   for leg in (2,3):
+    walk['bones'][f'hock_{leg}']={'rotation':[f'math.cos(query.anim_time * 300 + {leg%2*180}) * 3',0,0]}
   elif i==1:
    for leg in range(6):walk['bones'][f'foot_{leg}']={'rotation':[0,0,f'math.cos(query.anim_time * 380 + {0 if leg%2==0 else 180}) * 8']}
    for side,phase in (('l',0),('r',180)):

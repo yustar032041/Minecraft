@@ -29,7 +29,7 @@ test('item and real use handler register the scroll',()=>{
  const item=JSON.parse(fs.readFileSync('Hakkai_v7.1.0/BehaviorPack/items/dodge_scroll.json','utf8'))['minecraft:item'].components;
  assert.ok(item['hakkai:use']);assert.ok(item['minecraft:interact_button']);
  const s=fs.readFileSync('Hakkai_v7.1.0/BehaviorPack/scripts/main.js','utf8');
- assert.ok(s.includes("if(id===ns+'dodge_scroll')"));assert.ok(s.includes('useDodgeScroll(p,isCreative(p))'));assert.ok(s.includes('無敵や攻撃回避ではありません'));
+ assert.ok(s.includes("if(id===ns+'dodge_scroll')"));assert.ok(s.includes('useDodgeScroll(p,isCreative(p))'));assert.ok(fs.readFileSync('Hakkai_v7.1.0/BehaviorPack/scripts/combat_guide.js','utf8').includes('無敵や攻撃回避ではありません'));
 });
 test('a slot write that mutates then throws still attempts to restore the scroll',()=>{
  const f=fixture(1),container=f.p.getComponent().container,write=container.setItem;let fail=true;

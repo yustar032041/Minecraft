@@ -22,7 +22,7 @@ function encounter(type,sourceBuilder){
  const d={id:'r',isChunkLoaded:()=>true,getBlock:p=>p.y===69?{isSolid:true,isWaterlogged:false,typeId:'minecraft:stone'}:{isAir:true},
   getBlockFromRay:()=>({face:'Up',block:{location:{y:69}},faceLocation:{y:1}}),getPlayers:()=>[],
   getEntities:o=>o.families?[mob]:[],spawnParticle:()=>{}};
- const p=player('p',d),q=player('q',d),mob={id:'m',typeId:type,isValid:true,dimension:d,location:{x:0,y:70,z:0},playAnimation:()=>{},teleport(){this.moves++;},moves:0};
+ const p=player('p',d),q=player('q',d),mob={id:'m',typeId:type,isValid:true,dimension:d,location:{x:0,y:70,z:0},animations:[],playAnimation(id){this.animations.push(id);},teleport(){this.moves++;},moves:0};
  const system={currentTick:0},world={getDifficulty:()=>Difficulty.Normal,getAllPlayers:()=>[p,q].filter(p=>p.isValid)};
  const ctrl=type==='hakkai:fushi_chief'?setupFushiSystem({world,system,report:()=>{}}):setupRealmEnders({world,system,report:()=>{},safe:()=>true});
  ctrl.onHurt({hurtEntity:mob,damageSource:sourceBuilder(p,q)});
@@ -32,9 +32,11 @@ function encounter(type,sourceBuilder){
 for(const type of ['hakkai:ender_0','hakkai:fushi_chief']){
  test(`${type}: projectile-only owner provokes warning and remains the notified target`,()=>{
   const f=encounter(type,p=>({cause:EntityDamageCause.projectile,damagingProjectile:projectile(p)}));
-  f.tick(0);f.tick(20);
-  assert.equal(f.p.messages,1);assert.equal(f.q.messages,0);
-  assert.equal(f.mob.moves,type==='hakkai:ender_0'?1:0);
+  f.tick(0);
+  assert.equal(f.mob.moves,type==='hakkai:ender_0'?1:0,'projectile retreat');
+  f.tick(20);
+  assert.equal(f.p.messages,0);assert.equal(f.q.messages,0);assert.equal(f.mob.animations.length,1);
+  assert.equal(f.mob.moves,type==='hakkai:ender_0'?2:0,'later attack approach is a separate warp');
  });
  for(const mode of ['missing','invalid','nonplayer','creative','spectator','throws'])test(`${type}: ${mode} projectile owner cannot start retaliation`,()=>{
   const f=encounter(type,p=>{
@@ -45,13 +47,13 @@ for(const type of ['hakkai:ender_0','hakkai:fushi_chief']){
    if(mode==='spectator')p.getGameMode=()=>GameMode.Spectator;
    return {cause:EntityDamageCause.projectile,damagingProjectile:mode==='missing'?undefined:mode==='throws'?{getComponent(){throw Error('unloaded')}}:projectile(owner)};
   });
-  f.tick(0);f.tick(20);assert.equal(f.p.messages,0);assert.equal(f.q.messages,0);assert.equal(f.mob.moves,0);
+  f.tick(0);f.tick(20);assert.equal(f.p.messages,0);assert.equal(f.q.messages,0);assert.equal(f.mob.moves,0);assert.equal(f.mob.animations.length,0);
  });
  test(`${type}: another shooter's projectile does not redirect an active warning`,()=>{
   const f=encounter(type,p=>({cause:EntityDamageCause.entityAttack,damagingEntity:p}));
-  f.tick(0);f.tick(20);assert.equal(f.p.messages,1);
+  f.tick(0);f.tick(20);assert.equal(f.p.messages,0);assert.equal(f.mob.animations.length,1);
   f.ctrl.onHurt({hurtEntity:f.mob,damageSource:{cause:EntityDamageCause.projectile,damagingProjectile:projectile(f.q)}});
   f.tick(60);assert.equal(f.q.messages,0);assert.equal(f.q.hits,0);
-  if(type==='hakkai:ender_0')assert.equal(f.p.hits,1,'original warned traveler target is retained');
+  assert.equal(f.p.hits,0,'no scheduler in this fixture');
  });
 }

@@ -24,4 +24,4 @@ for style in ('impact','moon','mist'):
  for anim,t in ((wind,1.9),(strike,.12)):
   pts=[v for quad,_ in collect(posed(model,anim,t)) for v in quad]
   assert pts and all(math.isfinite(n) and abs(n)<256 for p in pts for n in p)
-print('FUSHI chief: protected model/texture untouched, 6 poses, aliases and aligned keys (static only)')
+print('FUSHI chief: check does not alter model/texture, 6 poses, aliases and aligned keys (static only)')

@@ -17,7 +17,7 @@ function fixture(){
   }};
  const p={id:'p',typeId:'minecraft:player',isValid:true,location:{x:2,y:80,z:0},dimension:d,getGameMode:()=>GameMode.Survival,
   sendMessage:m=>messages.push(m),applyDamage:n=>{hits.push(n);return true},applyImpulse:()=>{},addEffect:()=>{}};
- const makeMob=(id,kind='hakkai:wild_0_2')=>({id,kind,family:'hakkai_wildlife',typeId:kind,isValid:true,location:{x:0,y:80,z:0},dimension:d,
+ const makeMob=(id,kind='hakkai:foe_0_0')=>({id,kind,family:'hakkai_wildlife',typeId:kind,isValid:true,location:{x:0,y:80,z:0},dimension:d,
   applyImpulse:()=>{},addEffect:()=>{},playAnimation:()=>{},getComponent:()=>({effectiveMax:1000,currentValue:1000,setCurrentValue:()=>{}})});
  const world={getDifficulty:()=>Difficulty.Normal,getAllPlayers:()=>[p]};
  const controller=setupMobSystem({ns:'hakkai:',world,system,num:()=>0,property:()=>{},report:(...a)=>reports.push(a)});
@@ -31,16 +31,16 @@ test('every scripted wildlife profile has the queried entity family',()=>{
  }
 });
 test('nearby unrelated entities cannot consume the wildlife query limit',()=>{
- const f=fixture(),mob=f.makeMob('hostile');
+ const f=fixture(),mob=f.makeMob('hostile');f.p.location.x=.7;
  f.setEntities([...Array.from({length:50},(_,i)=>({id:`item${i}`,kind:'minecraft:item',family:'item'})),mob]);
  for(const t of [0,120,160])f.tick(t);
- assert.ok(f.messages.length>0,'hostile receives its warning opportunity');assert.ok(f.hits.length>0,'warned attack resolves');
+ assert.equal(f.messages.length,0);assert.ok(f.hits.length>0,'body attack resolves');
  assert.ok(f.queries.some(q=>q.families?.includes('hakkai_wildlife')&&q.closest===40));
 });
 test('an invalid creature does not prevent later valid ones from acting',()=>{
- const f=fixture(),bad={id:'stale',family:'hakkai_wildlife',get typeId(){throw Error('unloaded')}},mob=f.makeMob('hostile');
+ const f=fixture(),bad={id:'stale',family:'hakkai_wildlife',get typeId(){throw Error('unloaded')}},mob=f.makeMob('hostile');f.p.location.x=.7;
  f.setEntities([bad,mob]);for(const t of [0,120,160])f.tick(t);
- assert.ok(f.reports.length>0);assert.ok(f.messages.length>0);assert.ok(f.hits.length>0);
+ assert.ok(f.reports.length>0);assert.equal(f.messages.length,0);assert.ok(f.hits.length>0);
 });
 test('one stale boss reference cannot block a later valid boss',()=>{
  const f=fixture(),bad={kind:'hakkai:eclipse_colossus',get typeId(){throw Error('unloaded')}},boss=f.makeMob('king','hakkai:eclipse_colossus');boss.family='hakkai_boss';

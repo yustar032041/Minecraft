@@ -11,13 +11,22 @@
         "form1": "textures/entity/hakkai_time_warden_form1",
         "form2": "textures/entity/hakkai_time_warden_form2",
         "form3": "textures/entity/hakkai_time_warden_form3",
-        "form4": "textures/entity/hakkai_time_warden_form4"
+        "form4": "textures/entity/hakkai_time_warden_form4",
+        "blade0": "textures/entity/hakkai_warden_sword_0",
+        "blade1": "textures/entity/hakkai_warden_sword_1",
+        "blade2": "textures/entity/hakkai_warden_sword_2",
+        "blade3": "textures/entity/hakkai_warden_sword_3",
+        "blade4": "textures/entity/hakkai_warden_sword_4",
+        "blade5": "textures/entity/hakkai_warden_sword_5",
+        "blade6": "textures/entity/hakkai_warden_sword_6",
+        "blade7": "textures/entity/hakkai_warden_sword_7"
       },
       "geometry": {
         "default": "geometry.hakkai.time_warden"
       },
       "render_controllers": [
-        "controller.render.hakkai.warden"
+        "controller.render.hakkai.warden",
+        "controller.render.hakkai.warden_held_sword"
       ],
       "animations": {
         "walk": "animation.hakkai.realm_ender.walk",
@@ -32,7 +41,9 @@
         "wing_flight": "animation.hakkai.warden_wing_flight",
         "hover": "animation.hakkai.warden_hover",
         "idle": "animation.hakkai.warden_idle",
-        "halo": "animation.hakkai.warden_halo"
+        "halo": "animation.hakkai.warden_halo",
+        "roll": "animation.hakkai.warden_roll",
+        "leap": "animation.hakkai.warden_leap"
       },
       "scripts": {
         "animate": [

@@ -11,6 +11,7 @@ import argparse,json,random
 from pathlib import Path
 from PIL import Image,ImageChops,ImageDraw,ImageEnhance,ImageFilter
 from build_guardian_appearances import face_sizes,fits,paste_with_gutter,bytes_png
+from refine_mob_anatomy import refine_model
 ROOT=Path(__file__).resolve().parents[1];RP=ROOT/'Hakkai_v7.1.0/ResourcePack';BASE=ROOT/'tools/art_templates/mob_baselines';MAT=ROOT/'tools/art_templates/guardian_materials';SIZE=1024
 
 def c(o,s):return {'origin':o,'size':s}
@@ -240,6 +241,28 @@ def build(index):
     paste_with_gutter(normal,patch,x,y)
     x+=w+pad;row=max(row,h+pad)
    cube['uv']=uv
+ # Keep the approved atlas unchanged: the thin-wing creature's old tail was
+ # hinged one model unit behind the shortened body. Extend its existing cube
+ # to the body's rear face and move the hinge there; no new texture is drawn.
+ if index==11:
+  tail=next(b for b in model['bones'] if b['name']==prefix+'tail')
+  tail['pivot'][2]=3
+  tail['cubes'][0]['origin'][2]=3
+  tail['cubes'][0]['size'][2]=3
+  # Give each wing two broad, shallow lobes instead of the shadow runner's
+  # long bar-like silhouette. Reuse the existing detail cubes and their UVs;
+  # they remain children of the animated wing, not independent floating parts.
+  lobes={
+   'wing_l_detail_0':([-8,4.8,-5],[4,.7,4]),
+   'wing_l_detail_1':([-7,4.8,3],[4,.7,4]),
+   'wing_r_detail_0':([4,4.8,-5],[4,.7,4]),
+   'wing_r_detail_1':([3,4.8,3],[4,.7,4]),
+  }
+  for name,(origin,size) in lobes.items():
+   part=next(b for b in model['bones'] if b['name']==prefix+name)
+   part['cubes'][0]['origin']=origin;part['cubes'][0]['size']=size
+   part['pivot']=[origin[0]+size[0]/2,origin[1],origin[2]+size[2]/2]
+ refine_model(ident,model)
  return {RP/f'models/entity/{ident}.geo.json':(json.dumps(obj,ensure_ascii=False,indent=2)+'\n').encode(),RP/f'textures/entity/{ident}.png':bytes_png(atlas),RP/f'textures/entity/{ident}_mer.png':bytes_png(mer),RP/f'textures/entity/{ident}_n.png':bytes_png(normal)}
 
 def main():

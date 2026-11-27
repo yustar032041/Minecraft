@@ -20,7 +20,7 @@ import { configureFriendlyFire,friendlyFireEnabled,setFriendlyFire,protectsPlaye
 import { placeRepeatSite } from './seeded_repeat_sites.js';
 import { setupBowTrail } from './combat_bow_trail.js';
 import { setupWeaponTrace, isTraceWeapon } from './combat_weapon_trace.js';
-import { tomeSpells, tomeUnlocked, tomeCurrent, tomeNext, tomeCrouchTick, recordTomeRealm, hasTomeRealm, clearTomePending, hasPendingTomeVisits } from './spell_tome.js';
+import { tomeSpells, tomeCurrent, tomeNext, tomeCrouchTick } from './spell_tome.js';
 import { VILLAGE_GUIDE_CHAPTERS } from './village_guide.js';
 import { validPlot, repairPlotStep, validRoute, readCarry, vanillaCarryStep, festivalGameStart, festivalGameAdvance, GAME_CORNERS, GAME_COURSES } from './village_projects.js';
 import { seasonAt, festivalAt, villageTier, requestStatus, contributeRequest, festivalJoin, donation, workDay, detectCrisis, recoverCrisis, addVillageMemory, depositToVillage, validWorkshop, workshopStep } from './village_life.js';
@@ -30,6 +30,7 @@ import { CULTURE_SITES, CULTURE_PEOPLE, cultureResidentIdentity, foundCultureRes
 import { FACTORY_VILLAGE_ID, foundFactoryResident } from './factory_village.js';
 import { villageIdentity, villageBuilt } from './resident_spawn.js';
 import { farmStep } from './factory_farm.js';
+import { validVillageHarvest, villageHarvestStep } from './village_harvest.js';
 import { itemDuctStep } from './factory_ducts.js';
 import { bearingState, setBearingMode, bearingStep, bearingAutoTick, armBearing } from './factory_bearing.js';
 import { isGantry, gantryState, setGantryMode, gantryStep, gantryAutoTick, armGantry } from './factory_gantry.js';
@@ -60,6 +61,8 @@ import { spawnRareEncounter, fushiThresholds } from './rare_encounters.js';
 import { setupWardenArena } from './warden_arena.js';
 import { protectWardenBreak, protectWardenExplosion } from './warden_arena_protection.js';
 import { setupWardenBoss } from './warden_boss.js';
+import {COMBAT_GUIDE_SECTIONS,COMBAT_GUIDE_FOOTER} from './combat_guide.js';
+import {SURPLUS_GUIDE} from './surplus_guide.js';
 import { setupCombatResonance, combatEnemies, applyCombatHit, combatEffectAllowed } from './combat_resonance.js';
 import { setupCombatGuard } from './combat_guard.js';
 import { setupCombatParry } from './combat_parry.js';
@@ -2811,11 +2814,9 @@ function cast(p,g,charged=false){
  },4+n%7);
 }
 function castElement(p,a,b=-1,label=attrs[a]){
- const s=state(p),key='spell',t=system.currentTick,n=b<0?12:19;
- if((s.cd.get(key)??0)>t){notice(p,'§e魔法はまだ再使用できない');return;}
+ const s=state(p),n=b<0?12:19;
  if(!isCreative(p)&&s.m<n){notice(p,'§e魔力が足りない');return;}
  if(!isCreative(p))s.m-=n;
- s.cd.set(key,t+120);
  const defense=[1,3,5].includes(a)&&b<0;
  p.addEffect(effects[a],170,{showParticles:!defense});
  if(b>=0)p.addEffect(effects[b],125,{showParticles:false});
@@ -2875,11 +2876,11 @@ const chapters=[
  ['八界の暮らしと名所','八界の人々が残した風車・文庫・隊商の迷路・氷宮・鍛冶場・地下庭・空の観測庭・待合駅があります。名所にある記録石を使うと、その土地の約束と歴史を読み、旅の記録にも残せます。欠片付きの記録石は持ち物が満杯だと記録できないので、空きを作ってもう一度使いましょう。名所ではモブ生成が有効なら語り手が各2人まで一度だけ現れます。しゃがんで話しかけると土地の話、立って話しかけると通常の取引です。予定地は新規の空き区画に限られます。'],
  ['八界の大景観','新しい空き区画では、草原の風車の飾り・森の巨木・砂の石門や化石・氷晶塔・雷石の尖塔・地下の光る茸や天井の鍾乳状の石・空の雲の塔・時の時計飾りなどが現れます。各界の丘や地表の色も違います。飾りの風車や時計は動きません。シードと地形により出現しない場所もあり、旧地形や建物は改造しません。'],
  ['工場村と観測遺跡','風車工場村は草原の界、雷雲の観測遺跡は雷の界の新しい探索地です。手引きで選ぶと予定座標を表示します。工場村では鐘が動く間に住人が少しずつ現れます。破砕機と製材機の西側の樽に素材を入れ、東側の樽に空きを作ると、風力で加工し、成功した生産量が集落の備蓄に加わります。備蓄は住人の維持や成長に使います。生成条件が合わない場合は現れません。'],
- ['最初のサバイバル','①ガイド本から旅の地図を開き、始まりの草原へ。②木・石・食料を集め、作業台とかまどを用意。③畑・釣り・牧場・採集を使って食料を確保。④通常ダッシュ・通常攻撃ではスタミナを消費しません。泳ぎや技で減ったら、泳ぎや防御をやめて回復。⑤魔法を使うと魔力を消費するので、使いどころを考えよう。⑥ベッドでリスポーン地点を設定し、風見の帰還石も手元に置いておくと安心です。最初から守護獣に挑まず、食料と装備を整えてから遠征しよう。'],
+ ['最初のサバイバル','①ガイド本から旅の地図を開き、始まりの草原へ。②木・石・食料を集め、作業台とかまどを用意。③畑・釣り・牧場・採集を使って食料を確保。④通常ダッシュ・通常攻撃ではスタミナを消費しません。泳ぎや技で減ったら、泳ぎや防御をやめて回復。⑤魔法を使うと魔力を消費するので、使いどころを考えよう。⑥ベッドでリスポーン地点を設定し、風見の帰還石も手元に置いておくと安心です。最初から守護獣に挑まず、食料と装備を整えてから遠征しよう。冒険の目安は第1界から第8界へ順に進み、各界の素材で装備を更新しながら守護獣に挑戦することです。旅の地図では前の界を訪れると次の界が解放され、後の界ほど敵は強くなります。守護獣を倒さなくても次の界を訪問でき、後から戻って挑戦できます。装備II・IIIの製作には前段階と追加素材が必要です。8体の討伐後は八界王や八界統合装の試練へ。統合装にはさらに冒険者ランクと素材が必要です。時空の管理者は別の挑戦で、8種のパールとFUSHIのトーテムから作る挑戦印が必要です。'],
  ['地形と集め方','各界の新しく生成される地形では、地表の下を掘って結晶鉱を探せます。浮島の地層は薄いので掘り抜きに注意。生成済みの場所には後から追加されません。到着地点近くにも小さな鉱床があります。守護獣を倒すと欠片が手に入り、同じ欠片2個とアメジストの欠片1個から結晶を作れます。バニラの敵も、ときどき欠片を落とします。'],
  ['野営とサバイバル','焚き火か魂の焚き火の近くで、しゃがんで静止すると野営休息になり、スタミナと魔力が速く回復します。野営のきのこ包み・根菜の焚き火焼き・森歩きの滋養食は採集や料理で作れます。回復付きの料理は食べ終えた時にスタミナや魔力を回復します。満腹の時は食べられず回復しません。乾燥肉・乾燥ベリー・燻製魚の切り身・乾燥昆布を作業台で合わせると野営の補給袋を2個作れます。畑・季節の菜園・釣り・牧場・かまどを組み合わせ、遠征前に食料を準備しましょう。'],
  ['戦闘とスタミナ','通常ダッシュ・通常攻撃はスタミナを使いません。泳ぎ・ロール・空中ダッシュ・空中攻撃・防御・パリィ・武器技などは消費し、泳ぎや防御をやめると回復します。バニラの空腹消費は別です。装備スキルや属性魔法を使えます。ガイド本の「八界の幻影闘技場」では、体力・魔力・相手の予告を見ながら行動を選ぶターン制ミニゲームに挑戦できます。記念館の達成度と記念品の収集が進むと、特別な第4戦が解放されます。闘技場はゲーム内の幻影戦で、実際のプレイヤーや建築物にはダメージを与えません。'],
- ['八属性と魔導書','本＋風の結晶で魔導書を作れます。手に持ってしゃがむたび、使用可能な魔法へ順に切り替え、使うボタンで選択中の魔法を発動。選択名は画面に表示されます。風・水・火・土・雷・光・闇・時の8属性を使え、対応する界に入るだけで、その界の属性が解放されます。草原は風・土、霧の森は土、砂は火、氷は水、雷は雷、地下庭園は闇、空は光、時は時。訪問の保存が失敗すると接続中は再試行しますが、保存前に切断・停止すると記録が失われ、再訪が必要になる場合があります。選択の未保存も切断時に消えます。霧・溶岩・嵐・虹・疾風は両方の属性が必要です。光の矢は光を訪問後、魔力5で視線上の敵へ放ちます。絆の灯は風と水を訪問後、近くにもう一人いる時に魔力20で参加者を回復し敵を攻撃します。風・水・炎の専用魔法も選べます。FUSHIのトーテムから月のまどろみを使用すると確認後に消費します。魔法の再使用時間は共通6秒です。この本の攻撃魔法と武器技の着火・鈍足・吹き飛ばしや闇魔法の吸収は、対象へのダメージが受理された時に発生します。命中しなくても魔力や再使用時間は消費します。月のまどろみは直接ダメージのない別の効果です。'],
+ ['八属性と魔導書','本＋風の結晶で魔導書を作れます。手に持ってしゃがむたびに魔法を切り替え、使うボタンで発動します。8属性・5つの組合せ・光、絆、風、水、炎の専用魔法は界の訪問や解放なしで選べます。通常は魔力が必要で、共通の入力間隔（約0.35秒）以外の魔導書の再使用待ちはありません。光の矢は魔力5、絆の灯は魔力20で自分と近くの仲間を回復し敵を攻撃します（一人でも使用可能）。選択を保存できなかった場合は接続中のみ保持します。月のまどろみはFUSHIのトーテムを手に持って使い、魔力15、消費なし、再使用6秒です。致命傷からの復活時は別途トーテムを消費します。この本の攻撃魔法と武器技の着火・鈍足・吹き飛ばしや闇魔法の吸収は、対象へのダメージが受理された時に発生します。命中しなくても魔力や再使用時間は消費します。月のまどろみは直接ダメージのない別の効果です。'],
  ['村の暮らし','風記の集落鐘を置くか、村人の近くで普通の鐘をしゃがんで使うと台帳が開きます。壁の数、高い見張り台、足止め罠、工場が守りを強くします。工場が出荷した備蓄は交易・村の成長・祭りに役立ちます。村人には朝・昼・夕の行き先があります。'],
  ['季節と釣り','季節は4ゲーム日ごとに変わります。花壇を置くと季節の花に変わり、集落鐘の周りでは作物の成長も変化します。釣り竿を持ち物に入れてガイド本の「水辺の釣り」へ。釣果は季節や天気、水辺の種類で変わります。釣り竿を持ち水面の近くで開始し、待っている間も竿と水辺が必要です。大きく移動すると中断しますが待ち時間は残ります。'],
  ['時の列車','第8界の時の終着駅に着いたら、ガイド本の「時の列車」へ。操車場で過去か未来を選ぶと乗車します。しゃがんで降りると、旅を中止できます。各時代の駅から現在へ戻れます。'],
@@ -3162,7 +3163,7 @@ async function quest(p){
   const nearby=id?(guardianMultiplayer.active(site,p.dimension)||!!p.dimension.getEntities({type:id,location:coords(site),maxDistance:32,closest:1}).length):undefined;
   hint=guardianChallengeHint({site,location:p.location,peaceful:world.getDifficulty()===Difficulty.Peaceful,remaining:Math.max(0,(state(p).cd.get('guard')??0)-system.currentTick),nearby,name:id?guardians[aspect(site)]:undefined});
  }catch{}
- const ix=await form(p,'風見台の依頼帳',`守護獣を倒した界：${guardians.filter((_,i)=>cleared&(1<<i)).length}/8\n村の信頼度：${num(p,'trust')}\n${hint}\n\n【守護獣への挑戦】①旅の地図で風見台以外の地点へ移動 ②地点の中心から25ブロック以内でガイド本→暮らしと準備→依頼帳を開き「近くの守護獣に挑む」を選ぶ。ピースフル不可。地点の中心から32ブロック以内の同じ守護獣や、足場が塞がっている時・周囲を確認できない時は挑戦できません。召喚者は次の召喚まで18秒待ちます。召喚結果が確認できない場合も周囲を確認して18秒待ってください。同じ地点で出した守護獣を追跡中は、仲間も重ねて召喚できません。追跡は再起動で消え、未読込の個体は検出できない場合があります。\nマルチでは討伐時に同じディメンションの64ブロック以内にいて、過去5分以内に守護獣へダメージを与えた人それぞれに討伐記録と守護核1個。観戦・離れた人・攻撃していない人・ログアウト中の人は対象外です。支援だけでは記録されません。参加記録は再起動で消えるので戦闘中に再起動したら再度攻撃してください。倒した後は再召喚でき、守護核も毎回獲得できます。持ち物が満杯なら自分の足元に落ち、他の人も拾えます。持ち物の書込失敗時は二重配布を避けて落とさず、持ち物と記録の確認を案内します。依頼帳の結晶報酬は各人の初討伐後に1回です。予告技は強力です。防具・食料と帰還石を用意しよう。八界王は八体討伐後にガイド本→戦いと挑戦。時空の管理者は八種のパールとFUSHIのトーテムで作る時空の挑戦印を使用。別々の挑戦です。`,[
+ const ix=await form(p,'風見台の依頼帳',`守護獣を倒した界：${guardians.filter((_,i)=>cleared&(1<<i)).length}/8\n村の信頼度：${num(p,'trust')}\n${hint}\n\n【守護獣への挑戦】①旅の地図で風見台以外の地点へ移動 ②地点の中心から25ブロック以内でガイド本→暮らしと準備→依頼帳を開き「近くの守護獣に挑む」を選ぶ。ピースフル不可。地点の中心から32ブロック以内の同じ守護獣や、足場が塞がっている時・周囲を確認できない時は挑戦できません。召喚者は次の召喚まで18秒待ちます。召喚結果が確認できない場合も周囲を確認して18秒待ってください。同じ地点で出した守護獣を追跡中は、仲間も重ねて召喚できません。追跡は再起動で消え、未読込の個体は検出できない場合があります。\nマルチでは討伐時に同じディメンションの64ブロック以内にいて、過去5分以内に守護獣へダメージを与えた人それぞれに討伐記録と守護核1個。観戦・離れた人・攻撃していない人・ログアウト中の人は対象外です。支援だけでは記録されません。参加記録は再起動で消えるので戦闘中に再起動したら再度攻撃してください。倒した後は再召喚でき、守護核も毎回獲得できます。持ち物が満杯なら自分の足元に落ち、他の人も拾えます。持ち物の書込失敗時は二重配布を避けて落とさず、持ち物と記録の確認を案内します。依頼帳の結晶報酬は各人の初討伐後に1回です。守護獣は界ごとに異なる扇・双閃・直線・十字などの波を、構えた後に自身から広げます。波は壁で遮れます。見える波を避け、防具・食料と帰還石を用意しよう。八界王は八体討伐後にガイド本→戦いと挑戦。時空の管理者は八種のパールとFUSHIのトーテムで作る時空の挑戦印を使用。別々の挑戦です。`,[
    ['近くの守護獣に挑む'],['初討伐の報酬を受け取る'],['村守りの報酬を受け取る'],['見回りを頼む'],['閉じる']
  ]);
  if(ix===undefined||ix===4)return;
@@ -3237,11 +3238,7 @@ async function settings(p){
 }
 function castMagic(p,kind){
  return castNewMagic({p,s:state(p),system,kind,notice,mark,visibleFrom,
-   consumeTotem:()=>{
-     const result=useSelectedConsumable(p,ns+'fushi_totem',false);
-     if(result==='restore_failed')report('月魔法','トーテムの復旧に失敗しました');
-     return result==='used';
-   },
+   hasTotem:()=>selected(p)?.typeId===ns+'fushi_totem',
    stagger:(enemy,duration)=>{
      try{combatParry?.staggerTarget(enemy,system.currentTick,duration);}catch{}
      try{mobSystem?.stagger(enemy,system.currentTick);}catch{}
@@ -3250,26 +3247,15 @@ function castMagic(p,kind){
 }
 async function totemMagicMenu(p){
  const slot=p.selectedSlotIndex,dim=p.dimension.id;
- const choice=await form(p,'FUSHIのトーテム','月のまどろみ：魔力15で自分を回復し周囲の敵の動きと近接を一時抑制。ボスには無効。サバイバルでは月魔法を使うとトーテムを1個消費します。持ち手かオフハンドで致命傷を受けた時にも消費し、復活を試みます（試作・実機未検証）。',[['トーテムを消費して使う'],['やめる']]);
+ const choice=await form(p,'FUSHIのトーテム','月のまどろみ：魔力15で自分を回復し周囲の敵の動きと近接を一時抑制。ボスには無効。月魔法ではトーテムは消費せず、再使用まで6秒待ちます。持ち手かオフハンドで致命傷を受けた時の復活では消費します（試作・実機未検証）。',[['消費せずに使う'],['やめる']]);
  if(choice!==0||!p.isValid)return;
  if(p.selectedSlotIndex!==slot||p.dimension.id!==dim||selected(p)?.typeId!==ns+'fushi_totem')return notice(p,'§eトーテムの位置が変わったため中止しました');
  castMagic(p,'moon');
 }
 const TOME_SPELLS=tomeSpells(attrs,pairs);
-// Forest previously had no base-tome attribute. It also unlocks earth, while
-// retaining the existing meadow unlock for backwards compatibility.
-const TOME_REALMS=Array.from({length:8},(_,a)=>home.flatMap((group,r)=>group.includes(a)||(a===3&&r===1)?[r]:[]));
 // A failed selection write should not prevent a usable spell from casting.
 // Cache only unsaved changes; remove them on player leave.
 const TOME_SELECTIONS=new Map();
-function tomeHasAttribute(p,a){
- if(isCreative(p))return true;
- for(const r of TOME_REALMS[a]??[]){
-  if(hasTomeRealm(p,r))return true;
-  try{if(visited(p,r+1))return true;}catch{}
- }
- return false;
-}
 function tomeSelectionIndex(p){
  if(TOME_SELECTIONS.has(p.id))return TOME_SELECTIONS.get(p.id);
  try{return num(p,'tome_spell_v1',-1);}catch{return -1;}
@@ -3278,16 +3264,16 @@ function saveTomeSelection(p,index){
  try{property(p,'tome_spell_v1',index);TOME_SELECTIONS.delete(p.id);return true;}
  catch{TOME_SELECTIONS.set(p.id,index);return false;}
 }
-function tomeSelection(p){return tomeCurrent(TOME_SPELLS,tomeSelectionIndex(p),a=>tomeHasAttribute(p,a));}
+function tomeSelection(p){return tomeCurrent(TOME_SPELLS,tomeSelectionIndex(p));}
 function advanceTome(p){
- const next=tomeNext(TOME_SPELLS,tomeSelectionIndex(p),a=>tomeHasAttribute(p,a));
- if(next<0)return notice(p,'§eまだ使用できる魔法がありません。対応する界を訪れてね',70);
+ const next=tomeNext(TOME_SPELLS,tomeSelectionIndex(p));
+ if(next<0)return notice(p,'§e魔導書の魔法が見つかりません',70);
  const saved=saveTomeSelection(p,next);notice(p,`§b魔導書：${TOME_SPELLS[next].label} §7｜使うボタンで発動${saved?'':'｜選択は一時的（保存失敗）'}`,70);
 }
 function castTome(p){
  if(!p?.isValid||p.getGameMode()===GameMode.Spectator||selected(p)?.typeId!==ns+'element_tome')return;
- const i=tomeSelection(p);if(i<0)return notice(p,'§eまだ使用できる魔法がありません。対応する界を訪れてね',70);
- const spell=TOME_SPELLS[i];if(!tomeUnlocked(spell,a=>tomeHasAttribute(p,a)))return;
+ const i=tomeSelection(p);if(i<0)return notice(p,'§e魔導書の魔法が見つかりません',70);
+ const spell=TOME_SPELLS[i];
  saveTomeSelection(p,i);
  if(spell.special)return castMagic(p,spell.special);
  return castElement(p,spell.a,spell.b,spell.label);
@@ -3422,7 +3408,7 @@ async function runeForge(p,table){
 async function villageWatch(p){
  const v=villagerNear(p,12),day=seasonDay();
  if(!v)return simple(p,'村の見回り','村人の近くで依頼を開いてください。');
- const ix=await form(p,'村の見回り','信頼度が高いほど頼める守り手が増えます。日ごとに一人、エメラルド1個で6分間の見回りを依頼できます。',civicRoles.map((r,i)=>[`${r.name}：信頼度${[3,7,12][i]}`]));
+ const ix=await form(p,'村の見回り','信頼度が高いほど頼める守り手が増えます。見張りは近接、弓兵は矢、魔法使いは壁や生物で止まる魔法弾を使います。日ごとに一人、エメラルド1個で6分間の見回りを依頼できます。',civicRoles.map((r,i)=>[`${r.name}：信頼度${[3,7,12][i]}`]));
  if(!Number.isInteger(ix)||ix<0||ix>=civicRoles.length||!p.isValid||!v.isValid||p.dimension.id!==v.dimension.id||dist(p.location,v.location)>12)return;
  if(seasonDay()!==day)return notice(p,'§e日が変わりました。もう一度依頼してください');
  const c=space(p),r=civicRoles[ix],d=p.dimension,creative=isCreative(p),trust=num(p,'trust');
@@ -4326,6 +4312,13 @@ async function gearEvolutionChronicle(p){
  return simple(p,'装備の段階と製作案内',`現在所持または装備中の等級IIIのカタログ装備：${owned}種（脚防具・覚醒鎧などは含みません）。\n\nII・IIIへは、対応する前段階の装備と素材を通常の作業台で組み合わせます。手持ち装備の次のレシピは装備収集帳から確認できます。\n\nこれは現在の所持状況であり、製作回数や過去に所持した記録ではありません。一部の装備は、守護獣や装備セットの試練でも1回受け取れます。`);
 }
 
+async function combatGuide(p){
+ while(p.isValid){
+  const choice=await form(p,'風紋・防御・回避・パリィ','知りたい操作を選んでください。\n'+COMBAT_GUIDE_FOOTER,[...COMBAT_GUIDE_SECTIONS.map(x=>[x.title]),['戻る']]);
+  if(!Number.isInteger(choice)||choice<0||choice>=COMBAT_GUIDE_SECTIONS.length)return;
+  const page=COMBAT_GUIDE_SECTIONS[choice];await simple(p,page.title,page.body);
+ }
+}
 async function survivalGuide(p){
  const rows=[
   ['旅の地図・行き先を選ぶ'],
@@ -4354,7 +4347,7 @@ async function survivalGuide(p){
  if(i===8)return help(p);
  if(i===9)return openCreatureGuide(p);
  if(i===10)return wardenArena?.open(p);
- if(i===11)return simple(p,'風紋・防御・回避・パリィ（試作）','§b風記の剣・斧・槍で立ったまま敵に命中すると風紋がたまります。4秒以内の命中を3回、間隔は0.4秒以上。最大で6秒間維持します。\n\n§e2つたまったら、しゃがみながら剣・斧・槍を使うボタンを押すだけで二連終撃。剣は前方3体、槍は前方2体、斧は周囲6体まで。威力と吹き飛ばしが上がります。3つたまってからの溜め技は代わりに風紋閃。壁や味方で止まります。どちらも外しても消費します。通常攻撃の命中ではスタミナを消費せず、溜め技は8と魔力が必要です。\n\n§b風記の剣・斧・槍を持ってしゃがむと、前方からの近接・飛び道具を70%軽減します。スタミナを毎秒5消費し、なくなったらしゃがみを解除して回復。構えの開始には最大約0.5秒かかります。\n\n§b風記の盾は両手どちらでも持て、しゃがむと試作の正面防御。斧を防ぐと約5秒無効。耐久と矢の跳ね返りは試作で、完全再現ではありません。実機確認まで頼らないでね。\n\n§a俊足の巻物：手に持って使うと1個消費し、移動速度上昇Iが8秒間。無敵や攻撃回避ではありません。防御の巻物は1個消費して耐性Iを8秒間。強い／同等で十分長い効果があると消費しません。\n\n§a戦意の角笛は消費せず、自分に攻撃力上昇Iを10秒間。使用成功後20秒待機します。敵の誘導や味方への効果はありません。\n\n§a回避ロール：しゃがみながら前進を素早く2回入力。スタミナ10、約0.5秒の攻撃回避と発動から約0.5秒の再使用待ち。地上で発動し、空中では発動しません。足場を確認しながら端で滑り止めを試み、斜め移動時は壁沿いに進みます。足場を確認できない時や壁の前では、その場で発動します。特殊な形状や外部の押し出しでは落ちる可能性があります。\n\n§b空中ダッシュ：空中でしゃがまずに前進を一度離し、素早く2回入力。スタミナ15、着地まで1回。着地時の落下ダメージ1回を防ぎますが、攻撃無敵や奈落防止ではありません。\n\n§b武器の軌跡：風記の武器97種で攻撃すると前方に当たり判定付きの軌跡が出ます。同じ一振りで本体が当たった相手には重ねて当たりません。軌跡は壁や味方を越えず、プレイヤーや友好生物を攻撃しません。基礎威力は武器と同じですが防具やエンチャント等で実際の損傷は変わります。落下中に攻撃すると着地まで1回空中攻撃に変化。空中攻撃はスタミナ9を消費します。通常命中の費用はありません。直接命中への重複ダメージはありません。杖は最大16ブロックへ飛ぶ弾を放ち、弓の矢には光跡が付きます。剣・斧・槍・盾・扇・ハンマーは種類ごとの形。しゃがみ近接の自動スキルは停止。しゃがんで武器を使うと溜め技（弓は約0.4秒使用して離す）。\n\n§6必殺：武器を持ってジャンプし、しゃがまず空中で使うボタン。スタミナ20と魔力10で、見通せる敵へ必殺。武器の種類で範囲が変わり、1秒間通常ダメージを防ぎます。護符版は従来の低資源条件です。奈落や直接体力変更は防げず、30秒待機します。\n\n§eパリィ：盾を持たない剣・斧・槍の防御中にしゃがみを解除し、約0.3秒以内に正面から敵の近接か飛び道具を受けるとスタミナ15で防ぎます。近い敵の近接と一部の技を約2秒止めます。全攻撃・全行動が止まるわけではありません。管理者へのしゃがみ近接パリィも使えます。\n\n§7マナ・再使用時間は通常通り必要。操作・演出・バランスは試作で、統合版の検証が必要です。');
+ if(i===11)return combatGuide(p);
  if(i===12)return guide(p);
 }
 
@@ -4376,7 +4369,7 @@ async function openCreatureGuide(p){
   if(realm===undefined||realm===9)return;
   if(realm===8){
    const fq=fushiQuest.status(p);
-   await simple(p,'§d界渡りとFUSHI', `§b友好の記録：竹 ${fq.bamboo}/16・月夜 ${fq.nights}/2 ${fq.claimed?'（受取済み）':''}\n\n各界を探索すると、その界のエンダーマンにまれに出会います。視線または攻撃で敵対し、倒すと参加者に界のパールを配布します。使うと対応する界の到着地点へ帰還します（消費しません）。\n\n第8界では友好的なFUSHIとチーフもまれに出現します。新規地形の竹林では出会いやすく、竹を採って交換に使えます。チーフは攻撃された場合だけ強く反撃し、参加者に時の結晶2個とトーテム1個を配布します。戦わず竹8本を届ければ、1日1回、時の欠片2個と交換できます。\n\n界渡りとチーフは、討伐時に同じディメンション64ブロック以内にいて直近5分に攻撃した人ごとに報酬を受け取れます。観戦・支援だけ・離れた人・切断中は対象外。再起動で参加記録は消えます。満杯分は足元に落ち他の人も拾えます。書込失敗時は落とさず、持ち物と記録を確認し、必要なら再挑戦してください。\n\nFUSHIのトーテムはチーフの討伐か竹16本との交換に加え、月竹林で新月以外の夜に竹を採るとまれに見つかります（取得後24000ティックは再獲得不可）。8種のパールと合わせると挑戦印を作れます。使うと確認後に消費して月のまどろみを発動できます。両手のいずれかで持つと致命傷からの復活を試みます（試作）。挑戦印から試作の時空の闘技場へ入れます。新しい月竹林には小さな社もあります。チーフから月夜に竹16本を2夜にわたり採る友好の贈り物も受け取れます。社と管理者の全技はまだ試作です。`);
+   await simple(p,'§d界渡りとFUSHI', `§b友好の記録：竹 ${fq.bamboo}/16・月夜 ${fq.nights}/2 ${fq.claimed?'（受取済み）':''}\n\n各界を探索すると、その界のエンダーマンにまれに出会います。視線または攻撃で敵対し、界ごとに異なる位置へワープした後、構えて属性色の弾を放ちます。弾の進路から避けるか壁などで遮れます。狙われた人以外は弾を受け止めてもダメージを受けません。倒すと参加者に界のパールを配布します。パールを使うと第1界のパールは風見台へ、ほかは対応する界の到着地点へ帰還します（消費しません）。\n\n第8界では友好的なFUSHIとチーフもまれに出現します。新規地形の竹林では出会いやすく、竹を採って交換に使えます。チーフは攻撃された場合だけ反撃し、体当たり・月の弾・自身の周囲に広がる霧を使います。構えや攻撃を見て避けましょう。攻撃を狙われた人だけが対象です。討伐参加者に時の結晶2個とトーテム1個を配布します。戦わず竹8本を届ければ、1日1回、時の欠片2個と交換できます。\n\n界渡りとチーフは、討伐時に同じディメンション64ブロック以内にいて直近5分に攻撃した人ごとに報酬を受け取れます。観戦・支援だけ・離れた人・切断中は対象外。再起動で参加記録は消えます。満杯分は足元に落ち他の人も拾えます。書込失敗時は落とさず、持ち物と記録を確認し、必要なら再挑戦してください。\n\nFUSHIのトーテムはチーフの討伐か竹16本との交換に加え、月竹林で新月以外の夜に竹を採るとまれに見つかります（取得後24000ティックは再獲得不可）。8種のパールと合わせると挑戦印を作れます。手に持って使うと確認後、魔力15で月のまどろみを発動し、トーテムは消費せず6秒の再使用待ちになります。両手のいずれかで持つと致命傷からの復活を試み、その時はトーテムを消費します（試作）。挑戦印から試作の時空の闘技場へ入れます。新しい月竹林には小さな社もあります。チーフから月夜に竹16本を2夜にわたり採る友好の贈り物も受け取れます。社と管理者の全技はまだ試作です。`);
    continue;
   }
   const entries=creatureEntriesByRealm(list,realm);let page=0;
@@ -4402,7 +4395,7 @@ async function colossusGuide(p){
   ['§6攻略情報を読む',itemTexture('eclipse_core')],['§c八界王を召喚する',itemTexture('guardian_core_7')],['§8閉じる']
  ]);
  if(choice===1)return mobSystem?.summonColossus(p);
- if(choice===0)return simple(p,'§4終焉の八界王｜攻略帳','三段階の巨大ボス。八界断ち、星骸落とし、時環封じ、蝕光爆ぜ、影兵招来、時空裂波、終焉咆哮、逆刻再編、星蝕の収束を使う。\n\n赤い予告輪の外へ退避し、逆刻再編は回復を行う。予告中に近い攻撃をパリィできれば中断できる場合があるが、普通の攻撃だけでは止まらない。強力な攻撃は防具を整えても危険。条件を満たす参加者はそれぞれ時蝕核を獲得できる。時蝕核1個を作業台で時の結晶8個に加工できる（核は消費）。');
+ if(choice===0)return simple(p,'§4終焉の八界王｜攻略帳','三段階の巨大ボス。八界断ち、星骸落とし、時環封じ、蝕光爆ぜ、影兵招来、八界守護の影、時空裂波、終焉咆哮、逆刻再編、星蝕の収束を使う。特別な守護獣は王の構えの後に王の周囲へ現れ、各界で通常種とは異なる形の波を使う。通常の守護核・討伐記録は得られない。\n\n赤い予告輪の外へ退避し、逆刻再編は回復を行う。予告中に近い攻撃をパリィできれば中断できる場合があるが、普通の攻撃だけでは止まらない。強力な攻撃は防具を整えても危険。討伐済みの守護獣の素材で作れる上位防具・武器を整え、食料や回復薬を持とう。条件と素材が揃えば八界統合装・風記の永劫鎧も王の前に作れる。条件を満たす参加者はそれぞれ時蝕核を獲得できる。時蝕核1個を作業台で時の結晶8個に加工できる（核は消費）。');
 }
 async function villageGuide(p){
  while(p.isValid){
@@ -4497,14 +4490,23 @@ async function openSpecialMaterialCatalog(p){
   return;
  }
 }
+async function openSurplusGuide(p){
+ while(p.isValid){
+  const selected=await form(p,'§a余った素材の活用','§7交換は任意で素材を消費します。使い切った素材も、対象を再討伐するなどして集め直せます。', [...SURPLUS_GUIDE.map(x=>[x.title]),['戻る']]);
+  if(selected===undefined||selected===SURPLUS_GUIDE.length)return;
+  const entry=SURPLUS_GUIDE[selected];if(!entry)return;
+  await simple(p,entry.title,entry.body);
+ }
+}
 async function openRecipeCatalog(p){
  const groups=['装備・終刻のレシピ','その他の作業台レシピ','燻製・醸造レシピ'];
  while(p.isValid){
-  const selected=await form(p,'§6追加レシピ一覧',`パックのレシピJSON ${RECIPE_INDEX.length}件。項目を選ぶと素材・配置・作成場所を表示します。バニラ素材は名前とIDを併記します。機械加工は別の一覧から探せます。交換・報酬は含まれません。`,[...groups.map((g,i)=>[`${g}（${RECIPE_INDEX.filter(r=>r[0]===i).length}件）`]),['§b素材から使い道を探す'],['閉じる'],['§e完成品の名前・IDで検索'],['§e素材の名前・IDで検索'],['§b機械加工レシピ・検索'],['§b動的アイテムの入手と使い道']]);
+  const selected=await form(p,'§6追加レシピ一覧',`パックのレシピJSON ${RECIPE_INDEX.length}件。項目を選ぶと素材・配置・作成場所を表示します。バニラ素材は名前とIDを併記します。機械加工は別の一覧から探せます。交換・報酬は含まれません。`,[...groups.map((g,i)=>[`${g}（${RECIPE_INDEX.filter(r=>r[0]===i).length}件）`]),['§b素材から使い道を探す'],['閉じる'],['§e完成品の名前・IDで検索'],['§e素材の名前・IDで検索'],['§b機械加工レシピ・検索'],['§b動的アイテムの入手と使い道'],['§a余った素材の活用']]);
   if(selected===undefined||selected===4)return;
   if(selected===3){await openRecipeUses(p);continue;}
   if(selected===7){await openMachineCatalog(p);continue;}
   if(selected===8){await openSpecialMaterialCatalog(p);continue;}
+  if(selected===9){await openSurplusGuide(p);continue;}
   if(selected===5||selected===6){
    const query=await recipeQuery(p,selected===5?'§e完成品を検索':'§e素材を検索');if(query===undefined)continue;
    if(!query.trim()){await simple(p,'検索','名前やIDを入力してください。');continue;}
@@ -4553,6 +4555,7 @@ async function dispatchGuide(p,ix){
  if(ix===52)return survivalGuide(p);
  if(ix===53)return openCreatureGuide(p);
  if(ix===54)return colossusGuide(p);
+ if(ix===55)return wardenArena?.open(p);
  if(ix===0)return map(p);if(ix===1)return help(p);if(ix===2)return details(p);if(ix===3)return quest(p);if(ix===4)return fishing(p);if(ix===5)return settings(p);
  if(ix===6)notice(p,restore(p)?'§aガイド本と帰還石は持ち物にある':'§e持ち物に空きを作ってね');
  if(ix===7){
@@ -4607,14 +4610,14 @@ async function dispatchGuide(p,ix){
  if(ix===51)return expeditionRecords?.journal(p);
 }
 async function magicIndex(p){
- const desc=['速さと突風','回復と水中呼吸','火炎と火への耐性','耐性と吸収','前方への雷撃と弱体化','毒・衰弱・盲目を解除','命中した敵から体力を吸収','敵の動きを大幅に遅くする','突風と目くらまし','熱と土の守り','雷と水の嵐','光と闇、吸収の加護','敵を遅くし、自分を速くする','前方への光の一撃','仲間と共に回復と反撃','周囲の敵を吹き飛ばす','敵を大幅に遅くする','周囲の敵に火をつける','トーテムを消費し回復と敵の動きの抑制（本当の眠りではない）'];
+ const desc=['速さと突風','回復と水中呼吸','火炎と火への耐性','耐性と吸収','前方への雷撃と弱体化','毒・衰弱・盲目を解除','命中した敵から体力を吸収','敵の動きを大幅に遅くする','突風と目くらまし','熱と土の守り','雷と水の嵐','光と闇、吸収の加護','敵を遅くし、自分を速くする','前方への光の一撃','仲間と共に回復と反撃','周囲の敵を吹き飛ばす','敵を大幅に遅くする','周囲の敵に火をつける','トーテムを消費せず回復と敵の動きを抑制（再使用6秒、本当の眠りではない）'];
  const names=[...attrs.slice(0,8),...pairs.map(r=>`${r.label}（${attrs[r.a]}＋${attrs[r.b]}）`),'光の矢','絆の灯','風の輪','水の縛り','炎の環','月のまどろみ'];
- return paged(p,'魔法図鑑','◆ 発動したことがある魔法。訪問による解放と発動方法は魔導書に記載。',names.map((v,i)=>[`${marked(p,'learned_spells',i)?'◆':'◇'} ${v}：${desc[i]}`]));
+ return paged(p,'魔法図鑑','◆ 発動したことがある魔法。魔導書は訪問不要、月の魔法はFUSHIのトーテムから使用。',names.map((v,i)=>[`${marked(p,'learned_spells',i)?'◆':'◇'} ${v}：${desc[i]}`]));
 }
 async function recipeIndex(p){
  const entries=[
   ['導入の道具','ガイド本：本＋羽根。風見の帰還石：アメジストの欠片＋紙＋丸石。帰還は風見の帰還石を使います。'],
-  ['魔法と醸造','不屈の護符：アメジストの欠片＋風と時の結晶。魔導書：本＋風の結晶。光・風・水・炎・絆は魔導書から使えます。月はFUSHIのトーテムを使います。薄明の薬液：瓶＋グロウベリー。薬液＋水の結晶を醸造台で醸造（燃料はブレイズパウダー）。'],
+  ['魔法と醸造','不屈の護符：アメジストの欠片＋風と時の結晶。魔導書：本＋風の結晶。光・風・水・炎・絆は魔導書から使えます。月はFUSHIのトーテムを使います。魔力の薬は作業台でガラス瓶＋グロウベリー＋水の結晶から直接作れます。別の方法として、瓶＋グロウベリーの薄明の薬液を水の結晶で醸造するレシピや、醸造台をしゃがんで使う20秒の方式もあります。'],
   ['結晶と通行札','同属性の欠片2個＋アメジストの欠片で結晶。離島の通行札：紙＋風の結晶＋風の欠片。'],
   ['生き物の素材と欠片','生き物から手に入る生体核片は20属性で共通です。生体核片1個を作業台または破砕機で加工すると、同属性の欠片を2個入手できます。生き物ごとの種類は「生き物・素材・技図鑑」で確認できます。欠片2個＋アメジストの欠片1個から結晶を作り、装備や魔法に利用できます。'],
   ['牧場と遺跡','季節の花壇：土＋オークの板材＋骨粉で2個作れます。動物に餌を与えたとき、1日1回、骨粉を受け取れます。時渡りの羅針盤：コンパス＋風記の断片＋時の結晶。'],
@@ -4786,7 +4789,7 @@ function townRoutine(t){
  for(const mage of d.getEntities({type:ns+'village_mage',location:l,maxDistance:22,closest:2}))try{
    const foe=hostile.find(e=>dist(e.location,mage.location)<9&&visibleFrom(mage,e.getHeadLocation()));
    if(foe&&permit(mage,115,'town_spell')){
-     patrolMagicHit(mage,foe);
+     patrolMagicHit(mage,foe,system,world);
    }
  }catch{}
  const dutyStart=t.factoryVillage?(t.dutyCursor??0)%citizens.length:0;
@@ -4911,6 +4914,7 @@ function lifeWorkers(t){
  const people=t.d.getEntities({location:t.l,maxDistance:t.factoryVillage?60:32,closest:48}).filter(e=>e.isValid);
  return {farmer:people.some(e=>t.factoryVillage&&e.typeId==='minecraft:villager_v2'&&factoryResidentRole(e)==='grower'&&!e.getComponent('minecraft:is_baby')),artisan:people.some(e=>villagerJob(e,world)==='artisan'),builder:people.some(e=>villagerJob(e,world)==='builder')};
 }
+const villageHarvestCursors=new Map();
 function lifeTick(p,site,tick){
  const s=state(p);if(tick<(s.villageLifeAt??0))return;s.villageLifeAt=tick+200;
  const t=lifeTownForPlayer(p,site);if(!t||!lifeNear(p,t)||tick<(t.lifeTickAt??0))return;t.lifeTickAt=tick+200;
@@ -4932,6 +4936,13 @@ function lifeTick(p,site,tick){
      if(raw!==oldRaw){property(world,t.key,oldRaw);if(world.getDynamicProperty(ns+t.key)!==oldRaw)throw Error('村記録の復旧を確認できません');}
      t.data=live;const current=townGet(t.d,t.l,true);if(current){current.data=live;if(t.lifeSiteId)current.lifeSiteId=t.lifeSiteId;}
     }});
+  }
+  const harvest=townRecord(t);
+  if(harvest.lifeHarvest&&now>=(harvest.lifeHarvestAt??-200)+200){
+   const worked=villageHarvestStep(t,harvest.lifeHarvest,{farmStep,factoryTransaction,ItemStack,cursors:villageHarvestCursors,report,
+    workerRole:e=>villagerJob(e,world)==='artisan'||t.factoryVillage&&factoryResidentRole(e)==='grower',
+    currentHarvest:()=>lifeNear(p,t)?townRecord(t).lifeHarvest:undefined});
+   if(worked)saveVillageLife(t,{...townRecord(t),lifeHarvestAt:now});
   }
   const f=festivalAt(day,lifeRealm(t)),tier=villageTier(townRecord(t),lifeBuildings(t));
   if(f.open||tier.index>=1){try{t.d.spawnParticle(`hakkai:climate_${f.open?lifeRealm(t):seasonAt(day).index}`,{x:t.l.x+.5,y:t.l.y+2,z:t.l.z+.5});}catch{}}
@@ -5029,9 +5040,13 @@ async function villageSupplyMenu(p,t){
 
 共同工房：登録した2つの樽だけを使い、近くの物資係は小麦3→パン1、工場村の製材係はオーク原木1→板材4を現物で加工します。入出力樽から6ブロック以内に住人が必要、成功後60秒待機。加工中に樽・住人・登録・記録が変わると中止します。比較できない特殊データ付き材料は使えない場合があります。
 
-運搬：物資係が登録した2樽の間を歩き、小麦・パン・オーク原木・板材を1個ずつ移します。普通村人は持ち物を使わず、到着時に元の樽から出力樽へ移すため、運搬中は元の樽に残ります。樽は3〜16ブロック離して登録。登録解除で運搬を中止します。比較できない特殊データ付き品は運ばない場合があります。途中で樽や経路が変わった場合、品物と樽を確認してください。`,[['小麦4個を寄付'],['オークの板材4個を寄付'],['共同工房の樽を登録'],['工房の登録を解除'],['運搬元と運搬先の樽を登録'],['運搬登録を解除'],['閉じる']]);
+収穫：樽を1つ登録すると、樽と同じ高さの周囲5×5（樽の場所を除く）の熟した作物を、近くの物資係か風車村の畑守が1株ずつ収穫して樽に入れます。小麦・ニンジン・ジャガイモ・ビートルートと季節作物5種に対応し、株は成長0に戻ります。村人は移動や持ち運びをせず、樽から6ブロック以内にいる時だけ作業。10秒に1株、満杯なら待機します。樽は必ず自分が許可できる畑に登録し、止めたい時は登録解除してください。
+
+運搬：物資係が登録した2樽の間を歩き、小麦・パン・オーク原木・板材を1個ずつ移します。普通村人は持ち物を使わず、到着時に元の樽から出力樽へ移すため、運搬中は元の樽に残ります。樽は3〜16ブロック離して登録。登録解除で運搬を中止します。比較できない特殊データ付き品は運ばない場合があります。途中で樽や経路が変わった場合、品物と樽を確認してください。`,[['小麦4個を寄付'],['オークの板材4個を寄付'],['共同工房の樽を登録'],['工房の登録を解除'],['運搬元と運搬先の樽を登録'],['運搬登録を解除'],['収穫先の樽を登録'],['収穫登録を解除'],['閉じる']]);
  if(!lifeNear(p,t))return;
  if(ix===2||ix===4){state(p).villageBarrelPick={town:t,phase:0,mode:ix===4?'route':'workshop',expires:system.currentTick+600};return notice(p,'§b30秒以内に入力樽、次に出力樽をしゃがんで使ってください',120);}
+ if(ix===6){state(p).villageBarrelPick={town:t,mode:'harvest',expires:system.currentTick+600};return notice(p,'§b30秒以内に畑と同じ高さの収穫先樽をしゃがんで使ってください',120);}
+ if(ix===7){const data=townRecord(t);delete data.lifeHarvest;saveVillageLife(t,data);return notice(p,'§e収穫登録を解除しました');}
  if(ix===3){const data=townRecord(t);delete data.lifeWorkshop;saveVillageLife(t,data);return notice(p,'§e共同工房の樽登録を解除しました');}
  if(ix===5){const data=townRecord(t);delete data.lifeRoute;saveVillageLife(t,data);return notice(p,'§e運搬登録を解除しました。持ち運び中の品は運搬先へ届けます');}
  if(ix!==0&&ix!==1)return;
@@ -5254,9 +5269,9 @@ async function openRelic(p){
 }
 async function spellwork(p){
  const pick=await form(p,'醸造と属性刻印','しゃがんで台を使ったときだけ、風記の別画面を開きます。普通に使うとバニラの画面です。',[
-   ['醸造台：20秒かけて魔力の薬を作る'],...runes.map(x=>[`${x.name}の属性刻印`])
+   ['魔力の薬の作り方'],...runes.map(x=>[`${x.name}の属性刻印`])
  ]);
- if(pick===0)return simple(p,'魔力の薬','作業台でガラス瓶＋グロウベリーから薄明の薬液を作り、通常の醸造台の瓶スロットへ。材料は水の結晶、燃料はブレイズパウダーです。しゃがんで台を使う旧方式も使えます。');
+ if(pick===0)return simple(p,'魔力の薬','魔力の薬は作業台でガラス瓶＋グロウベリー＋水の結晶を組み合わせると直接作れます。\n\n別の方法：薄明の薬液（瓶＋グロウベリー）と水の結晶で通常の醸造台を使うレシピがあります。台をしゃがんで使うと、瓶・グロウベリー・水の結晶・ブレイズパウダーを各1個使う20秒方式も選べます。');
  if(pick>0)return simple(p,`${runes[pick-1].name}の属性刻印`,`${runes[pick-1].desc}。対応する結晶2個を用意し、バニラの剣または普通の本を持ってしゃがみ、エンチャント台を使います。刻印書も同じ台で使えます。`);
 }
 async function brewWork(p,at){
@@ -5288,6 +5303,11 @@ safeSub('world','before','playerInteractWithBlock',e=>{
      if(type!=='minecraft:barrel'||!p.isValid||p.dimension.id!==dimension||dimension!==pick.town.d.id||dist(p.location,at)>7){state(p).villageBarrelPick=undefined;return notice(p,'§e樽を選んでください。登録を中止しました');}
      const t=townGet(p.dimension,pick.town.l,true);if(t&&pick.town.lifeSiteId)t.lifeSiteId=pick.town.lifeSiteId;
      if(!t||!lifeNear(p,t)||p.dimension.getBlock(at)?.typeId!=='minecraft:barrel'){state(p).villageBarrelPick=undefined;return notice(p,'§e村か樽を確認できません');}
+     if(pick.mode==='harvest'){
+      state(p).villageBarrelPick=undefined;
+      if(!validVillageHarvest(t,at))return notice(p,'§e村の近くにある樽を選んでください');
+      saveVillageLife(t,{...townRecord(t),lifeHarvest:at});return notice(p,'§a収穫先の樽を登録しました。周囲5×5の熟した作物が対象です',120);
+     }
      if(pick.phase===0){pick.phase=1;pick.input=at;pick.town=t;return notice(p,pick.mode==='route'?'§b次に3〜16ブロック先の運搬先樽を選んでください':'§b次に4ブロック以内の出力樽をしゃがんで使ってください',100);}
      state(p).villageBarrelPick=undefined;const setup={input:pick.input,output:at};
      if(!(pick.mode==='route'?validRoute(t,setup):validWorkshop(t,setup))||!p.dimension.isChunkLoaded(setup.input)||p.dimension.getBlock(setup.input)?.typeId!=='minecraft:barrel')return notice(p,pick.mode==='route'?'§e異なる樽を3〜16ブロック離して指定してください':'§e異なる樽を4ブロック以内で指定してください');
@@ -5350,7 +5370,7 @@ function use(e){
  if(id===ns+'return_stone')menu(p,returnMenu);
  const pearl=id.match(/^hakkai:pearl_([0-7])$/);
  if(pearl){const realm=Number(pearl[1]);void arrive(p,places[realm===0?0:realm+1]);return;}
- if(id===ns+'element_tome'){recordTomeRealm(p);tomeCrouchTick(p,s,id,()=>advanceTome(p));return castTome(p);}
+ if(id===ns+'element_tome'){tomeCrouchTick(p,s,id,()=>advanceTome(p));return castTome(p);}
  if(id===ns+'village_badge'||id===ns+'wind_legacy_memorial'){
   const result=useKeepsake(p,id,s.cd,t);
   if(result==='used')return notice(p,id===ns+'village_badge'?'§a村守りのしるし：耐性Iを8秒（再使用まで60秒）':'§a終章の記念章：暗視Iを60秒（再使用まで120秒）');
@@ -5978,6 +5998,7 @@ function wildlifeTick(p,b,site){
 }
 safeSub('world','after','entityHurt',({hurtEntity:e,damageSource:source,damage})=>{
  try{guardianMultiplayer.record(e,source,damage,system.currentTick);bossMultiplayer.record(e,source,damage,system.currentTick);}catch(err){report('ボスの参加記録',err);}
+ try{wardenBoss?.onHurt({hurtEntity:e,damageSource:source,damage});}catch(err){report('管理者の戦況判断',err);}
  if(source.cause===EntityDamageCause.entityAttack&&source.damagingEntity?.typeId==='minecraft:player')try{
    const p=source.damagingEntity;
    if(p.getGameMode()!==GameMode.Spectator){
@@ -6046,7 +6067,7 @@ safeSub('world','after','entityDie',e=>{combatParry?.clearAttacker(e.deadEntity.
 // Optional events clear a stored wind mark promptly; the identity/expiry
 // check in the controller still protects older API versions.
 try{world.afterEvents.playerHotbarSelectedSlotChange?.subscribe(({player})=>{combatResonance?.clear(player.id);combatGuard?.invalidate(player.id);combatParry?.clear(player.id);combatCharge?.clear(player.id);weaponTrace?.clear(player.id);});}catch{}
-try{world.afterEvents.playerDimensionChange?.subscribe(({player,toDimension})=>{recordTomeRealm(player,toDimension?.id);combatResonance?.clear(player.id);combatGuard?.invalidate(player.id);combatRoll?.clear(player.id);combatParry?.clear(player.id);airDash?.clear(player.id);airStrike?.clear(player.id);combatUltimate?.invalidate(player.id);combatCharge?.clear(player.id);weaponTrace?.clear(player.id);bowTrail?.clear(player.id);});}catch{}
+try{world.afterEvents.playerDimensionChange?.subscribe(({player})=>{combatResonance?.clear(player.id);combatGuard?.invalidate(player.id);combatRoll?.clear(player.id);combatParry?.clear(player.id);airDash?.clear(player.id);airStrike?.clear(player.id);combatUltimate?.invalidate(player.id);combatCharge?.clear(player.id);weaponTrace?.clear(player.id);bowTrail?.clear(player.id);});}catch{}
 safeSub('world','after','entityDie',({deadEntity})=>{if(deadEntity?.typeId==='minecraft:player'){customShield.clear(deadEntity.id);wardenBoss?.clearMusic(deadEntity.id);combatResonance?.clear(deadEntity.id);combatGuard?.clear(deadEntity.id);combatRoll?.clear(deadEntity.id);combatParry?.clear(deadEntity.id);airDash?.clear(deadEntity.id);airStrike?.clear(deadEntity.id);combatUltimate?.clear(deadEntity.id);combatCharge?.clear(deadEntity.id);weaponTrace?.clear(deadEntity.id);bowTrail?.clear(deadEntity.id);}});
 safeSub('world','before','playerInteractWithEntity',e=>{
  const p=e.player;
@@ -6266,7 +6287,6 @@ safeSub('world','after','entityHitEntity',({damagingEntity:p,hitEntity})=>{
  if(g&&!parried&&(!weaponTrace?.enabled()||!isTraceWeapon(g))&&p.isSneaking&&hitEntity.typeId!=='minecraft:player'&&system.currentTick-s.useTick>=7){s.useTick=system.currentTick;cast(p,g);}
 });
 safeSub('world','after','playerSpawn',({player:p,initialSpawn})=>{
- recordTomeRealm(p);
  system.runTimeout(()=>{
    if(!p.isValid)return;
    const s=state(p);
@@ -6279,7 +6299,7 @@ safeSub('world','after','playerSpawn',({player:p,initialSpawn})=>{
    }
  },12);
 });
-safeSub('world','after','playerLeave',({playerId})=>{sessions.delete(playerId);TOME_SELECTIONS.delete(playerId);clearTomePending(playerId);mobSystem?.clearMarks(playerId);customShield.clear(playerId);shrineChiefs.clearPlayer(playerId);expeditionRecords?.clear(playerId);wardenArena?.clearPlayer(playerId);wardenBoss?.clearMusic(playerId);combatCharge?.clear(playerId);weaponTrace?.clear(playerId);bowTrail?.clear(playerId);combatResonance?.clear(playerId);combatGuard?.clear(playerId);combatRoll?.clear(playerId);combatParry?.clear(playerId);airDash?.clear(playerId);airStrike?.clear(playerId);combatUltimate?.clear(playerId);});
+safeSub('world','after','playerLeave',({playerId})=>{sessions.delete(playerId);TOME_SELECTIONS.delete(playerId);mobSystem?.clearMarks(playerId);customShield.clear(playerId);shrineChiefs.clearPlayer(playerId);expeditionRecords?.clear(playerId);wardenArena?.clearPlayer(playerId);wardenBoss?.clearMusic(playerId);combatCharge?.clear(playerId);weaponTrace?.clear(playerId);bowTrail?.clear(playerId);combatResonance?.clear(playerId);combatGuard?.clear(playerId);combatRoll?.clear(playerId);combatParry?.clear(playerId);airDash?.clear(playerId);airStrike?.clear(playerId);combatUltimate?.clear(playerId);});
 const bar=n=>'■'.repeat(Math.floor(n/20))+'□'.repeat(5-Math.floor(n/20));
 function hudLine(p,s,t){
  const pale=num(p,'hud_color'),st=Math.floor(s.s),mana=Math.floor(s.m),show=t<s.until,mode=num(p,'hud_pos');
@@ -6306,12 +6326,7 @@ system.runInterval(()=>{
  if(t>=cooldownSweep){cooldownSweep=t+60;for(const [id,end] of tempCooldown)if(t>=end)tempCooldown.delete(id);guardianMultiplayer.prune(t);bossMultiplayer.prune(t);}
  for(const p of world.getAllPlayers()){
    try{
-     recordTomeRealm(p); // Also flush pending visits when outside the realms.
      const s=state(p);
-     if(hasPendingTomeVisits(p)&&t>=(s.tomeVisitNoticeAt??0)){
-       s.tomeVisitNoticeAt=t+600;
-       try{notice(p,'§e界の訪問を保存できません。接続中は再試行します。保存前の切断後は再訪が必要です',80);}catch{}
-     }
      // Run before the spectator/arena exits so stale fog is cleaned on entry.
      if(t>=(s.ambienceAt??0)){
        s.ambienceAt=t+40;

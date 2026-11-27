@@ -7,6 +7,7 @@ normal maps are studies, not finished paintings. Gameplay stays untouched.
 import argparse
 from PIL import ImageDraw
 from build_forest_wild_art import c,bone,bake,PALETTE,surface,tint
+from refine_mob_anatomy import refine_baked
 PALETTE.update({
  'giant_rock':(70,78,90),'giant_plate':(112,120,130),'giant_dark':(48,56,67),'giant_rune':(222,184,87),'giant_edge':(151,155,152),
  'copper_body':(78,85,90),'copper_head':(104,99,88),'copper_wing':(155,99,67),'copper_feather':(199,137,85),'copper_light':(226,183,108),'copper_dark':(51,61,69),
@@ -200,7 +201,9 @@ def paint(mat,w,h,seed,face,part,ci):
  return im
 
 def material(mat):return (140,0,150,255) if mat in METAL else (0,0,190,255)
-def build(i):return bake(f'foe_4_{i}',f'f4_{i}_',DESIGNS[i](),paint,material)
+def build(i):
+ name=f'foe_4_{i}'
+ return refine_baked(name,bake(name,f'f4_{i}_',DESIGNS[i](),paint,material))
 def main():
  p=argparse.ArgumentParser();p.add_argument('--write',action='store_true');p.add_argument('--check',action='store_true');a=p.parse_args()
  if a.write==a.check:p.error('choose exactly one of --write or --check')

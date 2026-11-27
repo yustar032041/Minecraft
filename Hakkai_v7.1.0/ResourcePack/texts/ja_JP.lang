@@ -926,3 +926,20 @@ item.hakkai:drop_element_19.name=湖の生体核片
 
 tile.hakkai:warden_arena_light.name=時空の闘技場の照明
 tile.hakkai:warden_arena_stone.name=時空の闘技場の壁石
+
+entity.hakkai:king_guardian_0.name=八界王の影・草原の風鹿
+entity.hakkai:king_guardian_1.name=八界王の影・霧森の苔獣
+entity.hakkai:king_guardian_2.name=八界王の影・砂廊の石守
+entity.hakkai:king_guardian_3.name=八界王の影・鏡湖の氷獣
+entity.hakkai:king_guardian_4.name=八界王の影・断崖の雷獣
+entity.hakkai:king_guardian_5.name=八界王の影・地下庭園の影守
+entity.hakkai:king_guardian_6.name=八界王の影・浮島の雲獣
+entity.hakkai:king_guardian_7.name=八界王の影・終着駅の時守
+entity.hakkai:warden_sword_0.name=風裂の剣
+entity.hakkai:warden_sword_1.name=霧縫いの剣
+entity.hakkai:warden_sword_2.name=砂葬の剣
+entity.hakkai:warden_sword_3.name=氷鏡の剣
+entity.hakkai:warden_sword_4.name=雷迅の剣
+entity.hakkai:warden_sword_5.name=深影の剣
+entity.hakkai:warden_sword_6.name=雲翼の剣
+entity.hakkai:warden_sword_7.name=時環の剣

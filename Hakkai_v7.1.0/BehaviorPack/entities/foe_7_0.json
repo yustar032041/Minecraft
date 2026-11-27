@@ -16,8 +16,8 @@
         ]
       },
       "minecraft:health": {
-        "value": 36,
-        "max": 36
+        "value": 41,
+        "max": 41
       },
       "minecraft:collision_box": {
         "width": 0.55,
@@ -70,7 +70,7 @@
         "value": 0.1
       },
       "minecraft:attack": {
-        "damage": 5
+        "damage": 6
       },
       "minecraft:behavior.hurt_by_target": {
         "priority": 1

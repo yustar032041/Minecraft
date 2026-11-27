@@ -22,7 +22,7 @@ function fixture(id,count=1){
  const p={id:'p',typeId:'minecraft:player',isValid:true,selectedSlotIndex:1,dimension:dim,location:{x:0,y:0,z:0},getGameMode:()=> 'survival',getComponent:c=>c==='minecraft:inventory'?{container:inv}:c==='minecraft:health'?h:undefined,
   addEffect:(...args)=>{effects.push(args);return {}},playAnimation:()=>{},playSound:()=>{}};
  const st={s:50,m:10,cd:new Map(),useTick:0},system={currentTick:100};
- const ctx={useSelectedConsumable,isRecoveryFood,ns:'hakkai:',GameMode:{Spectator:'spectator'},gear:new Map(),state:()=>st,system,isCreative:p=>p.getGameMode()==='creative',max:100,
+ const ctx={useSelectedConsumable,isRecoveryFood,selected:p=>inv.getItem(p.selectedSlotIndex),ns:'hakkai:',GameMode:{Spectator:'spectator'},gear:new Map(),state:()=>st,system,isCreative:p=>p.getGameMode()==='creative',max:100,
   bounds:(x,a,b)=>Math.min(b,Math.max(a,x)),notice:(_p,msg)=>notices.push(msg),report:(...x)=>reports.push(x),castNewMagic,mark:()=>{},visibleFrom:()=>true,combatParry:undefined,mobSystem:undefined,realmEnders:undefined};
  vm.createContext(ctx);
  const start=source.indexOf('function use(e){'),end=source.indexOf('system.runInterval(()=>{',start);vm.runInContext(source.slice(start,end),ctx);
@@ -53,11 +53,15 @@ test('post-mutation write error and effect exception restore selected stack',()=
 test('restoration failure is reported rather than silently claiming success',()=>{
  const f=fixture('hakkai:bandage');f.inv.alwaysFail=true;f.use('hakkai:bandage');assert.ok(f.reports.some(([key])=>key==='旅の包帯'));assert.equal(f.effects.length,0);assert.match(f.notices.at(-1),/使えません/);
 });
-test('actual moon magic charges selected totem, not a different earlier totem',()=>{
- const f=fixture('hakkai:fushi_totem');f.st.m=50;assert.equal(f.ctx.castMagic(f.p,'moon'),true);assert.equal(f.inv.items[0].tag,'other');assert.equal(f.inv.items[1],undefined);assert.equal(f.st.m,35);assert.equal(f.h.currentValue,18);
+test('actual moon magic keeps the held totem and starts an independent cooldown',()=>{
+ const f=fixture('hakkai:fushi_totem');f.st.m=50;assert.equal(f.ctx.castMagic(f.p,'moon'),true);
+ assert.equal(f.inv.items[0].tag,'other');assert.equal(f.inv.items[1].tag,'selected');assert.equal(f.inv.writes,0);assert.equal(f.st.m,35);assert.equal(f.h.currentValue,18);
+ assert.equal(f.ctx.castMagic(f.p,'moon'),false);assert.equal(f.st.m,35);assert.equal(f.st.cd.get('fushi_moon'),220);
+ f.ctx.system.currentTick=220;assert.equal(f.ctx.castMagic(f.p,'moon'),true);assert.equal(f.inv.items[1].tag,'selected');assert.equal(f.st.m,20);
 });
-test('failed totem slot write restores it and does not charge mana, cooldown or effects',()=>{
- const f=fixture('hakkai:fushi_totem');f.inv.failAt=1;f.st.m=50;assert.equal(f.ctx.castMagic(f.p,'moon'),false);assert.equal(f.inv.items[0].tag,'other');assert.equal(f.inv.items[1].tag,'selected');assert.equal(f.st.m,50);assert.equal(f.st.cd.size,0);assert.equal(f.h.currentValue,10);
+test('moon requires the totem in the selected hand even if another is in inventory',()=>{
+ const f=fixture('hakkai:fushi_totem');f.inv.items[1]=new Item('minecraft:stone');f.st.m=50;
+ assert.equal(f.ctx.castMagic(f.p,'moon'),false);assert.equal(f.inv.items[0].tag,'other');assert.equal(f.st.m,50);assert.equal(f.st.cd.size,0);assert.equal(f.h.currentValue,10);
 });
 test('invalid slots and post-consume callback failure fail closed with selected item intact',()=>{
  const f=fixture('hakkai:bandage',2);f.p.selectedSlotIndex=99;assert.equal(useSelectedConsumable(f.p,'hakkai:bandage',false),'changed');f.p.selectedSlotIndex=1;

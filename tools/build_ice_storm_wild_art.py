@@ -6,6 +6,7 @@ studies, not finished painted textures. No behavior/collision/drops are touched.
 """
 import argparse
 from build_forest_wild_art import c,bone,bake,PALETTE
+from refine_mob_anatomy import refine_baked
 PALETTE.update({
  'ice_fox_fur':(207,220,219),'ice_fox_shadow':(159,182,188),'ice_fox_tip':(237,243,236),'ice_fox_ear':(163,183,192),
  'ice_deer_fur':(156,183,190),'ice_deer_belly':(215,228,222),'ice_antler':(155,216,229),'ice_hoof':(93,131,147),
@@ -88,7 +89,9 @@ def sentinel():
  return b
 
 DESIGNS={3:[fox,deer,wolf],4:[eagle,goat,sentinel]}
-def build(realm,i):return bake(f'wild_{realm}_{i}',f'w{realm}_{i}_',DESIGNS[realm][i]())
+def build(realm,i):
+ name=f'wild_{realm}_{i}'
+ return refine_baked(name,bake(name,f'w{realm}_{i}_',DESIGNS[realm][i]()))
 def main():
  p=argparse.ArgumentParser();p.add_argument('--write',action='store_true');p.add_argument('--check',action='store_true');a=p.parse_args()
  if a.write==a.check:p.error('choose exactly one of --write or --check')

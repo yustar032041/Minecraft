@@ -6,9 +6,10 @@ import {GameMode,Difficulty} from '@minecraft/server';
 import {setupMobSystem} from '../Hakkai_v7.1.0/BehaviorPack/scripts/mob_system.js';
 import {mobContentList} from '../Hakkai_v7.1.0/BehaviorPack/scripts/mob_content.js';
 import {clearRushLine,RUSH_REACH,RUSH_HEIGHT} from '../Hakkai_v7.1.0/BehaviorPack/scripts/mob_rush_line.js';
+import {BODY_RUSH} from '../Hakkai_v7.1.0/BehaviorPack/scripts/mob_body_rush.js';
 const rush=mobContentList.filter(p=>p.temper==='hostile'&&['leap','charge'].includes(p.talent));
 assert.equal(rush.length,14);
-function fixture(profile,{x=2,y=80,wall=false,unloaded=false,solid=false,throwRay=false,evade=false,parry=false,accept=true,particleFail=false,auto=true}={}){
+function fixture(profile,{x=.7,y=80,wall=false,unloaded=false,solid=false,throwRay=false,evade=false,parry=false,accept=true,particleFail=false,auto=true}={}){
  let tick=0;const hits=[],effects=[],motion=[],pushed=[],particles=[],animations=[],notices=[],parries=[];
  const dimension={id:'r',isChunkLoaded:()=>!unloaded,getBlock:()=>({isAir:!solid,isLiquid:false,...(solid?{isSolid:true}:{})}),getBlockFromRay:(from,dir,options)=>{if(throwRay)throw Error('ray');return wall?{block:{}}:undefined;},
   getEntities:()=>[mob],getPlayers:()=>[p],spawnParticle:(id,pos)=>{if(particleFail&&id.startsWith('hakkai:mob_'))throw Error('visual');particles.push([tick,id,{...pos}]);}};
@@ -24,27 +25,29 @@ function fixture(profile,{x=2,y=80,wall=false,unloaded=false,solid=false,throwRa
 }
 for(const profile of rush){
  test(`${profile.id}: close visible target is hit; far target only causes movement`,()=>{
-  const close=fixture(profile);assert.equal(close.notices.length,1);assert.match(close.notices[0],/近距離のみ命中・遮蔽物や高低差で不発/);assert.equal(close.hits.length,1);assert.ok(close.pushed.length>=1); // signature can add a second push
+  const close=fixture(profile);assert.equal(close.notices.length,0);assert.equal(close.particles.filter(([,id])=>id==='hakkai:warning_marker').length,0);assert.equal(close.hits.length,1);assert.ok(close.pushed.length>=1); // signature can add a second push
   assert.equal(close.motion.length,0,'close strike does not also propel into the target');
   const impact=close.particles.filter(([,id])=>id==='hakkai:mob_impact');assert.equal(impact.length,4);
   assert.ok(impact.slice(0,3).every(([,id,pos])=>Math.hypot(pos.x,pos.z)<=.45+1e-9),'movement sparks at mob');
-  assert.equal(impact[3][2].x,2,'accepted hit has an impact at the target');
-  const far=fixture(profile,{x:4.5});assert.equal(far.notices.length,1);assert.equal(far.hits.length,0);assert.equal(far.pushed.length,0);assert.equal(far.motion.length,1);
+  assert.equal(impact[3][2].x,.7,'accepted hit has an impact at the target');
+  const far=fixture(profile,{x:4.5});assert.equal(far.notices.length,0);assert.equal(far.hits.length,0);assert.equal(far.pushed.length,0);assert.equal(far.motion.length,1);
   assert.equal(far.particles.filter(([,id])=>id==='hakkai:mob_impact').length,3,'no fake distant hit');
  });
  for(const mode of ['wall','unloaded','solid','throwRay','too-high'])test(`${profile.id}: ${mode} cancels movement and strike before parry`,()=>{
   const opts=mode==='too-high'?{y:80+RUSH_HEIGHT+.001}:{[mode]:true},f=fixture(profile,opts);
-  assert.equal(f.notices.length,1);assert.equal(f.hits.length,0);assert.equal(f.motion.length,0);assert.equal(f.pushed.length,0);assert.equal(f.parries.length,0);
+  assert.equal(f.notices.length,0);assert.equal(f.hits.length,0);assert.equal(f.motion.length,0);assert.equal(f.pushed.length,0);assert.equal(f.parries.length,0);
  });
  test(`${profile.id}: windup rechecks wall, elevation and moving target`,()=>{
-  const f=fixture(profile,{auto:false});f.go(0);f.go(120);assert.equal(f.notices.length,1);f.setWall(true);f.go(160);
+  const f=fixture(profile,{auto:false});f.go(0);f.go(120);assert.equal(f.notices.length,0);f.setWall(true);f.go(160);
   assert.equal(f.hits.length,0);assert.equal(f.motion.length,0);assert.equal(f.parries.length,0);
   const high=fixture(profile,{auto:false});high.go(0);high.go(120);high.p.location.y=81.501;high.go(160);
   assert.equal(high.hits.length,0);assert.equal(high.motion.length,0);assert.equal(high.parries.length,0);
   const sidestep=fixture(profile,{auto:false});sidestep.go(0);sidestep.go(120);sidestep.p.location.x=3;sidestep.go(160);
-  assert.equal(sidestep.hits.length,0,'outside close reach');assert.equal(sidestep.motion.length,1,'still inside original warning and can advance');
+  assert.equal(sidestep.hits.length,0,'outside close reach');assert.equal(sidestep.motion.length,1,'can advance without an invisible fixed warning circle');
   const left=fixture(profile,{auto:false});left.go(0);left.go(120);left.p.location.x=10;left.go(160);
-  assert.equal(left.hits.length,0);assert.equal(left.motion.length,0,'leaving the warning cancels pursuit');
+  assert.equal(left.hits.length,0);assert.equal(left.motion.length,1,'advance may follow a target without an invisible circle');
+  const moved=fixture(profile,{x:6,auto:false});moved.go(0);moved.go(120);moved.p.location.x=.7;moved.go(160);
+  assert.equal(moved.hits.length,1,'current close contact works outside the former snapshot circle');
  });
  test(`${profile.id}: evade/parry/rejected damage and visual failures`,()=>{
   for(const option of [{evade:true},{parry:true}]){const f=fixture(profile,option);assert.equal(f.hits.length,0);assert.equal(f.motion.length,0);}
@@ -61,6 +64,7 @@ test('line and reach boundaries, dimension, block and unavailable API failures',
  f.dimension.isChunkLoaded=()=>true;f.dimension.getBlock=()=>({});assert.equal(clearRushLine(f.mob,f.p),false);
  f.dimension.getBlock=()=>undefined;assert.equal(clearRushLine(f.mob,f.p),false);
  f.dimension.getBlock=()=>({isSolid:false});f.dimension.getBlockFromRay=undefined;assert.equal(clearRushLine(f.mob,f.p),false);
- const edge=fixture(rush[0],{x:RUSH_REACH});assert.equal(edge.hits.length,1);
- const beyond=fixture(rush[0],{x:RUSH_REACH+.001});assert.equal(beyond.hits.length,0);assert.equal(beyond.motion.length,1);
+ const reach=BODY_RUSH[rush[0].id].reach;
+ const edge=fixture(rush[0],{x:reach});assert.equal(edge.hits.length,1);
+ const beyond=fixture(rush[0],{x:reach+.001});assert.equal(beyond.hits.length,0);assert.equal(beyond.motion.length,1);
 });

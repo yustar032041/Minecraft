@@ -2,7 +2,7 @@
 """Create the five humanoid warden skins, geometry, wings and synced client states.
 
 The 512px atlases are original procedural pixel art, not ripped Minecraft art.
-Runs after the encounter generator; safe to re-run without overwriting combat.
+Runs after the encounter generator. It rewrites warden textures; do not run over approved art.
 """
 import json, math, random
 from pathlib import Path
@@ -38,6 +38,7 @@ bones=[
  {'name':'wing_left','pivot':[3,23,2],'cubes':[cube([3,21,2],[9,3,1],(256,128)),cube([6,18,2.1],[9,3,1],(256,128)),cube([8,15,2.2],[8,3,1],(256,128)),cube([10,12,2.3],[6,3,1],(256,128))]},
  {'name':'wing_right','pivot':[-3,23,2],'cubes':[cube([-12,21,2],[9,3,1],(256,128)),cube([-15,18,2.1],[9,3,1],(256,128)),cube([-16,15,2.2],[8,3,1],(256,128)),cube([-16,12,2.3],[6,3,1],(256,128))]}
 ]
+bones.append({'name':'held_sword','parent':'right_arm','pivot':[-6,11,0],'cubes':[cube([-6.7,8,-.7],[1.4,6,1.4],(0,0)),cube([-10,13,-1],[8,1.7,2],(0,0)),cube([-7.5,14,-.6],[3,21,1.2],(0,0)),cube([-7,35,-.5],[2,3,1],(0,0))]})
 geo={'format_version':'1.12.0','minecraft:geometry':[{'description':{'identifier':'geometry.hakkai.time_warden','texture_width':512,'texture_height':512,'visible_bounds_width':5,'visible_bounds_height':4,'visible_bounds_offset':[0,1.2,0]},'bones':bones}]}
 write(rp/'models/entity/time_warden.geo.json',geo)
 # Five distinct colours, with subtle deterministic grain and geometric detailing.
@@ -91,17 +92,21 @@ for phase,(dark,mid,light) in enumerate(palettes):
  mer=Image.merge('RGBA',(Image.new('L',atlas.size,0),emissive,Image.new('L',atlas.size,160),Image.new('L',atlas.size,255)))
  mer.save(rp/f'textures/entity/{name}_mer.png')
  write(rp/f'textures/entity/{name}.texture_set.json',{'format_version':'1.16.100','minecraft:texture_set':{'color':name,'normal':name+'_n','metalness_emissive_roughness':name+'_mer'}})
-entity_path=bp/'entities/time_warden.json';entity=load(entity_path);desc=entity['minecraft:entity']['description'];desc['properties']={'hakkai:form':{'type':'int','range':[0,4],'default':0,'client_sync':True},'hakkai:flying':{'type':'bool','default':False,'client_sync':True}}
+entity_path=bp/'entities/time_warden.json';entity=load(entity_path);desc=entity['minecraft:entity']['description'];desc['properties']={'hakkai:form':{'type':'int','range':[0,4],'default':0,'client_sync':True},'hakkai:flying':{'type':'bool','default':False,'client_sync':True},'hakkai:held_blade':{'type':'int','range':[0,8],'default':0,'client_sync':True}}
 entity['minecraft:entity']['components']['minecraft:collision_box']={'width':.9,'height':2.35}
 entity['minecraft:entity']['components']['minecraft:damage_sensor']={'triggers':{'cause':'fall','deals_damage':'no'}}
 write(entity_path,entity)
-client_path=rp/'entity/time_warden.entity.json';client=load(client_path);c=client['minecraft:client_entity']['description'];c['textures']={f'form{i}':f'textures/entity/hakkai_time_warden_form{i}' for i in range(5)};c['render_controllers']=['controller.render.hakkai.warden'];c['animations'].update({'wing_flight':'animation.hakkai.warden_wing_flight','hover':'animation.hakkai.warden_hover','idle':'animation.hakkai.warden_idle','halo':'animation.hakkai.warden_halo'});c['scripts']['animate']=[{'walk':"query.modified_move_speed > 0.01 && !query.property('hakkai:flying')"},{'idle':"!query.property('hakkai:flying')"},{'wing_flight':"query.property('hakkai:flying')"},{'hover':"query.property('hakkai:flying')"},{'halo':"query.property('hakkai:form') == 4"}];write(client_path,client)
+client_path=rp/'entity/time_warden.entity.json';client=load(client_path);c=client['minecraft:client_entity']['description'];c['textures']={f'form{i}':f'textures/entity/hakkai_time_warden_form{i}' for i in range(5)};c['textures'].update({f'blade{i}':f'textures/entity/hakkai_warden_sword_{i}' for i in range(8)});c['render_controllers']=['controller.render.hakkai.warden','controller.render.hakkai.warden_held_sword'];c['animations'].update({'wing_flight':'animation.hakkai.warden_wing_flight','hover':'animation.hakkai.warden_hover','idle':'animation.hakkai.warden_idle','halo':'animation.hakkai.warden_halo','roll':'animation.hakkai.warden_roll','leap':'animation.hakkai.warden_leap'});c['scripts']['animate']=[{'walk':"query.modified_move_speed > 0.01 && !query.property('hakkai:flying')"},{'idle':"!query.property('hakkai:flying')"},{'wing_flight':"query.property('hakkai:flying')"},{'hover':"query.property('hakkai:flying')"},{'halo':"query.property('hakkai:form') == 4"}];write(client_path,client)
 render={'format_version':'1.8.0','render_controllers':{'controller.render.hakkai.warden':{'arrays':{'textures':{'Array.forms':[f'Texture.form{i}' for i in range(5)]}},'geometry':'Geometry.default','materials':[{'*':'Material.default'}],'textures':["Array.forms[query.property('hakkai:form')]"],'part_visibility':[{'*':1},*({f'form_{n}':f"query.property('hakkai:form') == {i}"} for i,n in enumerate(('time','sky','earth','thunder','true'))),{'wing_left':"query.property('hakkai:flying')"},{'wing_right':"query.property('hakkai:flying')"},{'wing_true_left':"query.property('hakkai:flying') && query.property('hakkai:form') == 4"},{'wing_true_right':"query.property('hakkai:flying') && query.property('hakkai:form') == 4"},{'halo_true':"query.property('hakkai:form') == 4"}]}}}
+render['render_controllers']['controller.render.hakkai.warden']['part_visibility'].append({'held_sword':0})
+render['render_controllers']['controller.render.hakkai.warden_held_sword']={'arrays':{'textures':{'Array.blades':[f'Texture.blade{i}' for i in range(8)]}},'geometry':'Geometry.default','materials':[{'*':'Material.default'}],'textures':["Array.blades[math.max(0,query.property('hakkai:held_blade')-1)]"],'part_visibility':[{'*':0},{'held_sword':"query.property('hakkai:held_blade') > 0"}]}
 write(rp/'render_controllers/time_warden.render_controllers.json',render)
 an_path=rp/'animations/time_warden.animation.json';an=load(an_path)
 an['animations']['animation.hakkai.warden_wing_flight']={'loop':True,'animation_length':1,'bones':{'wing_left':{'rotation':[0,'15 + math.sin(query.life_time * 360) * 25',0]},'wing_right':{'rotation':[0,'-15 - math.sin(query.life_time * 360) * 25',0]},'wing_true_left':{'rotation':[0,'-10 + math.sin(query.life_time * 360 + 50) * 20',-8]},'wing_true_right':{'rotation':[0,'10 - math.sin(query.life_time * 360 + 50) * 20',8]}}}
 an['animations']['animation.hakkai.warden_hover']={'loop':True,'animation_length':1,'bones':{'right_leg':{'rotation':['8 + math.sin(query.life_time * 180) * 4',0,3]},'left_leg':{'rotation':['-8 - math.sin(query.life_time * 180) * 4',0,-3]},'body':{'rotation':[2,0,0]}}}
 an['animations']['animation.hakkai.warden_idle']={'loop':True,'animation_length':2,'bones':{'head':{'rotation':['math.sin(query.life_time * 90) * 2',0,0]}}}
 an['animations']['animation.hakkai.warden_halo']={'loop':True,'animation_length':2,'bones':{'halo_true':{'rotation':[0,'query.life_time * 45',0]}}}
+an['animations']['animation.hakkai.warden_roll']={'loop': False, 'animation_length': 0.65, 'bones': {'body': {'rotation': {'0.0': [0, 0, 0], '0.2': [0, 0, 110], '0.4': [0, 0, 240], '0.65': [0, 0, 360]}}, 'right_leg': {'rotation': {'0.0': [0, 0, 0], '0.2': [-55, 0, 0], '0.65': [0, 0, 0]}}, 'left_leg': {'rotation': {'0.0': [0, 0, 0], '0.2': [55, 0, 0], '0.65': [0, 0, 0]}}}}
+an['animations']['animation.hakkai.warden_leap']={'loop': False, 'animation_length': 0.65, 'bones': {'right_leg': {'rotation': {'0.0': [0, 0, 0], '0.2': [-50, 0, 0], '0.65': [0, 0, 0]}}, 'left_leg': {'rotation': {'0.0': [0, 0, 0], '0.2': [45, 0, 0], '0.65': [0, 0, 0]}}, 'right_arm': {'rotation': {'0.0': [0, 0, 0], '0.2': [-75, 0, 25], '0.65': [0, 0, 0]}}}}
 write(an_path,an)
 print('Created humanoid 5-form warden, flight-only animated wings and synced rendering')

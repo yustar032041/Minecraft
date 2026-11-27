@@ -11,7 +11,7 @@ export const GUIDE_ENTRIES=[
  '八界の幻影闘技場','幻影闘技場・戦術図鑑','幻影闘技場の優勝記念展示','八界の巡礼・旅先イベント','八界の四季巡礼と物語',
  '八界の甲冑展示室','八界の装備収集とレシピ','八界の伝説装備クエスト','八界の甲冑図鑑・収集記録','装備の段階と製作案内',
  '夜渡り装・終章の鎧 覚醒試練','八界の覚醒装備・継承試練','八界の覚醒鎧・極進化','八界の守護核・収集年鑑','守護核継承工房・八界統合装備',
- '八界統合・終章の大記念館','大遠征地・72地点の記録','サバイバル実践ガイド','生き物・素材・技図鑑','終焉の八界王'
+ '八界統合・終章の大記念館','大遠征地・72地点の記録','サバイバル実践ガイド','生き物・素材・技図鑑','終焉の八界王','時空の闘技場'
 ];
 // Distinct thumbnails help users recognise destinations within each chapter.
 export const GUIDE_ICONS=[
@@ -25,7 +25,7 @@ export const GUIDE_ICONS=[
  'gear_048','gear_006','festival_1','guide','festival_0',
  'gear_010','gear_010','gear_187','gear_010','gear_010',
  'gear_187','gear_188','gear_196','guardian_core_0','gear_204',
- 'wind_legacy_memorial','chronicle_fragment','trail_ration','drop_element_0','eclipse_core'
+ 'wind_legacy_memorial','chronicle_fragment','trail_ration','drop_element_0','eclipse_core','warden_sigil'
 ];
 export const GUIDE_SECTIONS=[
  {title:'旅と探索', hint:'地図・列車・遺跡・遠征', icon:'return_stone', ids:[0,9,11,13,19,22,23,38,39,51]},
@@ -33,7 +33,7 @@ export const GUIDE_SECTIONS=[
  {title:'装備と魔法', hint:'製作・進化・属性・刻印', icon:'gear_048', ids:[2,14,15,16,40,41,42,43,44,45,46,47,48,49]},
  {title:'生き物と自然', hint:'生態・ドロップ・調査', icon:'crystal_0', ids:[8,53]},
  {title:'旅の記録と記念館', hint:'冒険記録・称号・収集', icon:'guide', ids:[7,20,21,24,25,26,27,28,29,30,31,32,33,34,50]},
- {title:'戦いと挑戦', hint:'幻影闘技場・終焉の八界王', icon:'eclipse_core', ids:[35,36,37,54]},
+ {title:'戦いと挑戦', hint:'幻影闘技場・八界王・時空の管理者', icon:'eclipse_core', ids:[35,36,37,54,55]},
  {title:'設定と困ったとき', hint:'帰還地点・本や帰還石の再発行', icon:'relic_key', ids:[5,6]}
 ];
 

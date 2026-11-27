@@ -1,0 +1,31 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:recipe_shapeless": {
+    "unlock": [
+      {
+        "context": "AlwaysUnlocked"
+      }
+    ],
+    "description": {
+      "identifier": "hakkai:surplus_crystal_18_mana"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:glass_bottle"
+      },
+      {
+        "item": "minecraft:glow_berries"
+      },
+      {
+        "item": "hakkai:crystal_18"
+      }
+    ],
+    "result": {
+      "item": "hakkai:mana_tonic",
+      "count": 1
+    }
+  }
+}

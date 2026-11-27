@@ -1,9 +1,6 @@
-// These existing single-target talents manifest instantly within the marked
-// area. They have no projectile or block-ray test, so walls do not stop them.
-const INSTANT_MARKED=new Set(['thorns','web','spore','frost','shock','time','gust','mark']);
-export function isInstantMarkedTalent(talent){return INSTANT_MARKED.has(talent);}
-// The burst group is multi-target but also manifests instantly at the mark.
-export function isInstantAreaTalent(talent){return talent==='burst'||isInstantMarkedTalent(talent);}
+// Ordinary single-target ranged talents use a fixed-direction moving shot.
+const MOVING_PROJECTILES=new Set(['thorns','web','spore','frost','shock','time','gust','mark','leech']);
+export function isMovingProjectileTalent(talent){return MOVING_PROJECTILES.has(talent);}
 
 // 判定は予告時点で固定した円を使う。別の高さに逃げた場合も命中しない。
 export function insideWarning(location, aim, radius, vertical = 3) {

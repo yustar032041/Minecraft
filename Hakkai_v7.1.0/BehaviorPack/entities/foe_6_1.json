@@ -16,8 +16,8 @@
         ]
       },
       "minecraft:health": {
-        "value": 25,
-        "max": 25
+        "value": 33,
+        "max": 33
       },
       "minecraft:collision_box": {
         "width": 0.53,
@@ -50,7 +50,7 @@
       },
       "minecraft:nameable": {},
       "minecraft:attack": {
-        "damage": 4
+        "damage": 5
       },
       "minecraft:loot": {
         "table": "loot_tables/hakkai/entities/foe_6_1.json"

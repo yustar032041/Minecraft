@@ -3,7 +3,7 @@
 Only client animation aliases and derived resource animations are changed.
 """
 import argparse,copy,json
-from mob_attack_joint_details import add_details,align_strike_start
+from mob_attack_joint_details import add_details,align_strike_start,add_refined_joints,neutral_refined_contact
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]/'Hakkai_v7.1.0/ResourcePack'
 WALKS=['deer','brute','brute','bug','fox','bird','spider','hare','deer','bird','brute','hare']
@@ -45,9 +45,11 @@ def main():
     templates['windup']['bones'][bone]={'rotation':{'0.0':[0,0,0],'0.65':[round(v*.45,2) for v in end],'1.9':end}}
     templates['strike']['bones'][bone]={'rotation':{'0.0':end,'0.12':[round(-v*.7,2) for v in end],'0.38':[0,0,0]}}
   add_details(templates,bones,prefix,0,i)
+  add_refined_joints(templates,bones,prefix,0,i)
   if i==4:align_strike_start(templates)
-  # Keep native contact animation unchanged; it has no scripted windup.
+  # Native contact has no scripted windup; new joints begin neutral.
   templates['contact']=copy.deepcopy(templates['strike'])
+  neutral_refined_contact(templates,0,i)
   align_strike_start(templates)
   for label,item in templates.items():
    item['bones']={prefix+bone:track for bone,track in item['bones'].items()}

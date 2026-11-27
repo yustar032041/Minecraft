@@ -12,12 +12,12 @@ export function startChiefMoon(origin,aim,t){
  return {position:{...origin},direction:{x:delta.x/length,y:delta.y/length,z:delta.z/length},remaining:length,next:t+1};
 }
 // Each frame is raycast and rendered before it can return a hit. Missing
-// chunk/raycast APIs, malformed hits, wall or particle failure cancel safely.
+// chunk/raycast APIs, malformed hits or a wall cancel safely; particles are cosmetic.
 // A different entity absorbs the projectile without being damaged.
-export function advanceChiefMoon(d,flight,t,sourceId,targetId){
- if(!d||!flight||t!==flight.next||!sourceId||!targetId)return {done:true};
+export function advanceChiefMoon(d,flight,t,sourceId,targetId,particleId='hakkai:mob_time',speed=SPEED){
+ if(!d||!flight||t!==flight.next||!sourceId||!targetId||!Number.isFinite(speed)||speed<=0||speed>2)return {done:true};
  try{
-  const from=flight.position,len=Math.min(SPEED,flight.remaining),dir=flight.direction;
+  const from=flight.position,len=Math.min(speed,flight.remaining),dir=flight.direction;
   if(!finite(from)||!finite(dir)||!Number.isFinite(len)||len<=0)return {done:true};
   const end=at(from,dir,len);
   for(const k of [0,len/2,len])if(!d.isChunkLoaded(at(from,dir,k)))return {done:true};
@@ -40,9 +40,12 @@ export function advanceChiefMoon(d,flight,t,sourceId,targetId){
   // entity at the same distance shields the target regardless of API order.
   const ambiguous=first&&candidates.some(h=>h.entity.id!==first.entity.id&&h.distance<=first.distance);
   const travel=first?first.distance:wallDistance;
-  for(let k=0;k<travel;k+=.5)d.spawnParticle('hakkai:mob_time',at(from,dir,k));
-  d.spawnParticle('hakkai:mob_time',at(from,dir,travel));
-  if(first)return {done:true,hit:!ambiguous&&first.entity.id===targetId?first.entity:undefined};
+  // Snapshot before particle callbacks: a contact cannot authorize a later
+  // position if an API hook changes the target during rendering.
+  const contact=first?.entity?.location?{...first.entity.location}:undefined;
+  for(let k=0;k<travel;k+=.5)try{d.spawnParticle(particleId,at(from,dir,k));}catch{}
+  try{d.spawnParticle(particleId,at(from,dir,travel));}catch{}
+  if(first)return {done:true,hit:!ambiguous&&first.entity.id===targetId?first.entity:undefined,contact};
   if(block)return {done:true};
   flight.position=end;flight.remaining-=len;flight.next=t+1;
   return {done:flight.remaining<=1e-6};

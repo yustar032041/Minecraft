@@ -1,8 +1,21 @@
 // A synchronous, best-effort inventory transaction for machine processing.
-// It plans every change before writing, preserves untouched item metadata and
-// restores original slots when a write or an external block change fails.
-// Rollback itself can fail if a container/chunk becomes invalid; callers must
-// report that case rather than claim the transaction is atomic in Bedrock.
+// Item state is rechecked where comparable, and a failed transaction restores
+// only slots that still have our written state. Unknown output/block rollback
+// blocks input restoration to avoid duplication, at the cost of possible loss.
+// This is not atomic: unstackable data, replacement containers, crashes and
+// changes during native calls may still be ambiguous.
+// true/false are definite; undefined means the API cannot compare the items.
+function sameStack(a,b){
+ if(!a||!b)return !a&&!b;
+ if(a.typeId!==b.typeId||a.amount!==b.amount)return false;
+ try{
+  if(typeof a.isStackableWith!=='function')return undefined;
+  if(a.isStackableWith(b))return true;
+  // Bedrock reports false for non-stackable items even against a clone.
+  if(a.maxAmount===1||b.maxAmount===1)return undefined;
+  return false;
+ }catch{return undefined;}
+}
 export function factoryTransaction({input,output,costs,product,commitExternal,rollbackExternal,report=()=>{}}){
  if(!input||!output||input===output||!product||!Number.isInteger(product.amount)||product.amount<1)return false;
  const clone=item=>item?.clone();
@@ -35,21 +48,38 @@ export function factoryTransaction({input,output,costs,product,commitExternal,ro
   }
   if(left)return false;
  }catch(err){report('機械の事前確認',err);return false;}
- // Write changed slots only. Push the index BEFORE each write because a native
- // call may throw after changing the slot.
- const writes=[];let externalAttempted=false;
+ // Recheck only slots involved in this transaction; unrelated slots may be
+ // edited freely. Unstackable or uncomparable items preserve normal operation,
+ // but cannot receive the same metadata-race guarantee as stackable items.
+ const expectedIn=originalIn.slice(),expectedOut=originalOut.slice(),writes=[];
+ const verify=()=>{
+  for(const i of changedIn)if(sameStack(input.getItem(i),expectedIn[i])===false)throw Error('機械の入力が変化');
+  for(const i of changedOut)if(sameStack(output.getItem(i),expectedOut[i])===false)throw Error('機械の出力が変化');
+ };
+ let externalAttempted=false;
  try{
-  for(const [container,original,next,changed] of [[input,originalIn,nextIn,changedIn],[output,originalOut,nextOut,changedOut]]){
+  verify();
+  for(const [container,original,next,changed,expected] of [[input,originalIn,nextIn,changedIn,expectedIn],[output,originalOut,nextOut,changedOut,expectedOut]]){
    for(const i of changed){
-    writes.push({container,index:i,old:original[i]});container.setItem(i,next[i]);
+    verify();
+    // Record the intended state first: a native write may throw after mutation.
+    writes.push({container,index:i,old:original[i],next:next[i]});
+    container.setItem(i,next[i]);expected[i]=next[i];verify();
    }
   }
-  if(commitExternal){externalAttempted=true;commitExternal();}
+  if(commitExternal){externalAttempted=true;commitExternal();verify();}
   return true;
  }catch(err){
-  let incomplete=false;
-  if(externalAttempted&&rollbackExternal)try{rollbackExternal();}catch(rollbackErr){incomplete=true;report('機械のブロック復旧失敗',rollbackErr);}
-  for(const write of writes.reverse())try{write.container.setItem(write.index,write.old);}catch(rollbackErr){incomplete=true;report('機械の持ち物復旧失敗',rollbackErr);}
+  let incomplete=false,outputUncertain=false,externalUncertain=false;
+  if(externalAttempted&&rollbackExternal)try{rollbackExternal();}catch(rollbackErr){externalUncertain=true;incomplete=true;report('機械のブロック復旧失敗',rollbackErr);}
+  for(const write of writes.reverse())try{
+   if(write.container===input&&(outputUncertain||externalUncertain))throw Error('出力またはブロックの状態が不明なため材料は戻しません');
+   const now=write.container.getItem(write.index);
+   if(sameStack(now,write.old)===true)continue;
+   if(sameStack(now,write.next)!==true)throw Error('品物の変更または比較不能');
+   write.container.setItem(write.index,write.old);
+   if(sameStack(write.container.getItem(write.index),write.old)!==true)throw Error('持ち物の復旧結果を確認できません');
+  }catch(rollbackErr){if(write.container===output)outputUncertain=true;incomplete=true;report('機械の持ち物復旧失敗',rollbackErr);}
   report(incomplete?'機械の処理失敗（復旧要確認）':'機械の処理失敗（復旧を試行）',err);
   return false;
  }

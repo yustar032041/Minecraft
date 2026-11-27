@@ -1,4 +1,4 @@
-"""Cross-check 139 non-final-boss prototypes; not a Bedrock render or visual review."""
+"""Cross-check 139 realm and patrol prototypes (excluding the eight-realm king and protected characters); not a Bedrock render or visual review."""
 import copy
 import json
 import math
@@ -91,4 +91,4 @@ broken = copy.deepcopy(client); broken['animations']['test'] = 'animation.missin
 assert any(e.startswith('missing animation') for e in visual_errors(model, broken, image, animations))
 broken = copy.deepcopy(animations); aid = next(iter(client['animations'].values())); broken[aid]['bones']['missing_bone'] = {}
 assert any(e.startswith('animation bones') for e in visual_errors(model, client, image, broken))
-print(f'{len(NAMES)} non-final-boss models: {face_count} UV faces, {alias_count} animation aliases checked; PBR file sizes checked (static only)')
+print(f'{len(NAMES)} realm and patrol models (excluding king and protected characters): {face_count} UV faces, {alias_count} animation aliases checked; PBR file sizes checked (static only)')

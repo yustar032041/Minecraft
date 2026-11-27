@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build cosmetic attack tracks for the existing protected FUSHI chief rig.
+"""Build cosmetic attack tracks for the existing FUSHI chief rig.
 
 No geometry, textures, collision, attack, target, timers or AI are changed.
 Keyframe/render semantics require Bedrock testing; idle blending is unknown.
@@ -9,12 +9,11 @@ from pathlib import Path
 RP=Path(__file__).resolve().parents[1]/'Hakkai_v7.1.0/ResourcePack'
 OUT=RP/'animations/fushi_chief_attacks.animation.json'
 CLIENT=RP/'entity/fushi_chief.entity.json'
-# Three non-parented joints: keep angles restrained so their separate pivots
-# do not create exaggerated gaps in the approximated pose.
+# Crown is parented to the head: rotate it only via the head to avoid doubling the motion.
 POSES={
- 'impact':{'body':[-6,0,0],'head':[-3,0,0],'crown':[-3,0,0]},
- 'moon':{'body':[0,-5,0],'head':[0,-4,0],'crown':[0,-4,0]},
- 'mist':{'body':[0,0,4],'head':[0,0,2],'crown':[0,0,2]},
+ 'impact':{'body':[-6,0,0],'head':[-3,0,0],'crown':[0,0,0]},
+ 'moon':{'body':[0,-5,0],'head':[0,-4,0],'crown':[0,0,0]},
+ 'mist':{'body':[0,0,4],'head':[0,0,2],'crown':[0,0,0]},
 }
 def encoded(obj):return (json.dumps(obj,ensure_ascii=False,indent=2)+'\n').encode('utf8')
 def build():

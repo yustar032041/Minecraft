@@ -7,6 +7,7 @@ No vanilla or protected assets, AI, collision or combat data are changed.
 """
 import argparse
 from build_forest_wild_art import c,bone,bake,PALETTE
+from refine_mob_anatomy import refine_baked
 PALETTE.update({
  'rabbit_fur':(187,150,103),'rabbit_belly':(225,208,172),'rabbit_ear':(194,142,125),'rabbit_tail':(233,217,186),
  'beetle_shell':(159,116,65),'beetle_plate':(193,157,99),'beetle_body':(81,65,52),'beetle_limb':(105,77,54),'beetle_horn':(220,180,113),
@@ -51,7 +52,9 @@ def statue():
  return b
 
 DESIGNS=[rabbit,beetle,statue]
-def build(i):return bake(f'wild_2_{i}',f'w2_{i}_',DESIGNS[i]())
+def build(i):
+ name=f'wild_2_{i}'
+ return refine_baked(name,bake(name,f'w2_{i}_',DESIGNS[i]()))
 def main():
  p=argparse.ArgumentParser();p.add_argument('--write',action='store_true');p.add_argument('--check',action='store_true');a=p.parse_args()
  if a.write==a.check:p.error('choose exactly one of --write or --check')

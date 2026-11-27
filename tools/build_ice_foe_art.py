@@ -7,6 +7,7 @@ collision boxes, attack effects or timing. Drafts require Bedrock inspection.
 import argparse
 from PIL import ImageDraw
 from build_forest_wild_art import c,bone,bake,PALETTE,surface,tint
+from refine_mob_anatomy import refine_baked
 PALETTE.update({
  'owl_body':(126,153,164),'owl_belly':(203,220,218),'owl_head':(156,184,193),'owl_disc':(218,233,226),'owl_wing':(111,145,161),'owl_tip':(175,203,208),'owl_dark':(61,87,101),'owl_ice':(157,218,226),'owl_beak':(215,194,147),
  'lake_body':(129,180,191),'lake_head':(180,216,216),'lake_wing':(116,178,197),'lake_feather':(191,225,225),'lake_dark':(65,113,130),'lake_beak':(209,203,167),
@@ -201,7 +202,9 @@ def paint(mat,w,h,seed,face,part,ci):
   d.line([(w*.16,h*.25),(w*.4,h*.7),(w*.63,h*.25),(w*.83,h*.55)],fill=(226,246,239,255),width=max(1,w//45))
  return im
 
-def build(i):return bake(f'foe_3_{i}',f'f3_{i}_',DESIGNS[i](),paint)
+def build(i):
+ name=f'foe_3_{i}'
+ return refine_baked(name,bake(name,f'f3_{i}_',DESIGNS[i](),paint))
 def main():
  p=argparse.ArgumentParser();p.add_argument('--write',action='store_true');p.add_argument('--check',action='store_true');a=p.parse_args()
  if a.write==a.check:p.error('choose exactly one of --write or --check')

@@ -33,12 +33,13 @@ function lightProjectile(p,system,initial,stagger){
  }
  system.runTimeout(advance,1);
 }
-export function castNewMagic({p,s,system,kind,notice,mark,visibleFrom,stagger,consumeTotem}){
+export function castNewMagic({p,s,system,kind,notice,mark,visibleFrom,stagger,hasTotem}){
  const spell=MAGIC[kind],t=system.currentTick;
  try{
-  if(!p?.isValid||p.typeId!=='minecraft:player'||![GameMode.Survival,GameMode.Creative].includes(p.getGameMode())||!spell)return false;
+  if(!p?.isValid||p.typeId!=='minecraft:player'||![GameMode.Survival,GameMode.Adventure,GameMode.Creative].includes(p.getGameMode())||!spell)return false;
   const creative=p.getGameMode()===GameMode.Creative;
-  if((s.cd.get('spell')??0)>t){notice(p,'§e魔法はまだ再使用できない');return false;}
+  if(kind==='moon'&&(!hasTotem||!hasTotem())){notice(p,'§eFUSHIのトーテムを手に持って使ってください');return false;}
+  if(kind==='moon'&&(s.cd.get('fushi_moon')??0)>t){notice(p,'§e月のまどろみはまだ再使用できない');return false;}
   if(!creative&&s.m<spell.cost){notice(p,'§e魔力が足りない');return false;}
   let beam,participants=[],targets=[],health;
   if(kind==='light'){
@@ -48,12 +49,12 @@ export function castNewMagic({p,s,system,kind,notice,mark,visibleFrom,stagger,co
   }else if(kind==='bond'){
    const found=[p,...p.dimension.getPlayers({location:p.location,maxDistance:8})],unique=new Map();
    for(const person of found){
-    if(!person?.isValid||person.typeId!=='minecraft:player'||!(person.getGameMode()===GameMode.Survival||(person.id===p.id&&creative))||person.dimension.id!==p.dimension.id||delta(p.location,person.location)>8)continue;
+    if(!person?.isValid||person.typeId!=='minecraft:player'||!([GameMode.Survival,GameMode.Adventure].includes(person.getGameMode())||(person.id===p.id&&creative))||person.dimension.id!==p.dimension.id||delta(p.location,person.location)>8)continue;
     const h=person.getComponent('minecraft:health');
     if(h&&Number.isFinite(h.currentValue)&&Number.isFinite(h.effectiveMax))unique.set(person.id,{person,health:h});
    }
    participants=[...unique.values()].sort((a,b)=>delta(p.location,a.person.location)-delta(p.location,b.person.location)).slice(0,8);
-   if(participants.length<2){notice(p,'§e絆の灯には近くにもう一人必要です');return false;}
+   if(!participants.some(({person})=>person.id===p.id)){notice(p,'§e自分の体力を確認できません');return false;}
   }else if(kind==='moon'){
    health=p.getComponent('minecraft:health');
    if(!health||!Number.isFinite(health.currentValue)||!Number.isFinite(health.effectiveMax)){notice(p,'§e体力を確認できません');return false;}
@@ -62,10 +63,10 @@ export function castNewMagic({p,s,system,kind,notice,mark,visibleFrom,stagger,co
    const range=kind==='bond'?8:kind==='moon'?6:5;
    targets=combatEnemies(p,range,8,{players:kind!=='bond'}).filter(e=>{try{return visibleFrom(p,e.getHeadLocation());}catch{return false;}}).slice(0,kind==='bond'?4:6);
   }
-  // Totem is consumed only after all validation. No revival is implied.
-  if(kind==='moon'&&!creative&&(!consumeTotem||!consumeTotem())){notice(p,'§eFUSHIのトーテムが必要です');return false;}
+  // Casting moon magic never consumes the held totem. Its cooldown is
+  // separate from the ordinary tome spells; revival remains a separate use.
   if(!creative)s.m-=spell.cost;
-  s.cd.set('spell',t+COOLDOWN);
+  if(kind==='moon')s.cd.set('fushi_moon',t+COOLDOWN);
   if(kind==='light'){
    try{lightProjectile(p,system,beam,stagger);}catch{}
   }else if(kind==='bond'){

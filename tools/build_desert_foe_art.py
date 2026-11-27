@@ -7,6 +7,7 @@ Requires Pillow. Images and motion are draft studies, not finished art.
 import argparse
 from PIL import ImageDraw
 from build_forest_wild_art import c,bone,bake,PALETTE,surface,tint
+from refine_mob_anatomy import refine_baked
 PALETTE.update({
  'burrow_body':(96,76,59),'burrow_shell':(169,128,75),'burrow_band':(211,171,105),'burrow_claw':(72,61,52),'burrow_horn':(231,192,123),
  'chase_fur':(174,92,61),'chase_belly':(223,173,124),'chase_ear':(132,70,56),'chase_dark':(81,55,48),'chase_mark':(238,200,146),
@@ -196,7 +197,9 @@ def paint(mat,w,h,seed,face,part,ci):
   d.line([(w*.5,h*.18),(w*.25,h*.5),(w*.5,h*.82),(w*.75,h*.5),(w*.5,h*.18)],fill=(117,70,42,255),width=max(1,w//18))
  return im
 
-def build(i):return bake(f'foe_2_{i}',f'f2_{i}_',DESIGNS[i](),paint)
+def build(i):
+ name=f'foe_2_{i}'
+ return refine_baked(name,bake(name,f'f2_{i}_',DESIGNS[i](),paint))
 def main():
  p=argparse.ArgumentParser();p.add_argument('--write',action='store_true');p.add_argument('--check',action='store_true');a=p.parse_args()
  if a.write==a.check:p.error('choose exactly one of --write or --check')

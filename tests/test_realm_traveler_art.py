@@ -72,6 +72,15 @@ for i in range(8):
  imgs=[Image.open(rp/f'textures/entity/{stem}{suffix}.png').convert('RGBA') for suffix in ('','_n','_mer')]
  assert all(im.size==(1024,1024) for im in imgs)
  assert imgs[2].getchannel('G').getextrema()[1]==125  # authored emissive mask, not proof of PBR
+ # Broad eyes are painted only on the north/front head face. Texture-space
+ # assertions do not prove the engine's UV orientation or emission rendering.
+ head=bones[prefix+'head']['cubes'][0]
+ for face in ('north','south'):
+  x,y=head['uv'][face]['uv'];w,h=head['uv'][face]['uv_size']
+  for cx in (.29,.71):
+   pos=(x+int(w*cx),y+int(h*.46))
+   if face=='north':assert sum(imgs[0].getpixel(pos)[:3])>450 and imgs[2].getpixel(pos)[1]==125
+   else:assert imgs[2].getpixel(pos)[1]==0
  alpha=[im.getchannel('A') for im in imgs];assert alpha[0].tobytes()==alpha[1].tobytes()==alpha[2].tobytes()
  rects=[]
  for bone in model['bones']:

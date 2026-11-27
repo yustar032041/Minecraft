@@ -5,10 +5,12 @@ import assert from 'node:assert/strict';
 import {Difficulty,GameMode} from '@minecraft/server';
 import {setupMobSystem} from '../Hakkai_v7.1.0/BehaviorPack/scripts/mob_system.js';
 import {mobContentList} from '../Hakkai_v7.1.0/BehaviorPack/scripts/mob_content.js';
-import {RUSH_REACH,RUSH_HEIGHT} from '../Hakkai_v7.1.0/BehaviorPack/scripts/mob_rush_line.js';
+import {RUSH_HEIGHT} from '../Hakkai_v7.1.0/BehaviorPack/scripts/mob_rush_line.js';
+import {GUARD_STYLES} from '../Hakkai_v7.1.0/BehaviorPack/scripts/mob_guard_styles.js';
 const guards=mobContentList.filter(p=>p.temper==='hostile'&&['ward','armor'].includes(p.talent));
 assert.equal(guards.length,18);
-function fixture(profile,{x=2,y=80,wall=false,unloaded=false,solid=false,rayError=false,parry=false,evade=false,accept=true,visualError=false,auto=true,moveOnBuff=false}={}){
+assert.deepEqual(Object.keys(GUARD_STYLES).sort(),guards.map(p=>p.id).sort());
+function fixture(profile,{x=.65,y=80,wall=false,unloaded=false,solid=false,rayError=false,parry=false,evade=false,accept=true,visualError=false,auto=true,moveOnBuff=false}={}){
  let t=0,players=[];const hits=[],victimEffects=[],selfEffects=[],allyEffects=[],outsideEffects=[],parries=[],particles=[],notices=[],anims=[];
  const d={id:'realm',isChunkLoaded:()=>!unloaded,getBlock:()=>({isSolid:solid}),getBlockFromRay:()=>{if(rayError)throw Error('unavailable');return wall?{block:{}}:undefined},
   getEntities:q=>q.families?[mob,ally,outsider]:[mob],getPlayers:()=>players,spawnParticle:(id,at)=>{if(visualError&&id.startsWith('hakkai:mob_'))throw Error('visual');particles.push([id,{...at}]);}};
@@ -27,14 +29,15 @@ function fixture(profile,{x=2,y=80,wall=false,unloaded=false,solid=false,rayErro
 function assertBuff(f,profile){
  assert.ok(f.selfEffects.includes('resistance'),profile.id);
  if(profile.talent==='armor'){assert.ok(f.selfEffects.includes('strength'));assert.deepEqual(f.allyEffects,[]);}
- else {assert.ok(f.allyEffects.includes('resistance'));assert.ok(!f.selfEffects.includes('strength'));}
+ else {assert.ok(f.allyEffects.includes('resistance'));if(GUARD_STYLES[profile.id].trait!=='strength')assert.ok(!f.selfEffects.includes('strength'));}
+ assert.ok(f.selfEffects.includes(GUARD_STYLES[profile.id].trait));
  assert.deepEqual(f.outsideEffects,[]);
 }
 for(const profile of guards){
  test(`${profile.id}: close hit and correct self/ally buff`,()=>{
-  const f=fixture(profile);assert.equal(f.notices.length,1);assert.match(f.notices[0],/近距離のみ打撃/);
+  const f=fixture(profile);assert.equal(f.notices.length,0);assert.equal(f.particles.filter(([id])=>id==='hakkai:warning_marker').length,0);
   assert.equal(f.hits.length,1);assert.equal(f.parries.length,1);assertBuff(f,profile);
-  const mark=f.particles.filter(([id])=>id==='hakkai:mob_impact');assert.equal(mark.length,1);assert.equal(mark[0][1].x,2);
+  const mark=f.particles.filter(([id])=>id==='hakkai:mob_impact');assert.equal(mark.length,1);assert.equal(mark[0][1].x,.65);
  });
  for(const mode of ['far','wall','unloaded','solid','rayError','high'])test(`${profile.id}: ${mode} has buff but no body hit or parry`,()=>{
   const opts=mode==='far'?{x:3}:mode==='high'?{y:80+RUSH_HEIGHT+.001}:{[mode]:true};
@@ -55,11 +58,14 @@ for(const profile of guards){
  test(`${profile.id}: rechecks geometry on resolution and after a buff callback`,()=>{
   const f=fixture(profile,{auto:false});f.go(0);f.go(120);f.setWall(true);f.go(160);assert.equal(f.hits.length,0);assert.equal(f.parries.length,0);assertBuff(f,profile);
   const changed=fixture(profile,{moveOnBuff:true});assert.equal(changed.hits.length,0,'target moved after the parry check');assertBuff(changed,profile);
-  const left=fixture(profile,{auto:false});left.go(0);left.go(120);left.p.location.x=12;left.go(160);assert.equal(left.hits.length,0);assert.equal(left.selfEffects.length,0);
+  const left=fixture(profile,{auto:false});left.go(0);left.go(120);left.p.location.x=12;left.go(160);assert.equal(left.hits.length,0);assertBuff(left,profile);
+  const moved=fixture(profile,{x:6,auto:false});moved.go(0);moved.go(120);moved.p.location.x=.65;moved.go(160);assert.equal(moved.hits.length,1,'close body hit is not limited by the former floor circle');
  });
 }
 test('exact physical reach and elevation boundaries',()=>{
- const p=guards[0];for(const y of [80-RUSH_HEIGHT,80+RUSH_HEIGHT])assert.equal(fixture(p,{x:RUSH_REACH,y}).hits.length,1);
- for(const y of [80-RUSH_HEIGHT-.001,80+RUSH_HEIGHT+.001])assert.equal(fixture(p,{x:RUSH_REACH,y}).hits.length,0);
- assert.equal(fixture(p,{x:RUSH_REACH+.001}).hits.length,0);
+ for(const p of guards){const reach=GUARD_STYLES[p.id].reach;
+  for(const y of [80-RUSH_HEIGHT,80+RUSH_HEIGHT])assert.equal(fixture(p,{x:reach,y}).hits.length,1);
+  for(const y of [80-RUSH_HEIGHT-.001,80+RUSH_HEIGHT+.001])assert.equal(fixture(p,{x:reach,y}).hits.length,0);
+  assert.equal(fixture(p,{x:reach+.001}).hits.length,0);
+ }
 });

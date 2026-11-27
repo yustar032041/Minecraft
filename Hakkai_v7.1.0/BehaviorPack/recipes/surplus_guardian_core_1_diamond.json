@@ -1,0 +1,25 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:recipe_shapeless": {
+    "unlock": [
+      {
+        "context": "AlwaysUnlocked"
+      }
+    ],
+    "description": {
+      "identifier": "hakkai:surplus_guardian_core_1_diamond"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "hakkai:guardian_core_1"
+      }
+    ],
+    "result": {
+      "item": "minecraft:diamond",
+      "count": 2
+    }
+  }
+}

@@ -7,6 +7,7 @@ Only three models and existing maps are written. No behavior or AI changes.
 import argparse
 from PIL import ImageDraw
 from build_forest_wild_art import c,bone,bake,PALETTE,surface,tint
+from refine_mob_anatomy import refine_baked
 PALETTE.update({
  'clock_hare_fur':(167,132,107),'clock_hare_belly':(218,197,162),'clock_hare_ear':(173,112,103),'clock_hare_needle':(223,178,91),
  'clock_fox_fur':(152,105,76),'clock_fox_muzzle':(218,187,143),'clock_fox_dark':(89,73,65),'clock_fox_copper':(192,121,72),'clock_fox_tip':(236,191,129),
@@ -66,7 +67,9 @@ def paint(mat,w,h,seed,face,part,ci):
  return image
 
 def mer(mat):return (95 if mat in ('clock_fox_copper','clock_guard_plate','clock_guard_gear') else 0,0,180 if 'clock_guard' in mat else 190,255)
-def build(i):return bake(f'wild_7_{i}',f'w7_{i}_',DESIGNS[i](),paint,mer)
+def build(i):
+ name=f'wild_7_{i}'
+ return refine_baked(name,bake(name,f'w7_{i}_',DESIGNS[i](),paint,mer))
 def main():
  p=argparse.ArgumentParser();p.add_argument('--write',action='store_true');p.add_argument('--check',action='store_true');a=p.parse_args()
  if a.write==a.check:p.error('choose exactly one of --write or --check')

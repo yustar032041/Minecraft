@@ -7,6 +7,7 @@ shared whole-animal rigs. Procedural atlases and motion remain provisional.
 import argparse
 from PIL import ImageDraw
 from build_forest_wild_art import c,bone,bake,PALETTE,surface,tint
+from refine_mob_anatomy import refine_baked
 PALETTE.update({
  'sky_rock':(132,152,157),'sky_dark':(72,102,114),'sky_edge':(180,192,185),'sky_gold':(221,192,131),'sky_cloud':(224,233,222),
  'sky_shell':(149,181,181),'sky_pale':(200,224,216),'sky_fur':(130,160,168),'sky_mane':(193,212,205),'sky_feather':(215,229,219),
@@ -144,7 +145,9 @@ def paint(mat,w,h,seed,face,part,ci):
   for x in (.3,.7):d.rectangle((w*(x-.08),h*.32,w*(x+.08),h*.46),fill=(238,224,167,255))
  return im
 
-def build(i):return bake(f'foe_6_{i}',f'f6_{i}_',DESIGNS[i-3](),paint)
+def build(i):
+ name=f'foe_6_{i}'
+ return refine_baked(name,bake(name,f'f6_{i}_',DESIGNS[i-3](),paint))
 def main():
  p=argparse.ArgumentParser();p.add_argument('--write',action='store_true');p.add_argument('--check',action='store_true');a=p.parse_args()
  if a.write==a.check:p.error('choose exactly one of --write or --check')

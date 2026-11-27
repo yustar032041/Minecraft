@@ -1,0 +1,156 @@
+[
+  {
+    "id": "foe_3_0",
+    "old": {
+      "health": 29,
+      "damage": 4
+    },
+    "new": {
+      "health": 35,
+      "damage": 5
+    }
+  },
+  {
+    "id": "foe_5_0",
+    "old": {
+      "health": 34,
+      "damage": 5
+    },
+    "new": {
+      "health": 39,
+      "damage": 6
+    }
+  },
+  {
+    "id": "foe_6_0",
+    "old": {
+      "health": 29,
+      "damage": 5
+    },
+    "new": {
+      "health": 40,
+      "damage": 6
+    }
+  },
+  {
+    "id": "foe_7_0",
+    "old": {
+      "health": 36,
+      "damage": 5
+    },
+    "new": {
+      "health": 41,
+      "damage": 6
+    }
+  },
+  {
+    "id": "foe_1_1",
+    "old": {
+      "health": 20,
+      "damage": 3
+    },
+    "new": {
+      "health": 28,
+      "damage": 4
+    }
+  },
+  {
+    "id": "foe_2_1",
+    "old": {
+      "health": 22,
+      "damage": 4
+    },
+    "new": {
+      "health": 29,
+      "damage": 4
+    }
+  },
+  {
+    "id": "foe_3_1",
+    "old": {
+      "health": 25,
+      "damage": 4
+    },
+    "new": {
+      "health": 30,
+      "damage": 4
+    }
+  },
+  {
+    "id": "foe_4_1",
+    "old": {
+      "health": 24,
+      "damage": 4
+    },
+    "new": {
+      "health": 31,
+      "damage": 4
+    }
+  },
+  {
+    "id": "foe_5_1",
+    "old": {
+      "health": 30,
+      "damage": 5
+    },
+    "new": {
+      "health": 32,
+      "damage": 5
+    }
+  },
+  {
+    "id": "foe_6_1",
+    "old": {
+      "health": 25,
+      "damage": 4
+    },
+    "new": {
+      "health": 33,
+      "damage": 5
+    }
+  },
+  {
+    "id": "foe_7_1",
+    "old": {
+      "health": 30,
+      "damage": 5
+    },
+    "new": {
+      "health": 34,
+      "damage": 5
+    }
+  },
+  {
+    "id": "wild_1_2",
+    "old": {
+      "health": 19,
+      "damage": 3
+    },
+    "new": {
+      "health": 24,
+      "damage": 3
+    }
+  },
+  {
+    "id": "wild_3_2",
+    "old": {
+      "health": 21,
+      "damage": 4
+    },
+    "new": {
+      "health": 26,
+      "damage": 4
+    }
+  },
+  {
+    "id": "wild_6_2",
+    "old": {
+      "health": 24,
+      "damage": 6
+    },
+    "new": {
+      "health": 29,
+      "damage": 6
+    }
+  }
+]

@@ -55,6 +55,42 @@
         },
         {
           "halo_true": "query.property('hakkai:form') == 4"
+        },
+        {
+          "held_sword": 0
+        }
+      ]
+    },
+    "controller.render.hakkai.warden_held_sword": {
+      "arrays": {
+        "textures": {
+          "Array.blades": [
+            "Texture.blade0",
+            "Texture.blade1",
+            "Texture.blade2",
+            "Texture.blade3",
+            "Texture.blade4",
+            "Texture.blade5",
+            "Texture.blade6",
+            "Texture.blade7"
+          ]
+        }
+      },
+      "geometry": "Geometry.default",
+      "materials": [
+        {
+          "*": "Material.default"
+        }
+      ],
+      "textures": [
+        "Array.blades[math.max(0,query.property('hakkai:held_blade')-1)]"
+      ],
+      "part_visibility": [
+        {
+          "*": 0
+        },
+        {
+          "held_sword": "query.property('hakkai:held_blade') > 0"
         }
       ]
     }

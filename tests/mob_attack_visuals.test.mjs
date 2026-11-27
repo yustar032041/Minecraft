@@ -4,7 +4,7 @@ import {mobContent} from '../Hakkai_v7.1.0/BehaviorPack/scripts/mob_content.js';
 import {setupNativeMobStrikes,patrolCast,creatureWindup,creatureStrike} from '../Hakkai_v7.1.0/BehaviorPack/scripts/mob_attack_visuals.js';
 import {patrolMagicHit} from '../Hakkai_v7.1.0/BehaviorPack/scripts/patrol_magic.js';
 import fs from 'node:fs';import vm from 'node:vm';
-import {setupFushiSystem} from '../Hakkai_v7.1.0/BehaviorPack/scripts/fushi_system.js';
+import {setupFushiSystem,CHIEF_ATTACKS} from '../Hakkai_v7.1.0/BehaviorPack/scripts/fushi_system.js';
 import {Difficulty,GameMode} from '@minecraft/server';
 import {creatureVisualAnimation} from '../Hakkai_v7.1.0/BehaviorPack/scripts/mob_visual_styles.js';
 
@@ -29,6 +29,16 @@ test('rebuilt wildlife native contacts use individual rigs without enabling pass
   const mob={id,typeId:id,isValid:true,location:{x:0,y:0,z:0},dimension:{spawnParticle:()=>{}},playAnimation:a=>calls.push(a)};
   assert.equal(hits.hit({damagingEntity:mob,hitEntity:target},20),i!==0);
   assert.deepEqual(calls,i===0?[]:[`animation.hakkai.wild_${realm}_${i}_contact`]);
+ }
+});
+
+test('king guardian native contacts reuse the matching guardian rig',()=>{
+ const hits=setupNativeMobStrikes(mobContent),target={isValid:true};
+ for(let i=0;i<8;i++){
+  const calls=[],id=`hakkai:king_guardian_${i}`;
+  const mob={id,typeId:id,isValid:true,location:{x:0,y:0,z:0},dimension:{spawnParticle:()=>{}},playAnimation:a=>calls.push(a)};
+  assert.equal(hits.hit({damagingEntity:mob,hitEntity:target},20),true);
+  assert.deepEqual(calls,[`animation.hakkai.guardian_${i}_contact`]);
  }
 });
 
@@ -118,7 +128,7 @@ test('FUSHI windup and strike follow warning; missing charge scheduler fails clo
  const mob={id:'m',typeId:'hakkai:fushi_chief',isValid:true,dimension:d,location:{x:0,y:0,z:0},playAnimation:id=>{animations.push([tick,id]);if(broken)throw Error('no animation')}};
  const system={get currentTick(){return tick}},world={getDifficulty:()=>Difficulty.Normal,getAllPlayers:()=>[p]};
  const ctrl=setupFushiSystem({world,system,report:()=>assert.fail()});ctrl.onHurt({hurtEntity:mob,damageSource:{damagingEntity:p}});
- tick=40;ctrl.tick(p,tick);assert.equal(particles.filter(x=>x==='hakkai:warning_marker').length,16);assert.deepEqual(animations,[[40,'animation.hakkai.fushi_chief_impact_windup']]);
+ tick=40;ctrl.tick(p,tick);assert.equal(particles.filter(x=>x==='hakkai:warning_marker').length,0);assert.deepEqual(animations,[[40,'animation.hakkai.fushi_chief_impact_windup']]);
  broken=true;tick=80;ctrl.tick(p,tick);assert.equal(animations[1][1],'animation.hakkai.fushi_chief_impact_strike');assert.deepEqual(damage,[]);
 });
 
@@ -136,18 +146,17 @@ test('melee patrol strikes are cosmetic on actual contact and do not cover range
  const broken=entity('broken','hakkai:village_watch');broken.playAnimation=()=>{throw Error('not loaded')};assert.doesNotThrow(()=>hits.hit({damagingEntity:broken,hitEntity:player},50));
 });
 
-test('mage cast animation is tied to actual magic without changing target or damage',()=>{
+test('village mage selects visible permitted hostile and starts its scheduled bolt',()=>{
  const src=fs.readFileSync('Hakkai_v7.1.0/BehaviorPack/scripts/main.js','utf8');
  const begin=src.indexOf(" for(const mage of d.getEntities({type:ns+'village_mage'");const end=src.indexOf(' const dutyStart=',begin);assert.ok(begin>0&&end>begin);
- const source=src.slice(begin,end),calls=[];let allowed=true,visible=true,broken=false;
- const d={getEntities:()=>[mage],spawnParticle:(...args)=>calls.push(['particle',...args])};
- const mage={isValid:true,typeId:'hakkai:village_mage',dimension:d,location:{x:0,y:0,z:0},playAnimation:id=>{calls.push(['animation',id]);if(broken)throw Error('unloaded')}};
- const foe={isValid:true,location:{x:5,y:0,z:0},getHeadLocation:()=>({x:5,y:1,z:0}),addEffect:(...args)=>calls.push(['effect',...args]),applyDamage:(...args)=>{calls.push(['damage',...args]);return true}};
- const ctx={d,ns:'hakkai:',l:{x:0,y:0,z:0},hostile:[foe],dist:(a,b)=>Math.hypot(a.x-b.x,a.z-b.z),visibleFrom:()=>visible,permit:()=>allowed,patrolMagicHit};
- vm.runInNewContext(source,ctx);assert.deepEqual(calls.map(x=>x[0]),['damage','effect','animation','particle']);assert.equal(calls[0][1],3);assert.equal(calls[2][1],'animation.hakkai.patrol_cast');
+ const source=src.slice(begin,end),calls=[];let allowed=true,visible=true;
+ const d={getEntities:()=>[mage]},system={},world={};
+ const mage={isValid:true,typeId:'hakkai:village_mage',location:{x:0,y:0,z:0}};
+ const foe={isValid:true,location:{x:5,y:0,z:0},getHeadLocation:()=>({x:5,y:1,z:0})};
+ const ctx={d,system,world,ns:'hakkai:',l:{x:0,y:0,z:0},hostile:[foe],dist:(a,b)=>Math.hypot(a.x-b.x,a.z-b.z),visibleFrom:()=>visible,permit:()=>allowed,patrolMagicHit:(...args)=>calls.push(args)};
+ vm.runInNewContext(source,ctx);assert.equal(calls.length,1);assert.deepEqual(calls[0],[mage,foe,system,world]);
  calls.length=0;allowed=false;vm.runInNewContext(source,ctx);assert.equal(calls.length,0);
  allowed=true;visible=false;vm.runInNewContext(source,ctx);assert.equal(calls.length,0);
- visible=true;broken=true;vm.runInNewContext(source,ctx);assert.deepEqual(calls.map(x=>x[0]),['damage','effect','animation','particle'],'visual failure does not cancel damage or particle');
  const other={typeId:'minecraft:villager_v2',playAnimation:()=>assert.fail('vanilla not affected')};patrolCast(other);
 });
 
@@ -195,11 +204,11 @@ test('FUSHI mist uses bounded marks; moving attacks fail closed without schedule
  const ctrl=setupFushiSystem({world,system,report:()=>assert.fail()});ctrl.onHurt({hurtEntity:mob,damageSource:{damagingEntity:p}});
  for(const [start,kind] of [[40,'impact'],[120,'time'],[200,'shadow']]){
   p.location.x=1;tick=start;ctrl.tick(p,tick);p.location.x=1.5;tick=start+40;ctrl.tick(p,tick);
-  const effect=marks.filter(x=>x.tick===tick&&x.id===`hakkai:mob_${kind}`);assert.equal(effect.length,kind==='shadow'?4:0,kind);
-  for(const x of effect.slice(0,3))assert.ok(Math.abs(x.loc.x-1)<=.45+1e-9,'impact marks anchored to warning');
-  if(kind==='shadow')assert.equal(effect[3].loc.x,1.5,'accepted mist hit has a separate mark on the victim');
+  const effect=marks.filter(x=>x.tick===tick&&x.id===`hakkai:mob_${kind}`);assert.equal(effect.length,kind==='shadow'?20:0,kind);
+  for(const x of effect.slice(0,3))assert.ok(Math.abs(x.loc.x)<=.45+1e-9,'impact marks anchored to chief');
+  if(kind==='shadow')assert.equal(effect.at(-1).loc.x,1.5,'accepted mist hit has a separate mark on the victim');
  }
- assert.deepEqual(damage,[7]);
+ assert.deepEqual(damage,[CHIEF_ATTACKS[2].damage]);
  assert.deepEqual(animations,[[40,'animation.hakkai.fushi_chief_impact_windup'],[80,'animation.hakkai.fushi_chief_impact_strike'],[120,'animation.hakkai.fushi_chief_moon_windup'],[160,'animation.hakkai.fushi_chief_moon_strike'],[200,'animation.hakkai.fushi_chief_mist_windup'],[240,'animation.hakkai.fushi_chief_mist_strike']]);
 });
 

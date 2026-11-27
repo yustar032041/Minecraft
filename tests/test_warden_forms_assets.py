@@ -18,7 +18,12 @@ for b in geo['bones']:
  for c in b.get('cubes',[]):
   assert all(v>0 for v in c['size'])
   for u in c['uv'].values():assert 0<=u['uv'][0]<=384 and 0<=u['uv'][1]<=384 and u['uv_size']==[128,128]
-client=load(rp/'entity/time_warden.entity.json')['minecraft:client_entity']['description'];assert client['render_controllers']==['controller.render.hakkai.warden']
+assert props['hakkai:held_blade']=={'type':'int','range':[0,8],'default':0,'client_sync':True}
+assert bones['held_sword']['parent']=='right_arm'
+client=load(rp/'entity/time_warden.entity.json')['minecraft:client_entity']['description'];assert client['render_controllers']==['controller.render.hakkai.warden','controller.render.hakkai.warden_held_sword']
+controllers=load(rp/'render_controllers/time_warden.render_controllers.json')['render_controllers']
+held=controllers['controller.render.hakkai.warden_held_sword'];assert held['part_visibility'][1]['held_sword']=="query.property('hakkai:held_blade') > 0"
+assert held['arrays']['textures']['Array.blades']==[f'Texture.blade{i}' for i in range(8)]
 render=load(rp/'render_controllers/time_warden.render_controllers.json')['render_controllers']['controller.render.hakkai.warden']
 assert render['textures']==["Array.forms[query.property('hakkai:form')]"]
 assert render['arrays']['textures']['Array.forms']==[f'Texture.form{i}' for i in range(5)]

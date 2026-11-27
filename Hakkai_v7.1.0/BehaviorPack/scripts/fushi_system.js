@@ -1,4 +1,4 @@
-import { talentImpact } from './mob_talent_effects.js';
+import { talentImpact, talentTell, guardianPulse } from './mob_talent_effects.js';
 import { creatureWindup, creatureStrike } from './mob_attack_visuals.js';
 import { EntityDamageCause, GameMode, Difficulty } from '@minecraft/server';
 import { inEnderWarning } from './realm_ender.js';
@@ -8,10 +8,10 @@ import { combatPlayerAttacker } from './combat_player_attacker.js';
 import { findCombatPlayer } from './combat_find_player.js';
 
 export const CHIEF_ATTACKS=[
- {name:'月光の体当たり',radius:3,damage:12,effect:'slowness',duration:45,amplifier:0},
- {name:'月光の弾',radius:3.5,damage:11,effect:'weakness',duration:70,amplifier:0},
+ {name:'月光の体当たり',radius:3,damage:18,effect:'slowness',duration:45,amplifier:0},
+ {name:'月光の弾',radius:3.5,damage:16.5,effect:'weakness',duration:70,amplifier:0},
  // Drowsiness is still not forced sleep. Both effects require accepted damage.
- {name:'眠りの霧',radius:4,damage:7,effect:'slowness',duration:100,amplifier:1,drowsiness:{effect:'blindness',duration:30,amplifier:0}}
+ {name:'眠りの霧',radius:4,damage:10.5,effect:'slowness',duration:100,amplifier:1,drowsiness:{effect:'blindness',duration:30,amplifier:0}}
 ];
 // Presentation only; existing single-target hit checks remain authoritative.
 export function chiefVisualAnimation(attack,phase){
@@ -21,13 +21,25 @@ export function chiefVisualAnimation(attack,phase){
 export function setupFushiSystem({world,system,report,isEvading=()=>false,tryParry=()=>false}){
  const states=new Map();
  const playable=p=>p?.isValid&&p.typeId==='minecraft:player'&&p.getGameMode()!==GameMode.Creative&&p.getGameMode()!==GameMode.Spectator;
+ // Hooks may move or invalidate either combatant. A contact established before
+ // such a hook must not turn into a hit at a different position or dimension.
+ function allowedContact(e,p,s,dimensionId){
+  try{
+   const a={...e.location},b={...p.location},flight=s.flight,nextAt=s.nextAt;
+   if(![a.x,a.y,a.z,b.x,b.y,b.z].every(Number.isFinite)||isEvading(p)||tryParry(p,e))return false;
+   const x=e.location,y=p.location;
+   return states.get(e.id)===s&&s.flight===flight&&s.nextAt===nextAt&&e.isValid&&playable(p)&&s.targetId===p.id&&world.getDifficulty()!==Difficulty.Peaceful&&
+    e.dimension.id===dimensionId&&p.dimension.id===dimensionId&&
+    x.x===a.x&&x.y===a.y&&x.z===a.z&&y.x===b.x&&y.y===b.y&&y.z===b.z;
+  }catch{return false;}
+ }
  function onHurt({hurtEntity,damageSource}){
   const attacker=combatPlayerAttacker(damageSource);
   if(hurtEntity?.typeId!=='hakkai:fushi_chief'||!hurtEntity.isValid||!playable(attacker)||world.getDifficulty()===Difficulty.Peaceful)return;
   let s=states.get(hurtEntity.id);
   if(!s){s={nextAt:system.currentTick+20,index:0};states.set(hurtEntity.id,s);}
   if(s.targetId&&s.targetId!==attacker.id){
-   // Keep the warned target while they remain present: alternating hits from
+   // Keep the original target while they remain present: alternating hits from
    // multiple players must not cancel every windup or silently switch victims.
    const current=findCombatPlayer(world,s.targetId);
    try{if(playable(current)&&current.dimension.id===hurtEntity.dimension.id&&Math.hypot(current.location.x-hurtEntity.location.x,current.location.z-hurtEntity.location.z)<=24)return;}catch{}
@@ -36,19 +48,12 @@ export function setupFushiSystem({world,system,report,isEvading=()=>false,tryPar
   s.targetId=attacker.id;s.lastSeen=system.currentTick;
  }
  function onDeath({deadEntity}){if(deadEntity?.typeId==='hakkai:fushi_chief')states.delete(deadEntity.id);}
- function ring(d,at,radius){
-  let ok=true;for(let i=0;i<16;i++){
-   const a=i*Math.PI/8;
-   try{d.spawnParticle('hakkai:warning_marker',{x:at.x+radius*Math.cos(a),y:at.y+.15,z:at.z+radius*Math.sin(a)});}catch{ok=false;}
-  }
-  return ok;
- }
- // Flight follows one fixed path; damage is possible only to the originally
- // notified player and only while they remain in the displayed warning.
+ // Flight follows a fixed physical trajectory toward the initial aim. The
+ // target can move out of that path; no target-floor marker is used.
  // One callback per frame, no catch-up after delayed or canceled updates.
  function launchMoon(e,s,aim,attack,t){
   const flight=startChiefMoon({x:e.location.x,y:e.location.y+.8,z:e.location.z},{x:aim.x,y:aim.y+.8,z:aim.z},t);
-  if(!flight||!ring(e.dimension,aim,attack.radius)){s.nextAt=t+120;return;}
+  if(!flight){s.nextAt=t+120;return;}
   const dimensionId=e.dimension.id,targetId=s.targetId;
   s.flight=flight;
   function finish(now){if(s.flight===flight){s.flight=undefined;s.nextAt=now+40;}}
@@ -62,8 +67,8 @@ export function setupFushiSystem({world,system,report,isEvading=()=>false,tryPar
     if(!e.isValid||e.dimension.id!==dimensionId||s.targetId!==targetId||world.getDifficulty()===Difficulty.Peaceful){finish(now);return;}
     const p=findCombatPlayer(world,targetId);
     if(!playable(p)||p.dimension.id!==dimensionId||Math.hypot(p.location.x-e.location.x,p.location.z-e.location.z)>24){finish(now);return;}
-    const result=advanceChiefMoon(e.dimension,flight,now,e.id,p.id);
-    if(result.hit&&inEnderWarning(p.location,aim,attack.radius)&&!isEvading(p)&&!tryParry(p,e)){
+    const result=advanceChiefMoon(e.dimension,flight,now,e.id,p.id,'hakkai:shot_time');
+    if(result.hit&&result.contact&&p.location.x===result.contact.x&&p.location.y===result.contact.y&&p.location.z===result.contact.z&&allowedContact(e,p,s,dimensionId)){
      let hit=false;try{hit=Boolean(p.applyDamage(attack.damage,{cause:EntityDamageCause.entityAttack,damagingEntity:e}));}catch{}
      if(hit)try{p.addEffect(attack.effect,attack.duration,{amplifier:0,showParticles:false});}catch{}
     }
@@ -72,11 +77,11 @@ export function setupFushiSystem({world,system,report,isEvading=()=>false,tryPar
   }
   schedule();
  }
- // The body charge can move only along the fixed warning direction, on
- // checked ground, and can damage only the original notified target on contact.
+ // The body charge moves along its original aim on checked ground and can
+ // damage only the original target on contact.
  function launchCharge(e,s,aim,attack,t){
   const flight=startChiefCharge(e.location,aim,t);
-  if(!flight||!ring(e.dimension,aim,attack.radius)){s.nextAt=t+120;return;}
+  if(!flight){s.nextAt=t+120;return;}
   const dimensionId=e.dimension.id,targetId=s.targetId;s.flight=flight;
   function finish(now){if(s.flight===flight){s.flight=undefined;s.nextAt=now+40;}}
   function schedule(){try{system.runTimeout(step,1);}catch{finish(system.currentTick);}}
@@ -88,7 +93,8 @@ export function setupFushiSystem({world,system,report,isEvading=()=>false,tryPar
     const p=findCombatPlayer(world,targetId);
     if(!playable(p)||p.dimension.id!==dimensionId||Math.hypot(p.location.x-e.location.x,p.location.z-e.location.z)>24){finish(now);return;}
     const result=advanceChiefCharge(e,p,flight,now);
-    if(result.contact&&inEnderWarning(p.location,aim,attack.radius)&&!isEvading(p)&&!tryParry(p,e)){
+    const same=(a,b)=>a&&b&&a.x===b.x&&a.y===b.y&&a.z===b.z;
+    if(result.contact&&same(p.location,result.targetPosition)&&same(e.location,result.sourcePosition)&&allowedContact(e,p,s,dimensionId)){
      let hit=false;try{hit=Boolean(p.applyDamage(attack.damage,{cause:EntityDamageCause.entityAttack,damagingEntity:e}));}catch{}
      if(hit)try{p.addEffect(attack.effect,attack.duration,{amplifier:attack.amplifier,showParticles:false});}catch{}
     }
@@ -112,9 +118,12 @@ export function setupFushiSystem({world,system,report,isEvading=()=>false,tryPar
    creatureStrike(e,chiefVisualAnimation(attack,'strike'));
    if(attack===CHIEF_ATTACKS[1]){launchMoon(e,s,aim,attack,t);return;}
    if(attack===CHIEF_ATTACKS[0]){launchCharge(e,s,aim,attack,t);return;}
-   // The mist remains a fixed-position single-target check.
-   talentImpact(e,{talent:'burst',realm:5},{aim,radius:attack.radius});
-   if(inEnderWarning(p.location,aim,attack.radius)&&!isEvading(p)&&!tryParry(p,e)){
+   // The mist blooms around the chief, not at the old player position.
+   // The effect and hit test share one source-centred snapshot.
+   const center={...e.location};if(![center.x,center.y,center.z].every(Number.isFinite)){s.nextAt=t+40;return;}
+   talentImpact(e,{talent:'burst',realm:5},{aim:center,radius:attack.radius});
+   guardianPulse(e,5,center,attack.radius);
+   if(inEnderWarning(p.location,center,attack.radius)&&allowedContact(e,p,s,dimensionId)){
     let hit=false;try{hit=Boolean(p.applyDamage(attack.damage,{cause:EntityDamageCause.entityAttack,damagingEntity:e}));}catch{}
     if(hit){
      try{p.addEffect(attack.effect,attack.duration,{amplifier:attack.amplifier,showParticles:false});}catch{}
@@ -131,12 +140,9 @@ export function setupFushiSystem({world,system,report,isEvading=()=>false,tryPar
   }
   if(!s.pending&&t>=s.nextAt){
    const attack=CHIEF_ATTACKS[s.index++%CHIEF_ATTACKS.length],aim={...p.location};
-   const instruction=attack===CHIEF_ATTACKS[1]?'約2秒後に弾を固定地点へ発射、途中で遮られる':
-    attack===CHIEF_ATTACKS[0]?'約2秒後に固定地点へ短く突進、輪内で接触すると命中':'約2秒後に鈍足と短い視界低下の霧（睡眠なし）';
-   try{p.sendMessage(`§dFUSHIのチーフ：${attack.name}！ 光の輪から離れよう（上下3ブロック・${instruction}、あなたのみ対象）`);}
-   catch{s.nextAt=t+120;return;}
-   if(!ring(e.dimension,aim,attack.radius)){s.nextAt=t+120;return;}
-   creatureWindup(e,chiefVisualAnimation(attack,'windup'));s.pending={attack,aim,at:t+40,dimensionId:e.dimension.id};
+   creatureWindup(e,chiefVisualAnimation(attack,'windup'));
+   talentTell(e,{talent:attack===CHIEF_ATTACKS[2]?'burst':'time',realm:attack===CHIEF_ATTACKS[2]?5:7},aim,attack===CHIEF_ATTACKS[2]?'radial':'forward');
+   s.pending={attack,aim,at:t+40,dimensionId:e.dimension.id};
   }
  }
  function tick(player,t){

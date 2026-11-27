@@ -35,20 +35,22 @@ function assertCanceled(f,label){
  assert.ok(!f.animations.some(([,id])=>id.endsWith('_strike')),label+' must not play strike');
 }
 for(let realm=0;realm<8;realm++)test(`traveler ${realm}: warning does not follow both combatants to another dimension`,()=>{
- const f=fixture(`hakkai:ender_${realm}`);f.tick(0);f.tick(20);assert.equal(f.notices.length,1);f.clear();f.move();f.tick(60);assertCanceled(f,'traveler');
+ const f=fixture(`hakkai:ender_${realm}`);f.tick(0);f.tick(20);assert.equal(f.notices.length,0);f.clear();f.move();f.tick(60);assertCanceled(f,'traveler');
 });
 for(let index=0;index<3;index++)test(`chief attack ${index}: moving both combatants cancels the warning before launch`,()=>{
  const f=fixture('hakkai:fushi_chief');for(let i=0;i<index;i++){f.tick(20+80*i);f.tick(60+80*i);}
- const start=20+80*index;f.tick(start);assert.equal(f.notices.length,index+1);f.clear();f.move();f.tick(start+40);assertCanceled(f,'chief');
+ const start=20+80*index;f.tick(start);assert.equal(f.notices.length,0);f.clear();f.move();f.tick(start+40);assertCanceled(f,'chief');
 });
 for(let realm=0;realm<8;realm++)for(let index=0;index<3;index++)test(`guardian ${realm}/${index}: no strike in another dimension`,()=>{
  const f=fixture(`hakkai:guardian_${realm}`);f.tick(0);for(let i=0;i<index;i++){f.tick(30+i*80);f.tick(70+i*80);}
- const start=30+index*80;f.tick(start);assert.equal(f.notices.length,index+1);f.clear();f.move();f.tick(start+40);assertCanceled(f,'guardian');
+ const start=30+index*80;f.tick(start);assert.equal(f.notices.length,0);f.clear();f.move();f.tick(start+40);assertCanceled(f,'guardian');
 });
 for(const profile of mobContentList.filter(x=>x.temper==='hostile'))test(`${profile.id}: no warned talent in another dimension`,()=>{
- const f=fixture(`hakkai:${profile.id}`);f.tick(0);f.tick(120);assert.ok(f.notices.length>0);f.clear();f.move();f.tick(160);assertCanceled(f,profile.id);
+ const f=fixture(`hakkai:${profile.id}`);f.tick(0);f.tick(120);
+ assert.equal(f.notices.length,0);
+ f.clear();f.move();f.tick(160);assertCanceled(f,profile.id);
 });
-for(let index=0;index<9;index++)test(`king technique ${index}: no damage, status or minions in another dimension`,()=>{
+for(let index=0;index<10;index++)test(`king technique ${index}: no damage, status or minions in another dimension`,()=>{
  const f=fixture('hakkai:eclipse_colossus');const start=100+index*70;for(let t=0;t<start;t+=10)f.tick(t);
- const before=f.notices.length;f.tick(start);assert.equal(f.notices.length,before+1);f.clear();f.move();f.tick(start+40);assertCanceled(f,'king');
+ const before=f.notices.length;f.tick(start);assert.equal(f.notices.length,before+(index===9?0:1));f.clear();f.move();f.tick(start+40);assertCanceled(f,'king');
 });

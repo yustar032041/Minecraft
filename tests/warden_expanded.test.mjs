@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
-import {WARDEN_EXTRA,WARDEN_DAMAGE_MULTIPLIER,WARDEN_COMBO_MULTIPLIER,inWardenWarning,setupWardenBoss} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_boss.js';
+import {WARDEN_EXTRA,WARDEN_DAMAGE_MULTIPLIER,WARDEN_COMBO_MULTIPLIER,inWardenWarning,setupWardenBoss as realSetupWardenBoss} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_boss.js';
+import {legacyWardenDecision} from './warden_legacy_decision.mjs';
+const setupWardenBoss=options=>realSetupWardenBoss({...options,decision:legacyWardenDecision()});
 import {GameMode,Difficulty} from '@minecraft/server';
 assert.equal(WARDEN_EXTRA.length,5);assert.ok(WARDEN_EXTRA.every(x=>x.length===3));assert.equal(new Set(WARDEN_EXTRA.flat().map(x=>x.attack)).size,15);
 function fixture(phase=0){

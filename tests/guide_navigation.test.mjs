@@ -6,12 +6,12 @@ import { mobContentList } from '../Hakkai_v7.1.0/BehaviorPack/scripts/mob_conten
 const main=fs.readFileSync('Hakkai_v7.1.0/BehaviorPack/scripts/main.js','utf8');
 const dispatch=main.slice(main.indexOf('async function dispatchGuide('),main.indexOf('async function magicIndex('));
 const routes=[...dispatch.matchAll(/if\(ix===(\d+)\)/g)].map(m=>Number(m[1]));
-assert.equal(GUIDE_ENTRIES.length,55);assert.equal(GUIDE_ICONS.length,GUIDE_ENTRIES.length);
+assert.equal(GUIDE_ENTRIES.length,56);assert.equal(GUIDE_ICONS.length,GUIDE_ENTRIES.length);
 for(const icon of GUIDE_ICONS)assert.ok(fs.existsSync(`Hakkai_v7.1.0/ResourcePack/textures/items/hakkai_${icon}.png`),icon);
 const ids=GUIDE_SECTIONS.flatMap(section=>section.ids);
-assert.equal(ids.length,55);assert.equal(new Set(ids).size,55);
-assert.deepEqual([...ids].sort((a,b)=>a-b),Array.from({length:55},(_,i)=>i));
-assert.deepEqual([...new Set(routes)].sort((a,b)=>a-b),Array.from({length:55},(_,i)=>i));
+assert.equal(ids.length,56);assert.equal(new Set(ids).size,56);
+assert.deepEqual([...ids].sort((a,b)=>a-b),Array.from({length:56},(_,i)=>i));
+assert.deepEqual([...new Set(routes)].sort((a,b)=>a-b),Array.from({length:56},(_,i)=>i));
 for(const group of GUIDE_SECTIONS){
  assert.ok(group.title&&group.hint&&group.ids.length);
  assert.ok(fs.existsSync(`Hakkai_v7.1.0/ResourcePack/textures/items/hakkai_${group.icon}.png`));
@@ -50,7 +50,7 @@ for(let realm=0;realm<8;realm++){
  for(const {profile,index} of list){assert.equal(profile.realm,realm);assert.equal(mobContentList[index],profile);covered.add(index);}
 }
 assert.equal(covered.size,120);assert.deepEqual(creatureEntriesByRealm(mobContentList,99),[]);
-console.log('Guide: all 55 routes, category icons, pagination/back/cancel, 175 gear filters and 120 realm-filtered creature entries OK (mocked/static)');
+console.log('Guide: all 56 routes, category icons, pagination/back/cancel, 175 gear filters and 120 realm-filtered creature entries OK (mocked/static)');
 {
  const {searchGuideEntries}=await import('../Hakkai_v7.1.0/BehaviorPack/scripts/guide_navigation.js');
  const entries=[[0,'鉄の剣（hakkai:gear_010）'],[1,'鉄の斧（hakkai:gear_011）'],[2,'紙（minecraft:paper）']];

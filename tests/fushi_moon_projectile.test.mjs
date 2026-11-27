@@ -3,7 +3,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {GameMode,Difficulty} from '@minecraft/server';
-import {setupFushiSystem} from '../Hakkai_v7.1.0/BehaviorPack/scripts/fushi_system.js';
+import {setupFushiSystem,CHIEF_ATTACKS} from '../Hakkai_v7.1.0/BehaviorPack/scripts/fushi_system.js';
 import {startChiefMoon,advanceChiefMoon} from '../Hakkai_v7.1.0/BehaviorPack/scripts/fushi_moon_projectile.js';
 
 function fixture(){
@@ -25,7 +25,7 @@ function fixture(){
    const radial=Math.hypot(delta.x-dir.x*along,delta.y-dir.y*along,delta.z-dir.z*along);
    return {entity,distance:Math.max(0,along-.35),along,radial};
   }).filter(h=>h.radial<=.35&&h.along>=0&&h.distance<=maxDistance),
-  spawnParticle:(id,pos)=>{if(particleFail&&id==='hakkai:mob_time')throw Error('particle unavailable');particles.push({tick,id,pos:{...pos}});}};
+  spawnParticle:(id,pos)=>{if(particleFail&&id==='hakkai:shot_time')throw Error('particle unavailable');particles.push({tick,id,pos:{...pos}});}};
  const player=(id,x,z=0)=>({id,typeId:'minecraft:player',isValid:true,dimension:d,location:{x,y:80,z},getGameMode:()=>GameMode.Survival,
   sendMessage:m=>messages.push({tick,id,m}),applyDamage:n=>{hits.push({tick,id,n});return true;},addEffect:(id,duration)=>effects.push({tick,id,duration})});
  const p=player('p',6),q=player('q',8,3),chief={id:'chief',typeId:'hakkai:fushi_chief',isValid:true,dimension:d,location:{x:0,y:80,z:0},playAnimation:()=>{}};
@@ -41,14 +41,14 @@ function fixture(){
   wall:v=>wall=v,loaded:v=>loaded=v,air:v=>air=v,particleFail:v=>particleFail=v,rayFail:v=>rayFail=v,
   entities:v=>entities=v,difficulty:v=>difficulty=v,evade:v=>evade=v,parry:v=>parry=v};
 }
-function ready(){const f=fixture();f.advance(100);assert.match(f.messages.at(-1).m,/月光の弾/);f.hits.length=0;f.effects.length=0;return f;}
+function ready(){const f=fixture();f.advance(100);assert.equal(f.messages.length,0);f.hits.length=0;f.effects.length=0;return f;}
 test('moon shot flies after its fixed warning, strikes only the notified target and refreshes the ring',()=>{
  const f=ready();f.advance(140);assert.deepEqual(f.hits,[]);
- assert.equal(f.particles.filter(x=>x.tick===100&&x.id==='hakkai:warning_marker').length,16);
- assert.equal(f.particles.filter(x=>x.tick===140&&x.id==='hakkai:warning_marker').length,16);
- f.advance(145);assert.deepEqual(f.hits.map(h=>[h.tick,h.id,h.n]),[[144,'p',11]]);
+ assert.equal(f.particles.filter(x=>x.id==='hakkai:warning_marker').length,0);
+ assert.ok(f.particles.some(x=>x.id==='hakkai:tell_time'));
+ f.advance(145);assert.deepEqual(f.hits.map(h=>[h.tick,h.id,h.n]),[[144,'p',CHIEF_ATTACKS[1].damage]]);
  assert.deepEqual(f.effects.map(e=>[e.id,e.duration]),[['weakness',70]]);
- const moving=f.particles.filter(x=>x.id==='hakkai:mob_time'&&x.tick>140);
+ const moving=f.particles.filter(x=>x.id==='hakkai:shot_time'&&x.tick>140);
  assert.ok(moving.length>4);assert.ok(moving.every(x=>x.tick<=144));
  assert.ok(moving.some(x=>x.pos.x<2)&&moving.some(x=>x.pos.x>5));
  f.advance(170);assert.equal(f.hits.length,1);
@@ -57,14 +57,14 @@ test('launch uses the chief position at release and the original fixed target ma
  const f=ready();f.chief.location.x=2;f.advance(140);
  // Target sidesteps after the warning: the projectile must not home in.
  f.p.location.z=1;f.advance(150);assert.deepEqual(f.hits,[]);
- const trail=f.particles.filter(x=>x.id==='hakkai:mob_time'&&x.tick>140);
+ const trail=f.particles.filter(x=>x.id==='hakkai:shot_time'&&x.tick>140);
  assert.ok(trail.length);assert.ok(trail.every(x=>Math.abs(x.pos.z)<1e-9&&x.pos.x>=2));
 });
 test('an entity in front of a wall can be hit but the wall blocks entities behind it',()=>{
  const f=ready();f.wall(6.2);f.advance(145);assert.deepEqual(f.hits.map(x=>x.id),['p']);
  const g=ready();g.wall(5.4);g.advance(145);assert.deepEqual(g.hits,[]);
 });
-for(const condition of ['wall','unloaded','solid-origin','particle','raycast','other-entity','outside-ring','sidestep','evade','parry','peaceful','disconnected','other-dimension','chief-dimension','dead-chief','stagger'])test(`moon shot cancels or misses for ${condition}`,()=>{
+for(const condition of ['wall','unloaded','solid-origin','raycast','other-entity','sidestep','evade','parry','peaceful','disconnected','other-dimension','chief-dimension','dead-chief','stagger'])test(`moon shot cancels or misses for ${condition}`,()=>{
  const f=ready();f.advance(140);
  if(condition==='wall')f.wall(2);
  if(condition==='unloaded')f.loaded(false);
@@ -92,7 +92,7 @@ test('retarget during flight cancels it; never silently transfers a projectile',
 test('failed refresh or unavailable scheduler cannot cause unmarked damage',()=>{
  const f=ready();f.advance(139);const spawn=f.d.spawnParticle;
  f.d.spawnParticle=(id,pos)=>{if(id==='hakkai:warning_marker')throw Error('marker');spawn(id,pos);};
- f.advance(150);assert.deepEqual(f.hits,[]);assert.equal(f.queue.length,0);
+ f.advance(150);assert.deepEqual(f.hits.map(x=>x.id),['p']);assert.equal(f.queue.length,0);
  const g=ready();g.advance(139);g.system.runTimeout=()=>{throw Error('scheduler unavailable');};
  g.advance(150);assert.deepEqual(g.hits,[]);assert.equal(g.queue.length,0);
 });
@@ -126,4 +126,13 @@ test('late frames, malformed rays and invalid starts fail closed',()=>{
 test('stale online player entry cannot hide the warned projectile target during flight',()=>{
  const f=ready();f.advance(140);f.world.getAllPlayers=()=>[{get id(){throw Error('disconnected')}},f.p,f.q];
  f.advance(145);assert.deepEqual(f.hits.map(x=>x.id),['p']);
+});
+
+test('moon hits an intercepted target outside the old ring and tolerates missing particles',()=>{
+ const f=ready();f.advance(140);f.p.location.x=2;f.particleFail(true);f.advance(150);assert.deepEqual(f.hits.map(x=>x.id),['p']);
+});
+test('moon contact is invalidated if its particle callback moves the target',()=>{
+ const f=ready();f.advance(140);const spawn=f.d.spawnParticle;let moved=false;
+ f.d.spawnParticle=(id,pos)=>{spawn(id,pos);if(id==='hakkai:shot_time'&&pos.x>5&&!moved){moved=true;f.p.location.z=5;}};
+ f.advance(150);assert.ok(moved);assert.deepEqual(f.hits,[]);
 });

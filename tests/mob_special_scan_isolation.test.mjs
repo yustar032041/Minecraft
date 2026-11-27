@@ -14,39 +14,40 @@ function fixture(type){
   sendMessage:m=>messages.push(m),applyDamage:n=>{hits.push(n);return true},addEffect:()=>{},applyImpulse:()=>{}};
  const mob={id:'good',typeId:type,isValid:true,dimension:d,location:{x:0,y:80,z:0},playAnimation:()=>{},getComponent:()=>({effectiveMax:1000,currentValue:1000})};
  players=[p];const world={getDifficulty:()=>Difficulty.Normal,getAllPlayers:()=>players};
- const system={currentTick:0,runTimeout:()=>{}};
- return {d,p,mob,world,system,messages,hits,reports,report:(...x)=>reports.push(x),setEntities:v=>entities=v,setPlayers:v=>players=v};
+ const queue=[];const system={currentTick:0,runTimeout:(fn,delay)=>queue.push({at:system.currentTick+delay,fn})};
+ const runUntil=t=>{while(system.currentTick<t){system.currentTick++;while(queue.some(q=>q.at===system.currentTick)){const i=queue.findIndex(q=>q.at===system.currentTick);queue.splice(i,1)[0].fn();}}};
+ return {d,p,mob,world,system,runUntil,messages,hits,reports,report:(...x)=>reports.push(x),setEntities:v=>entities=v,setPlayers:v=>players=v};
 }
 test('FUSHI family scan isolates a bad entity from a warned chief',()=>{
  const f=fixture('hakkai:fushi_chief'),c=setupFushiSystem(f);c.onHurt({hurtEntity:f.mob,damageSource:{damagingEntity:f.p}});
  f.setEntities([{get typeId(){throw Error('unloaded')}},f.mob]);c.tick(f.p,20);
- assert.equal(f.messages.length,1);assert.match(f.messages[0],/体当たり/);
+ assert.equal(f.messages.length,0);assert.ok(f.mob.isValid);
 });
 test('FUSHI fast chief scan isolates a stale id from later chiefs',()=>{
  const f=fixture('hakkai:fushi_chief'),c=setupFushiSystem(f);c.onHurt({hurtEntity:f.mob,damageSource:{damagingEntity:f.p}});
  f.setEntities([{get id(){throw Error('unloaded')}},f.mob]);c.tickChiefs(f.p,20);
- assert.equal(f.messages.length,1);assert.match(f.messages[0],/体当たり/);
+ assert.equal(f.messages.length,0);assert.ok(f.mob.isValid);
 });
 test('realm traveler scan isolates an invalid creature and still resolves a warned attack',()=>{
  const f=fixture('hakkai:ender_0'),c=setupRealmEnders({...f,safe:()=>false});
  c.onHurt({hurtEntity:f.mob,damageSource:{damagingEntity:f.p,cause:EntityDamageCause.entityAttack}});
  f.setEntities([{get id(){throw Error('unloaded')}},f.mob]);c.tick(f.p,20);c.tick(f.p,60);
- assert.equal(f.messages.length,1);assert.equal(f.hits.length,1);
+ assert.equal(f.messages.length,0);assert.equal(f.hits.length,0); // scheduler is a no-op
 });
-test('guardian scan isolates one stale guardian and retains warning before damage',()=>{
+test('guardian scan isolates one stale guardian and resolves a source-centred attack',()=>{
  const f=fixture('hakkai:guardian_0'),c=setupGuardianBoss(f);
  f.setEntities([{get isValid(){throw Error('unloaded')}},f.mob]);
- for(const t of [0,30,70])c.tick(f.p,t);
- assert.equal(f.messages.length,1);assert.equal(f.hits.length,1);
+ for(const t of [0,30,70]){f.system.currentTick=t;c.tick(f.p,t);}
+ f.runUntil(73);assert.equal(f.messages.length,0);assert.equal(f.hits.length,1);
 });
-test('one invalid player at warning or resolution cannot prevent another warned player from being hit',()=>{
+test('one invalid player cannot prevent another player from being hit',()=>{
  const f=fixture('hakkai:guardian_0'),c=setupGuardianBoss(f);f.setEntities([f.mob]);
  const broken={id:'broken',typeId:'minecraft:player',isValid:true,dimension:f.d,location:{x:1,y:80,z:0},
   getGameMode:()=>GameMode.Survival,sendMessage:()=>{},applyDamage:()=>{throw Error('not expected')}};
- c.tick(f.p,0);f.setPlayers([{get isValid(){throw Error('unavailable')}},broken,f.p]);c.tick(f.p,30);
- assert.equal(f.messages.length,1,'valid player warned despite stale player');
- Object.defineProperty(broken,'location',{get(){throw Error('disconnected')}});f.setPlayers([broken,f.p]);c.tick(f.p,70);
- assert.equal(f.hits.length,1,'disconnected target cannot block another warned target');
+ c.tick(f.p,0);f.setPlayers([{get isValid(){throw Error('unavailable')}},broken,f.p]);f.system.currentTick=30;c.tick(f.p,30);
+ assert.equal(f.messages.length,0,'no floor-warning notification');
+ Object.defineProperty(broken,'location',{get(){throw Error('disconnected')}});f.setPlayers([broken,f.p]);f.system.currentTick=70;c.tick(f.p,70);
+ f.runUntil(73);assert.equal(f.hits.length,1,'disconnected target cannot block another attack target');
 });
 test('fast king scan isolates one stale boss from a later valid one',()=>{
  const f=fixture('hakkai:eclipse_colossus'),c=setupMobSystem({...f,ns:'hakkai:',num:()=>0,property:()=>{}});
@@ -59,7 +60,7 @@ test('stale online-player references do not hide the recorded chief or traveler 
   const f=fixture(type),c=type.endsWith('chief')?setupFushiSystem(f):setupRealmEnders({...f,safe:()=>false});
   c.onHurt({hurtEntity:f.mob,damageSource:{damagingEntity:f.p,cause:EntityDamageCause.entityAttack}});
   f.setEntities([f.mob]);f.setPlayers([{get id(){throw Error('disconnected')}},f.p]);c.tick(f.p,20);
-  assert.equal(f.messages.length,1,type);
+  assert.equal(f.messages.length,0,type);assert.ok(f.mob.isValid);
  }
 });
 test('unavailable player list never silently retargets an attack',()=>{
@@ -68,20 +69,20 @@ test('unavailable player list never silently retargets an attack',()=>{
  f.world.getAllPlayers=()=>{throw Error('unavailable')};c.tick(f.p,20);c.tick(f.p,60);
  assert.equal(f.messages.length,0);assert.equal(f.hits.length,0);
 });
-test('ordinary targeted attack skips a stale online reference before the warned victim',()=>{
- const f=fixture('hakkai:foe_0_0'),c=setupMobSystem({...f,ns:'hakkai:',num:()=>0,property:()=>{}});
+test('ordinary body attack skips a stale online reference before the target',()=>{
+ const f=fixture('hakkai:foe_0_0'),c=setupMobSystem({...f,ns:'hakkai:',num:()=>0,property:()=>{}});f.p.location.x=.7;
  f.setEntities([f.mob]);for(const t of [0,120]){f.system.currentTick=t;c.tick(f.p,t);}
- assert.equal(f.messages.length,1);
+ assert.equal(f.messages.length,0);
  f.setPlayers([{get id(){throw Error('disconnected')}},f.p]);f.system.currentTick=160;c.tick(f.p,160);
  assert.equal(f.hits.length,1);
 });
-test('burst fallback and hit loops skip invalid warned players without adding new recipients',()=>{
+test('burst fallback and hit loops skip invalid players while hitting present targets',()=>{
  const f=fixture('hakkai:foe_0_10'),c=setupMobSystem({...f,ns:'hakkai:',num:()=>0,property:()=>{}});
  const hits=[];const q={id:'q',typeId:'minecraft:player',isValid:true,dimension:f.d,location:{x:2,y:80,z:0},getGameMode:()=>GameMode.Survival,sendMessage:()=>{},applyDamage:n=>{hits.push(n);return true},addEffect:()=>{},applyImpulse:()=>{}};
  f.setEntities([f.mob]);f.setPlayers([f.p,q]);for(const t of [0,120]){f.system.currentTick=t;c.tick(f.p,t);}
- assert.equal(f.messages.length,1);
+ assert.equal(f.messages.length,0);
  const stale={get id(){throw Error('gone')}};f.setPlayers([stale,q]);f.system.currentTick=160;c.tick(q,160);
- assert.equal(hits.length,1,'warned second player still receives the attack');assert.equal(f.hits.length,0);
+ f.runUntil(165);assert.equal(hits.length,1,'present second player still receives the attack');assert.equal(f.hits.length,0);
 });
 test('king skips stale references when selecting target and resolving a warned area',()=>{
  const f=fixture('hakkai:eclipse_colossus'),c=setupMobSystem({...f,ns:'hakkai:',num:()=>0,property:()=>{}});f.setEntities([f.mob]);
@@ -105,5 +106,5 @@ test('a missing global player list does not cause an unnotified single-target hi
  const f=fixture('hakkai:foe_0_0'),c=setupMobSystem({...f,ns:'hakkai:',num:()=>0,property:()=>{}});f.setEntities([f.mob]);
  for(const t of [0,120]){f.system.currentTick=t;c.tick(f.p,t);}
  f.world.getAllPlayers=()=>{throw Error('unavailable')};f.system.currentTick=160;c.tick(f.p,160);
- assert.equal(f.messages.length,1);assert.equal(f.hits.length,0);
+ assert.equal(f.messages.length,0);assert.equal(f.hits.length,0);
 });

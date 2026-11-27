@@ -3,6 +3,7 @@
 import argparse
 from PIL import ImageDraw
 from build_forest_wild_art import c,bone,bake,PALETTE,surface,tint
+from refine_mob_anatomy import refine_baked
 PALETTE.update({
  'ct_steel':(110,122,126),'ct_dark':(56,66,72),'ct_brass':(179,145,97),'ct_copper':(165,110,80),'ct_cream':(213,199,162),
  'ct_shell':(137,150,147),'ct_plate':(153,163,157),'ct_joint':(72,83,87),'ct_fur':(104,118,123),'ct_mane':(156,162,153),
@@ -155,7 +156,9 @@ def paint(mat,w,h,seed,face,part,ci):
  return im
 
 def material(mat):return (130,0,160,255) if mat in ('ct_steel','ct_shell','ct_plate','ct_brass','ct_copper') else (0,0,190,255)
-def build(i):return bake(f'foe_7_{i}',f'f7_{i}_',DESIGNS[i-3](),paint,material)
+def build(i):
+ name=f'foe_7_{i}'
+ return refine_baked(name,bake(name,f'f7_{i}_',DESIGNS[i-3](),paint,material))
 def main():
  p=argparse.ArgumentParser();p.add_argument('--write',action='store_true');p.add_argument('--check',action='store_true');a=p.parse_args()
  if a.write==a.check:p.error('choose exactly one of --write or --check')

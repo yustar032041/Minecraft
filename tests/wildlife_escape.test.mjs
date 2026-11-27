@@ -24,6 +24,12 @@ test('level route escapes directly or chooses a safe sideways route away from pl
  assert.deepEqual(f.effects,['speed','jump_boost']);
 });
 
+test('preferred side routes remain away from the player and fall back safely',()=>{
+ const f=fixture(),left=safeWildlifeEscape(f.mob,f.p,1),right=safeWildlifeEscape(f.mob,f.p,-1);
+ assert.ok(left.x<0&&right.x<0);assert.ok(left.z*right.z<0);
+ for(const preferred of [-1,1]){f.setMode('cliff');assert.equal(safeWildlifeEscape(f.mob,f.p,preferred),undefined);}
+});
+
 test('all eight timid species stop rather than boost into holes, obstacles or unknown footing',()=>{
  for(let realm=0;realm<8;realm++)for(const mode of ['cliff','wall','unloaded','missing-ray']){
   const f=fixture();f.mob.typeId=`hakkai:wild_${realm}_0`;f.setMode(mode);f.tick(0);

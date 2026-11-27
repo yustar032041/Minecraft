@@ -26,8 +26,9 @@ function safeTakeoff(e){
 }
 // True blocks new warnings. Both flying forms may attack while low in the air. If it climbs too high, caller cancels any
 // warning/front that began in flight, keeping a close counter reachable.
-export function updateWardenAppearance(e,s,phase,t,{idle=false,peaceful=false}={}){
+export function updateWardenAppearance(e,s,phase,t,{idle=false,peaceful=false,controlledFlight=false}={}){
  setVisual(e,s,'hakkai:form',phase,t);
+ if(controlledFlight){setVisual(e,s,'hakkai:flying',true,t);return true;}
  let grounded;try{grounded=e.isOnGround;}catch{}
  if(typeof grounded==='boolean')setVisual(e,s,'hakkai:flying',!grounded,t);
  if(s.nextFlight===undefined)s.nextFlight=t+100;

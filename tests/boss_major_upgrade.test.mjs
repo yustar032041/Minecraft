@@ -1,9 +1,13 @@
 import assert from 'node:assert/strict';
 import {Difficulty,GameMode} from '@minecraft/server';
-import {setupGuardianBoss,GUARDIAN_TECHNIQUES} from '../Hakkai_v7.1.0/BehaviorPack/scripts/guardian_boss.js';
-import {setupWardenBoss,WARDEN_DAMAGE_MULTIPLIER,WARDEN_NEW,wardenPatterns} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_boss.js';
+import {GUARDIAN_TECHNIQUES} from '../Hakkai_v7.1.0/BehaviorPack/scripts/guardian_boss.js';
+import {scaledRealmDamage,REALM_GUARDIAN_MULTIPLIERS} from '../Hakkai_v7.1.0/BehaviorPack/scripts/realm_balance.js';
+import {fixture as guardianFixture} from './guardian_wave_fixture.mjs';
+import {setupWardenBoss as realSetupWardenBoss,WARDEN_DAMAGE_MULTIPLIER,WARDEN_NEW,wardenPatterns} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_boss.js';
+import {legacyWardenDecision} from './warden_legacy_decision.mjs';
+const setupWardenBoss=options=>realSetupWardenBoss({...options,decision:legacyWardenDecision()});
 import {WARDEN_MOVING,startMoving,advanceMoving} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_moving_attacks.js';
-assert.equal(WARDEN_DAMAGE_MULTIPLIER,1.8,'scripted raw damage rebalanced');
+assert.equal(WARDEN_DAMAGE_MULTIPLIER,3,'scripted raw damage rebalanced');
 for(let i=0;i<5;i++)for(const a of WARDEN_NEW[i])assert.ok(wardenPatterns(i).includes(a));
 // After a parry, the ten-second healing lock must not suppress either attack
 // slot or a three-hit follow-up. The next warning still has a full windup.
@@ -33,22 +37,13 @@ for(let i=0;i<5;i++)for(const a of WARDEN_NEW[i])assert.ok(wardenPatterns(i).inc
  for(let t=1;t<=16;t++){const r=advanceMoving(d,m,t,[open,blocked]);for(const p of r.targets){hits.push(p.id);m.hit.add(p.id);}}
  assert.deepEqual(hits,['open']);assert.ok(parts.some(p=>p.x<0));assert.ok(!parts.some(p=>p.x>.1));
 }
-// Every guardian uses all three specials with warning, a deduplicated timer,
-// refusal to hurt late arrivals, and cancellation on stagger or peaceful.
+// Independent guardian clocks: attacks run after their windups and cannot
+// double-launch when multiple player scans occur on the same tick.
 for(let realm=0;realm<8;realm++){
- let t=0,peaceful=false,players=[];const hits=[],messages=[],particles=[],animations=[];
- const d={id:'realm',getPlayers:({location,maxDistance})=>players.filter(p=>Math.hypot(p.location.x-location.x,p.location.y-location.y,p.location.z-location.z)<=maxDistance),getEntities:()=>[guardian],spawnParticle:(...x)=>particles.push(x)};
- const make=id=>({id,typeId:'minecraft:player',isValid:true,dimension:d,location:{x:1,y:80,z:0},getGameMode:()=>GameMode.Survival,sendMessage:m=>messages.push([t,id,m]),applyDamage:n=>{hits.push([t,id,n]);return true;},addEffect:()=>{}});
- const p=make('p');players=[p];const guardian={id:'guardian',typeId:`hakkai:guardian_${realm}`,isValid:true,dimension:d,location:{x:0,y:80,z:0},playAnimation:id=>{animations.push([t,id]);if(realm===7)throw Error('cosmetic animation unavailable');}};
- const world={getDifficulty:()=>peaceful?Difficulty.Peaceful:Difficulty.Normal};const c=setupGuardianBoss({world});
- for(t=0;t<=230;t+=10){c.tick(p,t);c.tick(p,t);}
- assert.deepEqual(hits.map(h=>h[2]),GUARDIAN_TECHNIQUES.map(a=>a.damage),'visual failures cannot change damage');
- assert.deepEqual(hits.map(h=>h[0]),[70,150,230]);assert.equal(particles.filter(([id])=>id==='hakkai:warning_marker').length,48);
- assert.equal(particles.filter(([id])=>id.startsWith('hakkai:mob_')).length,9,`guardian ${realm} three compact effects per resolved attack`);
- assert.deepEqual(animations,GUARDIAN_TECHNIQUES.flatMap((a,i)=>[[30+i*80,`animation.hakkai.guardian_${realm}_${a.visual}_windup`],[70+i*80,`animation.hakkai.guardian_${realm}_${a.visual}_strike`]]));
- assert.ok(GUARDIAN_TECHNIQUES.every(a=>messages.some(([,id,m])=>id==='p'&&m.includes(a.name))));
- t=270;c.tick(p,t);players.push(make('late'));t=310;c.tick(p,t);assert.equal(hits.some(([,id])=>id==='late'),false);
- t=350;c.tick(p,t);c.stagger(guardian,355);t=390;c.tick(p,t);assert.equal(hits.filter(([at])=>at===390).length,0);
- t=430;c.tick(p,t);peaceful=true;t=470;c.tick(p,t);assert.equal(hits.filter(([at])=>at===470).length,0);
+ const f=guardianFixture({realm});f.primary.location.x=0;f.advance(265);
+ assert.deepEqual(f.hits.map(([,id,n])=>n),GUARDIAN_TECHNIQUES.map(a=>scaledRealmDamage(a.damage,realm,REALM_GUARDIAN_MULTIPLIERS)));
+ assert.deepEqual(f.hits.map(([t])=>t),[71,161,251]);
+ assert.deepEqual(f.animations.map(([t])=>t),[30,70,120,160,210,250]);
+ assert.ok(!f.particles.some(([,id])=>id==='hakkai:warning_marker'));
 }
-console.log('Boss tuning: rebalanced warden damage, post-parry slots and combos, clipped fronts, all eight guardian cycles (mocked)');
+console.log('Warden and eight guardian controller cycles (mocked)');

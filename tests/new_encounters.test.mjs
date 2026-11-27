@@ -1,6 +1,7 @@
 // Minimal Node simulation, not a Bedrock runtime test.
 import assert from 'node:assert/strict';
 import {setupRealmEnders,enderRealm,inEnderWarning,ENDER_ABILITIES} from '../Hakkai_v7.1.0/BehaviorPack/scripts/realm_ender.js';
+import {makeEnderFootprint,enderWarningMarkers} from '../Hakkai_v7.1.0/BehaviorPack/scripts/realm_ender_patterns.js';
 import {setupFushiSystem,CHIEF_ATTACKS} from '../Hakkai_v7.1.0/BehaviorPack/scripts/fushi_system.js';
 import {Difficulty,GameMode} from '@minecraft/server';
 function fixture(type){
@@ -15,12 +16,12 @@ for(let r=0;r<8;r++){
  const f=fixture(`hakkai:ender_${r}`),ctrl=setupRealmEnders({...f,report:()=>assert.fail('unexpected report')});
  ctrl.tick(f.p,0);assert.equal(f.particles.length,0,'neutral before attack');
  ctrl.onHurt({hurtEntity:f.mob,damageSource:{damagingEntity:f.p}});
- f.system.currentTick=40;ctrl.tick(f.p,40);assert.equal(f.messages.length,1);assert.equal(f.particles.length,16);
- ctrl.tick(f.q,40);assert.equal(f.messages.length,1,'no duplicate multiplayer warning');
- f.system.currentTick=80;ctrl.tick(f.p,80);assert.equal(f.damage.length,1);assert.equal(f.damage[0].n,ENDER_ABILITIES[r].damage);
+ f.system.currentTick=40;ctrl.tick(f.p,40);assert.equal(f.messages.length,0);
+ assert.equal(f.particles.filter(([id])=>id==='hakkai:warning_marker').length,0);
+ ctrl.tick(f.q,40);assert.equal(f.messages.length,0,'no multiplayer warning');
+ f.system.currentTick=80;ctrl.tick(f.p,80);assert.equal(f.damage.length,0,'no scheduler in this fixture');
  assert.deepEqual(f.animations,[[40,`animation.hakkai.ender_${r}_windup`],[80,`animation.hakkai.ender_${r}_strike`]],'each traveler uses its own rig at the warned timing');
- assert.equal(f.effects[0].id,ENDER_ABILITIES[r].effect);
- ctrl.onDeath({deadEntity:f.mob});f.system.currentTick=240;ctrl.tick(f.p,240);assert.equal(f.messages.length,1);
+ ctrl.onDeath({deadEntity:f.mob});f.system.currentTick=240;ctrl.tick(f.p,240);assert.equal(f.messages.length,0);
 }
 {
  const f=fixture('hakkai:ender_0'),ctrl=setupRealmEnders({...f,report:()=>{}});
@@ -34,8 +35,8 @@ for(const [type,setup] of [['hakkai:ender_0',setupRealmEnders],['hakkai:fushi_ch
  f.system.currentTick=41;ctrl.onHurt({hurtEntity:f.mob,damageSource:{damagingEntity:f.q}});
  f.system.currentTick=80;ctrl.tick(f.q,80);
  if(type==='hakkai:fushi_chief')assert.deepEqual(f.damage,[]); // no scheduler for charge
- else{assert.equal(f.damage.length,1);assert.equal(f.damage[0].id,'p');}
- assert.equal(f.messages.at(-1).id,'p');
+ else assert.equal(f.damage.length,0); // no scheduler in this fixture
+ assert.equal(f.messages.length,0);
  const peaceful=fixture(type);peaceful.world.difficulty=Difficulty.Peaceful;const safe=setup({...peaceful,report:()=>{}});
  safe.onHurt({hurtEntity:peaceful.mob,damageSource:{damagingEntity:peaceful.p}});safe.tick(peaceful.p,40);safe.tick(peaceful.p,80);
  assert.equal(peaceful.damage.length,0);assert.equal(peaceful.messages.length,0);
@@ -59,15 +60,8 @@ for(const [type,setup] of [['hakkai:ender_0',setupRealmEnders],['hakkai:fushi_ch
  // flight and contact checks have dedicated integration suites.
  assert.deepEqual(f.damage.map(d=>d.n),[CHIEF_ATTACKS[2].damage]);
  assert.deepEqual(f.effects.map(e=>e.id),[CHIEF_ATTACKS[2].effect,CHIEF_ATTACKS[2].drowsiness.effect]);
- assert.equal(f.messages.length,3);
- assert.match(f.messages[0].s,/短く突進/);assert.match(f.messages[1].s,/弾を固定地点へ発射/);assert.match(f.messages[2].s,/鈍足と短い視界低下の霧（睡眠なし）/);
- for(let i=0;i<3;i++){
-  assert.ok(f.messages[i].s.includes(CHIEF_ATTACKS[i].name)&&f.messages[i].s.includes('光の輪から離れよう')&&f.messages[i].s.includes('約2秒後'));
-  const offset=i*32; // charge and moon refresh their rings at launch
-  const marks=f.particles.filter(([id])=>id==='hakkai:warning_marker').slice(offset,offset+16);
-  assert.equal(marks.length,16);
-  for(const [,point] of marks)assert.ok(Math.abs(Math.hypot(point.x,point.z)-CHIEF_ATTACKS[i].radius)<1e-9);
- }
+ assert.equal(f.messages.length,0);
+ assert.equal(f.particles.filter(([id])=>id==='hakkai:warning_marker').length,0);
 }
 for(const [type,setup] of [['hakkai:ender_0',setupRealmEnders],['hakkai:fushi_chief',setupFushiSystem]]){
  const f=fixture(type),ctrl=setup({...f,report:()=>{}});f.dim.spawnParticle=()=>{throw Error('marker missing')};
@@ -90,8 +84,8 @@ for(const [type,setup] of [['hakkai:ender_0',setupRealmEnders],['hakkai:fushi_ch
 for(const [type,setup] of [['hakkai:ender_0',setupRealmEnders],['hakkai:fushi_chief',setupFushiSystem]]){
  const f=fixture(type),calls=[],ctrl=setup({...f,report:()=>{},tryParry:(p,e)=>{calls.push([p.id,e.id]);return true;}});
  ctrl.onHurt({hurtEntity:f.mob,damageSource:{damagingEntity:f.p}});f.system.currentTick=40;ctrl.tick(f.p,40);f.system.currentTick=80;ctrl.tick(f.p,80);
- assert.deepEqual(calls,type==='hakkai:fushi_chief'?[]:[['p','mob']]);assert.deepEqual(f.damage,[]);assert.deepEqual(f.effects,[]);
- ctrl.stagger(f.mob,80);f.system.currentTick=110;ctrl.tick(f.p,110);assert.equal(f.messages.length,1,'stagger does not start a premature attack');
+ assert.deepEqual(calls,[]); // moving attacks require a schedulerassert.deepEqual(f.damage,[]);assert.deepEqual(f.effects,[]);
+ ctrl.stagger(f.mob,80);f.system.currentTick=110;ctrl.tick(f.p,110);assert.equal(f.messages.length,0,'stagger does not start a premature attack');
 }
 assert.equal(enderRealm('minecraft:enderman'),-1);assert.equal(enderRealm('hakkai:ender_8'),-1);
 assert.equal(inEnderWarning({x:0,y:4,z:0},{x:0,y:0,z:0},3),false);

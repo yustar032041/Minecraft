@@ -14,8 +14,8 @@
         ]
       },
       "minecraft:health": {
-        "value": 240,
-        "max": 240
+        "value": 1500,
+        "max": 1500
       },
       "minecraft:attack": {
         "damage": 6

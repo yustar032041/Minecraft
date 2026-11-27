@@ -11,7 +11,7 @@ function fixture(){
  const ctx={guardianMultiplayer:m,COOP_BOSS_REWARDS:{},system,ns:'hakkai:',safeSub:(_w,_t,k,fn)=>handlers[k]=fn,guardians:Array.from({length:8},(_,i)=>`guardian ${i}`),vanillaDrops:{},
  num:(p,k)=>props.get(p.id+':'+k)??0,property:(p,k,v)=>{if(p.failProperty===k)throw Error('write failed');props.set(p.id+':'+k,v)},giveStatus:(p,id,n)=>{if(p.writeFailure)return 'error';if(p.full)return 'full';const k=p.id+':'+id;items.set(k,(items.get(k)??0)+n);return 'ok'},ItemStack:class{constructor(id,n){this.typeId=id;this.amount=n}},report:()=>{}};
  vm.createContext(ctx);vm.runInContext(src.slice(a,b),ctx);
- const boss=(id='b')=>({id,typeId:'hakkai:guardian_0',dimension:dim,location:{x:0,y:0,z:0},isValid:true});
+ const boss=(id='b',realm=0)=>({id,typeId:`hakkai:guardian_${realm}`,dimension:dim,location:{x:0,y:0,z:0},isValid:true});
  const hit=(e,p,damage=3)=>m.record(e,{damagingEntity:p},damage,system.currentTick);
  const kill=(e,source={})=>handlers.entityDie({deadEntity:e,damageSource:source});
  return {m,props,items,drops,messages,system,dim,player,boss,hit,kill};
@@ -23,6 +23,17 @@ test('cooperative hits give each eligible player independent credit and renewabl
  assert.equal(f.props.get(watch.id+':guards'),undefined);assert.equal(f.messages.length,2);
  const next=f.boss('next');f.hit(next,a);f.hit(next,b);f.kill(next,{damagingEntity:a});
  assert.equal(f.items.get('a:hakkai:guardian_core_0'),2);assert.equal(f.items.get('b:hakkai:guardian_core_0'),2);assert.ok(f.messages.slice(2).every(([,s])=>s.includes('再討伐')));
+});
+test('all eight guardians can award a new core even if the earlier core was spent',()=>{
+ const f=fixture(),p=f.player('solo');
+ for(let realm=0;realm<8;realm++){
+  const item=`solo:hakkai:guardian_core_${realm}`,first=f.boss(`first-${realm}`,realm);
+  f.hit(first,p);f.kill(first);assert.equal(f.items.get(item),1);
+  f.items.set(item,0); // crafting spent the last core; progress record remains
+  const next=f.boss(`repeat-${realm}`,realm);f.hit(next,p);f.kill(next);
+  assert.equal(f.items.get(item),1,`realm ${realm+1} core is renewable`);
+ }
+ assert.equal(f.props.get('solo:guards'),255);
 });
 test('projectile owner, lethal-only, environmental death, expiry, distance, mode and disconnect',()=>{
  const f=fixture(),a=f.player('arrow'),last=f.player('last'),far=f.player('far',65),old=f.player('old'),gone=f.player('gone'),spectator=f.player('spec'),other=f.player('other'),e=f.boss();

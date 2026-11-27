@@ -120,9 +120,17 @@ console.log('Warden arena: preflight, partial-build protection, safe arrival/ret
  const f=fixture();f.inventory.clear();f.p.getGameMode=()=>GameMode.Creative;
  assert.equal(await f.arena.enter(f.p),true);assert.equal(f.p.dimension.id,WARDEN_DIMENSION);
 }
-// The menu and attack catalogue must agree on the number of variations.
+// The menu keeps practical preparation advice, not an attack catalogue.
 {
- const {wardenPatterns}=await import('../Hakkai_v7.1.0/BehaviorPack/scripts/warden_boss.js');
  const f=fixture(),texts=[];f.p.dimension=f.dim;f.args.form=async(_p,_title,body)=>{texts.push(body);return undefined};await setupWardenArena(f.args).open(f.p);
- assert.deepEqual([0,1,2,3,4].map(n=>wardenPatterns(n).length),[42,42,42,42,210]);assert.match(texts[0],/各42パターン/);assert.match(texts[0],/全210パターン/);
+ assert.match(texts[0],/非常に強力なラスボス/);assert.match(texts[0],/推奨装備・持ち物/);assert.match(texts[0],/風記の永劫鎧/);assert.match(texts[0],/その時点で入手できる最上位/);assert.match(texts[0],/トーテム/);
+ assert.doesNotMatch(texts[0],/パターン|連撃|パリィ|第五形態|200以上/);assert.match(texts[0],/参加者/);
+}
+// Preparation is visible before entering as well as inside the arena.
+{
+ const f=fixture(),texts=[];f.args.form=async(_p,_title,body)=>{texts.push(body);return undefined};
+ await setupWardenArena(f.args).open(f.p);
+ assert.match(texts[0],/非常に強力なラスボス/);assert.match(texts[0],/風記の永劫鎧/);
+ assert.match(texts[0],/初回討伐後/);assert.match(texts[0],/トーテム/);
+ assert.doesNotMatch(texts[0],/パターン|連撃|パリィ|第五形態/);
 }

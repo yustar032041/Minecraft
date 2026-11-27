@@ -45,6 +45,20 @@
             0,
             0
           ]
+        },
+        "w7_0_hock_2": {
+          "rotation": [
+            "math.cos(query.anim_time * 300 + 0) * 3",
+            0,
+            0
+          ]
+        },
+        "w7_0_hock_3": {
+          "rotation": [
+            "math.cos(query.anim_time * 300 + 180) * 3",
+            0,
+            0
+          ]
         }
       }
     },

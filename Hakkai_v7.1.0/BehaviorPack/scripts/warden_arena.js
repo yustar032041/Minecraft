@@ -89,7 +89,7 @@ export function setupWardenArena({world,system,num,property,notice,report,loaded
     if(!safe(d,q)||!d.getBlock({x:Math.floor(q.x),y:q.y+2,z:Math.floor(q.z)})?.isAir){notice(p,'§e召喚場所が塞がれています');return false;}
    }
    if(d.getPlayers({location:center,maxDistance:5,closest:1}).length){notice(p,'§e召喚地点から5ブロック以上離れてください');return false;}
-   d.spawnEntity(BOSS,center);notice(p,'§c時空の管理者が現れた。予告された範囲から離れよう。');return true;
+   d.spawnEntity(BOSS,center);notice(p,'§c時空の管理者が現れた！');return true;
   }catch(err){report('時空の管理者召喚',err);notice(p,'§e召喚に失敗しました');return false;}
  }
  // Best effort safety net for a player who falls below the arena. It does
@@ -118,16 +118,16 @@ export function setupWardenArena({world,system,num,property,notice,report,loaded
  async function open(p){
   if(!p.isValid||p.getGameMode()===GameMode.Spectator)return;
   if(p.dimension.id===WARDEN_DIMENSION){
-   const choice=await form(p,'§d時空の闘技場','§7闘技場の床・壁・天井と照明は壊せません。自分で置いたブロックは撤去できます。現在のボスを倒した後は再戦できます。戻ると自分の入口の元の場所へ帰ります。仲間が闘技場にいる間は、挑戦印のない人もガイドから入場できます。\n過去5分に攻撃し、討伐時に同じディメンションの64ブロック以内にいる参加者それぞれに管理者の核1個と時の結晶4個。観戦・未攻撃者は対象外。満杯分は足元に落ち、他の人も拾えます。参加記録は再起動で消えます。クリエイティブのスポーンエッグは闘技場の床上で試してください。闘技場以外では固有技が動作しません。\n§b管理者の核＋時の結晶＋虹の欠片＋対応するネザライト防具・剣・斧・ツルハシを作業台で合わせると、対応する終刻装備を作れます。元の装備のエンチャント等は引き継ぎません。\n§c管理者の連撃や同時攻撃は、防具があっても危険です。食料を用意し、予告を避けよう。\n§e試作パリィ：予告範囲内で、直前にしゃがみ近接攻撃。スタミナ15が必要。三連撃は各回に予告。光の輪や弾・回る刃が動いて当たります。最大2技を同時予告。第一〜第四形態は各42パターン、第五形態は全210パターンを使用。形・方向などの異なる変種を含み、すべてが独立した仕組みではありません。いずれも試作です。',[
+   const choice=await form(p,'§d時空の闘技場','§7闘技場の床・壁・天井と照明は壊せません。自分で置いたブロックは撤去できます。現在のボスを倒した後は再戦できます。戻ると自分の入口の元の場所へ帰ります。仲間が闘技場にいる間は、挑戦印のない人もガイドから入場できます。\n過去5分に攻撃し、討伐時に同じディメンションの64ブロック以内にいる参加者それぞれに管理者の核1個と時の結晶4個。観戦・未攻撃者は対象外。満杯分は足元に落ち、他の人も拾えます。参加記録は再起動で消えます。クリエイティブのスポーンエッグは闘技場の床上で試してください。闘技場以外では固有技が動作しません。\n§b管理者の核＋時の結晶＋虹の欠片＋対応するネザライト防具・剣・斧・ツルハシを作業台で合わせると、対応する終刻装備を作れます。元の装備のエンチャント等は引き継ぎません。\n§c時空の管理者は非常に強力なラスボスです。十分に準備して挑みましょう。\n§e推奨装備・持ち物：八界統合装・風記の永劫鎧を含む一式など、その時点で入手できる最上位の強化装備と武器、盾、十分な食料・回復薬、耐火薬、FUSHIのトーテム、風見の帰還石。終刻装備はこの戦いの後に作れます。',[
     ['§b元の場所へ戻る'],['§c時空の管理者に挑む'],['§8閉じる']]);
    if(choice===0&&p.isValid&&p.dimension.id===WARDEN_DIMENSION){if(!parsePoint(p,'warden_return'))return notice(p,'§e帰還地点がありません。帰還石をご利用ください');return returnNatural(p,'warden_return');}
    if(choice===1&&p.isValid)return summon(p);
    return;
   }
   if(!arenaUnlocked(p)){
-   return form(p,'§d時空の闘技場',`${challengeMaterialText(p,space,total)}\n\n§7各界のエンダーマンからパール、チーフとの交換・友好などでトーテムを入手。8種とトーテムを作業台で合わせて挑戦印を作ります。素材は消費されるため、帰還に使うパールは別に確保してください。挑戦印を持つ仲間が先に入場していれば、自分は挑戦印なしでガイドから参加できます。クリエイティブでも挑戦印なしで入場できます。\n§eトーテムの復活は試作・実機未検証です。`,[['閉じる']]);
+   return form(p,'§d時空の闘技場',`${challengeMaterialText(p,space,total)}\n\n§7各界のエンダーマンからパール、チーフとの交換・友好などでトーテムを入手。8種とトーテムを作業台で合わせて挑戦印を作ります。素材は消費されますが、界渡りを再び倒せばパールを入手できます。帰還は地図や帰還石も利用できます。挑戦印を持つ仲間が先に入場していれば、自分は挑戦印なしでガイドから参加できます。クリエイティブでも挑戦印なしで入場できます。\n§c管理者は非常に強力なラスボスです。§e入手できる最上位の強化装備と武器（八界統合装・風記の永劫鎧など）、盾、食料・回復薬、耐火薬、FUSHIのトーテム、帰還石を準備しましょう。終刻装備は初回討伐後に作れます。\n§7トーテムの復活は実機未確認です。`,[['閉じる']]);
   }
-  const choice=await form(p,'§d時空の闘技場','§7安全な現在地を自分の帰還先に記録して入場します。仲間が闘技場にいる間は挑戦印がなくても入れます。死亡後はこのガイドから再入場できます。\n§e管理者と闘技場は試作です。',[['§d闘技場へ入る'],['§8閉じる']]);
+  const choice=await form(p,'§d時空の闘技場','§7安全な現在地を自分の帰還先に記録して入場します。仲間が闘技場にいる間は挑戦印がなくても入れます。死亡後はこのガイドから再入場できます。\n§c管理者は非常に強力なラスボスです。\n§e推奨：入手できる最上位の強化武器と防具（八界統合装・風記の永劫鎧など）、盾、十分な食料・回復薬、耐火薬、FUSHIのトーテム、帰還石。終刻装備は初回討伐後に作れます。\n§7管理者と闘技場は実機未確認です。',[['§d闘技場へ入る'],['§8閉じる']]);
   if(choice===0&&p.isValid&&p.dimension.id!==WARDEN_DIMENSION)return enter(p);
  }
  return {open,enter,summon,rescuePlayer,clearPlayer};

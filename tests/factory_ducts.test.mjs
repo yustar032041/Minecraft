@@ -37,3 +37,10 @@ for(const fault of ['extractor','source','destination','path','unloaded']){
  };
  assert.equal(f.run(),false,fault);assert.equal(src.getItem(0).amount,2,fault);assert.equal(src.getItem(0).nameTag,'marked');assert.equal(dst.getItem(0),undefined,fault);
 }
+// Inventory conflicts during a real duct step must not erase a changed barrel.
+{
+ const f=setup(),src=new Container([new Item('minecraft:diamond',2,'marked')]),dst=new Container([undefined]);
+ f.put(P(-1,0,0),'minecraft:barrel',src);f.put(P(1,0,0),'minecraft:barrel',dst);
+ const set=src.setItem.bind(src);let first=true;src.setItem=(i,v)=>{set(i,v);if(first){first=false;dst.items[0]=new Item('minecraft:gold_ingot',3,'other');}};
+ assert.equal(f.run(),false);assert.equal(src.getItem(0).amount,2);assert.equal(src.getItem(0).nameTag,'marked');assert.equal(dst.getItem(0).typeId,'minecraft:gold_ingot');assert.equal(dst.getItem(0).amount,3);
+}

@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import {wardenTransition,wardenCharge,wardenImpact,wardenParried} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_visuals.js';
-import {WARDEN_PHASES,WARDEN_ALTERNATES,WARDEN_EXTRA,WARDEN_DAMAGE_MULTIPLIER,WARDEN_COMBO_MULTIPLIER,inWardenWarning,setupWardenBoss} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_boss.js';
+import {WARDEN_PHASES,WARDEN_ALTERNATES,WARDEN_EXTRA,WARDEN_DAMAGE_MULTIPLIER,WARDEN_COMBO_MULTIPLIER,inWardenWarning,setupWardenBoss as realSetupWardenBoss} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_boss.js';
+import {legacyWardenDecision} from './warden_legacy_decision.mjs';
+const setupWardenBoss=options=>realSetupWardenBoss({...options,decision:legacyWardenDecision()});
 import {Difficulty,GameMode} from '@minecraft/server';
 const ids=['time','sky','earth','thunder','moon'].map(n=>`hakkai:warden_${n}`);
 const anims=['slash','sky_cast','slam','thunder_cast','moon_cast'].map(n=>`animation.hakkai.warden_${n}`);

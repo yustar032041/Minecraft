@@ -12,6 +12,6 @@ assert c['minecraft:particle_initial_speed']==0
 assert c['minecraft:particle_lifetime_expression']['max_lifetime']>=2
 assert c['minecraft:particle_motion_dynamic']['linear_acceleration']==[0,0,0]
 assert (rp/(particle['description']['basic_render_parameters']['texture']+'.png')).exists()
-for name in ('warden_boss.js','realm_ender.js','fushi_system.js'):
+for name in ('warden_boss.js','mob_system.js'):
  assert 'hakkai:warning_marker' in (bp/'scripts'/name).read_text()
 print('Fixed-position warning marker particle and combat hooks OK (static only)')

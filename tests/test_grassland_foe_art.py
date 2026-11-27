@@ -59,7 +59,9 @@ for i in range(12):
  if i==10:
   for side in ('l','r'):
    blade=bones[prefix+f'arm_{side}_detail_blade']
-   assert blade['parent']==prefix+f'arm_{side}' and len(blade['cubes'])==3
+   forearm=bones[prefix+f'forearm_{side}']
+   assert forearm['parent']==prefix+f'arm_{side}' and blade['parent']==forearm['name']
+   assert len(blade['cubes'])==3 and len(forearm['cubes'])==1
   assert bones[prefix+'body_detail_ridge']['parent']==prefix+'body'
  if i in (1,2,10):
   face=bones[prefix+'head']['cubes'][0]['uv']['north'];x,y=face['uv'];w,h=face['uv_size']

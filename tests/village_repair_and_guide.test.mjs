@@ -60,10 +60,12 @@ for(const [stage,plan] of BLUEPRINTS.entries())for(const q of blueprint(plan.id)
  assert.ok(VILLAGE_GUIDE_CHAPTERS.length>=10);for(const [title,body] of VILLAGE_GUIDE_CHAPTERS){assert.ok(title&&body.length>75);}
  const combined=VILLAGE_GUIDE_CHAPTERS.map(x=>x.join(' ')).join('\n');for(const word of ['16日','しゃがんで','空の新品','改装前','未検証','四隅めぐり','元の樽'])assert.ok(combined.includes(word),word);
  const src=fs.readFileSync('Hakkai_v7.1.0/BehaviorPack/scripts/main.js','utf8');const a=src.indexOf('async function villageGuide('),z=src.indexOf('async function dispatchGuide(',a);assert.ok(a>=0&&z>a);
- let choices=[3,6,1],seen=[];const p={isValid:true};const ctx={VILLAGE_GUIDE_CHAPTERS,checkEightRealmMemory:()=>0,realmRankUpdate:()=>0,realmRanks:[['','new']],era:()=>'',realmEchoCount:()=>0,places:[],visited:()=>false,currentPlace:()=>undefined,GUIDE_SECTIONS:[],itemTexture:x=>x,form:async(_p,title,body,rows)=>{seen.push({title,body,rows});return choices.shift();}};
+ let choices=[3,VILLAGE_GUIDE_CHAPTERS.findIndex(([title])=>title==='物資係の現物運搬'),1],seen=[];const p={isValid:true};const ctx={VILLAGE_GUIDE_CHAPTERS,checkEightRealmMemory:()=>0,realmRankUpdate:()=>0,realmRanks:[['','new']],era:()=>'',realmEchoCount:()=>0,places:[],visited:()=>false,currentPlace:()=>undefined,GUIDE_SECTIONS:[],itemTexture:x=>x,form:async(_p,title,body,rows)=>{seen.push({title,body,rows});return choices.shift();}};
  ctx.guideSelect=(p,title,body,rows)=>selectGuidePage(p,title,body,rows,ctx.form);
  vm.createContext(ctx);vm.runInContext(src.slice(a,z),ctx);await ctx.guide(p);
  assert.ok(seen[0].rows[3][0].includes('村と四季のガイド'));assert.ok(seen.some(s=>s.title.includes('物資係の現物運搬')));assert.ok(seen.some(s=>s.body.includes('3〜16')));
+ choices=[3,VILLAGE_GUIDE_CHAPTERS.findIndex(([title])=>title==='住人による現物収穫'),1];seen=[];await ctx.guide(p);
+ assert.ok(seen.some(s=>s.title.includes('住人による現物収穫')&&s.body.includes('登録解除')));
 }
 console.log('Barrel, machine, crops, full water enclosure and real guide-book navigation OK (mocked)');
 // Expanding repair to inventories, machines and water requires a new opt-in,

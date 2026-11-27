@@ -1,7 +1,8 @@
 import {validWardenArenaFloor} from './warden_arena_floor.js';
+import {chooseWardenTarget} from './warden_ai.js';
 // Bounded steering: sample the entire prospective path and volume before
 // applying an impulse. Never teleport or change blocks or other entities.
-export function steerWarden(e,s,phase,t,{idle=true,peaceful=false}={}){
+export function steerWarden(e,s,phase,t,{idle=true,peaceful=false,brain,situation}={}){
  if(!idle||peaceful||t<(s.stopHealUntil??0)||t<(s.nextMove??0))return false;
  try{
   const d=e.dimension,l=e.location,grounded=e.isOnGround;
@@ -12,10 +13,15 @@ export function steerWarden(e,s,phase,t,{idle=true,peaceful=false}={}){
   const players=d.getPlayers({location:l,maxDistance:45}).filter(p=>p.isValid&&p.typeId==='minecraft:player');
   if(!players.length)return false;
   players.sort((a,b)=>Math.hypot(a.location.x-l.x,a.location.z-l.z)-Math.hypot(b.location.x-l.x,b.location.z-l.z));
-  const target=players[0].location,seq=s.moveIndex??0;s.moveIndex=seq+1;
+  const chosen=brain&&situation?chooseWardenTarget(brain,situation,{origin:l}):players[0];
+  if(!chosen||!players.some(p=>p.id===chosen.id))return false;
+  const target=chosen.location,seq=s.moveIndex??0;s.moveIndex=seq+1;
   const toward=Math.atan2(target.z-l.z,target.x-l.x),distance=Math.hypot(target.x-l.x,target.z-l.z);
-  // Airborne forms alternate broad arcs and upward/downward sweeps.
-  const base=flying?toward+[Math.PI/2,-Math.PI/2,Math.PI,0][seq%4]:distance>9?toward:toward+(seq%2?1:-1)*Math.PI/2;
+  const profile=situation?.profiles.find(p=>p.player.id===chosen.id),cross=profile?Math.cos(toward)*profile.vz-Math.sin(toward)*profile.vx:0;
+  // Respond to a closing player or their lateral movement; retain the old
+  // fallback for callers that have no observation context.
+  const base=brain?(distance<3.5&&profile?.approach>.04?toward+Math.PI:distance>9?toward:toward+(cross>=0?-1:1)*Math.PI/2):
+   flying?toward+[Math.PI/2,-Math.PI/2,Math.PI,0][seq%4]:distance>9?toward:toward+(seq%2?1:-1)*Math.PI/2;
   for(let i=0;i<8;i++){
    const a=base+i*Math.PI/4,dx=Math.cos(a),dz=Math.sin(a),length=flying?3:1.4;
    let dy=0;

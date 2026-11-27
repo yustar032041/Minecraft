@@ -1,6 +1,7 @@
 // Simulated APIs: these checks do not verify Bedrock rendering or AI.
 import assert from 'node:assert/strict';
 import {setupRealmEnders} from '../Hakkai_v7.1.0/BehaviorPack/scripts/realm_ender.js';
+import {makeEnderFootprint,enderWarningMarkers} from '../Hakkai_v7.1.0/BehaviorPack/scripts/realm_ender_patterns.js';
 import {Difficulty,GameMode,EntityDamageCause} from '@minecraft/server';
 function fixture(){
  let helmet,blocked=false,allowed=true,occupied=false,loaded=true,upperAir=true;
@@ -16,7 +17,9 @@ function fixture(){
 }
 {
  const f=fixture();f.ctrl.tick(f.p,0);assert.equal(f.messages.length,1,'look detected');
- f.ctrl.tick(f.p,40);assert.equal(f.messages.length,2);assert.equal(f.particles.length,16,'warn before counterattack');
+ f.ctrl.tick(f.p,40);assert.equal(f.messages.length,1);
+ // This fixture's teleport stub does not update mob.location.
+ assert.equal(f.particles.filter(([id])=>id==='hakkai:warning_marker').length,0,'no floor warning');
 }
 {
  // Ray results can be unsorted. An intervening entity, a tie, or malformed
@@ -51,20 +54,11 @@ for(const condition of ['unsafe','occupied','unloaded','low-ceiling']){
 {
  const f=fixture();f.ctrl.onHurt({hurtEntity:f.mob,damageSource:{damagingEntity:f.p,cause:EntityDamageCause.entityAttack}});f.ctrl.tick(f.p,0);assert.equal(f.teleports.length,0,'melee does not retreat');
 }
-// Each realm's on-time warning resolves with a bounded realm-colored effect.
-// Cosmetic failure must never cancel the counterattack.
+// Without a tick scheduler no moving projectile can produce damage. Actual
+// flights, colors, contacts and evasion are exercised in the moving suite.
 for(let realm=0;realm<8;realm++){
  const f=fixture();f.mob.typeId=`hakkai:ender_${realm}`;let hits=0;f.p.applyDamage=()=>{hits++;return true};
  for(const t of [0,40,80])f.ctrl.tick(f.p,t);
- assert.equal(hits,1);assert.equal(f.particles.filter(([id])=>id.startsWith('hakkai:mob_')).length,3);
-}
-{
- const f=fixture();let hits=0;f.p.applyDamage=()=>{hits++;return true};
- f.p.dimension.spawnParticle=id=>{if(id.startsWith('hakkai:mob_'))throw Error('no visuals');};
- for(const t of [0,40,80])f.ctrl.tick(f.p,t);assert.equal(hits,1);
-}
-{
- const f=fixture();for(const t of [0,40,90])f.ctrl.tick(f.p,t);
- assert.equal(f.particles.filter(([id])=>id.startsWith('hakkai:mob_')).length,0,'late attack has no strike effect');
+ assert.equal(hits,0);assert.equal(f.particles.filter(([id])=>id==='hakkai:warning_marker').length,0);
 }
 console.log('Realm ender: gaze, pumpkin, occlusion, creative and safe projectile retreat OK (simulated)');

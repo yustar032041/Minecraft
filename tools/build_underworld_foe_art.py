@@ -7,6 +7,7 @@ choices below are independent designs, even where joints use the same helper.
 import argparse
 from PIL import ImageDraw
 from build_forest_wild_art import c,bone,bake,PALETTE,surface,tint
+from refine_mob_anatomy import refine_baked
 PALETTE.update({
  'ug_stone':(63,55,75),'ug_dark':(36,32,49),'ug_ridge':(97,77,113),'ug_crystal':(155,117,197),'ug_bright':(205,171,230),
  'ug_shell':(72,56,91),'ug_chitin':(47,39,64),'ug_gold':(178,151,122),'ug_fur':(75,65,91),
@@ -188,7 +189,9 @@ def paint(mat,w,h,seed,face,part,ci):
 def material(mat):
  # Emission/metal interpretation varies by renderer; no claim of illumination.
  return (0,90,180,255) if mat in ('ug_spore','ug_eye') else (0,0,190,255)
-def build(i):return bake(f'foe_5_{i}',f'f5_{i}_',DESIGNS[i](),paint,material)
+def build(i):
+ name=f'foe_5_{i}'
+ return refine_baked(name,bake(name,f'f5_{i}_',DESIGNS[i](),paint,material))
 def main():
  p=argparse.ArgumentParser();p.add_argument('--write',action='store_true');p.add_argument('--check',action='store_true');a=p.parse_args()
  if a.write==a.check:p.error('choose exactly one of --write or --check')

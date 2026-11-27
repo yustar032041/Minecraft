@@ -31,7 +31,7 @@ for name in ('fushi','fushi_chief'):
   assert comp['minecraft:behavior.tempt']['items']==['minecraft:bamboo']
   assert comp['minecraft:behavior.tempt']['priority']<comp['minecraft:behavior.random_stroll']['priority']
  else:
-  assert comp['minecraft:health']['max']==180 and comp['minecraft:knockback_resistance']['value']==1
+  assert comp['minecraft:health']['value']==comp['minecraft:health']['max']==1000 and comp['minecraft:knockback_resistance']['value']==1
   assert 'minecraft:boss' in comp and comp['minecraft:pushable']['is_pushable'] is False
   assert 'minecraft:loot' not in comp
   assert "'hakkai:crystal_7',2" in (bp/'scripts/boss_rewards.js').read_text()

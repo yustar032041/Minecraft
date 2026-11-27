@@ -7,6 +7,7 @@ and their existing maps, without changing gameplay, spawning or collision.
 import argparse,random
 from PIL import ImageDraw
 from build_forest_wild_art import c,bone,bake,PALETTE,surface,tint
+from refine_mob_anatomy import refine_baked
 PALETTE.update({
  'sky_bird_body':(182,203,212),'sky_bird_head':(211,224,226),'sky_feather':(230,235,228),'sky_bird_beak':(210,179,111),'sky_bird_foot':(116,127,129),
  'sky_goat_fur':(215,224,215),'sky_goat_wool':(239,238,222),'sky_goat_horn':(142,189,199),'sky_goat_hoof':(115,151,158),
@@ -67,7 +68,9 @@ def paint(mat,w,h,seed,face,part,ci):
    d.arc((w*(.2+n*.16),h*(.24+n*.12),w*(.65+n*.16),h*(.62+n*.12)),185,345,fill=(194,220,223,255),width=max(2,w//55))
  return image
 
-def build(i):return bake(f'wild_6_{i}',f'w6_{i}_',DESIGNS[i](),paint)
+def build(i):
+ name=f'wild_6_{i}'
+ return refine_baked(name,bake(name,f'w6_{i}_',DESIGNS[i](),paint))
 def main():
  p=argparse.ArgumentParser();p.add_argument('--write',action='store_true');p.add_argument('--check',action='store_true');a=p.parse_args()
  if a.write==a.check:p.error('choose exactly one of --write or --check')

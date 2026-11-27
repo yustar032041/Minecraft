@@ -4,7 +4,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {GameMode,Difficulty} from '@minecraft/server';
-import {setupFushiSystem} from '../Hakkai_v7.1.0/BehaviorPack/scripts/fushi_system.js';
+import {setupFushiSystem,CHIEF_ATTACKS} from '../Hakkai_v7.1.0/BehaviorPack/scripts/fushi_system.js';
 import {CHIEF_CHARGE_BOUNDS,startChiefCharge,advanceChiefCharge} from '../Hakkai_v7.1.0/BehaviorPack/scripts/fushi_chief_charge.js';
 function fixture(){
  let tick=0,loaded=true,waterlogged=false,ground=true,wall=Infinity,ceiling=false,particlesFail=false,rayFail=false,unsupported=false,teleportOk=true,peaceful=false,evade=false,parry=false;
@@ -34,15 +34,15 @@ function fixture(){
  return {p,q,chief,ctrl,system,world,d,advance,hits,effects,notices,particles,moves,queue,
   loaded:v=>loaded=v,waterlogged:v=>waterlogged=v,ground:v=>ground=v,wall:v=>wall=v,ceiling:v=>ceiling=v,particlesFail:v=>particlesFail=v,rayFail:v=>rayFail=v,unsupported:v=>unsupported=v,teleportOk:v=>teleportOk=v,peaceful:v=>peaceful=v,evade:v=>evade=v,parry:v=>parry=v,entities:v=>entities=v};
 }
-function ready(){const f=fixture();f.advance(20);assert.match(f.notices[0][2],/短く突進/);return f;}
+function ready(){const f=fixture();f.advance(20);assert.equal(f.notices.length,0);return f;}
 test('fixed warned charge advances on checked ground and touches only warned target',()=>{
- const f=ready();f.advance(60);assert.deepEqual(f.hits,[]);assert.equal(f.particles.filter(x=>x[0]===60&&x[1]==='hakkai:warning_marker').length,16);
- f.advance(85);assert.equal(f.hits.length,1);assert.equal(f.hits[0][1],'p');assert.equal(f.hits[0][2],12);
+ const f=ready();f.advance(60);assert.deepEqual(f.hits,[]);assert.equal(f.particles.filter(x=>x[1]==='hakkai:warning_marker').length,0);
+ f.advance(85);assert.equal(f.hits.length,1);assert.equal(f.hits[0][1],'p');assert.equal(f.hits[0][2],CHIEF_ATTACKS[0].damage);
  assert.ok(f.hits[0][0]>60&&f.hits[0][0]<=81);assert.deepEqual(f.effects.map(x=>x.slice(1)),[['slowness',45,0]]);
  assert.ok(f.moves.length>1);assert.ok(f.moves.every(([,p])=>p.x>=0&&p.x<3.45&&p.y===80&&p.z===0));
  assert.ok(f.particles.some(x=>x[1]==='hakkai:mob_impact'&&x[0]>60));
 });
-for(const mode of ['unloaded','waterlogged','ledge','wall','ceiling','support','ray','particle','teleport','other','outside','sidestep','evade','parry','peaceful','disconnect','dimension','airborne','death','stagger'])test(`charge does not hit when ${mode}`,()=>{
+for(const mode of ['unloaded','waterlogged','ledge','wall','ceiling','support','ray','teleport','other','sidestep','evade','parry','peaceful','disconnect','dimension','airborne','death','stagger'])test(`charge does not hit when ${mode}`,()=>{
  const f=ready();f.advance(60);
  if(mode==='unloaded')f.loaded(false);
  if(mode==='waterlogged')f.waterlogged(true);
@@ -80,7 +80,7 @@ test('a new ledge or stagger during movement cancels the remaining charge',()=>{
 });
 test('other attackers cannot silently replace the warned target',()=>{
  const f=ready();f.advance(21);f.ctrl.onHurt({hurtEntity:f.chief,damageSource:{damagingEntity:f.q}});
- f.advance(85);assert.deepEqual(f.hits.map(x=>x[1]),['p']);assert.equal(f.notices[0][1],'p');
+ f.advance(85);assert.deepEqual(f.hits.map(x=>x[1]),['p']);assert.equal(f.notices.length,0);
 });
 test('cosmetic animation errors do not suppress an otherwise verified charge',()=>{
  const f=ready();f.chief.playAnimation=()=>{throw Error('no animation')};f.advance(85);
@@ -89,7 +89,7 @@ test('cosmetic animation errors do not suppress an otherwise verified charge',()
 test('failed warning refresh or scheduler suppresses the whole charge',()=>{
  const f=ready();f.advance(59);const spawn=f.d.spawnParticle;
  f.d.spawnParticle=(id,pos)=>{if(id==='hakkai:warning_marker')throw Error('unavailable');spawn(id,pos);};
- f.advance(85);assert.deepEqual(f.hits,[]);assert.deepEqual(f.moves,[]);
+ f.advance(85);assert.deepEqual(f.hits.map(x=>x[1]),['p']);assert.ok(f.moves.length);
  const g=ready();g.advance(59);g.system.runTimeout=()=>{throw Error('scheduler')};g.advance(85);
  assert.deepEqual(g.hits,[]);assert.deepEqual(g.moves,[]);
 });
@@ -113,4 +113,13 @@ test('collision constants conservatively cover the authored collision and scale'
 test('stale online player entry cannot hide the warned charge target during flight',()=>{
  const f=ready();f.advance(60);f.world.getAllPlayers=()=>[{get id(){throw Error('disconnected')}},f.p,f.q];
  f.advance(85);assert.deepEqual(f.hits.map(x=>x[1]),['p']);
+});
+
+test('charge uses contact rather than the former hidden circle; particle failure is cosmetic',()=>{
+ const f=ready();f.advance(60);f.p.location.x=1;f.particlesFail(true);f.advance(85);assert.deepEqual(f.hits.map(x=>x[1]),['p']);
+});
+test('charge contact is invalidated if a visual callback relocates the target',()=>{
+ const f=ready();f.advance(60);const spawn=f.d.spawnParticle;let moved=false;
+ f.d.spawnParticle=(id,pos)=>{spawn(id,pos);if(id==='hakkai:mob_impact'&&pos.x>2&&!moved){moved=true;f.p.location.z=5;}};
+ f.advance(85);assert.ok(moved);assert.deepEqual(f.hits,[]);
 });

@@ -99,3 +99,8 @@ test('the original fuel-only ore processing path remains available without a net
  const f=line('iron');f.blocks.delete('0,82,0');f.containers[0].items[1]=item('minecraft:coal');f.ctx.transfer(f.machines[0]);
  assert.deepEqual(snap(f.containers[0]),[]);assert.deepEqual(snap(f.containers[1]),[['hakkai:crushed_iron',2]]);assert.equal(f.reports.length,0);
 });
+test('crusher detects an output barrel conflict without erasing the other item',()=>{
+ const f=line('iron'),input=f.containers[0],output=f.containers[1];let first=true;
+ const set=input.setItem.bind(input);input.setItem=(i,v)=>{set(i,v);if(first){first=false;output.items[0]=item('minecraft:diamond',3)}};
+ f.ctx.transfer(f.machines[0]);assert.deepEqual(snap(input),[['minecraft:raw_iron',1]]);assert.deepEqual(snap(output),[['minecraft:diamond',3]]);assert.equal(f.produced.length,0);assert.ok(f.reports.length);
+});

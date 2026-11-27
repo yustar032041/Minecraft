@@ -24,11 +24,15 @@
         "chief_moon_windup": "animation.hakkai.fushi_chief_moon_windup",
         "chief_moon_strike": "animation.hakkai.fushi_chief_moon_strike",
         "chief_mist_windup": "animation.hakkai.fushi_chief_mist_windup",
-        "chief_mist_strike": "animation.hakkai.fushi_chief_mist_strike"
+        "chief_mist_strike": "animation.hakkai.fushi_chief_mist_strike",
+        "walk": "animation.hakkai.fushi.walk"
       },
       "scripts": {
         "animate": [
-          "idle"
+          "idle",
+          {
+            "walk": "query.modified_move_speed > 0.01"
+          }
         ]
       },
       "spawn_egg": {

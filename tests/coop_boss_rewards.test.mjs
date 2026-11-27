@@ -55,7 +55,7 @@ test('a record storage error still delivers that player and does not block anyon
 test('actual hurt hook feeds boss ledger before actual death reward',()=>{
  const f=fixture(),p=f.player('attacker'),q=f.player('killer'),e=f.boss('hakkai:time_warden','wired');let hurt;
  const a=source.indexOf("safeSub('world','after','entityHurt',({hurtEntity:e,damageSource:source,damage})=>{"),b=source.indexOf('// Suppress newly naturally spawned vanilla hostiles',a);
- const ctx={safeSub:(_a,_b,_n,fn)=>hurt=fn,guardianMultiplayer:{record:()=>{}},bossMultiplayer:f.ledger,system:f.system,report:(_m,err)=>{throw err},EntityDamageCause:{entityAttack:'attack',projectile:'projectile'},mobSystem:null,realmEnders:null,fushiSystem:null};
+ const ctx={safeSub:(_a,_b,_n,fn)=>hurt=fn,guardianMultiplayer:{record:()=>{}},bossMultiplayer:f.ledger,system:f.system,report:(_m,err)=>{throw err},EntityDamageCause:{entityAttack:'attack',projectile:'projectile'},wardenBoss:null,mobSystem:null,realmEnders:null,fushiSystem:null};
  vm.createContext(ctx);vm.runInContext(source.slice(a,b),ctx);hurt({hurtEntity:e,damage:3,damageSource:{cause:'magic',damagingEntity:p}});f.kill(e,{damagingEntity:q});
  assert.equal(f.items.get('attacker:hakkai:warden_core'),1);assert.equal(f.items.get('killer:hakkai:warden_core'),1);
 });

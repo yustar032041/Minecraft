@@ -16,11 +16,15 @@
         "controller.render.hakkai.beast"
       ],
       "animations": {
-        "idle": "animation.hakkai.fushi.idle"
+        "idle": "animation.hakkai.fushi.idle",
+        "walk": "animation.hakkai.fushi.walk"
       },
       "scripts": {
         "animate": [
-          "idle"
+          "idle",
+          {
+            "walk": "query.modified_move_speed > 0.01"
+          }
         ]
       },
       "spawn_egg": {

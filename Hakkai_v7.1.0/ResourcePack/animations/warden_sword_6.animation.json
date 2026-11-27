@@ -1,0 +1,62 @@
+{
+  "format_version": "1.8.0",
+  "animations": {
+    "animation.hakkai.warden_sword_6.idle": {
+      "loop": true,
+      "animation_length": 2,
+      "bones": {
+        "weapon": {
+          "rotation": [
+            0,
+            0,
+            "math.sin(query.life_time * 150) * 3"
+          ],
+          "position": [
+            0,
+            "math.sin(query.life_time * 180) * .7",
+            0
+          ]
+        }
+      }
+    },
+    "animation.hakkai.warden_sword_6.windup": {
+      "loop": true,
+      "animation_length": 1,
+      "bones": {
+        "weapon": {
+          "rotation": [
+            0,
+            0,
+            -30
+          ]
+        }
+      }
+    },
+    "animation.hakkai.warden_sword_6.strike": {
+      "loop": true,
+      "animation_length": 0.4,
+      "bones": {
+        "weapon": {
+          "rotation": [
+            0,
+            0,
+            37
+          ]
+        }
+      }
+    },
+    "animation.hakkai.warden_sword_6.held": {
+      "loop": true,
+      "animation_length": 1,
+      "bones": {
+        "weapon": {
+          "scale": [
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    }
+  }
+}

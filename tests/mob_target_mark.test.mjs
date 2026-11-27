@@ -5,6 +5,7 @@ import {Difficulty,GameMode} from '@minecraft/server';
 import {createMobTargetMarks} from '../Hakkai_v7.1.0/BehaviorPack/scripts/mob_target_mark.js';
 import {setupMobSystem} from '../Hakkai_v7.1.0/BehaviorPack/scripts/mob_system.js';
 import {mobContentList} from '../Hakkai_v7.1.0/BehaviorPack/scripts/mob_content.js';
+import {start as startMoving} from './moving_attack_fixture.mjs';
 function context(){
  const particles=[],d={id:'realm',spawnParticle:(id,pos)=>particles.push([id,{...pos}])};
  const p={id:'p',isValid:true,typeId:'minecraft:player',dimension:d,location:{x:1,y:80,z:2}};
@@ -35,14 +36,24 @@ test('actual mob talents mark only accepted hits, never rejected/parried or unno
  const profiles=mobContentList.filter(p=>p.temper==='hostile'&&(p.talent==='mark'||[0,13].includes(p.signatureId%15)));
  assert.equal(mobContentList.filter(p=>p.talent==='mark').length,7);assert.ok(profiles.length>15);
  for(const profile of profiles)for(const mode of ['hit','reject','parry','unwarned']){
-  const {p,d,mob,particles}=context();p.location={x:2,y:80,z:0};p.getGameMode=()=>GameMode.Survival;p.sendMessage=()=>{if(mode==='unwarned')throw Error('offline')};let hits=0;p.applyDamage=()=>{hits++;return mode!=='reject'};p.addEffect=()=>{};p.applyImpulse=()=>{};
+  if(!['leap','charge','armor','ward','burst'].includes(profile.talent)){
+   const f=startMoving(profile,{reject:mode==='reject',onParry:()=>mode==='parry'});
+   f.p.sendMessage=()=>{throw Error('chat unavailable')};f.advance(175);
+   const before=f.particles.length;f.ctrl.tickMarks(f.p,176);
+   if(mode==='hit'||mode==='unwarned'){assert.equal(f.hits.length,1,profile.id);assert.equal(f.particles.length,before+2,profile.id);}
+   else assert.equal(f.particles.length,before,`${profile.id} ${mode}`);
+   assert.match(f.ctrl.fieldGuide(f.p,mobContentList.indexOf(profile)),/壁越しの輪郭表示/);continue;
+  }
+  const {p,d,mob,particles}=context();p.location={x:['leap','charge','armor','ward'].includes(profile.talent)?.7:2,y:80,z:0};p.getGameMode=()=>GameMode.Survival;p.sendMessage=()=>{if(mode==='unwarned')throw Error('offline')};let hits=0;p.applyDamage=()=>{hits++;return mode!=='reject'};p.addEffect=()=>{};p.applyImpulse=()=>{};
   mob.typeId='hakkai:'+profile.id;mob.location={x:0,y:80,z:0};mob.playAnimation=()=>{};mob.addEffect=()=>{};mob.applyImpulse=()=>{};mob.getComponent=()=>({currentValue:10,effectiveMax:20,setCurrentValue:()=>{}});
   d.getEntities=()=>[mob];d.getPlayers=()=>[p];d.isChunkLoaded=()=>true;d.getBlock=()=>({isAir:true,isLiquid:false});d.getBlockFromRay=()=>undefined;
-  const world={getDifficulty:()=>Difficulty.Normal,getAllPlayers:()=>[p]},system={currentTick:0};
+  const queue=[],world={getDifficulty:()=>Difficulty.Normal,getAllPlayers:()=>[p]},system={currentTick:0,runTimeout:(fn,delay)=>queue.push({at:system.currentTick+delay,fn})};
   const ctl=setupMobSystem({world,system,ns:'hakkai:',num:()=>0,property:()=>{},report:()=>{},tryParry:()=>mode==='parry'});
-  for(const t of [0,120,160]){system.currentTick=t;ctl.tick(p,t)}
-  const before=particles.length;ctl.tickMarks(p,161);
-  if(mode==='hit'){assert.equal(hits,1,profile.id);assert.equal(particles.length,before+2,profile.id);}
+  for(const t of [0,120,160]){system.currentTick=t;if(t===160&&profile.talent==='burst')p.location.x=0;ctl.tick(p,t)}
+  if(profile.talent==='burst')while(system.currentTick<170){system.currentTick++;while(queue.some(q=>q.at===system.currentTick)){const i=queue.findIndex(q=>q.at===system.currentTick);queue.splice(i,1)[0].fn();}}
+  const before=particles.length;ctl.tickMarks(p,171);
+  const body=['leap','charge','armor','ward','burst'].includes(profile.talent);
+  if(mode==='hit'||(mode==='unwarned'&&body)){assert.equal(hits,1,profile.id);assert.equal(particles.length,before+2,profile.id);}
   else assert.equal(particles.length,before,`${profile.id} ${mode}`);
   const guide=ctl.fieldGuide(p,mobContentList.indexOf(profile));assert.match(guide,/壁越しの輪郭表示/);
  }

@@ -10,7 +10,8 @@ spec = importlib.util.spec_from_file_location('mob_experience', root/'tools/mob_
 policy = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(policy)
 counts = collections.Counter()
-excluded = {'kinetic_visual', 'shore_ferry', 'time_train'}
+# King summons deliberately yield no XP and must not count as a normal boss.
+excluded = {'kinetic_visual', 'shore_ferry', 'time_train'} | {f'king_guardian_{i}' for i in range(8)} | {f'warden_sword_{i}' for i in range(8)}
 for path in (bp/'entities').glob('*.json'):
     data = json.loads(path.read_text(encoding='utf8'))['minecraft:entity']
     name = path.stem

@@ -1,6 +1,7 @@
 // Mocked checks for separate traveler/chief paths; not a Bedrock render test.
 import assert from 'node:assert/strict';
 import {setupRealmEnders,ENDER_ABILITIES} from '../Hakkai_v7.1.0/BehaviorPack/scripts/realm_ender.js';
+import {makeEnderFootprint,enderWarningMarkers,insideEnderFootprint} from '../Hakkai_v7.1.0/BehaviorPack/scripts/realm_ender_patterns.js';
 import {setupFushiSystem,CHIEF_ATTACKS} from '../Hakkai_v7.1.0/BehaviorPack/scripts/fushi_system.js';
 import {GameMode,Difficulty} from '@minecraft/server';
 function fixture(type){
@@ -16,19 +17,32 @@ function fixture(type){
 }
 // Moon and charge now move over time: their geometry and timing are tested
 // in their own collision suites, not this instant-hit fixture.
-const paths=[...ENDER_ABILITIES.map((ability,i)=>({type:`hakkai:ender_${i}`,ability,index:0})),...CHIEF_ATTACKS.map((ability,index)=>({type:'hakkai:fushi_chief',ability,index})).filter(x=>x.index===2)];
+const paths=CHIEF_ATTACKS.map((ability,index)=>({type:'hakkai:fushi_chief',ability,index})).filter(x=>x.index===2);
 for(const {type,ability,index} of paths)for(const placement of ['inside','boundary','outside','above','below','upperEdge','lowerEdge']){
  const f=fixture(type);
  for(let i=0;i<index;i++){f.tick(20+i*80);f.tick(60+i*80);}
  f.hits.length=0;f.effects.length=0;f.markers.length=0;f.messages.length=0;
  const start=20+index*80;f.tick(start);
- assert.equal(f.markers.length,16,`${type}/${index}`);
- assert.equal(f.messages.length,1);assert.equal(f.messages[0][1],'primary');assert.match(f.messages[0][2],/輪から離れよう/);assert.match(f.messages[0][2],/上下3ブロック/);assert.match(f.messages[0][2],/あなたのみ対象/);
- for(const marker of f.markers){assert.ok(Math.abs(Math.hypot(marker.x-2,marker.z)-ability.radius)<1e-9);assert.ok(Math.abs(marker.y-80.15)<1e-9);}
+ const realm=type.startsWith('hakkai:ender_')?Number(type.at(-1)):-1;
+ const footprint=realm>=0?makeEnderFootprint(realm,f.p.location,f.mob.location):undefined;
+ assert.equal(f.markers.length,footprint?enderWarningMarkers(footprint).length:0,`${type}/${index}`);
+ assert.equal(f.messages.length,footprint?1:0);
+ if(footprint){assert.equal(f.messages[0][1],'primary');assert.match(f.messages[0][2],/囲まれた範囲から離れよう/);
+  assert.match(f.messages[0][2],/上下3ブロック/);assert.match(f.messages[0][2],/あなたのみ対象/);}
+ for(const marker of f.markers){
+  if(footprint)assert.ok(insideEnderFootprint(marker,footprint));
+  else assert.ok(Math.abs(Math.hypot(marker.x-2,marker.z)-ability.radius)<1e-9);
+  assert.ok(Math.abs(marker.y-80.15)<1e-9);
+ }
  // A second player's hit cannot silently retarget an already announced move.
  f.system.currentTick=start+1;f.ctrl.onHurt({hurtEntity:f.mob,damageSource:{damagingEntity:f.q}});
- if(placement==='boundary')f.p.location.x=2+ability.radius;
- if(placement==='outside')f.p.location.x=2+ability.radius+.01;
+ if(footprint&&['boundary','outside'].includes(placement)){
+  const vertex=footprint.vertices[0],factor=placement==='outside'?1.01:1;
+  f.p.location.x=2+(vertex.x-2)*factor;f.p.location.z=vertex.z*factor;
+ }else{
+  if(placement==='boundary')f.p.location.x=ability.radius;
+  if(placement==='outside')f.p.location.x=ability.radius+.01;
+ }
  if(placement==='above')f.p.location.y=83.01;
  if(placement==='below')f.p.location.y=76.99;
  if(placement==='upperEdge')f.p.location.y=83;
@@ -38,4 +52,4 @@ for(const {type,ability,index} of paths)for(const placement of ['inside','bounda
   assert.deepEqual(f.hits,[[start+40,'primary',ability.damage]]);assert.equal(f.effects[0][0],'primary');assert.equal(f.effects[0][1],ability.effect);
  }else assert.deepEqual(f.hits,[],`${type}/${index}/${placement}`);
 }
-console.log('8 traveler and chief mist: warning radius, fixed aim, 40-tick windup, height and warned target (mocked)');
+console.log('Chief mist: source-centred boundary, 40-tick windup, height and target (mocked)');

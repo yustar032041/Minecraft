@@ -116,6 +116,36 @@ def emblem(draw,index,w,h,color):
   r=min(rx,ry);draw.ellipse((cx-r,cy-r,cx+r,cy+r),outline=color,width=th)
   draw.line([(cx,cy-r*.7),(cx,cy),(cx+r*.6,cy+r*.25)],fill=color,width=th)
 
+def realm_markings(draw,index,w,h,color,detail=False):
+ # Eight different line vocabularies, kept narrow so the dark Enderman body
+ # remains the dominant shape. All coordinates are local to one UV face.
+ line=max(1,round(min(w,h)/24)); c=(*color,255)
+ def path(points):draw.line([(round(x*w),round(y*h)) for x,y in points],fill=c,width=line)
+ if index==0: # wind: sweeping broken currents
+  for y in (.28,.57,.8):path([(.08,y+.08),(.38,y),(.73,y-.03),(.92,y-.12)])
+ elif index==1: # mist: root and branching leaf veins
+  path([(.5,.08),(.48,.9)])
+  for y in (.30,.52,.74):
+   path([(.48,y),(.2,y-.12)]);path([(.48,y+.06),(.78,y-.08)])
+ elif index==2: # sand: offset sediment bands
+  for y in (.22,.43,.64,.85):path([(.1,y),(.43,y+.03),(.62,y-.02),(.9,y+.01)])
+ elif index==3: # ice: long crystalline facets
+  path([(.48,.08),(.22,.37),(.52,.68),(.38,.92)])
+  path([(.48,.08),(.8,.38),(.52,.68),(.82,.9)])
+ elif index==4: # thunder: forked lightning
+  path([(.7,.08),(.35,.4),(.58,.43),(.24,.87)])
+  path([(.35,.4),(.18,.3)])
+ elif index==5: # shadow: void rings and sparse stars
+  for x,y,r in ((.25,.28,.12),(.73,.55,.17),(.32,.82,.08)):
+   draw.ellipse(((x-r)*w,(y-r)*h,(x+r)*w,(y+r)*h),outline=c,width=line)
+ elif index==6: # sky: nested cloud / feather arcs
+  for y in (.25,.49,.73):
+   draw.arc((w*.12,h*(y-.10),w*.88,h*(y+.10)),180,350,fill=c,width=line)
+ else: # time: clock rails, ticks and a hand
+  path([(.15,.14),(.85,.14),(.85,.86),(.15,.86),(.15,.14)])
+  path([(.5,.26),(.5,.51),(.73,.64)])
+  for y in (.29,.51,.73):path([(.15,y),(.26,y)])
+
 def build(index):
  theme=DESIGNS[index];p=f'e{index}_';obj=json.loads(BASE.read_text(encoding='utf8'));model=obj['minecraft:geometry'][0]
  model['description'].update(identifier=f'geometry.hakkai.ender_{index}',texture_width=SIZE,texture_height=SIZE,visible_bounds_width=4,visible_bounds_height=4.5)
@@ -162,28 +192,31 @@ def build(index):
     uv[face]={'uv':[x,y],'uv_size':[w,h]};rng=random.Random(f'traveler-{index}-{name}-{ci}-{face}')
     cw=min(sw,max(64,w*3));ch=min(sh,max(64,h*3));ox=rng.randrange(sw-cw+1);oy=rng.randrange(sh-ch+1)
     image=source.crop((ox,oy,ox+cw,oy+ch)).resize((w,h),Image.Resampling.LANCZOS)
-    image=Image.blend(image,Image.new('RGB',(w,h),theme['chest'] if ornament else theme['dark']),.38)
+    # Near-black skin keeps the Enderman silhouette recognizable; the
+    # individual source materials still provide subtle non-flat variation.
+    shade=tuple(round(v*.48) for v in theme['dark'])
+    image=Image.blend(image,Image.new('RGB',(w,h),shade),.72 if not ornament else .60)
     image=ImageEnhance.Brightness(image).enhance({'up':1.1,'down':.82,'west':.93,'east':.97,'north':1,'south':.93}[face]).convert('RGBA')
     draw=ImageDraw.Draw(image);col=(*theme['eye'],255)
-    # Face is explicitly painted (both +/- z for the front orientation); eyes
-    # are high contrast and not inferred by a generic material crop.
-    if base_name=='head' and face in ('north','south'):
-     draw.rectangle((w*.05,h*.3,w*.95,h*.62),fill=(*theme['dark'],255))
-     for cx in (.31,.69):
-      ex=w*cx;ey=h*.47;draw.polygon([(ex-w*.1,ey-h*.035),(ex+w*.09,ey-h*.07),(ex+w*.09,ey+h*.05),(ex-w*.1,ey+h*.08)],fill=col)
-      draw.line((ex,ey-h*.04,ex,ey+h*.04),fill=(22,20,31,255),width=max(1,w//70))
+    # Region-specific surface motifs are not simply an atlas recolor.
+    if base_name!='head' and face not in ('up','down'):
+     mark=tuple(round(c*.50) for c in theme['chest'])
+     realm_markings(draw,index,w,h,mark,ornament)
+    # One front face only: broad, pupil-less horizontal eyes, no face on
+    # the back of the head. North is the model's negative-Z front.
+    if base_name=='head' and face=='north':
+     for cx in (.29,.71):
+      draw.rectangle((w*(cx-.15),h*.43,w*(cx+.15),h*.52),fill=col)
+      draw.rectangle((w*(cx-.12),h*.45,w*(cx+.12),h*.475),fill=(235,235,245,255))
     if base_name=='body' and ci==0 and face in ('north','south'):
      emblem(draw,index,w,h,col)
-     # Body seams differ by region and are subordinate to the main emblem.
-     for k in range(1+index%3):
-      px=w*(.36+k*.14);draw.line((px,h*.49,px,h*(.78-(k%2)*.08)),fill=(*theme['chest'],255),width=max(1,w//65))
     # Author the emissive mask for eyes and the chest symbol independently;
     # actual PBR rendering and its intensity still need Bedrock verification.
     material=Image.new('RGBA',(w,h),(70 if ornament and index in (4,7) else 0,0,185,255))
     md=ImageDraw.Draw(material);glow=(0,125,185,255)
-    if base_name=='head' and face in ('north','south'):
-     for cx in (.31,.69):
-      ex=w*cx;ey=h*.47;md.polygon([(ex-w*.1,ey-h*.035),(ex+w*.09,ey-h*.07),(ex+w*.09,ey+h*.05),(ex-w*.1,ey+h*.08)],fill=glow)
+    if base_name=='head' and face=='north':
+     for cx in (.29,.71):
+      md.rectangle((w*(cx-.15),h*.43,w*(cx+.15),h*.52),fill=glow)
     if base_name=='body' and ci==0 and face in ('north','south'):emblem(md,index,w,h,glow)
     # Compute local slopes per UV face rather than sampling adjacent faces;
     # neutralize the outermost pixels before adding the texture gutters.

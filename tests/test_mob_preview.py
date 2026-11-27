@@ -65,6 +65,21 @@ for i in (5,9):
     assert len(head['cubes'])==2
 head=next(b for b in model('foe_0_7')['bones'] if b['name']=='f0_7_head')
 assert touches(head['cubes'][4],head['cubes'][2]) and touches(head['cubes'][4],head['cubes'][3])
+# The rotated tail of the grassland thin-wing creature meets the body at its
+# own hinge, rather than appearing connected only through an unrelated wing.
+thin={b['name']:b for b in model('foe_0_11')['bones']}
+body,tail=thin['f0_11_body']['cubes'][0],thin['f0_11_tail']
+assert tail['parent']=='f0_11_body' and tail['rotation']==[-20,0,0]
+assert tail['pivot'][2]==body['origin'][2]+body['size'][2]==tail['cubes'][0]['origin'][2]
+assert touches(body,tail['cubes'][0])
+for side in ('l','r'):
+    wing=thin[f'f0_11_wing_{side}']
+    for i in (0,1):
+        lobe=thin[f'f0_11_wing_{side}_detail_{i}']
+        assert lobe['parent']==wing['name'] and touches(wing['cubes'][0],lobe['cubes'][0])
+        assert lobe['cubes'][0]['size']==[4,.7,4]
+    assert thin[f'f0_11_wing_{side}_detail_0']['cubes'][0]['origin'][2]<wing['cubes'][0]['origin'][2]
+    assert thin[f'f0_11_wing_{side}_detail_1']['cubes'][0]['origin'][2]>wing['cubes'][0]['origin'][2]
 g={b['name']:b for b in model('guardian_6')['bones']}
 assert all(touches(g['g6_body']['cubes'][0],g[f'g6_wing_{side}']['cubes'][0]) for side in ('l','r'))
 print(f'{len(names)} prototype rest-pose geometries, preview and targeted attachment regressions OK (not engine validation)')

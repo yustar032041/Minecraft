@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';import fs from 'node:fs';import vm from 'node:vm';
-import {setupWardenBoss} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_boss.js';
+import {WARDEN_DAMAGE_MULTIPLIER,setupWardenBoss as realSetupWardenBoss} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_boss.js';
+import {legacyWardenDecision} from './warden_legacy_decision.mjs';
+const setupWardenBoss=options=>realSetupWardenBoss({...options,decision:legacyWardenDecision()});
 import {setupCombatParry} from '../Hakkai_v7.1.0/BehaviorPack/scripts/combat_parry.js';
 import {setupCombatGuard} from '../Hakkai_v7.1.0/BehaviorPack/scripts/combat_guard.js';
 import {GameMode,Difficulty} from '@minecraft/server';
@@ -14,5 +16,5 @@ warden.tick(a,0);warden.tick(a,80);b.isSneaking=true;guard.tick(b,g,states.get('
 const src=fs.readFileSync('Hakkai_v7.1.0/BehaviorPack/scripts/main.js','utf8'),start=src.indexOf('// Fast input sampling is isolated'),end=src.indexOf('// v5.2.0:',start);
 const ctx={system,world,GameMode,ns:'hakkai:',state:p=>states.get(p.id),gear:new Map([['s',g]]),selected:()=>({typeId:'s'}),combatRoll:undefined,airDash:undefined,airStrike:undefined,combatParry:parry,wardenArena:undefined,wardenBoss:warden,report:()=>assert.fail()};
 vm.createContext(ctx);vm.runInContext(src.slice(start,end),ctx);system.currentTick=120;fastLoop();
-assert.deepEqual(hits,[['a',9*1.8]],'later-listed player parries while first player is hit');assert.deepEqual(effects,['a']);assert.equal(states.get('b').s,20);
+assert.deepEqual(hits,[['a',9*WARDEN_DAMAGE_MULTIPLIER]],'later-listed player parries while first player is hit');assert.deepEqual(effects,['a']);assert.equal(states.get('b').s,20);
 console.log('Real fast loop: all players get a same-tick release parry against the shared warden attack (mocked)');

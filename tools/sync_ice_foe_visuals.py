@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Remap provisional motions to twelve ice foe rigs; gameplay is untouched."""
 import argparse,copy,json
-from mob_attack_joint_details import add_details,align_strike_start
+from mob_attack_joint_details import add_details,align_strike_start,add_refined_joints,neutral_refined_contact
 from pathlib import Path
 RP=Path(__file__).resolve().parents[1]/'Hakkai_v7.1.0/ResourcePack'
 def enc(x):return (json.dumps(x,ensure_ascii=False,indent=2)+'\n').encode()
@@ -39,8 +39,10 @@ def main():
    for phase in ('windup','strike'):
     for n in (4,5):anims[phase]['bones'][f'leg_{n}']=copy.deepcopy(anims[phase]['bones'][f'leg_{n-2}'])
   add_details(anims,bones,prefix,3,i)
+  add_refined_joints(anims,bones,prefix,3,i)
   # Keep native contact animation unchanged; it has no scripted windup.
   anims['contact']=copy.deepcopy(anims['strike'])
+  neutral_refined_contact(anims,3,i)
   align_strike_start(anims)
   for label,anim in anims.items():
    anim['bones']={prefix+n:track for n,track in anim['bones'].items()}

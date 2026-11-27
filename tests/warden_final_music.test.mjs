@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
-import {setupWardenBoss,wardenPatterns,WARDEN_HEAL_PER_SECOND} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_boss.js';
+import {setupWardenBoss as realSetupWardenBoss,wardenPatterns,WARDEN_HEAL_PER_SECOND} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_boss.js';
+import {legacyWardenDecision} from './warden_legacy_decision.mjs';
+const setupWardenBoss=options=>realSetupWardenBoss({...options,decision:legacyWardenDecision()});
 import {GameMode,Difficulty} from '@minecraft/server';
 const d={id:'hakkai:warden_arena',isChunkLoaded:()=>true,getBlock:()=>({isAir:true}),getBlockFromRay:()=>undefined,spawnParticle:()=>{}};
 const hp={currentValue:5000,effectiveMax:5000,setCurrentValue(v){this.currentValue=v;}};
