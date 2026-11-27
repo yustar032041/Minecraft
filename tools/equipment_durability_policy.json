@@ -1,0 +1,1252 @@
+[
+  {
+    "id": "gear_001",
+    "old": 282,
+    "new": 564
+  },
+  {
+    "id": "gear_002",
+    "old": 289,
+    "new": 578
+  },
+  {
+    "id": "gear_003",
+    "old": 296,
+    "new": 592
+  },
+  {
+    "id": "gear_004",
+    "old": 303,
+    "new": 606
+  },
+  {
+    "id": "gear_005",
+    "old": 310,
+    "new": 620
+  },
+  {
+    "id": "gear_006",
+    "old": 317,
+    "new": 634
+  },
+  {
+    "id": "gear_007",
+    "old": 324,
+    "new": 648
+  },
+  {
+    "id": "gear_008",
+    "old": 331,
+    "new": 662
+  },
+  {
+    "id": "gear_009",
+    "old": 338,
+    "new": 676
+  },
+  {
+    "id": "gear_010",
+    "old": 440,
+    "new": 880
+  },
+  {
+    "id": "gear_011",
+    "old": 459,
+    "new": 918
+  },
+  {
+    "id": "gear_012",
+    "old": 250,
+    "new": 500
+  },
+  {
+    "id": "gear_014",
+    "old": 373,
+    "new": 746
+  },
+  {
+    "id": "gear_015",
+    "old": 380,
+    "new": 760
+  },
+  {
+    "id": "gear_016",
+    "old": 387,
+    "new": 774
+  },
+  {
+    "id": "gear_017",
+    "old": 394,
+    "new": 788
+  },
+  {
+    "id": "gear_018",
+    "old": 401,
+    "new": 802
+  },
+  {
+    "id": "gear_019",
+    "old": 408,
+    "new": 816
+  },
+  {
+    "id": "gear_020",
+    "old": 415,
+    "new": 830
+  },
+  {
+    "id": "gear_021",
+    "old": 422,
+    "new": 844
+  },
+  {
+    "id": "gear_022",
+    "old": 429,
+    "new": 858
+  },
+  {
+    "id": "gear_023",
+    "old": 436,
+    "new": 872
+  },
+  {
+    "id": "gear_024",
+    "old": 443,
+    "new": 886
+  },
+  {
+    "id": "gear_025",
+    "old": 275,
+    "new": 550
+  },
+  {
+    "id": "gear_026",
+    "old": 288,
+    "new": 576
+  },
+  {
+    "id": "gear_027",
+    "old": 307,
+    "new": 614
+  },
+  {
+    "id": "gear_028",
+    "old": 326,
+    "new": 652
+  },
+  {
+    "id": "gear_030",
+    "old": 310,
+    "new": 620
+  },
+  {
+    "id": "gear_031",
+    "old": 317,
+    "new": 634
+  },
+  {
+    "id": "gear_032",
+    "old": 324,
+    "new": 648
+  },
+  {
+    "id": "gear_033",
+    "old": 331,
+    "new": 662
+  },
+  {
+    "id": "gear_034",
+    "old": 338,
+    "new": 676
+  },
+  {
+    "id": "gear_035",
+    "old": 345,
+    "new": 690
+  },
+  {
+    "id": "gear_036",
+    "old": 352,
+    "new": 704
+  },
+  {
+    "id": "gear_037",
+    "old": 359,
+    "new": 718
+  },
+  {
+    "id": "gear_038",
+    "old": 366,
+    "new": 732
+  },
+  {
+    "id": "gear_039",
+    "old": 373,
+    "new": 746
+  },
+  {
+    "id": "gear_040",
+    "old": 380,
+    "new": 760
+  },
+  {
+    "id": "gear_041",
+    "old": 387,
+    "new": 774
+  },
+  {
+    "id": "gear_042",
+    "old": 364,
+    "new": 728
+  },
+  {
+    "id": "gear_043",
+    "old": 383,
+    "new": 766
+  },
+  {
+    "id": "gear_044",
+    "old": 402,
+    "new": 804
+  },
+  {
+    "id": "gear_046",
+    "old": 422,
+    "new": 844
+  },
+  {
+    "id": "gear_047",
+    "old": 429,
+    "new": 858
+  },
+  {
+    "id": "gear_048",
+    "old": 436,
+    "new": 872
+  },
+  {
+    "id": "gear_049",
+    "old": 443,
+    "new": 886
+  },
+  {
+    "id": "gear_050",
+    "old": 275,
+    "new": 550
+  },
+  {
+    "id": "gear_051",
+    "old": 282,
+    "new": 564
+  },
+  {
+    "id": "gear_052",
+    "old": 289,
+    "new": 578
+  },
+  {
+    "id": "gear_053",
+    "old": 296,
+    "new": 592
+  },
+  {
+    "id": "gear_054",
+    "old": 303,
+    "new": 606
+  },
+  {
+    "id": "gear_055",
+    "old": 310,
+    "new": 620
+  },
+  {
+    "id": "gear_056",
+    "old": 317,
+    "new": 634
+  },
+  {
+    "id": "gear_057",
+    "old": 324,
+    "new": 648
+  },
+  {
+    "id": "gear_058",
+    "old": 440,
+    "new": 880
+  },
+  {
+    "id": "gear_059",
+    "old": 459,
+    "new": 918
+  },
+  {
+    "id": "gear_060",
+    "old": 250,
+    "new": 500
+  },
+  {
+    "id": "gear_062",
+    "old": 359,
+    "new": 718
+  },
+  {
+    "id": "gear_063",
+    "old": 366,
+    "new": 732
+  },
+  {
+    "id": "gear_064",
+    "old": 373,
+    "new": 746
+  },
+  {
+    "id": "gear_065",
+    "old": 380,
+    "new": 760
+  },
+  {
+    "id": "gear_066",
+    "old": 387,
+    "new": 774
+  },
+  {
+    "id": "gear_067",
+    "old": 394,
+    "new": 788
+  },
+  {
+    "id": "gear_068",
+    "old": 401,
+    "new": 802
+  },
+  {
+    "id": "gear_069",
+    "old": 408,
+    "new": 816
+  },
+  {
+    "id": "gear_070",
+    "old": 415,
+    "new": 830
+  },
+  {
+    "id": "gear_071",
+    "old": 422,
+    "new": 844
+  },
+  {
+    "id": "gear_072",
+    "old": 429,
+    "new": 858
+  },
+  {
+    "id": "gear_073",
+    "old": 436,
+    "new": 872
+  },
+  {
+    "id": "gear_074",
+    "old": 288,
+    "new": 576
+  },
+  {
+    "id": "gear_075",
+    "old": 307,
+    "new": 614
+  },
+  {
+    "id": "gear_076",
+    "old": 326,
+    "new": 652
+  },
+  {
+    "id": "gear_078",
+    "old": 296,
+    "new": 592
+  },
+  {
+    "id": "gear_079",
+    "old": 303,
+    "new": 606
+  },
+  {
+    "id": "gear_080",
+    "old": 310,
+    "new": 620
+  },
+  {
+    "id": "gear_081",
+    "old": 317,
+    "new": 634
+  },
+  {
+    "id": "gear_082",
+    "old": 324,
+    "new": 648
+  },
+  {
+    "id": "gear_083",
+    "old": 331,
+    "new": 662
+  },
+  {
+    "id": "gear_084",
+    "old": 338,
+    "new": 676
+  },
+  {
+    "id": "gear_085",
+    "old": 345,
+    "new": 690
+  },
+  {
+    "id": "gear_086",
+    "old": 352,
+    "new": 704
+  },
+  {
+    "id": "gear_087",
+    "old": 359,
+    "new": 718
+  },
+  {
+    "id": "gear_088",
+    "old": 366,
+    "new": 732
+  },
+  {
+    "id": "gear_089",
+    "old": 373,
+    "new": 746
+  },
+  {
+    "id": "gear_090",
+    "old": 440,
+    "new": 880
+  },
+  {
+    "id": "gear_091",
+    "old": 459,
+    "new": 918
+  },
+  {
+    "id": "gear_092",
+    "old": 402,
+    "new": 804
+  },
+  {
+    "id": "gear_094",
+    "old": 408,
+    "new": 816
+  },
+  {
+    "id": "gear_095",
+    "old": 415,
+    "new": 830
+  },
+  {
+    "id": "gear_096",
+    "old": 422,
+    "new": 844
+  },
+  {
+    "id": "gear_097",
+    "old": 429,
+    "new": 858
+  },
+  {
+    "id": "gear_098",
+    "old": 436,
+    "new": 872
+  },
+  {
+    "id": "gear_099",
+    "old": 443,
+    "new": 886
+  },
+  {
+    "id": "gear_100",
+    "old": 429,
+    "new": 858
+  },
+  {
+    "id": "gear_101",
+    "old": 436,
+    "new": 872
+  },
+  {
+    "id": "gear_102",
+    "old": 443,
+    "new": 886
+  },
+  {
+    "id": "gear_103",
+    "old": 450,
+    "new": 900
+  },
+  {
+    "id": "gear_104",
+    "old": 457,
+    "new": 914
+  },
+  {
+    "id": "gear_105",
+    "old": 310,
+    "new": 620
+  },
+  {
+    "id": "gear_106",
+    "old": 440,
+    "new": 880
+  },
+  {
+    "id": "gear_107",
+    "old": 459,
+    "new": 918
+  },
+  {
+    "id": "gear_108",
+    "old": 326,
+    "new": 652
+  },
+  {
+    "id": "gear_110",
+    "old": 345,
+    "new": 690
+  },
+  {
+    "id": "gear_111",
+    "old": 352,
+    "new": 704
+  },
+  {
+    "id": "gear_112",
+    "old": 359,
+    "new": 718
+  },
+  {
+    "id": "gear_113",
+    "old": 366,
+    "new": 732
+  },
+  {
+    "id": "gear_114",
+    "old": 373,
+    "new": 746
+  },
+  {
+    "id": "gear_115",
+    "old": 380,
+    "new": 760
+  },
+  {
+    "id": "gear_116",
+    "old": 387,
+    "new": 774
+  },
+  {
+    "id": "gear_117",
+    "old": 394,
+    "new": 788
+  },
+  {
+    "id": "gear_118",
+    "old": 401,
+    "new": 802
+  },
+  {
+    "id": "gear_119",
+    "old": 408,
+    "new": 816
+  },
+  {
+    "id": "gear_120",
+    "old": 415,
+    "new": 830
+  },
+  {
+    "id": "gear_121",
+    "old": 422,
+    "new": 844
+  },
+  {
+    "id": "gear_122",
+    "old": 364,
+    "new": 728
+  },
+  {
+    "id": "gear_123",
+    "old": 383,
+    "new": 766
+  },
+  {
+    "id": "gear_124",
+    "old": 402,
+    "new": 804
+  },
+  {
+    "id": "gear_126",
+    "old": 436,
+    "new": 872
+  },
+  {
+    "id": "gear_127",
+    "old": 443,
+    "new": 886
+  },
+  {
+    "id": "gear_128",
+    "old": 450,
+    "new": 900
+  },
+  {
+    "id": "gear_129",
+    "old": 457,
+    "new": 914
+  },
+  {
+    "id": "gear_130",
+    "old": 310,
+    "new": 620
+  },
+  {
+    "id": "gear_131",
+    "old": 317,
+    "new": 634
+  },
+  {
+    "id": "gear_132",
+    "old": 324,
+    "new": 648
+  },
+  {
+    "id": "gear_133",
+    "old": 331,
+    "new": 662
+  },
+  {
+    "id": "gear_134",
+    "old": 338,
+    "new": 676
+  },
+  {
+    "id": "gear_135",
+    "old": 345,
+    "new": 690
+  },
+  {
+    "id": "gear_136",
+    "old": 352,
+    "new": 704
+  },
+  {
+    "id": "gear_137",
+    "old": 359,
+    "new": 718
+  },
+  {
+    "id": "gear_138",
+    "old": 440,
+    "new": 880
+  },
+  {
+    "id": "gear_139",
+    "old": 459,
+    "new": 918
+  },
+  {
+    "id": "gear_140",
+    "old": 402,
+    "new": 804
+  },
+  {
+    "id": "gear_142",
+    "old": 394,
+    "new": 788
+  },
+  {
+    "id": "gear_143",
+    "old": 401,
+    "new": 802
+  },
+  {
+    "id": "gear_144",
+    "old": 408,
+    "new": 816
+  },
+  {
+    "id": "gear_145",
+    "old": 415,
+    "new": 830
+  },
+  {
+    "id": "gear_146",
+    "old": 422,
+    "new": 844
+  },
+  {
+    "id": "gear_147",
+    "old": 429,
+    "new": 858
+  },
+  {
+    "id": "gear_148",
+    "old": 436,
+    "new": 872
+  },
+  {
+    "id": "gear_149",
+    "old": 443,
+    "new": 886
+  },
+  {
+    "id": "gear_150",
+    "old": 429,
+    "new": 858
+  },
+  {
+    "id": "gear_151",
+    "old": 436,
+    "new": 872
+  },
+  {
+    "id": "gear_152",
+    "old": 443,
+    "new": 886
+  },
+  {
+    "id": "gear_153",
+    "old": 450,
+    "new": 900
+  },
+  {
+    "id": "gear_154",
+    "old": 440,
+    "new": 880
+  },
+  {
+    "id": "gear_155",
+    "old": 459,
+    "new": 918
+  },
+  {
+    "id": "gear_156",
+    "old": 326,
+    "new": 652
+  },
+  {
+    "id": "gear_158",
+    "old": 331,
+    "new": 662
+  },
+  {
+    "id": "gear_159",
+    "old": 338,
+    "new": 676
+  },
+  {
+    "id": "gear_160",
+    "old": 345,
+    "new": 690
+  },
+  {
+    "id": "gear_161",
+    "old": 352,
+    "new": 704
+  },
+  {
+    "id": "gear_162",
+    "old": 359,
+    "new": 718
+  },
+  {
+    "id": "gear_163",
+    "old": 366,
+    "new": 732
+  },
+  {
+    "id": "gear_164",
+    "old": 373,
+    "new": 746
+  },
+  {
+    "id": "gear_165",
+    "old": 380,
+    "new": 760
+  },
+  {
+    "id": "gear_166",
+    "old": 387,
+    "new": 774
+  },
+  {
+    "id": "gear_167",
+    "old": 394,
+    "new": 788
+  },
+  {
+    "id": "gear_168",
+    "old": 401,
+    "new": 802
+  },
+  {
+    "id": "gear_169",
+    "old": 408,
+    "new": 816
+  },
+  {
+    "id": "gear_170",
+    "old": 440,
+    "new": 880
+  },
+  {
+    "id": "gear_171",
+    "old": 459,
+    "new": 918
+  },
+  {
+    "id": "gear_172",
+    "old": 402,
+    "new": 804
+  },
+  {
+    "id": "gear_174",
+    "old": 443,
+    "new": 886
+  },
+  {
+    "id": "gear_175",
+    "old": 429,
+    "new": 858
+  },
+  {
+    "id": "gear_176",
+    "old": 436,
+    "new": 872
+  },
+  {
+    "id": "gear_177",
+    "old": 443,
+    "new": 886
+  },
+  {
+    "id": "gear_178",
+    "old": 450,
+    "new": 900
+  },
+  {
+    "id": "gear_179",
+    "old": 457,
+    "new": 914
+  },
+  {
+    "id": "gear_180",
+    "old": 443,
+    "new": 886
+  },
+  {
+    "id": "gear_181",
+    "old": 450,
+    "new": 900
+  },
+  {
+    "id": "gear_182",
+    "old": 457,
+    "new": 914
+  },
+  {
+    "id": "gear_183",
+    "old": 464,
+    "new": 928
+  },
+  {
+    "id": "gear_184",
+    "old": 471,
+    "new": 942
+  },
+  {
+    "id": "gear_185",
+    "old": 345,
+    "new": 690
+  },
+  {
+    "id": "gear_186",
+    "old": 364,
+    "new": 728
+  },
+  {
+    "id": "gear_187",
+    "old": 720,
+    "new": 1440
+  },
+  {
+    "id": "gear_188",
+    "old": 600,
+    "new": 1200
+  },
+  {
+    "id": "gear_189",
+    "old": 635,
+    "new": 1270
+  },
+  {
+    "id": "gear_190",
+    "old": 670,
+    "new": 1340
+  },
+  {
+    "id": "gear_191",
+    "old": 705,
+    "new": 1410
+  },
+  {
+    "id": "gear_192",
+    "old": 740,
+    "new": 1480
+  },
+  {
+    "id": "gear_193",
+    "old": 775,
+    "new": 1550
+  },
+  {
+    "id": "gear_194",
+    "old": 810,
+    "new": 1620
+  },
+  {
+    "id": "gear_195",
+    "old": 845,
+    "new": 1690
+  },
+  {
+    "id": "gear_196",
+    "old": 900,
+    "new": 1800
+  },
+  {
+    "id": "gear_197",
+    "old": 945,
+    "new": 1890
+  },
+  {
+    "id": "gear_198",
+    "old": 990,
+    "new": 1980
+  },
+  {
+    "id": "gear_199",
+    "old": 1035,
+    "new": 2070
+  },
+  {
+    "id": "gear_200",
+    "old": 1080,
+    "new": 2160
+  },
+  {
+    "id": "gear_201",
+    "old": 1125,
+    "new": 2250
+  },
+  {
+    "id": "gear_202",
+    "old": 1170,
+    "new": 2340
+  },
+  {
+    "id": "gear_203",
+    "old": 1215,
+    "new": 2430
+  },
+  {
+    "id": "gear_204",
+    "old": 1400,
+    "new": 2800
+  },
+  {
+    "id": "gear_205",
+    "old": 1455,
+    "new": 2910
+  },
+  {
+    "id": "gear_206",
+    "old": 1510,
+    "new": 3020
+  },
+  {
+    "id": "gear_207",
+    "old": 1565,
+    "new": 3130
+  },
+  {
+    "id": "gear_208",
+    "old": 1620,
+    "new": 3240
+  },
+  {
+    "id": "gear_209",
+    "old": 1675,
+    "new": 3350
+  },
+  {
+    "id": "gear_210",
+    "old": 1730,
+    "new": 3460
+  },
+  {
+    "id": "gear_211",
+    "old": 1785,
+    "new": 3570
+  },
+  {
+    "id": "gear_212",
+    "old": 2400,
+    "new": 4800
+  },
+  {
+    "id": "gear_213",
+    "old": 3200,
+    "new": 6400
+  },
+  {
+    "id": "guardian_armor_0_boots",
+    "old": 500,
+    "new": 1000
+  },
+  {
+    "id": "guardian_armor_0_helmet",
+    "old": 500,
+    "new": 1000
+  },
+  {
+    "id": "guardian_armor_0_leggings",
+    "old": 500,
+    "new": 1000
+  },
+  {
+    "id": "guardian_armor_1_boots",
+    "old": 500,
+    "new": 1000
+  },
+  {
+    "id": "guardian_armor_1_helmet",
+    "old": 500,
+    "new": 1000
+  },
+  {
+    "id": "guardian_armor_1_leggings",
+    "old": 500,
+    "new": 1000
+  },
+  {
+    "id": "guardian_armor_2_boots",
+    "old": 500,
+    "new": 1000
+  },
+  {
+    "id": "guardian_armor_2_helmet",
+    "old": 500,
+    "new": 1000
+  },
+  {
+    "id": "guardian_armor_2_leggings",
+    "old": 500,
+    "new": 1000
+  },
+  {
+    "id": "guardian_armor_3_boots",
+    "old": 500,
+    "new": 1000
+  },
+  {
+    "id": "guardian_armor_3_helmet",
+    "old": 500,
+    "new": 1000
+  },
+  {
+    "id": "guardian_armor_3_leggings",
+    "old": 500,
+    "new": 1000
+  },
+  {
+    "id": "guardian_armor_4_boots",
+    "old": 500,
+    "new": 1000
+  },
+  {
+    "id": "guardian_armor_4_helmet",
+    "old": 500,
+    "new": 1000
+  },
+  {
+    "id": "guardian_armor_4_leggings",
+    "old": 500,
+    "new": 1000
+  },
+  {
+    "id": "guardian_armor_5_boots",
+    "old": 500,
+    "new": 1000
+  },
+  {
+    "id": "guardian_armor_5_helmet",
+    "old": 500,
+    "new": 1000
+  },
+  {
+    "id": "guardian_armor_5_leggings",
+    "old": 500,
+    "new": 1000
+  },
+  {
+    "id": "guardian_armor_6_boots",
+    "old": 500,
+    "new": 1000
+  },
+  {
+    "id": "guardian_armor_6_helmet",
+    "old": 500,
+    "new": 1000
+  },
+  {
+    "id": "guardian_armor_6_leggings",
+    "old": 500,
+    "new": 1000
+  },
+  {
+    "id": "guardian_armor_7_boots",
+    "old": 500,
+    "new": 1000
+  },
+  {
+    "id": "guardian_armor_7_helmet",
+    "old": 500,
+    "new": 1000
+  },
+  {
+    "id": "guardian_armor_7_leggings",
+    "old": 500,
+    "new": 1000
+  },
+  {
+    "id": "nightwalker_armor_boots",
+    "old": 500,
+    "new": 1000
+  },
+  {
+    "id": "nightwalker_armor_helmet",
+    "old": 500,
+    "new": 1000
+  },
+  {
+    "id": "nightwalker_armor_leggings",
+    "old": 500,
+    "new": 1000
+  },
+  {
+    "id": "series_leggings_00",
+    "old": 440,
+    "new": 880
+  },
+  {
+    "id": "series_leggings_01",
+    "old": 288,
+    "new": 576
+  },
+  {
+    "id": "series_leggings_02",
+    "old": 364,
+    "new": 728
+  },
+  {
+    "id": "series_leggings_03",
+    "old": 440,
+    "new": 880
+  },
+  {
+    "id": "series_leggings_04",
+    "old": 288,
+    "new": 576
+  },
+  {
+    "id": "series_leggings_05",
+    "old": 440,
+    "new": 880
+  },
+  {
+    "id": "series_leggings_06",
+    "old": 440,
+    "new": 880
+  },
+  {
+    "id": "series_leggings_07",
+    "old": 364,
+    "new": 728
+  },
+  {
+    "id": "series_leggings_08",
+    "old": 440,
+    "new": 880
+  },
+  {
+    "id": "series_leggings_09",
+    "old": 440,
+    "new": 880
+  },
+  {
+    "id": "series_leggings_10",
+    "old": 440,
+    "new": 880
+  },
+  {
+    "id": "ult_axe",
+    "old": 2500,
+    "new": 5000
+  },
+  {
+    "id": "ult_boots",
+    "old": 850,
+    "new": 1700
+  },
+  {
+    "id": "ult_chest",
+    "old": 3600,
+    "new": 7200
+  },
+  {
+    "id": "ult_helmet",
+    "old": 750,
+    "new": 1500
+  },
+  {
+    "id": "ult_leggings",
+    "old": 950,
+    "new": 1900
+  },
+  {
+    "id": "ult_pickaxe",
+    "old": 2500,
+    "new": 5000
+  },
+  {
+    "id": "ult_sword",
+    "old": 2500,
+    "new": 5000
+  },
+  {
+    "id": "united_armor_boots",
+    "old": 500,
+    "new": 1000
+  },
+  {
+    "id": "united_armor_helmet",
+    "old": 500,
+    "new": 1000
+  },
+  {
+    "id": "united_armor_leggings",
+    "old": 500,
+    "new": 1000
+  }
+]

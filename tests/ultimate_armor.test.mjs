@@ -13,7 +13,7 @@ console.log('Final armor: exact slots, positive recovery bonus, parry healing ca
 {
  const fs=await import('node:fs'),vm=await import('node:vm');const src=fs.readFileSync('Hakkai_v7.1.0/BehaviorPack/scripts/main.js','utf8');
  const start=src.indexOf('     if(isCreative(p)){s.s=max;s.m=max;}else{',src.indexOf('const guarding=shieldStance'));
- const end=src.indexOf('     // The trial dimension',start);assert.ok(start>0&&end>start);
+ const end=src.indexOf('     // The trial arena',start);assert.ok(start>0&&end>start);
  const s={s:50,m:50,campResting:false},player={...p,isSwimming:false,isSprinting:false};const ctx={p:player,s,max:100,guarding:false,isCreative:()=>false,bounds:(n,a,b)=>Math.max(a,Math.min(b,n)),hasUltimateArmor,ultimateRegen};
  vm.createContext(ctx);vm.runInContext(src.slice(start,end),ctx);assert.equal(s.s,53);assert.ok(Math.abs(s.m-51.32)<1e-10);
  player.isSprinting=true;ctx.guarding=true;vm.runInContext(src.slice(start,end),ctx);assert.equal(s.s,53,'paid guard still blocks stamina regeneration');assert.ok(Math.abs(s.m-52.64)<1e-10);

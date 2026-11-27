@@ -5,7 +5,7 @@ root=Path(__file__).resolve().parents[1];bp=root/'Hakkai_v7.1.0/BehaviorPack'
 rows=json.loads((root/'tools/armor_progression_policy.json').read_text(encoding='utf8'))
 assert len(rows)==44 and len({r['id'] for r in rows})==44
 catalog=json.loads(re.search(r'^export const catalog=(\[.*\]);$',(bp/'scripts/data.js').read_text(encoding='utf8'),re.M)[1]);gear={g['id']:g for g in catalog}
-assert sum(r['old']!=r['new'] for r in rows)==18
+assert sum(r['old']['protection']!=r['new']['protection'] for r in rows)==18
 for row in rows:
  p=bp/'items'/f"{row['id']}.json";item=json.loads(p.read_text(encoding='utf8'))['minecraft:item'];c=item['components'];old=row['old'];new=row['new']
  assert item['description']['identifier']=='hakkai:'+row['id']

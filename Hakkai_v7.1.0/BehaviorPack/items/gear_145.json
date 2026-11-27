@@ -13,7 +13,7 @@
       "minecraft:damage": 25,
       "minecraft:hand_equipped": true,
       "minecraft:durability": {
-        "max_durability": 415
+        "max_durability": 830
       },
       "minecraft:use_modifiers": {
         "use_duration": 15.0,
@@ -31,7 +31,7 @@
             "items": [
               "minecraft:diamond"
             ],
-            "repair_amount": 104
+            "repair_amount": 208
           }
         ]
       }

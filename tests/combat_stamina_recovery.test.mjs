@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 const source=fs.readFileSync('Hakkai_v7.1.0/BehaviorPack/scripts/main.js','utf8');
 const start=source.indexOf('     if(isCreative(p)){s.s=max;s.m=max;}else{',source.indexOf('const guarding=shieldStance'));
-const end=source.indexOf('\n     // The trial dimension',start);
+const end=source.indexOf('\n     // The trial arena',start);
 assert.ok(start>=0&&end>start);
 const code=source.slice(start,end);
 function run(p={},guarding=false,creative=false,campResting=false){

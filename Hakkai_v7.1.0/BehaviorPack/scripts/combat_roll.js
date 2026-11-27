@@ -1,7 +1,7 @@
 import {EntityDamageCause,GameMode,InputPermissionCategory} from '@minecraft/server';
-// 24 blocks is eight times the previous three-block safety horizon. This is a
+// 30 blocks is the maximum checked target (previously 24). This is a
 // target distance, not a promise about Bedrock physics or interrupted rolls.
-const DOUBLE_TAP=9,COST=10,INVULNERABLE=10,COOLDOWN=10,DISTANCE=24,PER_TICK=2.4,SAMPLE=.1;
+const DOUBLE_TAP=9,COST=10,INVULNERABLE=10,COOLDOWN=5,DISTANCE=30,PER_TICK=3,SAMPLE=.1;
 const ATTACKS=new Set([EntityDamageCause.entityAttack,EntityDamageCause.projectile,
  EntityDamageCause.entityExplosion,EntityDamageCause.magic,EntityDamageCause.sonicBoom,
  EntityDamageCause.ramAttack,EntityDamageCause.maceSmash].filter(x=>typeof x==='string'));
@@ -105,7 +105,7 @@ export function setupCombatRoll({notice,safe}){
   if(e.dimension!==p.dimension.id){entries.delete(p.id);return;}
   let forward,input;
   try{
-   if(!p.isValid||p.typeId!=='minecraft:player'||!p.isSneaking||s.menu||s.busy||![GameMode.Survival,GameMode.Creative].includes(p.getGameMode())||
+   if(!p.isValid||p.typeId!=='minecraft:player'||s.menu||s.busy||![GameMode.Survival,GameMode.Creative].includes(p.getGameMode())||
       p.isSwimming||p.isGliding||p.isFlying||p.getComponent('minecraft:riding')){
     e.down=false;e.first=undefined;e.motion=undefined;return;
    }
@@ -114,6 +114,9 @@ export function setupCombatRoll({notice,safe}){
     e.down=false;e.first=undefined;e.motion=undefined;return;
    }
    if(e.motion)move(p,e);
+   // Releasing sneak after the gesture must not truncate an active roll to
+   // its first movement step. Sneak is required only to start another roll.
+   if(!p.isSneaking){e.down=false;e.first=undefined;return;}
    input=p.inputInfo.getMovementVector();
    if(!Number.isFinite(input.x)||!Number.isFinite(input.y)){e.down=false;e.first=undefined;return;}
    forward=input.y>.6&&Math.abs(input.x)<.7;

@@ -15,7 +15,7 @@
         "protection": 8
       },
       "minecraft:durability": {
-        "max_durability": 950
+        "max_durability": 1900
       },
       "minecraft:enchantable": {
         "slot": "armor_legs",
@@ -27,7 +27,7 @@
             "items": [
               "minecraft:netherite_scrap"
             ],
-            "repair_amount": 238
+            "repair_amount": 475
           }
         ]
       }

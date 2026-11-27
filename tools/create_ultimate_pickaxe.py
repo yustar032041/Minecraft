@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Create the prototype final pickaxe and inventory icon (Pillow required)."""
+raise SystemExit("Historical generator would overwrite current item and artwork; use tools/render_final_pickaxe_revision.py --write for the icon only")
 from pathlib import Path
 import json
 from PIL import Image,ImageDraw

@@ -6,7 +6,7 @@ subprocess.run([sys.executable,str(root/'tools/sync_equipment_repairs.py'),'--ch
 for ident,material in [('gear_001','minecraft:iron_ingot'),('gear_081','minecraft:diamond'),('gear_161','minecraft:netherite_scrap'),('series_leggings_10','minecraft:netherite_scrap'),('guardian_armor_3_helmet','minecraft:diamond'),('gear_188','minecraft:diamond'),('gear_196','minecraft:netherite_scrap'),('ult_chest','minecraft:netherite_scrap')]:
  c=json.loads((items/(ident+'.json')).read_bytes())['minecraft:item']['components'];repair=c['minecraft:repairable']['repair_items']
  assert repair==[{'items':[material],'repair_amount':math.ceil(c['minecraft:durability']['max_durability']/4)}],ident
-assert json.loads((items/'ult_chest.json').read_bytes())['minecraft:item']['components']['minecraft:repairable']['repair_items'][0]['repair_amount']==900
+assert json.loads((items/'ult_chest.json').read_bytes())['minecraft:item']['components']['minecraft:repairable']['repair_items'][0]['repair_amount']==1800
 print('250 durable items: reviewed anvil repair material and quarter durability OK (static only)')
 # The catalogue guide infers its material from rank; ensure this remains true
 # across every entry, including armor and hand-held magic tools.

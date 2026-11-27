@@ -115,7 +115,7 @@ for(let realm=0;realm<8;realm++){
  const {ctx}=makeCtx(f,{peaceful:true});ctx.pickRealmWildlife=(entries,realm,seen,peaceful)=>entries.find(m=>m.dim===realm&&(!peaceful||m.temper!=='hostile'));
  ctx.wildlifeTick(f.p,undefined,undefined);assert.equal(f.spawned.length,1);assert.notEqual(f.spawned[0][0],'hakkai:'+mob.id,'choose another species if nearby duplicate');
 }
-assert.match(main,/if\(!isCreative\(p\)\|\|\/\^hakkai:realm_\[0-7\]\$\/.test\(p.dimension.id\)\)try\{wildlifeTick\(p,profile,site\);\}/,'creative may observe wildlife in the eight realms');
+assert.match(main,/if\(p.getGameMode\(\)!==GameMode.Spectator\)try\{wildlifeTick\(p,profile,site\);\}/,'creative may observe wildlife in all eligible dimensions');
 assert.match(main,/try\{profile=survey\(p\);\}catch\{\}/,'survey errors are isolated');
 console.log('Wildlife: 8 realms, reserved/no-biome sites, peaceful, realm creative inclusion, multiplayer cap, slopes, biome fallback and safe refusal (mocked/static)');
 // The cap is checked at the actual candidate as well as around the player.
@@ -193,4 +193,31 @@ for(const waterlogged of [false,true]){
  assert.equal(spawnWildlife(f.args),true);assert.equal(f.spawned[0][1].y,89);
  assert.ok(checks.length<=24);assert.equal(caps,1);
  assert.ok(checks.slice(0,12).every(at=>at.y===90),'first try different columns');
+}
+// Connected highway and atlas get a bounded local fallback in either mode;
+// the outer main loop includes survival/adventure/creative, not spectator.
+for(const realm of [8,9])for(const peaceful of [false,true]){
+ const f=spawnFixture();f.p.location={x:500,y:90,z:500};f.d.id=`hakkai:realm_${realm}`;
+ const {ctx}=makeCtx(f,{peaceful});ctx.wildlifeTick(f.p,undefined,undefined);
+ assert.equal(f.spawned.length,1,`extra realm ${realm}, peaceful ${peaceful}`);
+ const mob=wildlife.find(x=>'hakkai:'+x.id===f.spawned[0][0]);assert.equal(mob.dim,0);if(peaceful)assert.notEqual(mob.temper,'hostile');
+}
+
+{
+ const f=spawnFixture();f.d.id='hakkai:realm_8';f.p.location={x:500,y:90,z:500};
+ const {ctx}=makeCtx(f);ctx.families={ocean:{mode:'water',species:'wild_6_0'}};
+ ctx.wildlifeTick(f.p,undefined,{id:200,kind:'atlas',family:'ocean',theme:6,x:700,z:700,dim:8});
+ assert.equal(f.spawned.length,1,'water-themed atlas is not unconditionally excluded; spawn still needs a valid land floor');
+ assert.equal(f.spawned[0][0],'hakkai:wild_6_0');
+}
+{
+ const f=spawnFixture();f.d.id='hakkai:realm_9';f.p.location={x:500,y:90,z:500};
+ const {ctx}=makeCtx(f);ctx.wildlifeTick(f.p,undefined,{id:512,kind:'linked',theme:4,x:700,z:700,dim:9});
+ const mob=wildlife.find(m=>'hakkai:'+m.id===f.spawned[0]?.[0]);assert.equal(mob?.dim,4,'connected highway uses local realm theme');
+}
+{
+ const f=spawnFixture();f.d.id='hakkai:warden_arena';f.p.location={x:0,y:90,z:0};const {ctx}=makeCtx(f);
+ ctx.wildlifeTick(f.p,undefined,undefined);assert.equal(f.spawned.length,1);
+ const m=wildlife.find(x=>'hakkai:'+x.id===f.spawned[0][0]);assert.equal(m.dim,7);assert.notEqual(m.temper,'hostile');
+ assert.match(main,/if\(!p.dimension.getEntities\(\{type:ns\+'time_warden',closest:1\}\).length\)wildlifeTick\(p,undefined,undefined\)/,'arena scan is skipped while the warden is present');
 }

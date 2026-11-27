@@ -13,7 +13,7 @@ function fixture({failMarker=false,full=false,nearby=1,blocked=false,unloaded=fa
  const player={id:'p',typeId:'minecraft:player',isValid:true,dimension:d,location:{x:2,y:80,z:0},getGameMode:()=>GameMode.Survival,sendMessage:msg=>notices.push([time,msg]),applyDamage:()=>true,addEffect:()=>{},applyImpulse:()=>{}};
  const king={id:'boss',typeId:'hakkai:eclipse_colossus',isValid:true,dimension:d,location:{x:0,y:80,z:0},getComponent:()=>({currentValue:100,effectiveMax:100,setCurrentValue:()=>{}}),playAnimation:()=>{}};
  const system={currentTick:0},world={getDifficulty:()=>Difficulty.Normal,getAllPlayers:()=>[player]};
- const ctrl=setupMobSystem({ns:'hakkai:',world,system,num:()=>0,property:()=>{},report:(_,e)=>{throw e}});
+ const ctrl=setupMobSystem({allowKingMelee:()=>false,ns:'hakkai:',world,system,num:()=>0,property:()=>{},report:(_,e)=>{throw e}});
  function tick(t){system.currentTick=time=t;ctrl.tick(player,t);}
  for(let t=0;t<=550;t+=10)tick(t);
  assert.ok(notices.some(([t,msg])=>t===550&&msg.includes('影兵招来')),'sixth attack is summoned after its own warning');

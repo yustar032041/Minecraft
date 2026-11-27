@@ -43,7 +43,11 @@
         "idle": "animation.hakkai.warden_idle",
         "halo": "animation.hakkai.warden_halo",
         "roll": "animation.hakkai.warden_roll",
-        "leap": "animation.hakkai.warden_leap"
+        "leap": "animation.hakkai.warden_leap",
+        "blade_ready": "animation.hakkai.warden_blade_ready",
+        "blade_cut": "animation.hakkai.warden_blade_cut",
+        "blade_reverse": "animation.hakkai.warden_blade_reverse",
+        "blade_aerial": "animation.hakkai.warden_blade_aerial"
       },
       "scripts": {
         "animate": [

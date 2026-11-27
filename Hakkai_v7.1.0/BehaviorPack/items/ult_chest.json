@@ -15,7 +15,7 @@
         "protection": 20
       },
       "minecraft:durability": {
-        "max_durability": 3600
+        "max_durability": 7200
       },
       "minecraft:enchantable": {
         "slot": "armor_torso",
@@ -27,7 +27,7 @@
             "items": [
               "minecraft:netherite_scrap"
             ],
-            "repair_amount": 900
+            "repair_amount": 1800
           }
         ]
       }

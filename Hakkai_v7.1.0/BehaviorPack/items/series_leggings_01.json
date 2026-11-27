@@ -15,7 +15,7 @@
         "protection": 2
       },
       "minecraft:durability": {
-        "max_durability": 288
+        "max_durability": 576
       },
       "minecraft:enchantable": {
         "slot": "armor_legs",
@@ -27,7 +27,7 @@
             "items": [
               "minecraft:iron_ingot"
             ],
-            "repair_amount": 72
+            "repair_amount": 144
           }
         ]
       }

@@ -12,7 +12,7 @@ for path in items.glob('*.json'):
  if not slot.startswith('slot.armor.'):continue
  dur=comps.get('minecraft:durability',{}).get('max_durability',0)
  by_slot.setdefault(slot,[]).append((item['description']['identifier'],wearable.get('protection',0),dur))
-expected={'helmet':('head',11,750),'chest':('chest',20,3600),'leggings':('legs',8,950),'boots':('feet',8,850)}
+expected={'helmet':('head',11,1500),'chest':('chest',20,7200),'leggings':('legs',8,1900),'boots':('feet',8,1700)}
 for part,(slot,protection,durability) in expected.items():
  entries=by_slot['slot.armor.'+slot];identifier='hakkai:ult_'+part
  own=[(p,d) for id,p,d in entries if id==identifier];assert own==[(protection,durability)]

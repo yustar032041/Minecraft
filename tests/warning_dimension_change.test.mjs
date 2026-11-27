@@ -23,7 +23,7 @@ function fixture(type){
  let ctrl;
  if(type==='hakkai:fushi_chief')ctrl=setupFushiSystem({world,system,report:()=>{}});
  else if(type.startsWith('hakkai:ender_'))ctrl=setupRealmEnders({world,system,report:()=>{}});
- else ctrl=setupMobSystem({ns:'hakkai:',world,system,report:()=>{},num:()=>0,property:()=>{}});
+ else ctrl=setupMobSystem({ns:'hakkai:',world,system,report:()=>{},num:()=>0,property:()=>{},allowKingMelee:()=>false});
  if(type==='hakkai:fushi_chief'||type.startsWith('hakkai:ender_'))ctrl.onHurt({hurtEntity:mob,damageSource:{damagingEntity:p}});
  const tick=t=>{now=system.currentTick=t;if(type.startsWith('hakkai:guardian_'))ctrl.tickBosses(p,t);else ctrl.tick(p,t);};
  const move=()=>{p.dimension=b;mob.dimension=b;};

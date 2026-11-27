@@ -32,12 +32,12 @@ const SINGLE_TALENT_LIMITS=Object.freeze({thorns:8,web:11,spore:12,frost:11,shoc
 // Presentation tracks selected by the already chosen boss technique. The
 // authoritative warning, target, damage and timing are unchanged.
 export function bossVisualAnimation(kind,phase){
- const style=kind==='cleave'?'cleave':['starfall','time_snare','star_collapse','summon','guardian_summon'].includes(kind)?'cast':'wave';
+ const style=(kind==='cleave'||kind==='melee')?'cleave':['starfall','time_snare','star_collapse','summon','guardian_summon'].includes(kind)?'cast':'wave';
  return `animation.hakkai.eclipse_${style}_${phase}`;
 }
 
 export function setupMobSystem(ctx){
- const {ns,world,system,num,property,report,isEvading=()=>false,tryParry=()=>false}=ctx;
+ const {ns,world,system,num,property,report,isEvading=()=>false,tryParry=()=>false,allowKingMelee=()=>true}=ctx;
  const mobStates=new Map(), bossStates=new Map(), lastBossTick=new Map();
  const targetMarks=createMobTargetMarks();
  let summonedBoss;
@@ -383,8 +383,13 @@ export function setupMobSystem(ctx){
   const attacks=phase===0?['cleave','starfall','time_snare','eclipse_burst','star_collapse','summon','guardian_summon']:
    phase===1?['cleave','starfall','time_snare','eclipse_burst','star_collapse','summon','rift_wave','guardian_summon']:
    ['cleave','starfall','time_snare','eclipse_burst','star_collapse','summon','rift_wave','roar','rewind','guardian_summon'];
-  const kind=attacks[state.attackIndex++%attacks.length];
-  const windup=40;
+  // Alternate a close, explicitly warned hand strike with the usual skills.
+  // No native melee: the scaled engine hitbox previously reached too far
+  // without any actionable windup. Keep other skills from being starved.
+  const melee=state.meleeReady&&allowKingMelee()&&dist(target.location,entity.location)<=3.5;
+  const kind=melee?'melee':attacks[state.attackIndex++%attacks.length];
+  if(melee)state.meleeReady=false;
+  const windup=40; // 2s: the existing 1.9s cleave windup reaches its end before impact
   if(kind==='guardian_summon'){
    // Summoning is shown on the king rather than as a player-floor warning.
    // It deals no direct damage and does not depend on messages or markers.
@@ -395,9 +400,9 @@ export function setupMobSystem(ctx){
    state.pending={kind,at:t+windup,targetId:target.id,aim,warnedPlayers:[],dimensionId:entity.dimension.id};
    return;
   }
-  const bossCenter=['summon','guardian_summon','eclipse_burst','rift_wave','roar','rewind'].includes(kind);
+  const bossCenter=['melee','summon','guardian_summon','eclipse_burst','rift_wave','roar','rewind'].includes(kind);
   const mark=bossCenter?entity.location:target.location;
-  const labels={cleave:'八界断ち',starfall:'星骸落とし',time_snare:'時環封じ',eclipse_burst:'蝕光爆ぜ',summon:'影兵招来',guardian_summon:'八界守護の影',rift_wave:'時空裂波',roar:'終焉咆哮',rewind:'逆刻再編',star_collapse:'星蝕の収束'};
+  const labels={melee:'近接攻撃',cleave:'八界断ち',starfall:'星骸落とし',time_snare:'時環封じ',eclipse_burst:'蝕光爆ぜ',summon:'影兵招来',guardian_summon:'八界守護の影',rift_wave:'時空裂波',roar:'終焉咆哮',rewind:'逆刻再編',star_collapse:'星蝕の収束'};
   const area=kind==='summon'?'予告円内に影兵出現':kind==='guardian_summon'?'予告円内に特別な守護獣が出現':`輪内・上下3ブロック${kind==='roar'||kind==='rewind'?'（外側は状態異常のみ）':''}`;
   const text=`§c§l${labels[kind]}§r §7— ${windup/20}秒後に発動、${area}`;
   // Capture recipients from the very same snapshot that receives the message.
@@ -406,13 +411,13 @@ export function setupMobSystem(ctx){
   for(const p of entity.dimension.getPlayers({location:entity.location,maxDistance:84}))try{
    p.sendMessage(text);if(validPlayer(p))warnedPlayers.push(p.id);
   }catch{warned=false;}
-  const radius={cleave:3.5,starfall:4,time_snare:6,eclipse_burst:9,summon:7,guardian_summon:7,rift_wave:18,roar:18,rewind:16,star_collapse:7}[kind]??3;
+  const radius={melee:3.5,cleave:3.5,starfall:4,time_snare:6,eclipse_burst:9,summon:7,guardian_summon:7,rift_wave:18,roar:18,rewind:16,star_collapse:7}[kind]??3;
   if(!warned||!warnedPlayers.includes(target.id)||!warningRing(entity.dimension,mark,radius,kingWarningMarkerCount(radius))){state.nextAt=t+120;return;}
   creatureWindup(entity,bossVisualAnimation(kind,'windup'));state.pending={kind,at:t+windup,targetId:target.id,aim:{...mark},warnedPlayers,dimensionId:entity.dimension.id};
   for(let i=0;i<6;i++)particle(entity.dimension,'minecraft:basic_smoke_particle',{x:mark.x+(Math.random()-.5)*2,y:mark.y+.3+i*.35,z:mark.z+(Math.random()-.5)*2});
  }
- // King skills target players with late-game equipment. Native melee remains
- // separate; warnings, parries, and the summon limits are unchanged.
+ // King skills target players with late-game equipment. The warned melee
+ // intentionally retains its original damage rather than the skill multiplier.
  function bossHit(entity,target,damage){return hit(entity,target,damage*3);}
  function resolveBossAttack(entity,state,phase){
   const attack=state.pending;if(!attack)return;
@@ -423,7 +428,7 @@ export function setupMobSystem(ctx){
    if(![attack.aim.x,attack.aim.y,attack.aim.z].every(Number.isFinite))return;
   }
   creatureStrike(entity,bossVisualAnimation(attack.kind,'strike'));
-  const effect=attack.kind==='cleave'?'impact':['time_snare','rewind'].includes(attack.kind)?'time':['summon','guardian_summon','eclipse_burst'].includes(attack.kind)?'ward':'wind';
+  const effect=['cleave','melee'].includes(attack.kind)?'impact':['time_snare','rewind'].includes(attack.kind)?'time':['summon','guardian_summon','eclipse_burst'].includes(attack.kind)?'ward':'wind';
   // Cosmetic spark at the already-warned aim; never expands the hit area.
   const talent={impact:'charge',time:'time',ward:'ward',wind:'burst'}[effect];
   talentImpact(entity,{talent},{aim:attack.aim,radius:1});
@@ -506,6 +511,12 @@ export function setupMobSystem(ctx){
    for(const p of warnedTargets(attack.aim,18))try{if(dist(p.location,attack.aim)>=12||bossHit(entity,p,6+phase*2)){addEffect(p,'weakness',120,1);addEffect(p,'mining_fatigue',100,1);}}catch{}
    return; // Avoid an unbounded melee damage boost after the roar.
   }
+  if(attack.kind==='melee'){
+   for(const p of warnedTargets(attack.aim,3.5))try{
+    if(dist(p.location,entity.location)<=3.5&&hit(entity,p,9))push(entity,p,.65,.12);
+   }catch{}
+   return;
+  }
   if(attack.kind==='cleave'){
    const aim=attack.aim;
    for(const p of warnedTargets(aim,3.5))try{if(bossHit(entity,p,13+phase*3)){push(entity,p,1.75,.34);addEffect(p,'slowness',42,1);}}catch{}
@@ -525,7 +536,7 @@ export function setupMobSystem(ctx){
    addEffect(entity,'resistance',110,phase===2?2:1);addEffect(entity,'speed',120,phase);
    for(const p of d.getPlayers({location:entity.location,maxDistance:50}))particle(d,'hakkai:climate_7',{x:p.location.x,y:p.location.y+1,z:p.location.z});
   }
-  if(s.pending&&t>=s.pending.at){if(t===s.pending.at)resolveBossAttack(entity,s,s.phase);else s.pending=undefined;s.nextAt=t+(s.phase===2?30:s.phase===1?40:50);}
+  if(s.pending&&t>=s.pending.at){if(t===s.pending.at){const kind=s.pending.kind;resolveBossAttack(entity,s,s.phase);if(kind!=='melee')s.meleeReady=true;}else s.pending=undefined;s.nextAt=t+(s.phase===2?30:s.phase===1?40:50);}
   if(!s.pending&&t>=s.nextAt){const target=bossTarget(entity);if(target)startBossAttack(entity,s,t,target,s.phase);else s.nextAt=t+40;}
   if(t%20===0)particle(entity.dimension,'hakkai:climate_7',{x:entity.location.x,y:entity.location.y+2.2,z:entity.location.z});
  }

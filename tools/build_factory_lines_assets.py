@@ -32,6 +32,8 @@ for name,label,color,parts in [
 write(atlas,atlasdata)
 def cube(o,s,uv=[0,0]):return {'origin':o,'size':s,'uv':uv}
 cubes=[cube([-8,0,-8],[16,2,16]),cube([-8,2,-8],[2,14,2]),cube([6,2,-8],[2,14,2]),cube([-8,2,6],[2,14,2]),cube([6,2,6],[2,14,2]),cube([-8,14,-8],[16,2,2]),cube([-8,14,6],[16,2,2])]
+# Rear identification plate keeps machinery visible through the front.
+cubes.append({'origin':[-7,2,7],'size':[14,12,1],'uv':{face:{'uv':[0,0],'uv_size':[32,32]} for face in ('north','south','east','west','up','down')}})
 write(rp/'models/blocks/factory_frame.geo.json',{'format_version':'1.12.0','minecraft:geometry':[{'description':{'identifier':'geometry.hakkai.factory_frame','texture_width':32,'texture_height':32},'bones':[{'name':'frame','pivot':[0,0,0],'cubes':cubes}]}]})
 for name in ['crusher','press','saw','washer','mixer','assembler']:
  p=bp/f'blocks/{name}.json';j=read(p);j['minecraft:block']['components']['minecraft:geometry']='geometry.hakkai.factory_frame';write(p,j)

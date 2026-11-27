@@ -158,7 +158,11 @@ export function setupWardenModes({validPlayer,isEvading=()=>false,damageCause,sw
     else{if(a.visible)launch(e,s,a.target,'lightning');s.attack=undefined;}
    }else{
     if(t>=a.release&&t<=a.end&&(t-a.release)%a.interval===0){
-     if(!pose(e,'animation.hakkai.warden_slash'))return;
+     const strike=Math.floor((t-a.release)/a.interval);
+     const animation=a.kind==='barrage'?'animation.hakkai.warden_blade_aerial':
+      strike%2?'animation.hakkai.warden_blade_reverse':'animation.hakkai.warden_blade_cut';
+     if(!pose(e,animation))return;
+     try{e.playSound('mob.player.attack.strong',{volume:.7,pitch:.9+strike%3*.12});}catch{}
      if(a.kind==='combo'){
       const from={...e.location,y:e.location.y+1};
       for(const p of people){const to={...p.location,y:p.location.y+1};if(isEvading(p)||distance(from,to)>3.1||!clearLine(e.dimension,from,to))continue;
@@ -181,7 +185,7 @@ export function setupWardenModes({validPlayer,isEvading=()=>false,damageCause,sw
   }else{
    const index=chooseWardenBlade(s.brain,s.situation,target);if(!swords.acquire(e,index)){s.nextAttack=t+25;return;}
    const kind=s.mode==='flight_sword'?'barrage':chooseSwordAction(s.situation,target);
-   if(!pose(e,'animation.hakkai.warden_warning')){swords.release(e);s.nextAttack=t+25;return;}
+   if(!pose(e,'animation.hakkai.warden_blade_ready')){swords.release(e);s.nextAttack=t+25;return;}
    s.attack={kind,target,release:t+20,end:t+20+(kind==='barrage'?36:kind==='combo'?24:8),interval:kind==='barrage'?4:kind==='combo'?6:8};s.nextAttack=t+(kind==='barrage'?105:85);
   }
  }

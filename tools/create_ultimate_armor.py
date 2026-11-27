@@ -16,7 +16,7 @@ from create_series_armor import normals
 root=Path(__file__).resolve().parents[1];bp=root/'Hakkai_v7.1.0/BehaviorPack';rp=root/'Hakkai_v7.1.0/ResourcePack'
 def write(path,value):
  path.parent.mkdir(parents=True,exist_ok=True);path.write_text(json.dumps(value,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
-parts={'helmet':('head','armor_head',11,750,'gear_011','helmet'),'chest':('chest','armor_torso',20,3600,'gear_186','chestplate'),'leggings':('legs','armor_legs',8,950,'gear_186','leggings'),'boots':('feet','armor_feet',8,850,'gear_012','boots')}
+parts={'helmet':('head','armor_head',11,1500,'gear_011','helmet'),'chest':('chest','armor_torso',20,7200,'gear_186','chestplate'),'leggings':('legs','armor_legs',8,1900,'gear_186','leggings'),'boots':('feet','armor_feet',8,1700,'gear_012','boots')}
 # Draw a distinct inventory icon for the formerly unfinished leggings.
 im=Image.new('RGBA',(128,128),(0,0,0,0));d=ImageDraw.Draw(im)
 d.polygon([(24,22),(104,22),(99,53),(90,109),(68,111),(64,68),(60,111),(38,109),(29,53)],fill=(42,27,73,255),outline=(230,186,91,255),width=4)

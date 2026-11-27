@@ -2814,43 +2814,62 @@ function cast(p,g,charged=false){
  },4+n%7);
 }
 function castElement(p,a,b=-1,label=attrs[a]){
- const s=state(p),n=b<0?12:19;
+ const s=state(p);
+ // Guardian records scale the basic eight spells toward late-game encounters.
+ // Failed property reads are treated as no progress. Combined spells stay unchanged.
+ let guards=0;try{guards=(Number(p.getDynamicProperty('hakkai:guards'))||0)&255;}catch{}
+ const guardCount=Array.from({length:8},(_,i)=>(guards>>i)&1).reduce((x,y)=>x+y,0);
+ const n=b<0?12-Math.floor(guardCount/2):19;
  if(!isCreative(p)&&s.m<n){notice(p,'§e魔力が足りない');return;}
  if(!isCreative(p))s.m-=n;
  const defense=[1,3,5].includes(a)&&b<0;
- p.addEffect(effects[a],170,{showParticles:!defense});
- if(b>=0)p.addEffect(effects[b],125,{showParticles:false});
- if(defense&&a===1){
+ try{p.addEffect(effects[a],170,{showParticles:!defense});}catch{}
+ if(b>=0)try{p.addEffect(effects[b],125,{showParticles:false});}catch{}
+ if(defense&&a===1)try{
    const h=p.getComponent('minecraft:health');
    if(h)h.setCurrentValue(Math.min(h.effectiveMax,h.currentValue+5));
- }
- if(defense&&a===5)for(const n of ['poison','wither','blindness'])p.removeEffect(n);
- if(defense&&a===3)p.addEffect('absorption',160,{showParticles:false});
+ }catch{}
+ if(defense&&a===5)for(const n of ['poison','wither','blindness'])try{p.removeEffect(n);}catch{}
+ if(defense&&a===3)try{p.addEffect('absorption',160,{showParticles:false});}catch{}
  const night=world.getTimeOfDay()>13000, stage=currentPlace(p), boosted=Boolean(stage&&home[aspect(stage)].includes(a)||night&&[5,6,7].includes(a));
  const line=p.getViewDirection(), l=p.location;
- const targets=defense?[]:enemies(p,(b>=0?8:a===4?10:6)+(boosted?1:0)).filter(e=>{
+ // The eight primary elements all attack; their former support bonuses remain.
+ const targets=enemies(p,(b>=0?8:a===4?10:7)+(boosted?1:0)).filter(e=>{
    try{if(!visibleFrom(p,e.getHeadLocation()))return false;}catch{return false;}
    return a!==4||b>=0||(e.location.x-l.x)*line.x+(e.location.z-l.z)*line.z>=Math.hypot(e.location.x-l.x,e.location.z-l.z)*.62;
  });
  let landedCount=0;
- if(!defense)for(const e of targets){
-   const landed=hit(p,e,(b>=0?12:8)+(boosted?2:0),a,b,a===0?1.5:.6);
+ for(const e of targets){
+   const power=b>=0?12:[20,18,22,20,23,20,20,20][a]+3*guardCount;
+   const landed=hit(p,e,power+(boosted?2:0),a,b,a===0?1.5:.6);
    if(!landed)continue;landedCount++;
+   // Paint the accepted contact as well as the casting gesture, so a
+   // distant target is not struck with no visible local effect.
+   try{for(let i=0;i<3;i++)p.dimension.spawnParticle(`hakkai:element_spell_${(b>=0?b:a)%8}`,{x:e.location.x+(i-1)*.28,y:e.location.y+.5+i*.35,z:e.location.z});}catch{}
    if(combatEffectAllowed(p,e)){
     try{if(a===7)e.addEffect('slowness',b===0?105:72,{amplifier:4,showParticles:false});}catch{}
     try{if(a===4||b===4)e.addEffect('weakness',84,{showParticles:false});}catch{}
     try{if(a===0&&b===1)e.addEffect('blindness',90,{showParticles:false});}catch{}
    }
  }
- if(a===6&&landedCount){
+ if(a===6&&landedCount)try{
    const h=p.getComponent('minecraft:health');
    if(h)h.setCurrentValue(Math.min(h.effectiveMax,h.currentValue+Math.min(5,landedCount*2)));
- }
- if(a===7&&b===0)p.addEffect('speed',125,{amplifier:1,showParticles:false});
- if(a===5&&b===6)p.addEffect('absorption',130,{showParticles:false});
+ }catch{}
+ if(a===7&&b===0)try{p.addEffect('speed',125,{amplifier:1,showParticles:false});}catch{}
+ if(a===5&&b===6)try{p.addEffect('absorption',130,{showParticles:false});}catch{}
  const known=b<0?a:pairs.findIndex(v=>v.a===a&&v.b===b);
  if(known>=0)try{mark(p,'learned_spells',b<0?known:8+known);}catch{}
- try{p.dimension.spawnParticle(`hakkai:climate_${(b>=0?b:a)%8}`,{x:l.x+line.x*2,y:l.y+1,z:l.z+line.z*2});}catch{}
+ const element=(b>=0?b:a)%8, particle=`hakkai:element_spell_${element}`;
+ // Distinct trajectories are cosmetic; the actual accepted targets remain
+ // bounded and line-of-sight checked by the combat path above.
+ for(let i=0;i<16;i++){
+   const angle=i*Math.PI/8, r=1+(i%3)*.42, f=1+i*.18, side=Math.sin(angle)*r;
+   const radial=[0,1,3,5,6,7].includes(a), x=radial?Math.cos(angle)*r:line.x*f-line.z*side*.35, z=radial?Math.sin(angle)*r:line.z*f+line.x*side*.35;
+   try{p.dimension.spawnParticle(particle,{x:l.x+x,y:l.y+.35+(a===7?i*.10:a===4?(i%4)*.45:.25+(i%3)*.16),z:l.z+z});}catch{}
+ }
+ try{p.playAnimation(`animation.hakkai.element_cast_${a}`,{blendOutTime:.12,stopExpression:'query.any_animation_finished'});}catch{}
+ try{p.playSound('random.orb',{volume:.4,pitch:.8+a*.1});}catch{}
  notice(p,`§b${label}の魔法`);
 }
 
@@ -2880,7 +2899,7 @@ const chapters=[
  ['地形と集め方','各界の新しく生成される地形では、地表の下を掘って結晶鉱を探せます。浮島の地層は薄いので掘り抜きに注意。生成済みの場所には後から追加されません。到着地点近くにも小さな鉱床があります。守護獣を倒すと欠片が手に入り、同じ欠片2個とアメジストの欠片1個から結晶を作れます。バニラの敵も、ときどき欠片を落とします。'],
  ['野営とサバイバル','焚き火か魂の焚き火の近くで、しゃがんで静止すると野営休息になり、スタミナと魔力が速く回復します。野営のきのこ包み・根菜の焚き火焼き・森歩きの滋養食は採集や料理で作れます。回復付きの料理は食べ終えた時にスタミナや魔力を回復します。満腹の時は食べられず回復しません。乾燥肉・乾燥ベリー・燻製魚の切り身・乾燥昆布を作業台で合わせると野営の補給袋を2個作れます。畑・季節の菜園・釣り・牧場・かまどを組み合わせ、遠征前に食料を準備しましょう。'],
  ['戦闘とスタミナ','通常ダッシュ・通常攻撃はスタミナを使いません。泳ぎ・ロール・空中ダッシュ・空中攻撃・防御・パリィ・武器技などは消費し、泳ぎや防御をやめると回復します。バニラの空腹消費は別です。装備スキルや属性魔法を使えます。ガイド本の「八界の幻影闘技場」では、体力・魔力・相手の予告を見ながら行動を選ぶターン制ミニゲームに挑戦できます。記念館の達成度と記念品の収集が進むと、特別な第4戦が解放されます。闘技場はゲーム内の幻影戦で、実際のプレイヤーや建築物にはダメージを与えません。'],
- ['八属性と魔導書','本＋風の結晶で魔導書を作れます。手に持ってしゃがむたびに魔法を切り替え、使うボタンで発動します。8属性・5つの組合せ・光、絆、風、水、炎の専用魔法は界の訪問や解放なしで選べます。通常は魔力が必要で、共通の入力間隔（約0.35秒）以外の魔導書の再使用待ちはありません。光の矢は魔力5、絆の灯は魔力20で自分と近くの仲間を回復し敵を攻撃します（一人でも使用可能）。選択を保存できなかった場合は接続中のみ保持します。月のまどろみはFUSHIのトーテムを手に持って使い、魔力15、消費なし、再使用6秒です。致命傷からの復活時は別途トーテムを消費します。この本の攻撃魔法と武器技の着火・鈍足・吹き飛ばしや闇魔法の吸収は、対象へのダメージが受理された時に発生します。命中しなくても魔力や再使用時間は消費します。月のまどろみは直接ダメージのない別の効果です。'],
+ ['八属性と魔導書','本＋風の結晶で魔導書を作れます。手に持ってしゃがむたびに魔法を切り替え、使うボタンで発動します。8属性はすべて攻撃魔法で、属性ごとの補助効果も持ちます。守護獣の討伐記録が増えると八属性の威力が上がり、魔力消費は12から最大8まで下がります。5つの組合せ・光、絆、風、水、炎の専用魔法も含め、界の訪問や解放なしで選べます。通常は魔力が必要で、共通の入力間隔（約0.35秒）以外の魔導書の再使用待ちはありません。光の矢は魔力5、絆の灯は魔力20で自分と近くの仲間を回復し敵を攻撃します（一人でも使用可能）。選択を保存できなかった場合は接続中のみ保持します。月のまどろみはFUSHIのトーテムを手に持って使い、魔力15、消費なし、再使用6秒です。致命傷からの復活時は別途トーテムを消費します。この本の攻撃魔法と武器技の着火・鈍足・吹き飛ばしや闇魔法の吸収は、対象へのダメージが受理された時に発生します。命中しなくても魔力や再使用時間は消費します。月のまどろみは直接ダメージのない別の効果です。'],
  ['村の暮らし','風記の集落鐘を置くか、村人の近くで普通の鐘をしゃがんで使うと台帳が開きます。壁の数、高い見張り台、足止め罠、工場が守りを強くします。工場が出荷した備蓄は交易・村の成長・祭りに役立ちます。村人には朝・昼・夕の行き先があります。'],
  ['季節と釣り','季節は4ゲーム日ごとに変わります。花壇を置くと季節の花に変わり、集落鐘の周りでは作物の成長も変化します。釣り竿を持ち物に入れてガイド本の「水辺の釣り」へ。釣果は季節や天気、水辺の種類で変わります。釣り竿を持ち水面の近くで開始し、待っている間も竿と水辺が必要です。大きく移動すると中断しますが待ち時間は残ります。'],
  ['時の列車','第8界の時の終着駅に着いたら、ガイド本の「時の列車」へ。操車場で過去か未来を選ぶと乗車します。しゃがんで降りると、旅を中止できます。各時代の駅から現在へ戻れます。'],
@@ -4531,7 +4550,7 @@ async function guide(p){
    ['§aサバイバル実践ガイド\n§7はじめての冒険はこちら',itemTexture('trail_ration')],
    ['§e工業ガイド本を受け取る\n§7工場の動力・加工・搬送',itemTexture('industrial_guide')],
    ['§a村と四季のガイド\n§7祭り・運搬・自動修理',itemTexture('guide')],
-   ['§e追加レシピ一覧\n§7素材・配置・作成場所',itemTexture('assembler')],
+   ['§e追加レシピ一覧\n§7素材・配置・作成場所','textures/blocks/hakkai_assembler_0'],
    ...GUIDE_SECTIONS.map(section=>[`§6${section.title}\n§7${section.hint}`,itemTexture(section.icon)]),
    ['§8本を閉じる']
   ];
@@ -4610,7 +4629,7 @@ async function dispatchGuide(p,ix){
  if(ix===51)return expeditionRecords?.journal(p);
 }
 async function magicIndex(p){
- const desc=['速さと突風','回復と水中呼吸','火炎と火への耐性','耐性と吸収','前方への雷撃と弱体化','毒・衰弱・盲目を解除','命中した敵から体力を吸収','敵の動きを大幅に遅くする','突風と目くらまし','熱と土の守り','雷と水の嵐','光と闇、吸収の加護','敵を遅くし、自分を速くする','前方への光の一撃','仲間と共に回復と反撃','周囲の敵を吹き飛ばす','敵を大幅に遅くする','周囲の敵に火をつける','トーテムを消費せず回復と敵の動きを抑制（再使用6秒、本当の眠りではない）'];
+ const desc=['突風で攻撃し自身の速度を上げる','水で攻撃し自分を回復','炎で攻撃し火への耐性','土で攻撃し耐性と吸収','前方への雷撃と弱体化','光で攻撃し毒・衰弱・盲目を解除','闇で攻撃し命中時に体力を吸収','時で攻撃し敵の動きを大幅に遅くする','突風と目くらまし','熱と土の守り','雷と水の嵐','光と闇、吸収の加護','敵を遅くし、自分を速くする','前方への光の一撃','仲間と共に回復と反撃','周囲の敵を吹き飛ばす','敵を大幅に遅くする','周囲の敵に火をつける','トーテムを消費せず回復と敵の動きを抑制（再使用6秒、本当の眠りではない）'];
  const names=[...attrs.slice(0,8),...pairs.map(r=>`${r.label}（${attrs[r.a]}＋${attrs[r.b]}）`),'光の矢','絆の灯','風の輪','水の縛り','炎の環','月のまどろみ'];
  return paged(p,'魔法図鑑','◆ 発動したことがある魔法。魔導書は訪問不要、月の魔法はFUSHIのトーテムから使用。',names.map((v,i)=>[`${marked(p,'learned_spells',i)?'◆':'◇'} ${v}：${desc[i]}`]));
 }
@@ -5928,11 +5947,14 @@ function wildlifeTick(p,b,site){
  const realmId=d.id.startsWith(ns+'realm_')?Number(d.id.slice((ns+'realm_').length)):-1;
  const seededBiome=realmId>=0&&realmId<8?seededWorlds?.biomeAt(realmId,p.location):undefined;
  const inRealm=Number.isInteger(realmId)&&realmId>=0&&realmId<8;
+ const arena=d.id===ns+'warden_arena';
+ const extraRealm=realmId===8||realmId===9||arena; // atlas, highway and idle arena
+ const localTheme=inRealm?realmId:arena?7:Number.isInteger(site?.theme)&&site.theme>=0&&site.theme<8?site.theme:0;
  const procedural=Boolean(seededBiome&&b?.id===seededBiome.id);
  const place=site?.id>0&&site.kind!=='era';
  // In the eight void dimensions the reserved areas and unrecognised biomes
  // still need a local wildlife pool. Keep vanilla-world rules unchanged.
- if(!inRealm&&!place&&!procedural&&(!b||b.profile.mode==='water'||b.key==='end'&&Math.hypot(p.location.x,p.location.z)<160))return;
+ if(!inRealm&&!extraRealm&&!place&&!procedural&&(!b||b.profile.mode==='water'||b.key==='end'&&Math.hypot(p.location.x,p.location.z)<160))return;
  // 近距離の密度を制限しつつ、遠くの個体が新規出現を永久に塞がないようにする。
  const around=d.getEntities({families:['hakkai_wildlife'],location:p.location,maxDistance:32,closest:16});
  const night=world.getTimeOfDay()>=13000;
@@ -5944,7 +5966,6 @@ function wildlifeTick(p,b,site){
  }
  if(realmId>=0&&realmId<8&&Math.random()<(night?.18:.09)&&spawnRealmEnder(p,realmId,t))return;
  if(around.length>=14)return;
- if(site?.kind==='atlas'&&families[site.family].mode==='water')return;
  let m;
  if(site?.kind==='atlas')m=wildlifeById.get(ns+families[site.family].species);
  else if(place){
@@ -5957,11 +5978,13 @@ function wildlifeTick(p,b,site){
    m??=wildlifeById.get(ns+(rare?b.profile.rareSpecies:b.profile.species));
  }else if(inRealm){
    m=pickRealmWildlife(wildlife,realmId,entry=>marked(p,'sight',wildlifeIndex.get(entry.id))||marked(p,'wild_spawn_seen',wildlifeIndex.get(entry.id)),world.getDifficulty()===Difficulty.Peaceful);
+ }else if(extraRealm){
+   m=pickRealmWildlife(wildlife,localTheme,entry=>marked(p,'sight',wildlifeIndex.get(entry.id))||marked(p,'wild_spawn_seen',wildlifeIndex.get(entry.id)),arena||world.getDifficulty()===Difficulty.Peaceful);
  }else m=wildlifeById.get(ns+b.profile.species);
  const peaceful=world.getDifficulty()===Difficulty.Peaceful;
- if(inRealm&&(!m||m.temper==='hostile'&&peaceful||around.some(e=>e.typeId===ns+m.id&&dist(e.location,p.location)<10))){
+ if((inRealm||extraRealm)&&(!m||m.temper==='hostile'&&peaceful||around.some(e=>e.typeId===ns+m.id&&dist(e.location,p.location)<10))){
    const available=wildlife.filter(entry=>!around.some(e=>e.typeId===ns+entry.id&&dist(e.location,p.location)<10));
-   m=pickRealmWildlife(available,realmId,entry=>marked(p,'sight',wildlifeIndex.get(entry.id))||marked(p,'wild_spawn_seen',wildlifeIndex.get(entry.id)),peaceful);
+   m=pickRealmWildlife(available,localTheme,entry=>marked(p,'sight',wildlifeIndex.get(entry.id))||marked(p,'wild_spawn_seen',wildlifeIndex.get(entry.id)),arena||peaceful);
  }
  // Near protected arrival centres a hostile draw cannot spawn at most candidate
  // sites. Prefer an available peaceful species instead of repeatedly failing.
@@ -5972,7 +5995,7 @@ function wildlifeTick(p,b,site){
  if(!m||m.temper==='hostile'&&peaceful)return;
  if(around.some(e=>e.typeId===ns+m.id&&dist(e.location,p.location)<10))return;
  const spawned=spawnWildlife({
-  player:p,type:ns+m.id,tick:t,safe,confirm:validWildlifeGround,allowNearbyBiome:inRealm,
+  player:p,type:ns+m.id,tick:t,safe,confirm:validWildlifeGround,allowNearbyBiome:inRealm||extraRealm,
   // Recheck density at the actual spawn point, not only around the player.
   capacity:(dim,pos)=>dim.getEntities({families:['hakkai_wildlife'],location:pos,maxDistance:32,closest:14}).length<14,
   avoid:pos=>{
@@ -5981,12 +6004,12 @@ function wildlifeTick(p,b,site){
    // volume for lights. These checks cannot make an invalid position valid.
    if(inRealm&&places.slice(0,9).some(s=>s.dim===realmId&&Math.hypot(pos.x-s.x,pos.z-s.z)<16))return true;
    if(site&&dist(pos,coords(site))<9)return true;
-   if(inRealm){const floor=d.getBlock({x:Math.floor(pos.x),y:Math.floor(pos.y)-1,z:Math.floor(pos.z)});if(!floor||!wildlifeNaturalFloors.has(floor.typeId))return true;}
+   if(inRealm||extraRealm){const floor=d.getBlock({x:Math.floor(pos.x),y:Math.floor(pos.y)-1,z:Math.floor(pos.z)});if(!floor||!wildlifeNaturalFloors.has(floor.typeId))return true;}
    return disallowHostileSpawn(d,pos,hostileSpawnContext());
   },
   preferred:pos=>{
    if(procedural)return seededWorlds?.biomeAt(realmId,pos)?.id===b.id;
-   if(inRealm||place)return true;
+   if(inRealm||extraRealm||place)return true;
    return d.getBiome(pos).id.replace(/^minecraft:/,'')===b.id;
   }
  });
@@ -6361,9 +6384,13 @@ system.runInterval(()=>{
        if(!guarding)s.s=bounds(s.s+ultimateRegen(p.isSwimming?-1.4:s.campResting?4.5:2.5,finalSet),0,max);
        s.m=bounds(s.m+ultimateRegen(s.campResting?2.2:1.1,finalSet),0,max);
      }
-     // The trial dimension is not a normal realm. Keep unrelated wildlife,
-     // site and terrain systems out of it, and run the boss independently.
+     // The trial arena admits only peaceful wildlife while no warden is
+     // present; an unknown boss query skips the spawn rather than interfering.
      if(p.dimension.id===ns+'warden_arena'){
+       if(t>=(s.natureAt??0)){
+         s.natureAt=t+40;
+         try{if(!p.dimension.getEntities({type:ns+'time_warden',closest:1}).length)wildlifeTick(p,undefined,undefined);}catch{}
+       }
        if(t>=(s.wardenAt??0)){s.wardenAt=t+40;persist(p,s);}
        const hud=hudLine(p,s,t);if(hud!==undefined)p.onScreenDisplay.setActionBar(hud);
        continue;
@@ -6472,8 +6499,8 @@ system.runInterval(()=>{
        villagerGuardTick(p,t);
        if([GameMode.Survival,GameMode.Adventure].includes(p.getGameMode()))friendlySupportTick(p,s,t,e=>villagerJob(e,world));
        let profile;try{profile=survey(p);}catch{}
-       // Allow observing realm wildlife in creative too; keep vanilla-world behavior unchanged.
-       if(!isCreative(p)||/^hakkai:realm_[0-7]$/.test(p.dimension.id))try{wildlifeTick(p,profile,site);}catch(err){if(t%200===0)report('生き物の出現',err);}
+       // Creative players participate in the same bounded wildlife scans; spectators do not.
+       if(p.getGameMode()!==GameMode.Spectator)try{wildlifeTick(p,profile,site);}catch(err){if(t%200===0)report('生き物の出現',err);}
      try{mobSystem?.tick(p,t);realmEnders?.tick(p,t);fushiSystem?.tick(p,t);}catch{}
      }
      const hud=hudLine(p,s,t);

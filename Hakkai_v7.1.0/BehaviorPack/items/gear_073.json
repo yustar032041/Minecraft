@@ -13,7 +13,7 @@
       "minecraft:damage": 28,
       "minecraft:hand_equipped": true,
       "minecraft:durability": {
-        "max_durability": 436
+        "max_durability": 872
       },
       "minecraft:use_modifiers": {
         "use_duration": 1.2,
@@ -27,7 +27,7 @@
             "items": [
               "minecraft:iron_ingot"
             ],
-            "repair_amount": 109
+            "repair_amount": 218
           }
         ]
       }

@@ -19,7 +19,7 @@ function fixture(height=()=>79){
  return {d,s,p,ctrl,tap,run,moves,edits,notes};
 }
 {
- const f=fixture();f.tap();f.run();assert.ok(Math.abs(f.p.location.x-24.5)<1e-8);assert.equal(f.s.s,40);
+ const f=fixture();f.tap();f.run();assert.ok(Math.abs(f.p.location.x-30.5)<1e-8);assert.equal(f.s.s,40);
 }
 {
  const f=fixture(x=>x>=3?80:79);f.tap();f.run();assert.equal(f.p.location.y,81,'fully supported one-block rise is climbed');assert.ok(f.p.location.x>20);assert.equal(f.ctrl.evading(f.p,2),true);

@@ -8,7 +8,7 @@
     },
     "new": {
       "damage": 27,
-      "durability": 429
+      "durability": 858
     }
   },
   {
@@ -20,7 +20,7 @@
     },
     "new": {
       "damage": 28,
-      "durability": 436
+      "durability": 872
     }
   },
   {
@@ -32,7 +32,7 @@
     },
     "new": {
       "damage": 29,
-      "durability": 443
+      "durability": 886
     }
   },
   {
@@ -44,7 +44,7 @@
     },
     "new": {
       "damage": 30,
-      "durability": 450
+      "durability": 900
     }
   },
   {
@@ -56,7 +56,7 @@
     },
     "new": {
       "damage": 31,
-      "durability": 457
+      "durability": 914
     }
   },
   {
@@ -68,7 +68,7 @@
     },
     "new": {
       "damage": 28,
-      "durability": 436
+      "durability": 872
     }
   },
   {
@@ -80,7 +80,7 @@
     },
     "new": {
       "damage": 29,
-      "durability": 443
+      "durability": 886
     }
   },
   {
@@ -92,7 +92,7 @@
     },
     "new": {
       "damage": 30,
-      "durability": 450
+      "durability": 900
     }
   },
   {
@@ -104,7 +104,7 @@
     },
     "new": {
       "damage": 31,
-      "durability": 457
+      "durability": 914
     }
   },
   {
@@ -116,7 +116,7 @@
     },
     "new": {
       "damage": 27,
-      "durability": 429
+      "durability": 858
     }
   },
   {
@@ -128,7 +128,7 @@
     },
     "new": {
       "damage": 28,
-      "durability": 436
+      "durability": 872
     }
   },
   {
@@ -140,7 +140,7 @@
     },
     "new": {
       "damage": 29,
-      "durability": 443
+      "durability": 886
     }
   },
   {
@@ -152,7 +152,7 @@
     },
     "new": {
       "damage": 30,
-      "durability": 450
+      "durability": 900
     }
   },
   {
@@ -164,7 +164,7 @@
     },
     "new": {
       "damage": 27,
-      "durability": 429
+      "durability": 858
     }
   },
   {
@@ -176,7 +176,7 @@
     },
     "new": {
       "damage": 28,
-      "durability": 436
+      "durability": 872
     }
   },
   {
@@ -188,7 +188,7 @@
     },
     "new": {
       "damage": 29,
-      "durability": 443
+      "durability": 886
     }
   },
   {
@@ -200,7 +200,7 @@
     },
     "new": {
       "damage": 30,
-      "durability": 450
+      "durability": 900
     }
   },
   {
@@ -212,7 +212,7 @@
     },
     "new": {
       "damage": 31,
-      "durability": 457
+      "durability": 914
     }
   },
   {
@@ -224,7 +224,7 @@
     },
     "new": {
       "damage": 29,
-      "durability": 443
+      "durability": 886
     }
   },
   {
@@ -236,7 +236,7 @@
     },
     "new": {
       "damage": 30,
-      "durability": 450
+      "durability": 900
     }
   },
   {
@@ -248,7 +248,7 @@
     },
     "new": {
       "damage": 31,
-      "durability": 457
+      "durability": 914
     }
   },
   {
@@ -260,7 +260,7 @@
     },
     "new": {
       "damage": 32,
-      "durability": 464
+      "durability": 928
     }
   },
   {
@@ -272,7 +272,7 @@
     },
     "new": {
       "damage": 33,
-      "durability": 471
+      "durability": 942
     }
   }
 ]

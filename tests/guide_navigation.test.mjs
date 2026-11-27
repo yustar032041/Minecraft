@@ -60,3 +60,7 @@ console.log('Guide: all 56 routes, category icons, pagination/back/cancel, 175 g
  assert.deepEqual(searchGuideEntries(entries,'['),[],'literal, not regular expression');
  assert.deepEqual(searchGuideEntries(entries,'  '),[]);assert.deepEqual(searchGuideEntries(entries,null),[]);
 }
+// Also audit the dynamically built equipment and drop buttons, not just
+// category thumbnails. PNG existence does not prove device-side rendering.
+for(const id of [...catalog.map(g=>g.id),...mobContentList.map(m=>m.dropId.slice('hakkai:'.length)),...Array.from({length:20},(_,i)=>`crystal_${i}`),...Array.from({length:8},(_,i)=>`guardian_core_${i}`)])
+ assert.ok(fs.existsSync(`Hakkai_v7.1.0/ResourcePack/textures/items/hakkai_${id}.png`),id);

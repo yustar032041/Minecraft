@@ -18,7 +18,7 @@ function fixture(type, options={}){
   applyImpulse:v=>pushes.push(v),addEffect:(id)=>effects.push(id)};
  const mob={id:'mob',typeId:type,isValid:true,location:{x:0,y:80,z:0},dimension:d,applyImpulse:v=>mobPushes.push(v),addEffect:()=>{},getComponent:()=>({currentValue:5000,effectiveMax:5000,setCurrentValue:()=>{}}),playAnimation:id=>{animations.push([system.currentTick,id]);if(options.noAnimation)throw Error('animation unavailable');}};
  const system={currentTick:0},world={difficulty:Difficulty.Normal,getDifficulty(){return this.difficulty},getAllPlayers:()=>[p]};
- const controller=setupMobSystem({ns:'hakkai:',world,system,num:()=>0,property:()=>{},report:()=>assert.fail('unexpected report'),...options.ctx});
+ const controller=setupMobSystem({allowKingMelee:()=>false,ns:'hakkai:',world,system,num:()=>0,property:()=>{},report:()=>assert.fail('unexpected report'),...options.ctx});
  const tick=t=>{system.currentTick=t;controller.tick(p,t)};
  return {d,p,mob,system,world,controller,tick,effects,pushes,mobPushes,hits,markers,messages,animations};
 }

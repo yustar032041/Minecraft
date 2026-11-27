@@ -13,7 +13,7 @@
       "minecraft:damage": 33,
       "minecraft:hand_equipped": true,
       "minecraft:durability": {
-        "max_durability": 471
+        "max_durability": 942
       },
       "minecraft:use_modifiers": {
         "use_duration": 1.2,
@@ -27,7 +27,7 @@
             "items": [
               "minecraft:netherite_scrap"
             ],
-            "repair_amount": 118
+            "repair_amount": 236
           }
         ]
       }

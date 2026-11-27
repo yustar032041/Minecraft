@@ -15,7 +15,7 @@
         "protection": 14
       },
       "minecraft:durability": {
-        "max_durability": 1730
+        "max_durability": 3460
       },
       "minecraft:use_modifiers": {
         "use_duration": 1.2,
@@ -33,7 +33,7 @@
             "items": [
               "minecraft:netherite_scrap"
             ],
-            "repair_amount": 433
+            "repair_amount": 865
           }
         ]
       }

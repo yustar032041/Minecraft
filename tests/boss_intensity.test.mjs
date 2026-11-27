@@ -11,7 +11,7 @@ function fixture(type){
  return {p,q,entity,system,world,hits,messages,step(t){system.currentTick=now=t;}};
 }
 {
- const f=fixture('hakkai:eclipse_colossus');const c=setupMobSystem({...f,ns:'hakkai:',num:()=>0,property:()=>{},report:(_,e)=>{throw e;}});
+ const f=fixture('hakkai:eclipse_colossus');const c=setupMobSystem({allowKingMelee:()=>false,...f,ns:'hakkai:',num:()=>0,property:()=>{},report:(_,e)=>{throw e;}});
  for(let t=0;t<=260;t+=10){f.step(t);c.tickBosses(f.p,t);c.tickBosses(f.q,t);}
  assert.deepEqual(f.hits.map(v=>[v[0],v[1],v[2]]),[[140,'p',13*3],[140,'q',13*3],[230,'p',12*3],[230,'q',12*3]],'rebalanced damage and phase 1 cadence once per warned hit');
  const warnings=f.messages.filter(([t,id,m])=>id==='p'&&m.includes('秒後')).map(([t])=>t);
@@ -31,7 +31,7 @@ console.log('Boss cadence and rebalanced damage with two players (mocked, no Bed
 // A player entering after the warning cannot be damaged by the enlarged attack.
 {
  const f=fixture('hakkai:eclipse_colossus'),players=f.world.getAllPlayers();
- const c=setupMobSystem({...f,ns:'hakkai:',num:()=>0,property:()=>{},report:(_,e)=>{throw e;}});
+ const c=setupMobSystem({allowKingMelee:()=>false,...f,ns:'hakkai:',num:()=>0,property:()=>{},report:(_,e)=>{throw e;}});
  for(let t=0;t<=100;t+=10){f.step(t);c.tickBosses(f.p,t);}
  const late={...f.q,id:'late',applyDamage:n=>{f.hits.push([f.system.currentTick,'late',n]);return true;}};players.push(late);
  for(let t=110;t<=140;t+=10){f.step(t);c.tickBosses(f.p,t);}

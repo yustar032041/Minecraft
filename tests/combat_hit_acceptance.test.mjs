@@ -90,3 +90,17 @@ test('attribute spell effect completes even if learned-spell history cannot be w
  const c={state:()=>f.s,system:f.system,isCreative:()=>false,notice:(_p,msg)=>messages.push(msg),effects:Array(20).fill('speed'),world:{getTimeOfDay:()=>6000},currentPlace:()=>undefined,home:[],aspect:()=>0,enemies:()=>[],visibleFrom:()=>true,hit:applyCombatHit,combatEffectAllowed,pairs:[],mark:()=>{throw Error('history unavailable')},attrs:Array(8).fill('element')};
  vm.createContext(c);vm.runInContext(code,c);assert.doesNotThrow(()=>c.castElement(f.p,0,-1,'wind'));assert.ok(messages.some(m=>m.includes('wind')));assert.equal(f.s.m,88);
 });
+
+for(let a=0;a<8;a++)test(`element ${a}: attack damage and element-specific visuals`,()=>{
+ const f=fixture(),poses=[];f.p.playAnimation=id=>poses.push(id);element(f,[f.enemy()],a);
+ assert.equal(f.hits.length,1);assert.ok(f.hits[0][1]>=18);assert.equal(f.s.m,88);
+ assert.equal(poses[0],`animation.hakkai.element_cast_${a}`);
+ assert.equal(f.particles.filter(([id])=>id===`hakkai:element_spell_${a}`).length,19);
+});
+test('eight guardian records strengthen each base spell and reduce mana cost without changing combinations',()=>{
+ for(let a=0;a<8;a++){
+  const f=fixture();f.p.getDynamicProperty=k=>k==='hakkai:guards'?255:undefined;element(f,[f.enemy()],a);
+  assert.ok(f.hits[0][1]>=42);assert.equal(f.s.m,92);
+ }
+ const f=fixture();f.p.getDynamicProperty=()=>255;element(f,[f.enemy()],0,1);assert.equal(f.hits[0][1],12);assert.equal(f.s.m,81);
+});

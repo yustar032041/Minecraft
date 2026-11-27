@@ -15,7 +15,7 @@
         "protection": 3
       },
       "minecraft:durability": {
-        "max_durability": 307
+        "max_durability": 614
       },
       "minecraft:use_modifiers": {
         "use_duration": 1.2,
@@ -33,7 +33,7 @@
             "items": [
               "minecraft:iron_ingot"
             ],
-            "repair_amount": 77
+            "repair_amount": 154
           }
         ]
       }

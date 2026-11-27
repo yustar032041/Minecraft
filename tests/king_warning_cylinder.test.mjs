@@ -19,7 +19,7 @@ for(let index=0;index<attacks.length;index++){
  const primary=make('primary');players.push(primary);
  const king={id:'king',typeId:'hakkai:eclipse_colossus',isValid:true,dimension:d,location:{x:0,y:80,z:0},playAnimation:()=>{},addEffect:()=>{},getComponent:()=>({currentValue:20,effectiveMax:100,setCurrentValue:()=>{}})};
  const system={currentTick:0},world={getDifficulty:()=>Difficulty.Normal,getAllPlayers:()=>players};
- const ctrl=setupMobSystem({ns:'hakkai:',world,system,num:()=>0,property:()=>{},report:(_,e)=>{throw e},tryParry:p=>{parries.push(p.id);return false}});
+ const ctrl=setupMobSystem({allowKingMelee:()=>false,ns:'hakkai:',world,system,num:()=>0,property:()=>{},report:(_,e)=>{throw e},tryParry:p=>{parries.push(p.id);return false}});
  const tick=t=>{now=system.currentTick=t;ctrl.tick(primary,t)};
  const start=100+index*70;
  for(let t=0;t<start;t+=10)tick(t);

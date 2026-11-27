@@ -15,7 +15,7 @@
         "protection": 9
       },
       "minecraft:durability": {
-        "max_durability": 740
+        "max_durability": 1480
       },
       "minecraft:use_modifiers": {
         "use_duration": 1.2,
@@ -33,7 +33,7 @@
             "items": [
               "minecraft:diamond"
             ],
-            "repair_amount": 185
+            "repair_amount": 370
           }
         ]
       }

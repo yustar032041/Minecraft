@@ -28,6 +28,7 @@ function fixture(phase=4){
  assert.ok(f.parts.some(x=>x.id==='hakkai:warden_front_moon'),'flying slash');
  assert.ok(f.hits.some(x=>x.n===WARDEN_MODE_DAMAGE.lightning)&&f.hits.some(x=>x.n===WARDEN_MODE_DAMAGE.fire),'lightning and fire inflict damage');
  assert.ok(f.held.some(([x])=>x==='acquire'),'sword mode borrows a blade');assert.ok(f.poses.includes('animation.hakkai.warden_roll')&&f.poses.includes('animation.hakkai.warden_leap'));
+ for(const name of ['blade_ready','blade_cut','blade_reverse','blade_aerial'])assert.ok(f.poses.includes('animation.hakkai.warden_'+name),name);
  assert.ok(f.props.some(([k,v])=>k==='hakkai:flying'&&v===true));
 }
 {

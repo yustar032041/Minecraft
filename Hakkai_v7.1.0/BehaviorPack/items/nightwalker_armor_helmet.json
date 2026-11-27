@@ -15,7 +15,7 @@
         "protection": 3
       },
       "minecraft:durability": {
-        "max_durability": 500
+        "max_durability": 1000
       },
       "minecraft:enchantable": {
         "slot": "armor_head",
@@ -27,7 +27,7 @@
             "items": [
               "minecraft:diamond"
             ],
-            "repair_amount": 125
+            "repair_amount": 250
           }
         ]
       }

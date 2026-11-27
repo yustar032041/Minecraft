@@ -6,7 +6,7 @@ progress=json.loads((root/'texture_progress.json').read_text());atlas=json.loads
 for part,damage in [('sword',29),('axe',30)]:
  name='ult_'+part;ident='hakkai:'+name;item=json.loads((bp/'items'/f'{name}.json').read_text())['minecraft:item'];c=item['components']
  assert item['description']['identifier']==ident and c['minecraft:damage']==damage
- assert c['minecraft:durability']['max_durability']==2500 and c['minecraft:enchantable']['slot']==part
+ assert c['minecraft:durability']['max_durability']==5000 and c['minecraft:enchantable']['slot']==part
  assert c['minecraft:use_modifiers']['use_duration']==15 and 'hakkai:use' in c
  assert {'minecraft:is_'+part,'minecraft:is_tool','minecraft:netherite_tier'}<=set(c['minecraft:tags']['tags'])
  if part=='axe':assert c['minecraft:digger']['destroy_speeds'][0]['block']['tags']=="q.any_tag('minecraft:is_axe_item_destructible')"

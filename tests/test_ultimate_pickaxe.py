@@ -3,7 +3,7 @@ from pathlib import Path
 from PIL import Image
 root=Path(__file__).resolve().parents[1]/'Hakkai_v7.1.0';bp=root/'BehaviorPack';rp=root/'ResourcePack'
 c=json.loads((bp/'items/ult_pickaxe.json').read_text())['minecraft:item']['components']
-assert c['minecraft:durability']['max_durability']==2500 and c['minecraft:enchantable']['slot']=='pickaxe'
+assert c['minecraft:durability']['max_durability']==5000 and c['minecraft:enchantable']['slot']=='pickaxe'
 assert {'minecraft:is_pickaxe','minecraft:netherite_tier'}<=set(c['minecraft:tags']['tags'])
 speeds=c['minecraft:digger']['destroy_speeds'];assert {x['block'] for x in speeds if isinstance(x['block'],str)}=={f'hakkai:ore_{i}' for i in range(20)}
 for i in range(20):assert (bp/f'blocks/ore_{i}.json').exists()

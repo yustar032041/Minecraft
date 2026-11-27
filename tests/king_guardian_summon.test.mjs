@@ -26,7 +26,7 @@ function fixture(options={}){
   sendMessage:m=>messages.push([now,m]),applyDamage:()=>true,addEffect:()=>{},applyImpulse:()=>{}};
  const king={id:'king',typeId:'hakkai:eclipse_colossus',isValid:true,dimension:d,location:{x:0,y:80,z:0},getComponent:()=>({currentValue:100,effectiveMax:100,setCurrentValue:()=>{}}),playAnimation:()=>{}};
  const system={currentTick:0},world={getDifficulty:()=>Difficulty.Normal,getAllPlayers:()=>[p]};
- const ctrl=setupMobSystem({ns:'hakkai:',world,system,num:()=>0,property:()=>{},report:()=>{}});
+ const ctrl=setupMobSystem({allowKingMelee:()=>false,ns:'hakkai:',world,system,num:()=>0,property:()=>{},report:()=>{}});
  const go=t=>{now=system.currentTick=t;ctrl.tickBosses(p,t);ctrl.tickBosses(p,t);};
  return {go,all,spawns,messages,king,ctrl,d,setScan:v=>brokenScan=v,setBlocked:v=>blocked=v};
 }
