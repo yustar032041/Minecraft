@@ -42,4 +42,26 @@ folded=[p.casefold() for p in files]
 assert len(folded)==len(set(folded)),'case-insensitive resource path collision'
 overlap={p for p in files if p.casefold() in vanilla_paths}
 assert overlap <= allowed,sorted(overlap-allowed)
-print(f'Pinned vanilla snapshot: no language/atlas key collisions, {len(overlap)} expected shared paths; rendering unverified')
+
+# Bedrock can resolve an image by extensionless name and prefers TGA over PNG,
+# JPG, and JPEG. Comparing exact filenames misses grass.png vs grass.tga.
+# Restrict this check to textures/; each pack's own pack_icon is intentional.
+image_exts={'.tga','.png','.jpg','.jpeg'}
+def texture_key(path):
+    p=Path(path)
+    if len(p.parts)<2 or p.parts[0].casefold()!='textures' or p.suffix.casefold() not in image_exts:
+        return None
+    return p.with_suffix('').as_posix().casefold()
+
+def texture_collisions(left,right):
+    a={key for path in left if (key:=texture_key(path)) is not None}
+    b={key for path in right if (key:=texture_key(path)) is not None}
+    return a & b
+
+# Injection shows extension and case aliases are caught, but unrelated paths
+# and pack icons are not. Actual client pack stacking remains untested.
+assert texture_collisions(['textures/blocks/Grass.TGA'],['textures/blocks/grass.png']) == {'textures/blocks/grass'}
+assert not texture_collisions(['pack_icon.png','textures/ui/custom.png'],['pack_icon.png','textures/ui/default.png'])
+texture_overlap=texture_collisions(files,vanilla['resource_paths'])
+assert not texture_overlap,sorted(texture_overlap)
+print(f'Pinned vanilla snapshot: no language/atlas key or extensionless texture collisions, {len(overlap)} expected shared paths; rendering unverified')
