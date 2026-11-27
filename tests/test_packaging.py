@@ -24,6 +24,11 @@ with tempfile.TemporaryDirectory() as tmp:
         for pack in ('BehaviorPack','ResourcePack'):
             with zipfile.ZipFile(io.BytesIO(bundle.read(f'{pack}.mcpack'))) as z:
                 names = z.namelist(); total += len(names)
+                # Source-only notes and old scratch files are not game assets.
+                # Their removal is not evidence of a Switch rendering fix.
+                assert not any(name.lower().endswith('.md') for name in names)
+                assert 'textures/hakkai/png_test.bin' not in names
+                assert 'textures/hakkai/text_test.txt' not in names
                 assert len(names) == len(set(names))
                 assert all(not name.startswith('/') and '..' not in Path(name).parts for name in names)
                 assert z.testzip() is None
