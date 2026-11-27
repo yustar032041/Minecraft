@@ -35,7 +35,7 @@ export function spawnWildlife({player,type,tick,safe,preferred=()=>true,allowNea
   if(capacityChecks>=maxCapacityChecks)return 'stop';
   capacityChecks++;
   try{if(!capacity(d,at))return 'full';}catch{return 'stop';}
-  try{d.spawnEntity(type,at,{spawnEvent:'hakkai:wild',initialPersistence:false});return true;}catch{return false;}
+  try{const selected=typeof type==='function'?type(at):type;if(typeof selected!=='string'||!selected)return false;d.spawnEntity(selected,at,{spawnEvent:'hakkai:wild',initialPersistence:false});return true;}catch{return false;}
  }
  for(let i=0;i<12;i++){
   const radius=8+(i%4)*2,angle=i*2.39996+(tick%100)/100;

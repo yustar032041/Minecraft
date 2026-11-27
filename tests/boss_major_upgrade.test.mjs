@@ -8,7 +8,7 @@ import {legacyWardenDecision} from './warden_legacy_decision.mjs';
 const setupWardenBoss=options=>realSetupWardenBoss({...options,decision:legacyWardenDecision()});
 import {WARDEN_MOVING,startMoving,advanceMoving} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_moving_attacks.js';
 assert.equal(WARDEN_DAMAGE_MULTIPLIER,3,'scripted raw damage rebalanced');
-for(let i=0;i<5;i++)for(const a of WARDEN_NEW[i])assert.ok(wardenPatterns(i).includes(a));
+for(let i=0;i<5;i++)for(const a of WARDEN_NEW[i])assert.ok(wardenPatterns(i).some(x=>x.attack===a.attack));
 // After a parry, the ten-second healing lock must not suppress either attack
 // slot or a three-hit follow-up. The next warning still has a full windup.
 {

@@ -29,10 +29,10 @@ test('warden patterns, combos, modes and blades have deliberate separate budgets
  for(let phase=0;phase<5;phase++){
   const patterns=wardenPatterns(phase);assert.equal(patterns.length,phase===4?210:42);
   for(const attack of patterns){
-   const perHit=wardenAttackDamage(attack),total=perHit*(attack.strikes??1);
+   const perHit=wardenAttackDamage(attack,false,phase),total=perHit*(attack.strikes??1);
    assert.ok(Number.isFinite(total)&&total>0&&total<=72,`${attack.attack}: ${total}`);
    assert.ok(hpAfter(total,2,strongest)>0,`${attack.attack}: ${total}`);
-   assert.equal(wardenAttackDamage(attack,true),perHit/2);
+   assert.equal(wardenAttackDamage(attack,true,phase),perHit/2);
   }
  }
  assert.equal(WARDEN_HEAL_PER_SECOND,8);

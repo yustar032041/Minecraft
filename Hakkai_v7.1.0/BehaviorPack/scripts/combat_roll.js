@@ -1,8 +1,8 @@
 import {knownFullCube} from './full_cube_floor.js';
 import {EntityDamageCause,GameMode,InputPermissionCategory} from '@minecraft/server';
-// 30 blocks is the maximum checked target (previously 24). This is a
+// Three blocks is the maximum checked target. This is a
 // target distance, not a promise about Bedrock physics or interrupted rolls.
-const DOUBLE_TAP=9,COST=10,INVULNERABLE=10,COOLDOWN=5,DISTANCE=30,PER_TICK=3,SAMPLE=.1;
+const DOUBLE_TAP=9,COST=10,INVULNERABLE=10,COOLDOWN=5,DISTANCE=3,PER_TICK=.75,SAMPLE=.1;
 const ATTACKS=new Set([EntityDamageCause.entityAttack,EntityDamageCause.projectile,
  EntityDamageCause.entityExplosion,EntityDamageCause.magic,EntityDamageCause.sonicBoom,
  EntityDamageCause.ramAttack,EntityDamageCause.maceSmash].filter(x=>typeof x==='string'));

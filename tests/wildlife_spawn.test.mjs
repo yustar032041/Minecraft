@@ -6,7 +6,7 @@ import {validWildlifeGround,possibleWildlifeSite} from '../Hakkai_v7.1.0/Behavio
 import {pickRealmWildlife} from '../Hakkai_v7.1.0/BehaviorPack/scripts/wildlife_selection.js';
 import {wildlife,places} from '../Hakkai_v7.1.0/BehaviorPack/scripts/data.js';
 import {Difficulty} from '@minecraft/server';
-import {disallowHostileSpawn} from '../Hakkai_v7.1.0/BehaviorPack/scripts/hostile_spawn_rules.js';
+import {inFactoryVillage} from '../Hakkai_v7.1.0/BehaviorPack/scripts/hostile_spawn_rules.js';
 function spawnFixture(){
  const spawned=[],players=[];
  const d={id:'hakkai:realm_0',getEntities:()=>[],getPlayers:()=>players,isChunkLoaded:()=>true,getLightLevel:()=>0,spawnEntity:(...x)=>spawned.push(x),getBiome:()=>({id:'minecraft:plains'}),getBlock:()=>({typeId:'minecraft:grass_block'})};
@@ -42,16 +42,16 @@ for(const change of [f=>f.d.isChunkLoaded=()=>false,f=>f.args.safe=()=>false,f=>
 }
 // Execute the real integration function for each realm, using Bedrock stubs.
 const main=fs.readFileSync('Hakkai_v7.1.0/BehaviorPack/scripts/main.js','utf8');
-const code=main.slice(main.indexOf('const wildlifeNaturalFloors='),main.indexOf("safeSub('world','after','entityHurt'",main.indexOf('function wildlifeTick(')));
+const code=main.slice(main.indexOf('function hostileSpawnContext()'),main.indexOf("safeSub('world','after','entityHurt'",main.indexOf('function wildlifeTick(')));
 const random=Object.create(Math);random.random=()=>.99;
 function makeCtx(f,opts={}){
  const world={gameRules:{doMobSpawning:true},getTimeOfDay:()=>6000,getDifficulty:()=>opts.peaceful?Difficulty.Peaceful:Difficulty.Normal};
- const state={};const marks=[];
+ const state={};const marks=[];if(opts.peaceful)f.d.getLightLevel=()=>15;
  const ctx={ns:'hakkai:',state:()=>state,system:{currentTick:40},num:()=>opts.quiet?1:0,world,
   seededWorlds:opts.seededWorlds,wildlife,wildlifeById:new Map(wildlife.map(x=>['hakkai:'+x.id,x])),wildlifeIndex:new Map(wildlife.map((x,i)=>[x.id,i])),
-  Math:random,marked:()=>false,mark:(_p,k,i)=>marks.push([k,i]),pickRealmWildlife,spawnWildlife,validWildlifeGround:opts.confirm??(()=>true),safe:opts.safe??(()=>true),possibleWildlifeSite:opts.safe??(()=>true),
+  Math:random,marked:()=>false,mark:(_p,k,i)=>marks.push([k,i]),pickRealmWildlife:(a,b,c,d)=>pickRealmWildlife(a,b,c,d,()=>.99),spawnWildlife,validWildlifeGround:opts.confirm??(()=>true),safe:opts.safe??(()=>true),possibleWildlifeSite:opts.safe??(()=>true),
   spawnRealmEnder:()=>false,spawnFushi:()=>false,isMoonlitNight:()=>false,fushiThresholds:()=>({chief:0,normal:0}),
-  disallowHostileSpawn,travelSites:new Map(),FACTORY_VILLAGE_ID:59, Difficulty,places,aspect:s=>s.theme??s.dim,dist:(a,b)=>Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z),coords:s=>({x:s.x+.5,y:89,z:s.z+.5}),families:{}};
+  inFactoryVillage,travelSites:new Map(),FACTORY_VILLAGE_ID:59, Difficulty,places,aspect:s=>s.theme??s.dim,dist:(a,b)=>Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z),coords:s=>({x:s.x+.5,y:89,z:s.z+.5}),families:{}};
  vm.createContext(ctx);vm.runInContext(code,ctx);return {ctx,world,state,marks};
 }
 for(let realm=0;realm<8;realm++){
@@ -81,7 +81,7 @@ for(let realm=0;realm<8;realm++){
 // Near arrival, prefer a non-hostile encounter instead of wasting a hostile
 // draw on positions that the protection rules necessarily reject.
 {
- const f=spawnFixture(),{ctx}=makeCtx(f);
+ const f=spawnFixture(),{ctx}=makeCtx(f);f.d.getLightLevel=()=>15;
  ctx.pickRealmWildlife=(entries,realm,seen,peaceful)=>entries.find(m=>m.dim===realm&&(peaceful?m.temper!=='hostile':m.temper==='hostile'));
  ctx.wildlifeTick(f.p,undefined,undefined);assert.equal(f.spawned.length,1);
  const species=wildlife.find(m=>'hakkai:'+m.id===f.spawned[0][0]);assert.notEqual(species.temper,'hostile');
@@ -90,13 +90,13 @@ for(let realm=0;realm<8;realm++){
 {
  const f=spawnFixture();f.p.location={x:500,y:90,z:500};f.d.getLightLevel=()=>15;
  const {ctx}=makeCtx(f);ctx.pickRealmWildlife=(entries,realm)=>entries.find(m=>m.dim===realm&&m.temper==='hostile');
- ctx.wildlifeTick(f.p,undefined,undefined);assert.equal(f.spawned.length,1,'sunlight alone is not a lamp');
+ ctx.wildlifeTick(f.p,undefined,undefined);assert.equal(f.spawned.length,1,'bright candidate can fall back to a peaceful species');assert.notEqual(wildlife.find(m=>'hakkai:'+m.id===f.spawned[0][0]).temper,'hostile');
 }
 {
  const f=spawnFixture();f.p.location={x:500,y:90,z:500};f.d.getBlocks=(volume)=>({getBlockLocationIterator:()=>[{x:volume.from.x+7,y:volume.from.y+7,z:volume.from.z+7}][Symbol.iterator]()});
- f.d.getBlock=()=>({typeId:'minecraft:torch'});f.d.getBlockFromRay=()=>undefined;
+ f.d.getBlock=()=>({typeId:'minecraft:torch'});f.d.getBlockFromRay=()=>undefined;f.d.getLightLevel=()=>14;
  const {ctx}=makeCtx(f);ctx.pickRealmWildlife=(entries,realm)=>entries.find(m=>m.dim===realm&&m.temper==='hostile');
- ctx.wildlifeTick(f.p,undefined,undefined);assert.equal(f.spawned.length,0,'hostile rejected near torches');
+ ctx.wildlifeTick(f.p,undefined,undefined);assert.equal(f.spawned.length,1,'bright torch area substitutes a peaceful species');assert.notEqual(wildlife.find(m=>'hakkai:'+m.id===f.spawned[0][0]).temper,'hostile');
 }
 {
  const f=spawnFixture();f.p.location={x:500,y:90,z:500};
@@ -107,7 +107,7 @@ for(let realm=0;realm<8;realm++){
 {
  const f=spawnFixture();f.p.location={x:500,y:90,z:500};f.d.getBlock=()=>({typeId:'minecraft:oak_planks'});
  const {ctx}=makeCtx(f);ctx.pickRealmWildlife=(entries,realm)=>entries.find(m=>m.dim===realm&&m.temper==='hostile');
- ctx.wildlifeTick(f.p,undefined,undefined);assert.equal(f.spawned.length,0,'hostiles avoid non-natural floors');
+ ctx.wildlifeTick(f.p,undefined,undefined);assert.equal(f.spawned.length,1,'hostiles do not require natural floor types');
 }
 {
  const f=spawnFixture();f.p.location={x:500,y:90,z:500};const mob=wildlife.find(m=>m.dim===0&&m.temper==='passive');
@@ -146,24 +146,13 @@ for(const floor of ['minecraft:granite','minecraft:diorite','minecraft:dripstone
 }
 {
  const f=spawnFixture();f.p.location={x:500,y:40,z:500};f.d.getBlock=()=>({typeId:'minecraft:stone_bricks'});
- const {ctx}=makeCtx(f);ctx.pickRealmWildlife=(entries,realm)=>entries.find(m=>m.dim===realm&&m.temper==='hostile');ctx.wildlifeTick(f.p,undefined,undefined);assert.equal(f.spawned.length,0,'constructed stone bricks do not qualify');
+ const {ctx}=makeCtx(f);ctx.pickRealmWildlife=(entries,realm)=>entries.find(m=>m.dim===realm&&m.temper==='hostile');ctx.wildlifeTick(f.p,undefined,undefined);assert.equal(f.spawned.length,1,'safe constructed floor qualifies at low light');
 }
 // Positions ruled out by a nearby player skip costly light scans entirely.
 {
  const f=spawnFixture();let inspections=0;f.players.push({});f.args.avoid=()=>{inspections++;return false;};
  assert.equal(spawnWildlife(f.args),false);assert.equal(inspections,0);assert.equal(f.spawned.length,0);
 }
-// A candidate in a built-up realm floor is rejected before the 15-cube light
-// search; valid natural floors still check light and all existing protections.
-{
- const f=spawnFixture();f.p.location={x:500,y:40,z:500};f.d.getBlock=()=>({typeId:'minecraft:stone_bricks'});
- let lightScans=0;f.d.getBlocks=()=>{lightScans++;return {getBlockLocationIterator:()=>[][Symbol.iterator]()}};
- const {ctx}=makeCtx(f);ctx.pickRealmWildlife=(entries,realm)=>entries.find(m=>m.dim===realm&&m.temper==='hostile');
- ctx.wildlifeTick(f.p,undefined,undefined);assert.equal(f.spawned.length,0);assert.equal(lightScans,0);
- f.d.getBlock=()=>({typeId:'minecraft:stone'});ctx.system.currentTick=200;ctx.wildlifeTick(f.p,undefined,undefined);
- assert.equal(f.spawned.length,1);assert.ok(lightScans>0);
-}
-
 // Execute the actual terrain precheck and final ground check together through
 // wildlifeTick; this synthetic level cave is not a Bedrock terrain simulation.
 for(const waterlogged of [false,true]){
@@ -204,7 +193,7 @@ for(const realm of [8,9])for(const peaceful of [false,true]){
 }
 
 {
- const f=spawnFixture();f.d.id='hakkai:realm_8';f.p.location={x:500,y:90,z:500};
+ const f=spawnFixture();f.d.getLightLevel=()=>15;f.d.id='hakkai:realm_8';f.p.location={x:500,y:90,z:500};
  const {ctx}=makeCtx(f);ctx.families={ocean:{mode:'water',species:'wild_6_0'}};
  ctx.wildlifeTick(f.p,undefined,{id:200,kind:'atlas',family:'ocean',theme:6,x:700,z:700,dim:8});
  assert.equal(f.spawned.length,1,'water-themed atlas is not unconditionally excluded; spawn still needs a valid land floor');
@@ -216,7 +205,7 @@ for(const realm of [8,9])for(const peaceful of [false,true]){
  const mob=wildlife.find(m=>'hakkai:'+m.id===f.spawned[0]?.[0]);assert.equal(mob?.dim,4,'connected highway uses local realm theme');
 }
 {
- const f=spawnFixture();f.d.id='hakkai:warden_arena';f.p.location={x:0,y:90,z:0};const {ctx}=makeCtx(f);
+ const f=spawnFixture();f.d.getLightLevel=()=>15;f.d.id='hakkai:warden_arena';f.p.location={x:0,y:90,z:0};const {ctx}=makeCtx(f);
  ctx.wildlifeTick(f.p,undefined,undefined);assert.equal(f.spawned.length,1);
  const m=wildlife.find(x=>'hakkai:'+x.id===f.spawned[0][0]);assert.equal(m.dim,7);assert.notEqual(m.temper,'hostile');
  assert.match(main,/if\(!p.dimension.getEntities\(\{type:ns\+'time_warden'\}\).length\)wildlifeTick\(p,undefined,undefined\)/,'arena scan is skipped while the warden is present');
@@ -232,4 +221,39 @@ for(const realm of [0,7]){
  ctx.wildlifeTick(f.p,undefined,undefined);
  assert.equal(f.spawned.length,1,`realm ${realm} reaches spawnEntity`);
  assert.deepEqual(f.spawned[0][2],{spawnEvent:'hakkai:wild',initialPersistence:false});
+}
+// Real tick-to-spawn regression: use the actual site/ground validators on
+// multiple safe floor materials, and the engine total light at the spawn point.
+for(const floor of ['minecraft:stone','minecraft:oak_planks','minecraft:glass','hakkai:cloudstone'])for(const [light,want] of [[0,1],[7,1],[8,1],[15,1]]){
+ const f=spawnFixture();f.p.location={x:500,y:40,z:500};f.d.getLightLevel=()=>light;
+ f.d.getBlock=pos=>pos.y===39?{typeId:floor,isAir:false,isLiquid:false,isWaterlogged:false,location:{...pos}}:{typeId:'minecraft:air',isAir:true,isLiquid:false,isWaterlogged:false};
+ f.d.getBlockFromRay=()=>{throw Error('ray unavailable')};
+ const {ctx}=makeCtx(f,{confirm:validWildlifeGround});ctx.possibleWildlifeSite=possibleWildlifeSite;
+ ctx.pickRealmWildlife=(entries,realm)=>entries.find(m=>m.dim===realm&&m.temper==='hostile');
+ ctx.wildlifeTick(f.p,undefined,undefined);assert.equal(f.spawned.length,want,`${floor} light ${light}`);assert.equal(wildlife.find(m=>'hakkai:'+m.id===f.spawned[0][0]).temper==='hostile',light<=7);
+}
+for(const [light,want] of [[0,0],[7,0],[8,1],[15,1],[NaN,0]]){
+ const f=spawnFixture();f.p.location={x:500,y:90,z:500};f.d.getLightLevel=()=>light;
+ const {ctx}=makeCtx(f);ctx.pickRealmWildlife=(entries,realm)=>entries.find(m=>m.dim===realm&&m.temper==='passive');
+ ctx.wildlifeTick(f.p,undefined,undefined);assert.equal(f.spawned.length,Number(Number.isFinite(light)),`candidate light ${light}`);if(f.spawned.length)assert.equal(wildlife.find(m=>'hakkai:'+m.id===f.spawned[0][0]).temper==='hostile',light<=7);
+}
+{
+ const f=spawnFixture();f.p.location={x:500,y:90,z:500};f.d.getLightLevel=()=>15;
+ const profile={id:'biome_a',profile:{species:'wild_0_0',rareSpecies:'foe_0_0',rareChance:0,mode:'land'}};
+ let same=true;const seededWorlds={biomeAt:(_r,p)=>same||p===f.p.location?profile:{...profile,id:'biome_b'},repeatSiteAt:()=>undefined};
+ const {ctx,state}=makeCtx(f,{seededWorlds});
+ ctx.wildlifeTick(f.p,profile,undefined);assert.equal(f.spawned[0][0],'hakkai:wild_0_0');
+ f.spawned.length=0;same=false;ctx.system.currentTick=200;state.wildAt=0;
+ ctx.wildlifeTick(f.p,profile,undefined);assert.equal(f.spawned.length,0,'candidate in different biome does not receive a different biome species');
+}
+
+// On the same seeded biome, the species changes with the candidate's light;
+// a failed first random draw does not permanently block spawning.
+{
+ const f=spawnFixture();f.p.location={x:500,y:90,z:500};let light=15;f.d.getLightLevel=()=>light;
+ const profile={id:'seeded_test',profile:{species:'wild_0_0',rareSpecies:'foe_0_0',rareChance:0,mode:'land'}};
+ const {ctx,state}=makeCtx(f,{seededWorlds:{biomeAt:()=>profile,repeatSiteAt:()=>undefined}});
+ ctx.wildlifeTick(f.p,profile,undefined);assert.equal(f.spawned[0][0],'hakkai:wild_0_0');
+ f.spawned.length=0;light=0;ctx.system.currentTick=200;state.wildAt=0;
+ ctx.wildlifeTick(f.p,profile,undefined);assert.equal(f.spawned[0][0],'hakkai:foe_0_0');
 }

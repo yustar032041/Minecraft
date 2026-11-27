@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {WARDEN_HEAL_PER_SECOND,wardenPhase,WARDEN_PHASES,WARDEN_ALTERNATES,WARDEN_DAMAGE_MULTIPLIER,WARDEN_COMBO_MULTIPLIER,inWardenWarning,setupWardenBoss as realSetupWardenBoss} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_boss.js';
+import {WARDEN_HEAL_PER_SECOND,wardenPhase,wardenAttackDamage,wardenPatterns,WARDEN_PHASES,WARDEN_ALTERNATES,WARDEN_DAMAGE_MULTIPLIER,WARDEN_COMBO_MULTIPLIER,inWardenWarning,setupWardenBoss as realSetupWardenBoss} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_boss.js';
 import {legacyWardenDecision} from './warden_legacy_decision.mjs';
 const setupWardenBoss=options=>realSetupWardenBoss({...options,decision:legacyWardenDecision()});
 import {Difficulty,GameMode} from '@minecraft/server';
@@ -29,7 +29,7 @@ function fixture(){
 for(let phase=0;phase<5;phase++){
  const f=fixture();f.health.currentValue=[5000,3990,2990,1990,990][phase];
  f.ctrl.tick(f.p,0);f.ctrl.tick(f.p,80);f.ctrl.tick(f.p,120);
- assert.equal(f.damage[0],WARDEN_PHASES[phase].damage*WARDEN_DAMAGE_MULTIPLIER);assert.ok(f.messages.some(m=>m.includes(WARDEN_PHASES[phase].name)));
+ assert.equal(f.damage[0],wardenAttackDamage(wardenPatterns(phase)[0],false,phase));assert.ok(f.messages.some(m=>m.includes(WARDEN_PHASES[phase].name)));
 }
 {
  const f=fixture();f.ctrl.tick(f.p,0);f.ctrl.tick(f.p,80);f.p.location.x=9;f.ctrl.tick(f.p,120);assert.equal(f.damage.length,0,'dodge leaves marked area');
@@ -58,7 +58,7 @@ for(let phase=0;phase<5;phase++){
  f.health.currentValue=5000;
  const ctrl=setupWardenBoss({world:f.world,system:{},property:()=>{},report:()=>assert.fail('unexpected error')});
  ctrl.tick(f.p,100);ctrl.tick(f.p,180);ctrl.tick(f.p,220);
- assert.equal(f.damage[0],WARDEN_PHASES[4].damage*WARDEN_DAMAGE_MULTIPLIER);
+ assert.equal(f.damage[0],wardenAttackDamage(wardenPatterns(4)[0],false,4));
 }
 {
  const f=fixture();f.dim.spawnParticle=()=>{throw Error('marker missing')};
@@ -151,7 +151,7 @@ for(let phase=0;phase<4;phase++){
 
  }
  assert.equal(inWardenWarning({x:aim.x,y:aim.y+4,z:aim.z},aim,a),false);
- f.p.location.x+=a.radius-.25;f.ctrl.tick(f.p,120);assert.equal(f.damage.at(-1),a.damage*WARDEN_DAMAGE_MULTIPLIER);
+ f.p.location.x+=a.radius-.25;f.ctrl.tick(f.p,120);assert.equal(f.damage.at(-1),wardenAttackDamage(wardenPatterns(phase)[1],false,phase));
 }
 console.log('Prototype warden: phase boundaries, regeneration, warning/dodge, peaceful and completion OK (simulated)');
 // Refused damage and API errors must not leave a standalone debuff.

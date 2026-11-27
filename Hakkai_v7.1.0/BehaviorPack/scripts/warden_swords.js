@@ -7,6 +7,7 @@ const FAMILY='hakkai_warden_sword',OWNER='hakkai:warden_blade_owner';
 const blades=Array.from({length:8},(_,i)=>`hakkai:warden_sword_${i}`);
 const speed=[.72,.58,.49,.66,.94,.64,.81,.55];
 export const WARDEN_BLADE_DAMAGE=Object.freeze([13.5,12,18,15,16.5,15,13.5,18]);
+export const wardenBladeScale=phase=>phase===3?.8:phase>=4?.9:1;
 export const WARDEN_BLADE_PULSE_DAMAGE=Object.freeze({sand:15,ice:12});
 const windup=[20,25,24,22,15,23,18,27];
 // Sideways velocity turns the same visible blade itself, not an invisible
@@ -58,7 +59,7 @@ function clearSight(d,a,b){
   return n<.001||!d.getBlockFromRay(a,{x:dx/n,y:dy/n,z:dz/n},{maxDistance:n});
  }catch{return false;}
 }
-export function setupWardenSwords({world,validPlayer,isEvading=()=>false,damageCause}){
+export function setupWardenSwords({world,validPlayer,isEvading=()=>false,damageCause,damageGate}){
  const sessions=new Map(),held=new Map();
  function release(e){
   const previous=held.get(e.id);
@@ -100,7 +101,7 @@ export function setupWardenSwords({world,validPlayer,isEvading=()=>false,damageC
   if(!e?.isValid||phase<2)return;
   let s=sessions.get(e.id);
   if(!s){
-   s={ready:t+40,states:new Map(),last:t-1};sessions.set(e.id,s);
+   s={ready:t+40,states:new Map(),hitNext:new Map(),last:t-1};sessions.set(e.id,s);
    // Clear a stale client-synced hold after reload, including blades that
    // survived in a loaded chunk while the script state was lost.
    try{e.setProperty('hakkai:held_blade',0);}catch{}
@@ -170,11 +171,13 @@ export function setupWardenSwords({world,validPlayer,isEvading=()=>false,damageC
      // unobstructed segment after movement succeeded, never a floor marker.
      const a={x:from.x,y:from.y+1,z:from.z},b={x:to.x,y:to.y+1,z:to.z};
      for(const p of players){
-      if(q.hit.has(p.id)||isEvading(p))continue;
+      if(q.hit.has(p.id)||isEvading(p)||phase>=3&&t<(s.hitNext.get(p.id)??0)||damageGate&&!damageGate.allows(e,p,phase,t))continue;
       const center={x:p.location.x,y:p.location.y+.9,z:p.location.z};
       const contact=contactPoint(a,b,center);
       if(dist(contact,center)>.9||!clearSight(d,contact,center))continue;
-      q.hit.add(p.id);let hit=false;try{hit=Boolean(p.applyDamage(WARDEN_BLADE_DAMAGE[i],{cause:damageCause,damagingEntity:e}));}catch{}
+      q.hit.add(p.id);let hit=false;try{hit=Boolean(p.applyDamage(WARDEN_BLADE_DAMAGE[i]*wardenBladeScale(phase),{cause:damageCause,damagingEntity:e}));}catch{}
+      if(hit&&phase>=3)s.hitNext.set(p.id,t+8);
+      if(hit)damageGate?.record(e,p,phase,t);
       if(hit)try{
        if(i===0||i===6){const dx=center.x-contact.x,dz=center.z-contact.z,n=Math.hypot(dx,dz)||1;p.applyKnockback({x:dx/n*.55,z:dz/n*.55},i===6?.3:.12);}
        else {const effects=['','blindness','weakness','slowness','weakness','poison','','slowness'];p.addEffect(effects[i],i===7?75:50,{amplifier:0,showParticles:false});}
@@ -196,10 +199,10 @@ export function setupWardenSwords({world,validPlayer,isEvading=()=>false,damageC
      }
      if(!drawn||failed){finish(sword,q,phase,t,i);continue;}
      for(const p of players){
-      if(q.pulseHit.has(p.id)||isEvading(p)||Math.abs(p.location.y+.9-center.y)>1.8)continue;
+      if(q.pulseHit.has(p.id)||isEvading(p)||phase>=3&&t<(s.hitNext.get(p.id)??0)||damageGate&&!damageGate.allows(e,p,phase,t)||Math.abs(p.location.y+.9-center.y)>1.8)continue;
       const dx=p.location.x-center.x,dz=p.location.z-center.z,r=Math.hypot(dx,dz),target={...p.location,y:p.location.y+.9};
       if(r>radius+.45||r<Math.max(0,previous-.45)||!clearSight(d,center,target))continue;
-      q.pulseHit.add(p.id);try{if(p.applyDamage(i===2?WARDEN_BLADE_PULSE_DAMAGE.sand:WARDEN_BLADE_PULSE_DAMAGE.ice,{cause:damageCause,damagingEntity:e})&&i===3)p.addEffect('slowness',60,{amplifier:0,showParticles:false});}catch{}
+      q.pulseHit.add(p.id);try{const hit=p.applyDamage((i===2?WARDEN_BLADE_PULSE_DAMAGE.sand:WARDEN_BLADE_PULSE_DAMAGE.ice)*wardenBladeScale(phase),{cause:damageCause,damagingEntity:e});if(hit&&phase>=3)s.hitNext.set(p.id,t+8);if(hit)damageGate?.record(e,p,phase,t);if(hit&&i===3)p.addEffect('slowness',60,{amplifier:0,showParticles:false});}catch{}
      }
      q.radius=radius;if(radius>=2.4)finish(sword,q,phase,t,i);
     }

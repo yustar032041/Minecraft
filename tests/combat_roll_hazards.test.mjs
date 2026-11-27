@@ -37,9 +37,9 @@ for(const hazard of [{typeId:'minecraft:water',isSolid:false,isLiquid:true},{typ
 for(const hazard of [{...stone,typeId:'minecraft:magma'},{...stone,typeId:'minecraft:campfire'}, {...stone,isWaterlogged:true}]){
  test(`roll avoids dangerous supporting floor ${hazard.typeId}`,()=>{const f=fixture(hazard,true);f.install();f.tap();f.run();assert.ok(f.p.location.x+.3<=3.001);});
 }
-test('late hazard is checked at the next segment',()=>{const f=fixture({...air,isAir:false,typeId:'minecraft:fire'});f.tap();f.install(5);f.run();assert.ok(f.p.location.x+.3<=5.001);});
+test('late hazard is checked at the next segment',()=>{const f=fixture({...air,isAir:false,typeId:'minecraft:fire'});f.tap();f.install(2);f.run();assert.ok(f.p.location.x+.3<=2.001);});
 for(const id of ['minecraft:short_grass','minecraft:fern','minecraft:dandelion','minecraft:poppy','minecraft:azure_bluet','minecraft:oxeye_daisy','minecraft:cornflower','minecraft:allium','minecraft:blue_orchid','minecraft:red_tulip','minecraft:orange_tulip','minecraft:white_tulip','minecraft:pink_tulip']){
- test(`known benign plant ${id} remains traversable without isSolid`,()=>{const f=fixture({...air,isAir:false,typeId:id});f.install();f.tap();f.run();assert.ok(f.p.location.x>20);});
+ test(`known benign plant ${id} remains traversable without isSolid`,()=>{const f=fixture({...air,isAir:false,typeId:id});f.install();f.tap();f.run();assert.ok(f.p.location.x>3.4);});
 }
 for(const hazard of [
  {...air,isAir:false,typeId:'minecraft:stone_slab',isSolid:false},

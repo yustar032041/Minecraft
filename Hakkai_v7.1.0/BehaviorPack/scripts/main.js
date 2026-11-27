@@ -15,7 +15,7 @@ import { createGuardianMultiplayer } from './guardian_multiplayer.js';
 import { COOP_BOSS_REWARDS, awardCoopBoss } from './boss_rewards.js';
 import { RECIPE_INDEX, RECIPE_USES } from './recipe_index.js';
 import { JOBS, villagerJob, workstationTick, releaseWorkstation, releaseDeadWorker } from './villager_jobs.js';
-import { disallowHostileSpawn, suppressVanillaSpawn, VANILLA_HOSTILES } from './hostile_spawn_rules.js';
+import { inFactoryVillage, suppressVanillaSpawn, VANILLA_HOSTILES } from './hostile_spawn_rules.js';
 import { configureFriendlyFire,friendlyFireEnabled,setFriendlyFire,protectsPlayer,playerAttacker } from './friendly_fire.js';
 import { placeRepeatSite } from './seeded_repeat_sites.js';
 import { setupBowTrail } from './combat_bow_trail.js';
@@ -4384,7 +4384,7 @@ async function openCreatureGuide(p){
    return [`§b第${realm+1}界 §r${places[realm+1].name}\n§7観察 ${found}/${entries.length}`,itemTexture(`guardian_core_${realm}`)];
   });
   rows.push(['§d界渡りとFUSHIについて',itemTexture('pearl_7')],['§8↩ 本を閉じる']);
-  const realm=await form(p,'§6生き物・素材・技図鑑','§7調べたい界を選択。◆ は観察済み、◇ は未観察です。\n§7敵対種はピースフルでは出現しません。\n§b追加の生き物はプレイヤーの攻撃で倒すと経験値玉を落とす試作です。玉は参加者別ではなく、近くにいる人が拾えます。',rows);
+  const realm=await form(p,'§6生き物・素材・技図鑑','§7調べたい界を選択。◆ は観察済み、◇ は未観察です。\n§7敵対種はピースフルでは出現しません。通常の追加MOBは足元の種類ではなく、地形帯と出現位置の明るさで選ばれます。敵対種は明るさ0～7、おとなしい・中立種は8～15。安全な足場と空間、出現上限は必要です。界渡りとFUSHIは別の希少出現条件です。\n§b追加の生き物はプレイヤーの攻撃で倒すと経験値玉を落とす試作です。玉は参加者別ではなく、近くにいる人が拾えます。',rows);
   if(realm===undefined||realm===9)return;
   if(realm===8){
    const fq=fushiQuest.status(p);
@@ -5933,11 +5933,6 @@ function spawnRealmEnder(p,realm,t){
 function spawnFushi(p,t,chief){
  return spawnRareEncounter(p,ns+(chief?'fushi_chief':'fushi'),t,safe,{chief});
 }
-// Restrict hostile spawns to terrain-like floors; this is not a claim-detection system.
-const wildlifeNaturalFloors=new Set(['grass_block','dirt','coarse_dirt','rooted_dirt','podzol','mycelium','moss_block','mud','sand','red_sand','sandstone','gravel','clay','stone','deepslate','tuff','andesite','granite','diorite','dripstone_block','calcite','basalt','smooth_basalt','blackstone','netherrack','snow_block','ice','packed_ice','blue_ice','terracotta','quartz_block'].map(id=>'minecraft:'+id));
-for(const id of ['coal','iron','copper','gold','redstone','lapis','diamond','emerald'])for(const prefix of ['', 'deepslate_'])wildlifeNaturalFloors.add(`minecraft:${prefix}${id}_ore`);
-for(let i=0;i<20;i++)wildlifeNaturalFloors.add(ns+`ore_${i}`);
-for(const id of ['wind_soil','mist_loam','sun_silt','rime_soil','storm_grit','deep_loam','cloud_loam','epoch_soil','red_dune_stone','windworn_sandstone','frost_stone','aether_stone','mirror_ice','thunderstone','copper_slate','glow_moss','moonstone','cloudstone','clockstone','brasswork','abyssal_stone'])wildlifeNaturalFloors.add('hakkai:'+id);
 function hostileSpawnContext(){return {factory:travelSites.get(FACTORY_VILLAGE_ID),world,num,repeatSiteAt:(r,x,z)=>seededWorlds?.repeatSiteAt(r,x,z)};}
 function wildlifeTick(p,b,site){
  const s=state(p), t=system.currentTick, d=p.dimension;
@@ -5950,6 +5945,7 @@ function wildlifeTick(p,b,site){
  const arena=d.id===ns+'warden_arena';
  const extraRealm=realmId===8||realmId===9||arena; // atlas, highway and idle arena
  const localTheme=inRealm?realmId:arena?7:Number.isInteger(site?.theme)&&site.theme>=0&&site.theme<8?site.theme:0;
+ if(seededBiome)b=seededBiome;
  const procedural=Boolean(seededBiome&&b?.id===seededBiome.id);
  const place=site?.id>0&&site.kind!=='era';
  // In the eight void dimensions the reserved areas and unrecognised biomes
@@ -5972,7 +5968,6 @@ function wildlifeTick(p,b,site){
    m=pickRealmWildlife(wildlife,aspect(site),entry=>marked(p,'sight',wildlifeIndex.get(entry.id))||marked(p,'wild_spawn_seen',wildlifeIndex.get(entry.id)),world.getDifficulty()===Difficulty.Peaceful);
  }else if(procedural){
    // 地形帯ごとの出現を主に保ちつつ、希少な地形帯の生物にも出会える。
-   if(Math.random()<.4)m=pickRealmWildlife(wildlife,realmId,entry=>marked(p,'sight',wildlifeIndex.get(entry.id))||marked(p,'wild_spawn_seen',wildlifeIndex.get(entry.id)),world.getDifficulty()===Difficulty.Peaceful);
    const encounterChance=Math.min(.58,(b.profile.rareChance??.24)+(night?.09:0)+(p.location.y>110?.08:0));
    const rare=b.profile.rareSpecies&&Math.random()<encounterChance;
    m??=wildlifeById.get(ns+(rare?b.profile.rareSpecies:b.profile.species));
@@ -5982,34 +5977,48 @@ function wildlifeTick(p,b,site){
    m=pickRealmWildlife(wildlife,localTheme,entry=>marked(p,'sight',wildlifeIndex.get(entry.id))||marked(p,'wild_spawn_seen',wildlifeIndex.get(entry.id)),arena||world.getDifficulty()===Difficulty.Peaceful);
  }else m=wildlifeById.get(ns+b.profile.species);
  const peaceful=world.getDifficulty()===Difficulty.Peaceful;
- if((inRealm||extraRealm)&&(!m||m.temper==='hostile'&&peaceful||around.some(e=>e.typeId===ns+m.id&&dist(e.location,p.location)<10))){
+ if(!procedural&&(inRealm||extraRealm)&&(!m||m.temper==='hostile'&&peaceful||around.some(e=>e.typeId===ns+m.id&&dist(e.location,p.location)<10))){
    const available=wildlife.filter(entry=>!around.some(e=>e.typeId===ns+entry.id&&dist(e.location,p.location)<10));
    m=pickRealmWildlife(available,localTheme,entry=>marked(p,'sight',wildlifeIndex.get(entry.id))||marked(p,'wild_spawn_seen',wildlifeIndex.get(entry.id)),arena||peaceful);
  }
  // Near protected arrival centres a hostile draw cannot spawn at most candidate
  // sites. Prefer an available peaceful species instead of repeatedly failing.
- if(inRealm&&m?.temper==='hostile'&&places.slice(0,9).some(s=>s.dim===realmId&&Math.hypot(p.location.x-s.x,p.location.z-s.z)<20)){
+ if(inRealm&&!procedural&&m?.temper==='hostile'&&places.slice(0,9).some(s=>s.dim===realmId&&Math.hypot(p.location.x-s.x,p.location.z-s.z)<20)){
    const available=wildlife.filter(entry=>!around.some(e=>e.typeId===ns+entry.id&&dist(e.location,p.location)<10));
    m=pickRealmWildlife(available,realmId,entry=>marked(p,'sight',wildlifeIndex.get(entry.id))||marked(p,'wild_spawn_seen',wildlifeIndex.get(entry.id)),true);
  }
+ if(procedural&&m?.temper==='hostile'&&peaceful)m=wildlifeById.get(ns+b.profile.species);
  if(!m||m.temper==='hostile'&&peaceful)return;
- if(around.some(e=>e.typeId===ns+m.id&&dist(e.location,p.location)<10))return;
  const spawned=spawnWildlife({
-  player:p,type:ns+m.id,tick:t,safe:possibleWildlifeSite,confirm:validWildlifeGround,allowNearbyBiome:inRealm||extraRealm,
+  player:p,type:()=>ns+m.id,tick:t,safe:possibleWildlifeSite,confirm:validWildlifeGround,
   // Recheck density at the actual spawn point, not only around the player.
   capacity:(dim,pos)=>dim.getEntities({families:['hakkai_wildlife'],location:pos,maxDistance:32,closest:14}).length<14,
   avoid:pos=>{
+   // Use the actual engine light at the candidate: daylight counts. Unknown
+   // light is not a license to spawn. Safe geometry remains independent of
+   // which block the player used to build the floor.
+   const light=d.getLightLevel(pos);
+   if(!Number.isFinite(light)||light<0||light>15)return true;
+   const eligible=entry=>entry&&(!peaceful||entry.temper!=='hostile')&&
+    (entry.temper==='hostile'?light<=7:light>=8)&&
+    !around.some(e=>e.typeId===ns+entry.id&&dist(e.location,p.location)<10);
+   if(!eligible(m)){
+    // Prefer an eligible species for this exact candidate's light instead of
+    // failing an entire scan because the first random draw was nocturnal.
+    const pool=procedural?[b.profile.species,b.profile.rareSpecies].filter(Boolean).map(id=>wildlifeById.get(ns+id)):site?.kind==='atlas'?[m]:
+     inRealm||extraRealm||place?wildlife.filter(entry=>entry.dim===localTheme):[m];
+    const choices=pool.filter(eligible);if(!choices.length)return true;
+    m=choices[Math.min(choices.length-1,Math.floor(Math.random()*choices.length))];
+   }
    if(m.temper!=='hostile')return false;
-   // Reject protected centres and artificial floors before scanning a 15³
-   // volume for lights. These checks cannot make an invalid position valid.
    if(inRealm&&places.slice(0,9).some(s=>s.dim===realmId&&Math.hypot(pos.x-s.x,pos.z-s.z)<16))return true;
    if(site&&dist(pos,coords(site))<9)return true;
-   if(inRealm||extraRealm){const floor=d.getBlock({x:Math.floor(pos.x),y:Math.floor(pos.y)-1,z:Math.floor(pos.z)});if(!floor||!wildlifeNaturalFloors.has(floor.typeId))return true;}
-   return disallowHostileSpawn(d,pos,hostileSpawnContext());
+   return inFactoryVillage(d,pos,hostileSpawnContext());
   },
   preferred:pos=>{
    if(procedural)return seededWorlds?.biomeAt(realmId,pos)?.id===b.id;
-   if(inRealm||extraRealm||place)return true;
+   if(inRealm)return !seededWorlds?.biomeAt(realmId,pos);
+   if(extraRealm||place)return true;
    return d.getBiome(pos).id.replace(/^minecraft:/,'')===b.id;
   }
  });

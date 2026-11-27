@@ -14,13 +14,13 @@ function fixture(){
 }
 function tap(f,t){f.set(0,1);f.ctrl.tick(f.p,f.s,t);f.set(0,0);f.ctrl.tick(f.p,f.s,t+1);f.set(0,1);f.ctrl.tick(f.p,f.s,t+2);}
 {
- const f=fixture();tap(f,10);assert.equal(f.s.s,40);assert.ok(Math.abs(f.p.location.x-3.5)<1e-8);
+ const f=fixture();tap(f,10);assert.equal(f.s.s,40);assert.ok(Math.abs(f.p.location.x-1.25)<1e-8);
  assert.equal(f.animations[0][0],'animation.hakkai.dodge_roll');assert.equal(f.particles.length,8);
  for(const cause of [Cause.entityAttack,Cause.projectile,Cause.entityExplosion,Cause.magic,Cause.sonicBoom])assert.equal(f.ctrl.blocks(f.p,{cause},12),true);
  assert.equal(f.ctrl.blocks(f.p,{cause:Cause.fall},12),false);assert.equal(f.ctrl.blocks(f.p,{cause:Cause.entityAttack},22),false);
  for(let t=13;t<=21;t++)f.ctrl.tick(f.p,f.s,t);
- assert.ok(Math.abs(f.p.location.x-30.5)<1e-8,'30 checked blocks on clear ground');
- f.ctrl.tick(f.p,f.s,22);assert.equal(f.moves.length,10,'held input never repeats');
+ assert.ok(Math.abs(f.p.location.x-3.5)<1e-8,'3 checked blocks on clear ground');
+ f.ctrl.tick(f.p,f.s,22);assert.equal(f.moves.length,4,'held input never repeats');
 }
 {
  const f=fixture();tap(f,0);f.set(0,0);f.ctrl.tick(f.p,f.s,3);tap(f,4);assert.equal(f.s.s,40,'retry during cooldown is free');assert.equal(f.animations.length,1);assert.equal(f.ctrl.evading(f.p,12),false,'blocked retry did not extend immunity');
@@ -77,11 +77,11 @@ for(const prepare of [f=>f.p.isSneaking=false,f=>f.p.isSwimming=true,f=>f.p.isGl
  const f=fixture();tap(f,0);f.ctrl.clear(f.p.id);f.set(0,0);f.ctrl.tick(f.p,f.s,3);tap(f,4);
  assert.equal(f.s.s,30,'explicit session cleanup clears local cooldown');
 }
-console.log('Roll: checked 30-block target, 5-tick cooldown, stamina, attack immunity and invalid contexts (mocked)');
+console.log('Roll: checked 3-block target, 5-tick cooldown, stamina, attack immunity and invalid contexts (mocked)');
 {
  const f=fixture();tap(f,0);f.p.isSneaking=false;
  for(let t=3;t<=11;t++)f.ctrl.tick(f.p,f.s,t);
- assert.ok(Math.abs(f.p.location.x-30.5)<1e-8,'releasing sneak after activation does not truncate movement');
+ assert.ok(Math.abs(f.p.location.x-3.5)<1e-8,'releasing sneak after activation does not truncate movement');
 }
 {
  const f=fixture();tap(f,0);f.set(0,0);f.ctrl.tick(f.p,f.s,3);tap(f,5);

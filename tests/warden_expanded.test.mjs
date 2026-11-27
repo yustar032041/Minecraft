@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {WARDEN_EXTRA,WARDEN_DAMAGE_MULTIPLIER,WARDEN_COMBO_MULTIPLIER,inWardenWarning,setupWardenBoss as realSetupWardenBoss} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_boss.js';
+import {WARDEN_EXTRA,wardenAttackDamage,WARDEN_DAMAGE_MULTIPLIER,WARDEN_COMBO_MULTIPLIER,inWardenWarning,setupWardenBoss as realSetupWardenBoss} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_boss.js';
 import {legacyWardenDecision} from './warden_legacy_decision.mjs';
 const setupWardenBoss=options=>realSetupWardenBoss({...options,decision:legacyWardenDecision()});
 import {GameMode,Difficulty} from '@minecraft/server';
@@ -40,7 +40,7 @@ function reachThird(f){for(const t of [0,80,120,220])f.tick(t);}
  f.p.getComponent=id=>id==='minecraft:inventory'?{container:{size:2,getItem:i=>i===1?{typeId:'hakkai:fushi_totem'}:undefined}}:undefined;
  let warning=-1;for(let t=0;t<4000;t++){f.tick(t);if(f.messages.some(x=>x[1].includes('月光の審判'))){warning=t;break;}}
  assert.ok(warning>=0);f.hits.length=0;for(let t=warning+1;t<=warning+40;t++)f.tick(t);
- assert.deepEqual(f.hits,[['p',10*WARDEN_DAMAGE_MULTIPLIER],['q',20*WARDEN_DAMAGE_MULTIPLIER]],'ward applies only to bearer and does not consume totem');
+ assert.deepEqual(f.hits,[['p',wardenAttackDamage(WARDEN_EXTRA[4][0],true,4)],['q',wardenAttackDamage(WARDEN_EXTRA[4][0],false,4)]],'ward applies only to bearer and does not consume totem');
  assert.ok(f.messages.some(x=>x[0]==='p'&&x[1].includes('和らげた')));
 }
 {

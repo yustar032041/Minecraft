@@ -1,4 +1,5 @@
 import { EntityDamageCause, GameMode, Difficulty, EquipmentSlot } from '@minecraft/server';
+import { createWardenDamageGate } from './warden_damage_gate.js';
 import { WARDEN_DIMENSION } from './warden_arena.js';
 import { rescueWarden,isOutsideWardenArena } from './warden_rescue.js';
 import { updateWardenAppearance,cancelWardenFlight } from './warden_appearance.js';
@@ -84,23 +85,34 @@ export const WARDEN_HEAL_PER_SECOND=8;
 export const WARDEN_DAMAGE_MULTIPLIER=3;
 // Three separately warned strikes use half the single-strike multiplier.
 export const WARDEN_COMBO_MULTIPLIER=1.5;
-export function wardenAttackDamage(attack,warded=false){
- const multiplier=attack.strikes>1?WARDEN_COMBO_MULTIPLIER:WARDEN_DAMAGE_MULTIPLIER;
- return attack.damage*multiplier*(warded?.5:1);
+// Later forms compress the previous extreme damage spike; floorTotal is
+// assigned by wardenPatterns against the corresponding earlier-form attack.
+export function wardenAttackDamage(attack,warded=false,phase=0){
+ const strikes=attack.strikes>1?attack.strikes:1;
+ const base=attack.damage*(strikes>1?WARDEN_COMBO_MULTIPLIER:WARDEN_DAMAGE_MULTIPLIER);
+ let total=base*strikes;
+ if(phase>=3){
+  total=Math.max(total*(2.6/3),attack.floorTotal??0);
+  if(phase>=4)total=Math.min(56,total);
+ }
+ return total/strikes*(warded?.5:1);
 }
 export const WARDEN_RECOVERY_TICKS=20;
 // Every fifth selection belongs to the same source form. Final starts with its
 // own attack, then alternates through forms 1–4 before repeating that order.
 export function wardenPatterns(phase){
  const form=i=>[WARDEN_PHASES[i],WARDEN_ALTERNATES[i],...WARDEN_EXTRA[i],...WARDEN_MOVING[i],...WARDEN_NEW[i],...WARDEN_ADVANCED[i],...WARDEN_EXTRA_PATTERNS[i]];
- if(phase!==4)return form(phase);
- const groups=[4,0,1,2,3].map(form),all=[];
- for(let i=0;i<groups[0].length;i++)for(const group of groups)all.push(group[i]);
+ if(phase<3)return form(phase);
+ const third=form(2),fourth=form(3).map((attack,i)=>({...attack,floorTotal:wardenAttackDamage(third[i])*(third[i].strikes??1)}));
+ if(phase===3)return fourth;
+ const fourthTotals=fourth.map(a=>wardenAttackDamage(a,false,3)*(a.strikes??1));
+ const groups=[4,0,1,2,3].map(i=>form(i)),all=[];
+ for(let i=0;i<groups[0].length;i++)for(const group of groups)all.push({...group[i],floorTotal:fourthTotals[i]});
  return all;
 }
 const MUSIC_TICKS=[937,1372,613,1325,747];
 export function setupWardenBoss({world,system,property,report,isEvading=()=>false,tryParry=()=>false,spendParry=()=>false,musicMuted=()=>false,decision}){
- const states=new Map(),music=new Map();
+ const states=new Map(),music=new Map(),damageGate=createWardenDamageGate();
  function clearMusic(id){const m=music.get(id);if(!m)return;try{m.sound?.stop();}catch{}music.delete(id);}
  function musicActive(id){return music.has(id);}
  function updateMusic(p,e,t){
@@ -119,8 +131,8 @@ export function setupWardenBoss({world,system,property,report,isEvading=()=>fals
   }
  }
  const valid=p=>p?.isValid&&p.typeId==='minecraft:player'&&p.getGameMode()!==GameMode.Creative&&p.getGameMode()!==GameMode.Spectator;
- const swords=setupWardenSwords({world,validPlayer:valid,isEvading,damageCause:EntityDamageCause.entityAttack});
- const modes=setupWardenModes({validPlayer:valid,isEvading,damageCause:EntityDamageCause.entityAttack,swords,decision});
+ const swords=setupWardenSwords({world,validPlayer:valid,isEvading,damageCause:EntityDamageCause.entityAttack,damageGate});
+ const modes=setupWardenModes({validPlayer:valid,isEvading,damageCause:EntityDamageCause.entityAttack,swords,decision,damageGate});
  function telegraph(d,aim,attack){
   let ok=true;const dot=(x,z)=>{try{d.spawnParticle('hakkai:warning_marker',{x:aim.x+x,y:aim.y+.15,z:aim.z+z});}catch{ok=false;}};
   const circle=radius=>{for(let i=0;i<20;i++){const a=i*Math.PI/10;dot(Math.cos(a)*radius,Math.sin(a)*radius);}};
@@ -226,7 +238,9 @@ export function setupWardenBoss({world,system,property,report,isEvading=()=>fals
      if(hitThisTick.has(p.id))continue;
      hitThisTick.add(p.id);
      if(tryParry(p,e)){if((s.attackSerial??0)!==attackSerial)break;continue;}
-     let hit=false;try{hit=Boolean(p.applyDamage(wardenAttackDamage(m.attack),{cause:EntityDamageCause.entityAttack,damagingEntity:e}));}catch{}
+     if(!damageGate.allows(e,p,m.phase,t))continue;
+     let hit=false;try{hit=Boolean(p.applyDamage(wardenAttackDamage(m.attack,false,m.phase),{cause:EntityDamageCause.entityAttack,damagingEntity:e}));}catch{}
+     if(hit)damageGate.record(e,p,m.phase,t);
      if(hit)try{p.addEffect(m.attack.effect,60,{amplifier:0,showParticles:false});}catch{}
     }
     if(result.done)slot.active=undefined;
@@ -245,8 +259,10 @@ export function setupWardenBoss({world,system,property,report,isEvading=()=>fals
       for(const p of world.getAllPlayers())if(warned.includes(p.id)&&valid(p)&&p.dimension.id===WARDEN_DIMENSION&&inWardenWarning(p.location,aim,attack)&&!isEvading(p)&&!hitThisTick.has(p.id)){
        hitThisTick.add(p.id);
        if(tryParry(p,e)){if((s.attackSerial??0)!==attackSerial)break;continue;}
+       if(!damageGate.allows(e,p,pending.phase,t))continue;
        const warded=attack.totemWard&&hasFushiTotem(p);
-       let hit=false;try{hit=Boolean(p.applyDamage(wardenAttackDamage(attack,warded),{cause:EntityDamageCause.entityAttack,damagingEntity:e}));}catch{}
+       let hit=false;try{hit=Boolean(p.applyDamage(wardenAttackDamage(attack,warded,pending.phase),{cause:EntityDamageCause.entityAttack,damagingEntity:e}));}catch{}
+       if(hit)damageGate.record(e,p,pending.phase,t);
        if(hit&&warded)try{p.sendMessage('§dFUSHIのトーテムが月光の審判を和らげた！');}catch{}
        if(hit)try{p.addEffect(attack.effect,60,{amplifier:0,showParticles:false});}catch{}
       }
@@ -304,7 +320,7 @@ export function setupWardenBoss({world,system,property,report,isEvading=()=>fals
    const near=e&&e.isValid&&Math.hypot(e.location.x-p.location.x,e.location.y-p.location.y,e.location.z-p.location.z)<=45?e:undefined;
    updateMusic(p,near,t);
   }catch(err){clearMusic(p.id);if(t%200===0)report('時空の管理者',err);}
-  for(const [id,s] of states)if(t-s.lastTick>2400){states.delete(id);swords.forget(id);modes.forget(id);}
+  for(const [id,s] of states)if(t-s.lastTick>2400){states.delete(id);swords.forget(id);modes.forget(id);damageGate.clear(id);}
  }
  // A close-range counter, not a generic damage cancel: only the warned,
  // endangered player can parry the scripted attack during its last 8 ticks.
@@ -336,7 +352,7 @@ export function setupWardenBoss({world,system,property,report,isEvading=()=>fals
  function onDeath({deadEntity,damageSource}){
   if(deadEntity?.typeId!=='hakkai:time_warden')return;
   modes.onDeath(deadEntity);swords.onDeath(deadEntity);
-  states.delete(deadEntity.id);for(const [id,m] of music)if(m.boss===deadEntity.id)clearMusic(id);
+  states.delete(deadEntity.id);damageGate.clear(deadEntity.id);for(const [id,m] of music)if(m.boss===deadEntity.id)clearMusic(id);
  }
  return {tick,onDeath,onHurt,onMeleeParry,stagger,clearMusic,musicActive};
 }

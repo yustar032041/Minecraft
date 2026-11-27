@@ -1,20 +1,20 @@
 import assert from 'node:assert/strict';
-import {setupWardenModes,WARDEN_MODE_DAMAGE} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_modes.js';
+import {setupWardenModes,WARDEN_MODE_DAMAGE,wardenModeDamage} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_modes.js';
 import {bladeDirection} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_swords.js';
 function fixture(phase=4){
- let turn=0;const order=phase===1?['flight']:phase===3?['sword']:['flight','sword','flight_sword'];
+ let turn=0,now=0;const order=phase===1?['flight']:phase===3?['sword']:['flight','sword','flight_sword'];
  // Isolate each physical mode from the adaptive policy in this engine test.
  const decision={mode:(_brain,_phase,_situation,opts)=>opts.current==='traditional'?order[(turn++)%order.length]:opts.current};
  const parts=[],hits=[],moves=[],poses=[],messages=[],props=[],held=[];
  let wall=false,loaded=true,visual=true;
  const d={isChunkLoaded:()=>loaded,getBlock:q=>Math.floor(q.y)<80?{typeId:'hakkai:warden_arena_stone',isAir:false,isLiquid:false,isWaterlogged:false}:{isAir:true},getBlockFromRay:()=>wall?{}:undefined,
   spawnParticle(id,p){if(!visual)throw Error('particle');parts.push({id,p});},getPlayers:()=>[p]};
- const p={id:'p',isValid:true,typeId:'minecraft:player',location:{x:0,y:80,z:0},sendMessage:m=>messages.push(m),applyDamage:(n,src)=>{hits.push({n,src});return true;},setOnFire:()=>{}};
+ const p={id:'p',isValid:true,typeId:'minecraft:player',location:{x:0,y:80,z:0},sendMessage:m=>messages.push(m),applyDamage:(n,src)=>{hits.push({n,src,t:now});return true;},setOnFire:()=>{}};
  const boss={id:'b',typeId:'hakkai:time_warden',isValid:true,location:{x:-6,y:80,z:-6},dimension:d,get isOnGround(){return this.location.y<=80.01;},
   setProperty:(k,v)=>props.push([k,v]),playAnimation:id=>poses.push(id),clearVelocity:()=>{},addEffect:()=>{},tryTeleport(at){moves.push({...at});this.location={...at};return true;}};
  const swords={acquire:(e,i)=>{held.push(['acquire',i]);return true;},release:()=>held.push(['release'])};
  const ctrl=setupWardenModes({validPlayer:p=>p.isValid,isEvading:()=>false,damageCause:'attack',swords,decision}),state={};
- return {d,p,boss,ctrl,state,parts,hits,moves,poses,messages,props,held,setWall:v=>wall=v,setLoaded:v=>loaded=v,setVisual:v=>visual=v,tick(t,opts={}){return ctrl.tick(boss,state,phase,t,opts);}};
+ return {d,p,boss,ctrl,state,parts,hits,moves,poses,messages,props,held,setWall:v=>wall=v,setLoaded:v=>loaded=v,setVisual:v=>visual=v,tick(t,opts={}){now=t;return ctrl.tick(boss,state,phase,t,opts);}};
 }
 {
  const f=fixture();let flight=0,sword=0,airSword=0,maximum=0,seen=new Set();
@@ -26,7 +26,7 @@ function fixture(phase=4){
  assert.ok(maximum>85&&maximum<92);assert.ok(f.moves.every(p=>Math.abs(p.x)<=12.8&&Math.abs(p.z)<=12.8&&p.y>=80&&p.y<=91.8));
  assert.ok(f.parts.some(x=>x.id==='hakkai:warden_hellfire'),'visible fire hazard');
  assert.ok(f.parts.some(x=>x.id==='hakkai:warden_front_moon'),'flying slash');
- assert.ok(f.hits.some(x=>x.n===WARDEN_MODE_DAMAGE.lightning)&&f.hits.some(x=>x.n===WARDEN_MODE_DAMAGE.fire),'lightning and fire inflict damage');
+ assert.ok(f.hits.some(x=>x.n===wardenModeDamage('lightning',4))&&f.hits.some(x=>x.n===wardenModeDamage('fire',4)),'lightning and fire inflict damage');
  assert.ok(f.held.some(([x])=>x==='acquire'),'sword mode borrows a blade');assert.ok(f.poses.includes('animation.hakkai.warden_roll')&&f.poses.includes('animation.hakkai.warden_leap'));
  for(const name of ['blade_ready','blade_cut','blade_reverse','blade_aerial'])assert.ok(f.poses.includes('animation.hakkai.warden_'+name),name);
  assert.ok(f.props.some(([k,v])=>k==='hakkai:flying'&&v===true));
@@ -54,3 +54,9 @@ function fixture(phase=4){
  assert.notDeepEqual(bladeDirection(0,2,2,5,base),bladeDirection(0,3,2,5,base),'later form adds an alternate');
 }
 console.log('Warden enhanced modes, bounded flight, visual attacks, pause, walls, eight sword trajectories (mocked)');
+
+// Overlapping projectiles, combos and zones share a late-form damage window.
+{
+ const f=fixture(4);for(let t=0;t<3000;t++)f.tick(t);
+ assert.ok(f.hits.length>2);for(let i=1;i<f.hits.length;i++)assert.ok(f.hits[i].t-f.hits[i-1].t>=10,'late special hits cannot pile onto one player');
+}

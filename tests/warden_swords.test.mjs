@@ -54,3 +54,10 @@ function fixture(){
  assert.equal(f.hits.length,0,'no attack when the windup pose could not be set');
 }
 console.log('Warden blade entity ownership, warning, lifecycle, pause and collision (mock only)');
+
+{
+ const f=fixture(),hits=[];let now=0;f.player.applyDamage=n=>{hits.push([now,n]);return true;};
+ for(now=0;now<1200;now++)f.ctrl.tick(f.boss,4,now);
+ assert.ok(hits.length>2);for(let i=1;i<hits.length;i++)assert.ok(hits[i][0]-hits[i-1][0]>=8,'multiple blades share a late-form hit window');
+ assert.ok(hits.every(([,n])=>n<=16.2+1e-6));
+}

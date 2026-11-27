@@ -79,7 +79,7 @@ const chief=read(`${bp}/entities/fushi_chief.json`)['minecraft:entity'].componen
 const king=read(`${bp}/entities/eclipse_colossus.json`)['minecraft:entity'].components['minecraft:health'].value;
 const warden=read(`${bp}/entities/time_warden.json`)['minecraft:entity'].components['minecraft:health'].value;
 const patternTotals=Array.from({length:5},(_,phase)=>{
- const attacks=wardenPatterns(phase).map(a=>({name:a.attack,perStrike:wardenAttackDamage(a),strikes:a.strikes??1,total:wardenAttackDamage(a)*(a.strikes??1)}));
+ const attacks=wardenPatterns(phase).map(a=>({name:a.attack,perStrike:wardenAttackDamage(a,false,phase),strikes:a.strikes??1,total:wardenAttackDamage(a,false,phase)*(a.strikes??1)}));
  return {phase:phase+1,count:attacks.length,min:Math.min(...attacks.map(x=>x.total)),max:Math.max(...attacks.map(x=>x.total))};
 });
 // Pure upper envelope, not a claim that these independent paths can all hit at

@@ -19,10 +19,10 @@ function fixture(height=()=>79){
  return {d,s,p,ctrl,tap,run,moves,edits,notes};
 }
 {
- const f=fixture();f.tap();f.run();assert.ok(Math.abs(f.p.location.x-30.5)<1e-8);assert.equal(f.s.s,40);
+ const f=fixture();f.tap();f.run();assert.ok(Math.abs(f.p.location.x-3.5)<1e-8);assert.equal(f.s.s,40);
 }
 {
- const f=fixture(x=>x>=3?80:79);f.tap();f.run();assert.equal(f.p.location.y,81,'fully supported one-block rise is climbed');assert.ok(f.p.location.x>20);assert.equal(f.ctrl.evading(f.p,2),true);
+ const f=fixture(x=>x>=3?80:79);f.tap();f.run();assert.equal(f.p.location.y,81,'fully supported one-block rise is climbed');assert.ok(f.p.location.x>3);assert.equal(f.ctrl.evading(f.p,2),true);
 }
 {
  const f=fixture(x=>x>=4?78:79);f.tap();f.run();assert.ok(f.p.location.x+.28<4.01,'stops before a one-block drop');
@@ -37,7 +37,7 @@ function fixture(height=()=>79){
  const f=fixture();f.d.isChunkLoaded=p=>p.x<4;f.tap();f.run();assert.ok(f.p.location.x+.28<4,'unloaded area stops the roll');
 }
 {
- const f=fixture();f.tap();for(let y=80;y<=83;y++)f.edits.set(`5,${y},0`,solid);f.run();assert.ok(f.p.location.x+.28<5,'late wall is checked immediately before movement');
+ const f=fixture();f.tap();for(let y=80;y<=83;y++)f.edits.set(`2,${y},0`,solid);f.run();assert.ok(f.p.location.x+.28<2,'late wall is checked immediately before movement');
 }
 {
  const f=fixture();f.p.tryTeleport=()=>false;f.tap();assert.equal(f.s.s,40);assert.equal(f.ctrl.evading(f.p,2),true,'rejected movement still activates in place');
@@ -48,7 +48,7 @@ console.log('Roll movement: real safe validator, uphill, drops, void, wall, unlo
  f.p.getViewDirection=()=>({x:1,z:.6});f.tap();f.run();assert.ok(f.ctrl.evading(f.p,2),'wall never prevents activation');assert.ok(f.p.location.z>1,'diagonal travel can follow a wall');
 }
 {
- const f=fixture();f.d.getBlockFromRay=()=>{throw Error('unsupported ray API');};f.tap();f.run();assert.ok(Math.abs(f.p.location.x-30.5)<1e-8,'known full cube does not need ray API');
+ const f=fixture();f.d.getBlockFromRay=()=>{throw Error('unsupported ray API');};f.tap();f.run();assert.ok(Math.abs(f.p.location.x-3.5)<1e-8,'known full cube does not need ray API');
 }
 {
  const f=fixture();for(let y=80;y<=83;y++)f.edits.set(`1,${y},0`,solid);f.tap();assert.equal(f.ctrl.evading(f.p,2),true);assert.equal(f.s.s,40,'roll triggers even immediately against a wall');
@@ -66,12 +66,12 @@ console.log('Roll movement: real safe validator, uphill, drops, void, wall, unlo
  const f=fixture(x=>x===3?80:x>=4?-64:79);f.tap();f.run();assert.equal(f.p.location.y,81,'can land on a supported raised ledge');assert.ok(f.p.location.x+.28<4.01,'then stops at the raised ledge edge');
 }
 {
- const f=fixture(x=>x>=3?80:79);f.tap();f.run(3,3);assert.equal(f.p.location.y,81);
- f.p.location.y=80.5;f.run(4,4);assert.equal(f.p.location.y,81,'after a rise the planned height never drops back below it');
+ const f=fixture(x=>x>=3?80:79);f.tap();f.run(3,5);assert.equal(f.p.location.y,81);
+ f.p.location.y=80.5;f.run(6,6);assert.equal(f.p.location.y,81,'after a rise the planned height never drops back below it');
 }
 for(const mode of [GameMode.Survival,GameMode.Creative]){
  const f=fixture();f.p.getGameMode=()=>mode;f.d.getBlockFromRay=()=>undefined;
- f.tap();f.p.isSneaking=false;f.run();assert.ok(Math.abs(f.p.location.x-30.5)<1e-8,`${mode} travels 30 blocks on a known cube even with absent ray hits`);
+ f.tap();f.p.isSneaking=false;f.run();assert.ok(Math.abs(f.p.location.x-3.5)<1e-8,`${mode} travels 3 blocks on a known cube even with absent ray hits`);
 }
 {
  const f=fixture();f.d.getBlockFromRay=()=>undefined;f.edits.set('3,79,0',{...solid,typeId:'minecraft:stone_slab'});

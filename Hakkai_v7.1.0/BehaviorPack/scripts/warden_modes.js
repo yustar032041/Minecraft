@@ -4,6 +4,13 @@
 import {validWardenArenaFloor} from './warden_arena_floor.js';
 import {createWardenBrain,observeWarden,wardenSituation,chooseWardenTarget,chooseWardenMode,modeScores,chooseSwordAction,chooseWardenBlade} from './warden_ai.js';
 export const WARDEN_MODE_DAMAGE=Object.freeze({lightning:33,slash:24,fire:31.2,combo:33});
+// Keep the second-form flight mode unchanged; tone down the fourth and
+// fifth forms' sword/flight burst while keeping fifth >= fourth for shared moves.
+export function wardenModeDamage(kind,phase){
+ if(phase===3)return ({slash:18,combo:22})[kind]??WARDEN_MODE_DAMAGE[kind];
+ if(phase===4)return ({lightning:24,slash:20,fire:20,combo:24})[kind]??WARDEN_MODE_DAMAGE[kind];
+ return WARDEN_MODE_DAMAGE[kind];
+}
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const finite=p=>p&&[p.x,p.y,p.z].every(Number.isFinite);
 const len=v=>Math.hypot(v.x,v.y,v.z);
@@ -41,16 +48,25 @@ function hand(e){
 function flightVisual(e,s,on){
  try{e.setProperty('hakkai:flying',on);s.sentFlight=on;return true;}catch{return false;}
 }
-export function setupWardenModes({validPlayer,isEvading=()=>false,damageCause,swords,decision}){
+export function setupWardenModes({validPlayer,isEvading=()=>false,damageCause,swords,decision,damageGate}){
  const states=new Map();
  function enabled(e){return typeof e?.tryTeleport==='function'&&typeof e?.clearVelocity==='function'&&typeof e?.dimension?.getBlockFromRay==='function';}
  function stop(e,s,t){
-  swords.release(e);s.mode='traditional';s.next=t+100;s.traditionalSince=t;s.attack=undefined;s.projectiles=[];s.zones=[];s.motion=undefined;
+  swords.release(e);s.mode='traditional';s.next=t+100;s.traditionalSince=t;s.attack=undefined;s.projectiles=[];s.zones=[];s.hitNext.clear();s.motion=undefined;
   if(s.flying){try{e.clearVelocity();e.addEffect('slow_falling',100,{amplifier:0,showParticles:false});}catch{}flightVisual(e,s.bossState,false);s.flying=false;}
  }
  function reset(e,t){const s=states.get(e?.id);if(s)stop(e,s,t);else if(e)swords.release(e);}
  function onDeath(e){if(e){reset(e,0);states.delete(e.id);}}
  function forget(id){states.delete(id);}
+ // One successful special-mode hit per player per 10 ticks in late forms.
+ // Projectiles and lingering flames share the budget; visuals still play.
+ function modeHit(e,s,p,kind,t){
+  if(s.phase>=3&&t<(s.hitNext.get(p.id)??0)||damageGate&&!damageGate.allows(e,p,s.phase,t))return false;
+  let accepted=false;try{accepted=Boolean(p.applyDamage(wardenModeDamage(kind,s.phase),{cause:damageCause,damagingEntity:e}));}catch{}
+  if(accepted&&s.phase>=3)s.hitNext.set(p.id,t+10);
+  if(accepted)damageGate?.record(e,p,s.phase,t);
+  return accepted;
+ }
  function playersFor(e){try{return e.dimension.getPlayers({location:e.location,maxDistance:45}).filter(validPlayer);}catch{return [];}}
  function launch(e,s,target,type,spread=0){
   const origin=hand(e);
@@ -78,7 +94,7 @@ export function setupWardenModes({validPlayer,isEvading=()=>false,damageCause,sw
     const contact=segmentContact(from,to,centre);
     if(distance(contact,centre)>.85||!clearLine(d,contact,centre))continue;
     shot.hit.add(p.id);hit=true;
-    try{const ok=p.applyDamage(shot.type==='lightning'?WARDEN_MODE_DAMAGE.lightning:WARDEN_MODE_DAMAGE.slash,{cause:damageCause,damagingEntity:e});if(ok&&shot.type==='lightning')p.setOnFire?.(3);}catch{}
+    try{if(modeHit(e,s,p,shot.type==='lightning'?'lightning':'slash',t)&&shot.type==='lightning')p.setOnFire?.(s.phase>=3?2:3);}catch{}
    }
    shot.p=to;shot.remain-=step;
    if(shot.type==='lightning'&&(hit||shot.remain<=0))createFlame(e,s,{x:to.x,y:Math.max(80,to.y-1),z:to.z},t);
@@ -96,7 +112,7 @@ export function setupWardenModes({validPlayer,isEvading=()=>false,damageCause,sw
    if(t-z.visibleAt>5)continue;
    for(const p of people){if(!p.isValid||isEvading(p)||t<(z.next.get(p.id)??0)||Math.abs(p.location.y-z.p.y)>2||Math.hypot(p.location.x-z.p.x,p.location.z-z.p.z)>1.6)continue;
     if(!clearLine(d,{...z.p,y:z.p.y+.7},{...p.location,y:p.location.y+.7}))continue;
-    z.next.set(p.id,t+25);try{if(p.applyDamage(WARDEN_MODE_DAMAGE.fire,{cause:damageCause,damagingEntity:e}))p.setOnFire?.(4);}catch{}
+    z.next.set(p.id,t+25);try{if(modeHit(e,s,p,'fire',t))p.setOnFire?.(s.phase>=3?2:4);}catch{}
    }
   }
  }
@@ -166,7 +182,7 @@ export function setupWardenModes({validPlayer,isEvading=()=>false,damageCause,sw
      if(a.kind==='combo'){
       const from={...e.location,y:e.location.y+1};
       for(const p of people){const to={...p.location,y:p.location.y+1};if(isEvading(p)||distance(from,to)>3.1||!clearLine(e.dimension,from,to))continue;
-       try{p.applyDamage(WARDEN_MODE_DAMAGE.combo,{cause:damageCause,damagingEntity:e});}catch{}
+       modeHit(e,s,p,'combo',t);
       }
      }else{
       const spread=a.kind==='barrage'?((Math.floor((t-a.release)/a.interval)%5)-2)*.12:0;
@@ -192,7 +208,7 @@ export function setupWardenModes({validPlayer,isEvading=()=>false,damageCause,sw
  function tick(e,bossState,phase,t,{busy=false,paused=false,peaceful=false}={}){
   if(!enabled(e))return {enabled:false,active:false};
   let s=states.get(e.id);
-  if(!s){s={phase,mode:'traditional',next:t+100,traditionalSince:t,projectiles:[],zones:[],bossState,lastTick:t-1};states.set(e.id,s);}
+  if(!s){s={phase,mode:'traditional',next:t+100,traditionalSince:t,projectiles:[],zones:[],hitNext:new Map(),bossState,lastTick:t-1};states.set(e.id,s);}
   s.bossState=bossState;
   if(s.lastTick===t)return {enabled:true,active:s.mode!=='traditional',flying:s.flying,mode:s.mode};
   if(s.lastTick!==t-1)stop(e,s,t);

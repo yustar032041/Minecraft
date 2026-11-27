@@ -25,7 +25,8 @@ test('chief, king and warden budgets include recovery and independent attack pat
  const {chief,king,warden}=audit.bosses;
  assert.equal(chief.hp,1000);assert.equal(chief.hits,33);assert.equal(king.hp,1800);assert.equal(king.rewindHeals,145);
  assert.equal(warden.hp,5000);assert.equal(warden.healingPerSecond,8);
- assert.deepEqual(warden.patternTotals.map(p=>p.max),[36,45,54,63,72]);
+ const maxima=warden.patternTotals.map(p=>p.max);
+ for(const [i,want] of [36,45,54,54.6,56].entries())assert.ok(Math.abs(maxima[i]-want)<1e-6);
  assert.equal(warden.bladeDamage.length,8);assert.ok(warden.overlapEnvelope>2*warden.patternTotals[4].max);
  assert.ok(warden.hypotheticalWardenTimes.every(t=>t.netDps>0&&Number.isFinite(t.seconds)));
  assert.ok(warden.hypotheticalWardenTimes[0].seconds>warden.hypotheticalWardenTimes[1].seconds);
