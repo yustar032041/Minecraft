@@ -24,8 +24,32 @@ test('every catalog weapon of the five action classes resolves to a deliberate f
   }
  }
  assert.equal(families.size,25);
- for(const g of melee.filter(x=>x.rank>=2))assert.notDeepEqual(authoredMove(g,3),authoredMove({...g,rank:1},3),g.id);
+ for(const g of melee.filter(x=>x.rank>=2)){const {familyAnimation:_,...upgraded}=authoredMove(g,3),{familyAnimation:__,...basic}=authoredMove({...g,rank:1},3);assert.notDeepEqual(upgraded,basic,g.id);}
  assert.equal(isActionWeapon({id:'gear_002',kind:'弓'}),false);
+});
+test('family choreography exists at every real weapon stage and matches hit timing',()=>{
+ const animations=JSON.parse(fs.readFileSync('Hakkai_v7.1.0/ResourcePack/animations/action_families.animation.json','utf8')).animations;
+ assert.equal(Object.keys(animations).length,245);const winding={'剣':4,'斧':6,'槍':5,'ハンマー':7,'扇':4};
+ const examples=new Set();for(const g of melee)for(let stage=1;stage<=3;stage++){
+  const m=authoredMove(g,stage),a=animations[`animation.hakkai.${m.familyAnimation}`];assert.ok(a,g.id);
+  assert.ok(a.bones.rightarm&&a.bones.rightitem&&a.bones.body,g.id);
+  const impact=(m.windup??winding[g.kind])/20;assert.ok(Object.keys(a.bones.rightarm.rotation).some(t=>Number(t)===impact),g.id);
+  const last=impact+Math.max(...(m.pulses??[0]))/20;assert.ok(a.animation_length>last,g.id);
+  if(stage===3&&g.rank===1)examples.add(JSON.stringify(a.bones));
+ }
+ assert.ok(examples.size>=8,'patterns are not one pose for every family');
+});
+
+test('special weapons have stage one and two tracks synchronized to their gameplay timings',()=>{
+ const animations=JSON.parse(fs.readFileSync('Hakkai_v7.1.0/ResourcePack/animations/action_families.animation.json','utf8')).animations;
+ for(const g of [...WARDEN_BLADES,...ULTIMATE_WEAPONS])for(let stage=1;stage<=2;stage++){
+  const m=authoredMove(g,stage),a=animations[`animation.hakkai.${m.specialAnimation}`];assert.ok(a,g.id);
+  assert.ok(a.bones.body&&a.bones.rightarm&&a.bones.rightitem,g.id);
+  const first=(m.windup??(g.kind==='斧'?6:4))/20,last=first+Math.max(...(m.pulses??[0]))/20;
+  assert.ok(Object.keys(a.bones.rightarm.rotation).some(t=>Number(t)===first),g.id);
+  assert.ok(Object.keys(a.bones.rightarm.rotation).some(t=>Math.abs(Number(t)-last)<1e-9),g.id);
+  assert.ok(a.animation_length>last,g.id);
+ }
 });
 test('ordinary melee families select distinct geometry and improved tiers',()=>{
  const find=id=>melee.find(g=>g.id===id);
@@ -49,6 +73,15 @@ test('all 95 catalog weapons resolve to 40 ultimate families with progression re
   if(g.rank>1)assert.ok(m.range>authoredUltimate({...g,rank:1}).range,g.id);
  }
  assert.equal(families.size,40);
+});
+test('ten finisher animations track the action windup, extra hit and recovery',()=>{
+ const animations=JSON.parse(fs.readFileSync('Hakkai_v7.1.0/ResourcePack/animations/action_finishers.animation.json','utf8')).animations;
+ for(const g of [...WARDEN_BLADES,...ULTIMATE_WEAPONS]){
+  const m=authoredMove(g,3),a=animations[`animation.hakkai.action_finisher_${m.animation}`];
+  const first=m.windup??(g.kind==='斧'?6:4),last=first+Math.max(...(m.pulses??[0]));
+  assert.ok(a.bones.rightitem,g.id);assert.ok(Object.keys(a.bones.rightarm.rotation).some(t=>Number(t)===first/20),g.id);
+  assert.ok(Object.keys(a.bones.rightarm.rotation).some(t=>Number(t)===last/20),g.id);assert.ok(a.animation_length>last/20,g.id);
+ }
 });
 test('ten authored ultimates have bounded and meaningfully different sectors',()=>{
  assert.equal(AUTHORED_ULTIMATE_IDS.length,10);

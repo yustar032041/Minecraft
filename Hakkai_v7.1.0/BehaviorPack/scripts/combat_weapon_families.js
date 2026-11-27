@@ -78,12 +78,14 @@ const families={
   {name:'虹突き',shape:'thrust',reach:5.4},{name:'時戻し',shape:'cleave',reach:4.5,angle:.35},
   {name:'虹時の交差',shape:'cross',reach:5,pulses:[0,8],power:-2}],tier2:{effect:'slowness'},tier3:{effect:'slowness',backBonus:4}}
 };
+export const FAMILY_CODES=Object.freeze({'剣':'sword','斧':'axe','槍':'spear','ハンマー':'hammer','扇':'fan'});
 export function catalogFamily(g){
  if(!/^gear_\d{3}$/.test(g?.id??'')||!Number.isInteger(g.a)||!Number.isInteger(g.rank)||g.rank<1||g.rank>3)return;
  return families[`${g.kind}:${g.a}`];
 }
 export function catalogFamilyMove(g,stage){
  const family=catalogFamily(g);if(!family||!Number.isInteger(stage)||stage<1||stage>3)return;
- const m=family.stages[stage-1];return stage===3&&g.rank>=2?{...m,...(g.rank===3?family.tier3:family.tier2)}:m;
+ const m=family.stages[stage-1],tier=stage===3&&g.rank>=2?(g.rank===3?family.tier3:family.tier2):{};
+ return {...m,...tier,familyAnimation:`family_${FAMILY_CODES[g.kind]}_${g.a}_${stage}_${g.rank}`};
 }
 export const CATALOG_FAMILY_COUNT=Object.keys(families).length;

@@ -17,13 +17,28 @@ POSES={
  'ult_sword':{'root':[[0,-20,0],[0,240,0],[0,360,0]],'body':[[-20,-35,0],[25,35,0],[0,0,0]],'rightarm':[[-150,30,65],[-70,-35,-75],[0,0,0]],'leftarm':[[-70,-30,-55],[-70,30,55],[0,0,0]],'rightleg':[[40,0,0],[-40,0,0],[0,0,0]],'leftleg':[[-40,0,0],[40,0,0],[0,0,0]]},
  'ult_axe':{'root':[[0,0,0],[0,120,0],[0,0,0]],'body':[[-35,-25,0],[45,25,0],[0,0,0]],'rightarm':[[-170,20,30],[-20,-15,-40],[0,0,0]],'leftarm':[[-150,-25,-30],[-30,15,20],[0,0,0]],'rightleg':[[30,0,0],[-35,0,0],[0,0,0]],'leftleg':[[-30,0,0],[35,0,0],[0,0,0]]}
 }
+# Match scripted third-stage windup/pulses/recovery (ticks at 20 TPS).
+# These tracks are also reused by ultimate casts, whose damage is immediate.
+TIMING={
+ 'warden_0':(4,6,16),'warden_1':(4,7,16),'warden_2':(7,0,21),
+ 'warden_3':(4,7,16),'warden_4':(3,7,17),'warden_5':(4,7,16),
+ 'warden_6':(4,0,16),'warden_7':(5,9,21),'ult_sword':(4,8,21),'ult_axe':(8,0,24)
+}
+def key(tick):return str(tick/20)
 def build():
  anim={}
  for name,bones in POSES.items():
-  tracks={}
+  first,extra,recovery=TIMING[name];tracks={}
+  # Modest, explicit item-space track follows the authored right-arm pose;
+  # rendering and double transforms in first/third person require client tests.
+  arm=bones['rightarm'];bones={**bones,'rightitem':[[round(v*.25,2) for v in pose] for pose in arm]}
   for bone,(windup,impact,end) in bones.items():
-   tracks[bone]={'rotation':{'0.0':[0,0,0],'0.15':windup,'0.35':impact,'0.72':end}}
-  anim[f'animation.hakkai.action_finisher_{name}']={'loop':False,'animation_length':.72,'bones':tracks}
+   frames={'0.0':[0,0,0],key(max(1,first//2)):windup,key(first):impact}
+   if extra:
+    recoil=first+max(1,extra//2);frames[key(recoil)]=windup
+    frames[key(first+extra)]=([impact[0],-impact[1],-impact[2]] if name in ('warden_1','warden_5') else impact)
+   frames[key(recovery)]=end;tracks[bone]={'rotation':frames}
+  anim[f'animation.hakkai.action_finisher_{name}']={'loop':False,'animation_length':recovery/20,'bones':tracks}
  return (json.dumps({'format_version':'1.8.0','animations':anim},indent=2)+'\n').encode()
 if __name__=='__main__':
  p=argparse.ArgumentParser();group=p.add_mutually_exclusive_group(required=True);group.add_argument('--write',action='store_true');group.add_argument('--check',action='store_true');args=p.parse_args()

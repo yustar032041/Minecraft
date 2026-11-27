@@ -15,7 +15,7 @@ function fixture(kind='剣',counter={hasCounter:()=>false,consumeCounter:()=>fal
   getGameMode:()=>GameMode.Survival,getComponent:()=>undefined,getHeadLocation(){return {...this.location,y:this.location.y+1};},getViewDirection:()=>({x:1,y:0,z:0}),inputInfo:{getMovementVector:()=>input},playSound(){},playAnimation:id=>animations.push(id),applyImpulse:v=>impulses.push(v)};
  const makeEnemy=(id,x,z)=>({id,typeId:'minecraft:zombie',isValid:true,dimension:d,location:{x,y:80,z},getHeadLocation(){return {...this.location,y:this.location.y+1};},getComponent:()=>({hasTypeFamily:()=>true}),applyDamage:n=>(hits.push([id,n]),true)});
  const front=makeEnemy('front',2.5,.5),back=makeEnemy('back',-1.5,.5);d.getEntities=()=>[front,back];
- const g={id:'gear_008',kind,rank:1,damage:99},s={s:100};const gear=new Map([[item,g]]);
+ const g={id:'gear_008',kind,rank:1},s={s:100};const gear=new Map([[item,g]]);
  const ctrl=setupActionCombat({system,gear,selected:()=>({typeId:item}),state:()=>s,enabled:()=>enabled,visibleFrom:()=>visible,onHit:(...args)=>onHits.push(args),...counter});
  return {p,d,g,s,front,back,ctrl,system,hits,animations,impulses,onHits,
   setEnabled:x=>enabled=x,setItem:x=>item=x,setInput:(x,y)=>input={x,y},setRay:x=>ray=x,setVisible:x=>visible=x,
@@ -33,7 +33,7 @@ test('replaces only opted-in survival melee damage on hostile targets',()=>{
 });
 test('timed combo has windup, stamina, spacing and a real 360 degree third attack',()=>{
  const f=fixture();assert.equal(f.swing(),true);assert.equal(f.s.s,94);assert.deepEqual(f.hits,[]);
- f.advance(3);assert.deepEqual(f.hits,[]);f.advance(4);assert.deepEqual(f.hits,[['front',19]],'sword sweet spot bonus, not native 99');
+ f.advance(3);assert.deepEqual(f.hits,[]);f.advance(4);assert.deepEqual(f.hits,[['front',19]],'fallback sword sweet spot bonus');
  f.advance(11);assert.equal(f.swing(),true);assert.equal(f.s.s,86);f.advance(15);assert.deepEqual(f.hits,[['front',19],['front',23]]);
  f.advance(22);assert.equal(f.swing(),true);assert.equal(f.s.s,74);assert.equal(f.animations.at(-1),'animation.hakkai.action_spin');
  f.advance(26);assert.deepEqual(f.hits,[['front',19],['front',23],['front',27],['back',27]]);assert.equal(f.onHits.length,4);
@@ -107,7 +107,7 @@ test('mist cross sweeps opposite sides in separate pulses and revalidates',()=>{
 test('last pulse is included in recovery; swapping cancels all remaining hits',()=>{
  const f=fixture();f.d.getEntities=()=>[];startThird(f,'warden_blade_7');f.d.getEntities=()=>[f.front];f.advance(27);assert.equal(f.hits.length,1);
  f.advance(35);assert.equal(f.swing(),false);f.ctrl.invalidate(f.p.id);f.advance(36);assert.equal(f.hits.length,1);
- f.advance(43);assert.equal(f.swing(),true);assert.equal(f.animations.at(-1),'animation.hakkai.action_cut_a');
+ f.advance(43);assert.equal(f.swing(),true);assert.equal(f.animations.at(-1),'animation.hakkai.action_special_warden_blade_7_1');
 });
 test('ring has an inner dead zone and shadow rewards attacking from behind',()=>{
  const f=fixture();f.d.getEntities=()=>[];startThird(f,'warden_blade_6');f.front.location.x=1;f.back.location.x=2.5;f.d.getEntities=()=>[f.front,f.back];f.advance(26);
@@ -119,4 +119,53 @@ test('authored effects spare major bosses and preserve stronger effects',()=>{
  const f=fixture();f.g.id='warden_blade_1';f.d.getEntities=()=>[];startThird(f,'warden_blade_1');let effects=0;
  f.front.typeId='minecraft:wither';f.front.getEffect=()=>undefined;f.front.addEffect=()=>effects++;f.d.getEntities=()=>[f.front];f.advance(26);assert.equal(f.hits.length,1);assert.equal(effects,0);
  const x=fixture();x.d.getEntities=()=>[];startThird(x,'warden_blade_1');x.front.getEffect=()=>({amplifier:1,duration:100});x.front.addEffect=()=>effects++;x.d.getEntities=()=>[x.front];x.advance(26);assert.equal(effects,0);
+});
+
+test('actual action hit reads bounded weapon enchantments and target type',()=>{
+ const enchants={sharpness:3,smite:4,bane_of_arthropods:5};
+ const item={typeId:'hakkai:gear_008',getComponent:id=>id==='minecraft:enchantable'?{getEnchantment:n=>enchants[n]?{level:enchants[n]}:undefined}:undefined};
+ const f=fixture('剣',{selected:()=>item});
+ f.front.getComponent=id=>id==='minecraft:type_family'?{hasTypeFamily:name=>name==='monster'||name==='undead'}:undefined;
+ f.swing();f.advance(4);assert.deepEqual(f.hits,[['front',29]],'only strongest applicable enchantment, not all of them');
+ const nohit=fixture('剣',{selected:()=>item});nohit.setVisible(false);nohit.swing();nohit.advance(4);assert.equal(nohit.hits.length,0);
+});
+
+test('real catalog weapon resolves its family animation through the swing handler',()=>{
+ const f=fixture('槍');f.g.id='gear_037';f.g.a=17;f.g.rank=1;f.swing();
+ assert.equal(f.animations.at(-1),'animation.hakkai.family_spear_17_1_1');
+ f.advance(5);assert.equal(f.hits.length,1);
+ f.advance(13);f.swing();assert.equal(f.animations.at(-1),'animation.hakkai.family_spear_17_2_1');
+});
+
+test('listed weapon attack damage contributes to real action hits with an upper bound',()=>{
+ const damage=value=>{const f=fixture();f.g.damage=value;f.swing();f.advance(4);return f.hits[0][1];};
+ assert.equal(damage(6),8);assert.equal(damage(13),17);assert.equal(damage(27),34);assert.equal(damage(999),50);
+ assert.equal(damage(NaN),19,'invalid metadata uses class fallback');
+});
+test('one aerial strike per landing costs nine, hits after windup, and breaks combos',()=>{
+ const f=fixture();f.p.getVelocity=()=>({x:0,y:-.2,z:0});f.ctrl.tick(f.p);f.p.isOnGround=false;
+ assert.equal(f.swing(),true);assert.equal(f.s.s,91);assert.equal(f.animations.at(-1),'animation.hakkai.air_strike');
+ f.advance(3);assert.equal(f.hits.length,0);f.advance(4);assert.deepEqual(f.hits.map(x=>x[0]),['front','back']);
+ f.advance(15);assert.equal(f.swing(),true);assert.equal(f.s.s,85);assert.notEqual(f.animations.at(-1),'animation.hakkai.air_strike');
+ f.advance(26);f.p.isOnGround=true;f.ctrl.tick(f.p);f.p.isOnGround=false;assert.equal(f.swing(),true);assert.equal(f.s.s,76);assert.equal(f.animations.at(-1),'animation.hakkai.air_strike');
+});
+test('aerial strike fails safe on load, low stamina, cancellation, or obstruction',()=>{
+ const x=fixture();x.p.getVelocity=()=>({y:-.2});x.p.isOnGround=false;x.ctrl.tick(x.p);x.swing();assert.notEqual(x.animations.at(-1),'animation.hakkai.air_strike');
+ const y=fixture();y.p.getVelocity=()=>({y:-.2});y.ctrl.tick(y.p);y.p.isOnGround=false;y.s.s=8;y.swing();assert.equal(y.s.s,2);assert.notEqual(y.animations.at(-1),'animation.hakkai.air_strike');
+ const z=fixture();z.p.getVelocity=()=>({y:-.2});z.ctrl.tick(z.p);z.p.isOnGround=false;z.swing();z.ctrl.invalidate(z.p.id);z.advance(4);assert.equal(z.hits.length,0);
+ const w=fixture();w.p.getVelocity=()=>({y:-.2});w.ctrl.tick(w.p);w.p.isOnGround=false;w.swing();w.setVisible(false);w.advance(4);assert.equal(w.hits.length,0);
+});
+
+test('roll counter uses actual delayed hit tick, not the initial swing tick',()=>{
+ const checks=[],spends=[];const f=fixture('剣',{hasCounter:(_p,t)=>(checks.push(t),t<4),consumeCounter:(_p,t)=>spends.push(t)});
+ f.swing();f.advance(4);assert.deepEqual(checks,[4]);assert.deepEqual(spends,[]);assert.deepEqual(f.hits,[['front',19]]);
+ const calls=[];const x=fixture('剣',{hasCounter:(_p,t)=>t>=4&&t<5,consumeCounter:(_p,t)=>calls.push(t)});
+ x.swing();x.advance(4);assert.deepEqual(calls,[4]);assert.equal(x.hits[0][1],27);
+});
+
+test('special sword first and second stages select their own timing tracks',()=>{
+ const f=fixture();f.g.id='warden_blade_4';assert.equal(f.swing(),true);
+ assert.equal(f.animations.at(-1),'animation.hakkai.action_special_warden_blade_4_1');
+ f.advance(10);assert.equal(f.swing(),true);
+ assert.equal(f.animations.at(-1),'animation.hakkai.action_special_warden_blade_4_2');
 });

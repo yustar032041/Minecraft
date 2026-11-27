@@ -1,7 +1,7 @@
 import {catalogFamily,catalogFamilyMove} from './combat_weapon_families.js';
 // Hand-authored experimental melee movesets for the eight boss-derived swords
 // and two endgame weapons. These are gameplay patterns, not hash-based visual
-// variants. Other weapons intentionally use the existing class fallback.
+// variants. Catalog melee weapons use their own shared family definitions.
 //
 // One pulse = one delayed hit test. Multiple pulses may still be rejected by
 // Bedrock's hurt immunity; a pulse is never a promise of guaranteed damage.
@@ -49,6 +49,8 @@ const moves={
 };
 export function authoredMoveset(g){return moves[g?.id]??catalogFamily(g);}
 export function authoredMove(g,stage){
- const set=moves[g?.id];return set&&Number.isInteger(stage)&&stage>=1&&stage<=3?set.stages[stage-1]:catalogFamilyMove(g,stage);
+ const set=moves[g?.id];
+ if(set&&Number.isInteger(stage)&&stage>=1&&stage<=3){const move=set.stages[stage-1];return stage<3?{...move,specialAnimation:`action_special_${g.id}_${stage}`}:move;}
+ return catalogFamilyMove(g,stage);
 }
 export const AUTHORED_WEAPONS=Object.freeze(Object.keys(moves));

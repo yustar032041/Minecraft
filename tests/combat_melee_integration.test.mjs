@@ -23,3 +23,10 @@ selectedItem={typeId:'minecraft:iron_sword',getDynamicProperty:()=>undefined};p.
  p.isSneaking=false;handler({damagingEntity:p,hitEntity:target});assert.equal(s.s,30,'creative does not spend melee stamina');
 }
 console.log('Melee event: free ordinary attacks, parry and skill coexistence OK (mocked)');
+// The action replacement must not swallow the warden's direct-hit parry.
+{
+ let count=0;context.isCreative=()=>false;context.actionCombat={controls:()=>true};context.wardenBoss={onMeleeParry:()=>{count++;return true;}};
+ const before=healing;handler({damagingEntity:p,hitEntity:target});assert.equal(count,1);assert.equal(healing,before+1);
+ handler({damagingEntity:p,hitEntity:{typeId:'minecraft:player',isValid:true}});assert.equal(count,1,'protected player does not trigger parry');
+ context.actionCombat=undefined;
+}

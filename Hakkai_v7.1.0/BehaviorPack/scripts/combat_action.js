@@ -3,6 +3,7 @@ import {isCombatTarget} from './combat_resonance.js';
 import {weaponDirection} from './combat_weapon_style.js';
 import {planRollSegment} from './combat_roll.js';
 import {authoredMove} from './combat_weapon_movesets.js';
+import {actionEnchantmentBonus} from './combat_action_enchantments.js';
 
 // Experimental replacement combat for five add-on melee classes.
 // No animation is assumed to have rendered merely because playAnimation returned.
@@ -16,7 +17,9 @@ const PROFILE=Object.freeze({
 export const isActionWeapon=g=>!!g&&Object.hasOwn(PROFILE,g.kind)&&typeof g.id==='string';
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z);
 export function setupActionCombat({system,gear,selected,state,enabled,visibleFrom,onHit=()=>{},hasCounter=()=>false,consumeCounter=()=>false,notice=()=>{},report=()=>{}}){
- const actions=new Map();
+ const actions=new Map(),airborne=new Map();
+ // Start conservatively if first seen in midair; landing re-arms one strike.
+ function tick(p){try{if(p?.isValid&&p.isOnGround)airborne.set(p.id,false);else if(p?.id&&!airborne.has(p.id))airborne.set(p.id,true);}catch{}}
  function eligible(p){
   try{const health=p?.getComponent('minecraft:health');return !!p?.isValid&&(!health||health.currentValue>0)&&p.typeId==='minecraft:player'&&p.getGameMode()===GameMode.Survival&&enabled(p)===true;}catch{return false;}
  }
@@ -52,15 +55,17 @@ export function setupActionCombat({system,gear,selected,state,enabled,visibleFro
     if(t>old.started+1)old.mashed=true;
     return false;
    }
-   const stage=old?.identity===identity&&!old.mashed&&old.stage<3&&t>=old.ready&&t<=old.ready+10?old.stage+1:1;
-   const profile=PROFILE[g.kind],move=authoredMove(g,stage),windup=move?.windup??profile.windup;
-   const recovery=Math.max(move?.recovery??(profile.recovery+(stage===3?5:0)),windup+Math.max(...(move?.pulses??[0]))+1),cost=[0,6,8,12][stage];
+   let aerial=false;
+   try{aerial=!p.isOnGround&&!p.isSneaking&&airborne.get(p.id)===false&&p.getVelocity().y<-.08&&Number.isFinite(s.s)&&s.s>=9;}catch{}
+   const stage=aerial?1:old?.identity===identity&&!old.mashed&&old.stage<3&&t>=old.ready&&t<=old.ready+10?old.stage+1:1;
+   const profile=PROFILE[g.kind],move=aerial?{name:'空中衝撃',shape:'spin',reach:3.5,windup:4,recovery:15,power:2}:authoredMove(g,stage),windup=move?.windup??profile.windup;
+   const recovery=Math.max(move?.recovery??(profile.recovery+(stage===3?5:0)),windup+Math.max(...(move?.pulses??[0]))+1),cost=aerial?9:[0,6,8,12][stage];
    if(!Number.isFinite(s.s)||s.s<cost)return false;
    const view=p.getViewDirection(),n=Math.hypot(view.x,view.z);
    if(!Number.isFinite(n)||n<.01)return false;
    const facing={x:view.x/n,z:view.z/n},direction=weaponDirection(p),dim=p.dimension.id,slot=p.selectedSlotIndex,origin={...p.location};
-   const action={identity,stage,started:t,ready:t+recovery,direction,mashed:false};
-   actions.set(p.id,action);s.s-=cost;
+   const action={identity,stage,started:t,ready:t+recovery,direction,mashed:aerial};
+   actions.set(p.id,action);s.s-=cost;if(aerial)airborne.set(p.id,true);
    // Directional attacks attempt a short physical step, with a small hop on
    // forward input. Require a checked, supported run-up; collision is still
    // resolved by Bedrock physics, not guaranteed against every edge/impulse.
@@ -68,8 +73,8 @@ export function setupActionCombat({system,gear,selected,state,enabled,visibleFro
     const step=direction==='forward'?facing:direction==='back'?{x:-facing.x,z:-facing.z}:direction==='left'?{x:facing.z,z:-facing.x}:{x:-facing.z,z:facing.x};
     try{const speed=move?.move??.36,hop=move?.hop??.20;const path=planRollSegment(p.dimension,origin,step,1.8,true);if(path&&path.travel>=1.79)p.applyImpulse({x:step.x*speed,y:direction==='forward'?hop:0,z:step.z*speed});}catch{}
    }
-   const anim=move?.animation?`finisher_${move.animation}`:stage===3?(['spin','ring'].includes(move?.shape??'spin')?'spin':move?.shape==='thrust'?'lunge':'cut_b'):direction==='forward'?'lunge':direction==='back'?'retreat':direction==='left'?'sidestep_left':direction==='right'?'sidestep_right':stage===2?'cut_b':'cut_a';
-   try{p.playAnimation(`animation.hakkai.action_${anim}`,{blendOutTime:.1,stopExpression:'query.any_animation_finished'});}catch{}
+   const anim=aerial?'air_strike':move?.familyAnimation??move?.specialAnimation??(move?.animation?`action_finisher_${move.animation}`:stage===3?(['spin','ring'].includes(move?.shape??'spin')?'action_spin':move?.shape==='thrust'?'action_lunge':'action_cut_b'):direction==='forward'?'action_lunge':direction==='back'?'action_retreat':direction==='left'?'action_sidestep_left':direction==='right'?'action_sidestep_right':stage===2?'action_cut_b':'action_cut_a');
+   try{p.playAnimation(`animation.hakkai.${anim}`,{blendOutTime:.1,stopExpression:'query.any_animation_finished'});}catch{}
    if(move?.name)try{notice(p,`§b${move.name}`,22);}catch{}
    try{p.playSound('random.orb',{volume:.30,pitch:stage===3?1.5:1.05});}catch{}
    // A quiet cue marks the end of recovery; client timing is still untested.
@@ -104,16 +109,19 @@ export function setupActionCombat({system,gear,selected,state,enabled,visibleFro
       if(seen.has(target.id))continue;if(seen.size>=(stage===3?6:3))break;seen.add(target.id);
       if(actions.get(p.id)!==action||action.cancelled||!eligible(p)||p.dimension.id!==dim||p.selectedSlotIndex!==slot||selected(p)?.typeId!==item.typeId||state(p).menu||state(p).busy||dist(origin,p.location)>3||dist(p.location,center)>.5||!inside(target))continue;
       const dx=target.location.x-center.x,dz=target.location.z-center.z,r=Math.hypot(dx,dz);
-      const base=profile.damage+rank*3+(stage-1)*3+(move?.power??0);
+      // Honor each weapon's listed attack stat rather than flattening all
+      // weapons of one class/rank. Unknown metadata uses the older fallback.
+      const listed=Number.isFinite(g.damage)&&g.damage>0?Math.min(40,g.damage):profile.damage+rank*3;
+      const base=Math.max(1,listed+(stage-1)*3+(move?.power??0));
       const sweet=g.kind==='剣'?r>=1.6&&r<=3:['斧','ハンマー'].includes(g.kind)?r>=.8&&r<=2.2:g.kind==='槍'?r>=3.2&&r<=5:r>=2.5&&r<=4.3;
       // Deep Shadow rewards positioning behind an opponent, not just weapon
       // damage. If the target's orientation is unavailable there is no bonus.
       let behind=false;
       if(move?.backBonus)try{const v=target.getViewDirection(),n=Math.hypot(v.x,v.z);behind=n>.01&&(v.x*(-dx)+v.z*(-dz))/(n*r)<-.3;}catch{}
-      let counter=false;try{counter=hasCounter(p,t)===true;}catch{}
-      const damage=base+(sweet?Math.ceil(base*.25):0)+(behind?move.backBonus:0)+(counter?6+rank*2:0);
+      const hitTick=system.currentTick;let counter=false;try{counter=hasCounter(p,hitTick)===true;}catch{}
+      const damage=base+(sweet?Math.ceil(base*.25):0)+(behind?move.backBonus:0)+(counter?6+rank*2:0)+actionEnchantmentBonus(selected(p),target);
       try{if(target.applyDamage(damage,{cause:EntityDamageCause.magic,damagingEntity:p})){
-       if(counter)try{consumeCounter(p,t);}catch{}
+       if(counter)try{consumeCounter(p,hitTick);}catch{}
        try{onHit(p,target,g,damage);}catch(err){report('アクション命中',err);}
        try{p.dimension.spawnParticle('hakkai:wind_burst',{...target.location,y:target.location.y+1});}catch{}
        // Extra crowd control and knockback do not pin major bosses. Recheck
@@ -133,8 +141,8 @@ export function setupActionCombat({system,gear,selected,state,enabled,visibleFro
  function controls(p){try{return eligible(p)&&isActionWeapon(gear.get(selected(p)?.typeId));}catch{return false;}}
  // Invalidate a pending hit without erasing recovery: equipment or dimension
  // swapping must not allow a player to bypass a weapon's attack cadence.
- function invalidate(id){const e=actions.get(id);if(e){e.cancelled=true;e.mashed=true;}}
- function clear(id){actions.delete(id);}
+ function invalidate(id){const e=actions.get(id);if(e){e.cancelled=true;e.mashed=true;}airborne.set(id,true);}
+ function clear(id){actions.delete(id);airborne.delete(id);}
  function status(p,t){const e=actions.get(p.id);return e&&t<e.ready?'§e攻撃後の隙':'';}
- return {cancelNative,swing,controls,invalidate,clear,status};
+ return {cancelNative,swing,controls,invalidate,clear,status,tick};
 }
