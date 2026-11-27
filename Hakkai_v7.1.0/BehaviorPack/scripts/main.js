@@ -6625,7 +6625,7 @@ let weaponSwingAvailable=false;
 try{const signal=world.afterEvents.playerSwingStart;if(signal){signal.subscribe(e=>{if(actionCombat?.controls(e.player))actionCombat.swing(e);else{weaponTrace?.swing(e);vanillaSwingMotion(e,selected,state);}});weaponSwingAvailable=true;}}catch(err){report('武器の振りイベント',err);}
 weaponTrace=setupWeaponTrace({system,gear,selected,state,visibleFrom,airAttack:(p,s,g,t)=>airStrike?.beginSwing(p,s,g,t)??false,consumeCounter:(p,t)=>combatRoll?.consumeCounter(p,t)??false,enabled:weaponSwingAvailable,report});
 try{const signal=world.beforeEvents.entityHurt;if(signal){signal.subscribe(e=>actionCombat?.cancelNative(e));actionHurtAvailable=true;}}catch(err){report('試作戦闘のダメージイベント',err);}
-actionCombat=setupActionCombat({system,gear,selected,state,visibleFrom,enabled:p=>weaponSwingAvailable&&actionHurtAvailable&&num(p,'action_prototype')===1,onHit:(p,e,g,damage)=>combatResonance?.onHurt(p,e,g,damage),hasCounter:(p,t)=>combatRoll?.hasCounter(p,t)??false,consumeCounter:(p,t)=>combatRoll?.consumeCounter(p,t)??false,report});
+actionCombat=setupActionCombat({system,gear,selected,state,visibleFrom,enabled:p=>weaponSwingAvailable&&actionHurtAvailable&&num(p,'action_prototype')===1,onHit:(p,e,g,damage)=>combatResonance?.onHurt(p,e,g,damage),notice,hasCounter:(p,t)=>combatRoll?.hasCounter(p,t)??false,consumeCounter:(p,t)=>combatRoll?.consumeCounter(p,t)??false,report});
 bowTrail=setupBowTrail({system,gear,selected,state,airAttack:(p,s,g,t)=>airStrike?.beginSwing(p,s,g,t)??false});
 safeSub('world','after','entitySpawn',({entity})=>bowTrail?.spawned(entity));
 combatGuard=setupCombatGuard({notice});

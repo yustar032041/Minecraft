@@ -3,6 +3,9 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {setupActionCombat} from '../Hakkai_v7.1.0/BehaviorPack/scripts/combat_action.js';
 import {EntityDamageCause,GameMode} from '@minecraft/server';
+import {AUTHORED_WEAPONS,authoredMove} from '../Hakkai_v7.1.0/BehaviorPack/scripts/combat_weapon_movesets.js';
+import {WARDEN_BLADES} from '../Hakkai_v7.1.0/BehaviorPack/scripts/warden_blades.js';
+import {ULTIMATE_WEAPONS} from '../Hakkai_v7.1.0/BehaviorPack/scripts/ultimate_weapons.js';
 
 function fixture(kind='剣',counter={hasCounter:()=>false,consumeCounter:()=>false}){
  const hits=[],animations=[],impulses=[],jobs=[],onHits=[];let enabled=true,item='hakkai:gear_008',input={x:0,y:0},visible=true,ray=[];
@@ -81,4 +84,39 @@ test('seven action animation names and body-spin keyframes exist',()=>{
  const a=JSON.parse(fs.readFileSync('Hakkai_v7.1.0/ResourcePack/animations/action_combat.animation.json','utf8')).animations;
  for(const name of ['cut_a','cut_b','lunge','retreat','sidestep_left','sidestep_right','spin'])assert.ok(a[`animation.hakkai.action_${name}`]);
  assert.deepEqual(a['animation.hakkai.action_spin'].bones.root.rotation['0.50'],[0,360,0]);
+});
+
+test('ten real weapons have three authored moves and referenced finishers',()=>{
+ const finish=JSON.parse(fs.readFileSync('Hakkai_v7.1.0/ResourcePack/animations/action_finishers.animation.json','utf8')).animations;
+ const all=[...WARDEN_BLADES,...ULTIMATE_WEAPONS];
+ assert.equal(AUTHORED_WEAPONS.length,10);
+ for(const id of AUTHORED_WEAPONS){
+  const g=all.find(x=>x.id===id);assert.ok(g,id);
+  for(let stage=1;stage<=3;stage++){const m=authoredMove(g,stage);assert.ok(m?.name);if(m.animation)assert.ok(finish[`animation.hakkai.action_finisher_${m.animation}`]);}
+ }
+ assert.equal(authoredMove({id:'gear_008'},1),undefined);
+});
+function startThird(f,id){f.g.id=id;assert.equal(f.swing(),true);f.advance(11);assert.equal(f.swing(),true);f.advance(22);assert.equal(f.swing(),true);}
+test('mist cross sweeps opposite sides in separate pulses and revalidates',()=>{
+ const f=fixture();f.g.id='warden_blade_1';f.d.getEntities=()=>[];startThird(f,'warden_blade_1');
+ const r=2,a=1.35;f.front.location={x:.5+r*Math.cos(a),y:80,z:.5+r*Math.sin(a)};f.back.location={x:.5+r*Math.cos(a),y:80,z:.5-r*Math.sin(a)};
+ f.d.getEntities=()=>[f.front,f.front,f.back];f.advance(26);assert.deepEqual(f.hits.map(x=>x[0]),['front']);
+ f.advance(33);assert.deepEqual(f.hits.map(x=>x[0]),['front','back']);assert.equal(f.animations.at(-1),'animation.hakkai.action_finisher_warden_1');
+ const x=fixture();x.d.getEntities=()=>[];startThird(x,'warden_blade_1');x.d.getEntities=()=>[x.front];x.advance(26);x.setVisible(false);x.advance(33);assert.equal(x.hits.length,1);
+});
+test('last pulse is included in recovery; swapping cancels all remaining hits',()=>{
+ const f=fixture();f.d.getEntities=()=>[];startThird(f,'warden_blade_7');f.d.getEntities=()=>[f.front];f.advance(27);assert.equal(f.hits.length,1);
+ f.advance(35);assert.equal(f.swing(),false);f.ctrl.invalidate(f.p.id);f.advance(36);assert.equal(f.hits.length,1);
+ f.advance(43);assert.equal(f.swing(),true);assert.equal(f.animations.at(-1),'animation.hakkai.action_cut_a');
+});
+test('ring has an inner dead zone and shadow rewards attacking from behind',()=>{
+ const f=fixture();f.d.getEntities=()=>[];startThird(f,'warden_blade_6');f.front.location.x=1;f.back.location.x=2.5;f.d.getEntities=()=>[f.front,f.back];f.advance(26);
+ assert.deepEqual(f.hits.map(x=>x[0]),['back']);
+ const damage=view=>{const x=fixture();x.g.id='warden_blade_5';x.front.getViewDirection=()=>view;x.swing();x.advance(4);return x.hits[0][1];};
+ assert.equal(damage({x:1,z:0})-damage({x:-1,z:0}),5);
+});
+test('authored effects spare major bosses and preserve stronger effects',()=>{
+ const f=fixture();f.g.id='warden_blade_1';f.d.getEntities=()=>[];startThird(f,'warden_blade_1');let effects=0;
+ f.front.typeId='minecraft:wither';f.front.getEffect=()=>undefined;f.front.addEffect=()=>effects++;f.d.getEntities=()=>[f.front];f.advance(26);assert.equal(f.hits.length,1);assert.equal(effects,0);
+ const x=fixture();x.d.getEntities=()=>[];startThird(x,'warden_blade_1');x.front.getEffect=()=>({amplifier:1,duration:100});x.front.addEffect=()=>effects++;x.d.getEntities=()=>[x.front];x.advance(26);assert.equal(effects,0);
 });

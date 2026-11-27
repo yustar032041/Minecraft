@@ -2,6 +2,7 @@ import {EntityDamageCause,GameMode} from '@minecraft/server';
 import {isCombatTarget} from './combat_resonance.js';
 import {weaponDirection} from './combat_weapon_style.js';
 import {planRollSegment} from './combat_roll.js';
+import {authoredMove} from './combat_weapon_movesets.js';
 
 // Experimental replacement combat, limited to these three melee classes.
 // No animation is assumed to have rendered merely because playAnimation returned.
@@ -12,10 +13,10 @@ const PROFILE=Object.freeze({
 });
 export const isActionWeapon=g=>!!g&&Object.hasOwn(PROFILE,g.kind)&&typeof g.id==='string';
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z);
-export function setupActionCombat({system,gear,selected,state,enabled,visibleFrom,onHit=()=>{},hasCounter=()=>false,consumeCounter=()=>false,report=()=>{}}){
+export function setupActionCombat({system,gear,selected,state,enabled,visibleFrom,onHit=()=>{},hasCounter=()=>false,consumeCounter=()=>false,notice=()=>{},report=()=>{}}){
  const actions=new Map();
  function eligible(p){
-  try{return !!p?.isValid&&p.typeId==='minecraft:player'&&p.getGameMode()===GameMode.Survival&&enabled(p)===true;}catch{return false;}
+  try{const health=p?.getComponent('minecraft:health');return !!p?.isValid&&(!health||health.currentValue>0)&&p.typeId==='minecraft:player'&&p.getGameMode()===GameMode.Survival&&enabled(p)===true;}catch{return false;}
  }
  // Before-event callback is read-only. Cancel native damage only for living
  // hostile targets with an opted-in player and supported weapon. If the event
@@ -50,62 +51,80 @@ export function setupActionCombat({system,gear,selected,state,enabled,visibleFro
     return false;
    }
    const stage=old?.identity===identity&&!old.mashed&&old.stage<3&&t>=old.ready&&t<=old.ready+10?old.stage+1:1;
-   const profile=PROFILE[g.kind],cost=[0,6,8,12][stage];
+   const profile=PROFILE[g.kind],move=authoredMove(g,stage),windup=move?.windup??profile.windup;
+   const recovery=Math.max(move?.recovery??(profile.recovery+(stage===3?5:0)),windup+Math.max(...(move?.pulses??[0]))+1),cost=[0,6,8,12][stage];
    if(!Number.isFinite(s.s)||s.s<cost)return false;
    const view=p.getViewDirection(),n=Math.hypot(view.x,view.z);
    if(!Number.isFinite(n)||n<.01)return false;
    const facing={x:view.x/n,z:view.z/n},direction=weaponDirection(p),dim=p.dimension.id,slot=p.selectedSlotIndex,origin={...p.location};
-   const action={identity,stage,started:t,ready:t+profile.recovery+(stage===3?5:0),direction,mashed:false};
+   const action={identity,stage,started:t,ready:t+recovery,direction,mashed:false};
    actions.set(p.id,action);s.s-=cost;
    // Directional attacks attempt a short physical step, with a small hop on
    // forward input. Require a checked, supported run-up; collision is still
    // resolved by Bedrock physics, not guaranteed against every edge/impulse.
    if(direction!=='neutral'&&p.isOnGround){
     const step=direction==='forward'?facing:direction==='back'?{x:-facing.x,z:-facing.z}:direction==='left'?{x:facing.z,z:-facing.x}:{x:-facing.z,z:facing.x};
-    try{const path=planRollSegment(p.dimension,origin,step,1.8,true);if(path&&path.travel>=1.79)p.applyImpulse({x:step.x*.36,y:direction==='forward'?.20:0,z:step.z*.36});}catch{}
+    try{const speed=move?.move??.36,hop=move?.hop??.20;const path=planRollSegment(p.dimension,origin,step,1.8,true);if(path&&path.travel>=1.79)p.applyImpulse({x:step.x*speed,y:direction==='forward'?hop:0,z:step.z*speed});}catch{}
    }
-   const anim=stage===3?'spin':direction==='forward'?'lunge':direction==='back'?'retreat':direction==='left'?'sidestep_left':direction==='right'?'sidestep_right':stage===2?'cut_b':'cut_a';
+   const anim=move?.animation?`finisher_${move.animation}`:stage===3?'spin':direction==='forward'?'lunge':direction==='back'?'retreat':direction==='left'?'sidestep_left':direction==='right'?'sidestep_right':stage===2?'cut_b':'cut_a';
    try{p.playAnimation(`animation.hakkai.action_${anim}`,{blendOutTime:.1,stopExpression:'query.any_animation_finished'});}catch{}
+   if(move?.name)try{notice(p,`§b${move.name}`,22);}catch{}
    try{p.playSound('random.orb',{volume:.30,pitch:stage===3?1.5:1.05});}catch{}
    // A quiet cue marks the end of recovery; client timing is still untested.
    system.runTimeout(()=>{
     try{if(actions.get(p.id)===action&&!action.cancelled&&eligible(p)&&p.dimension.id===dim&&p.selectedSlotIndex===slot&&selected(p)?.typeId===item.typeId)p.playSound('random.click',{volume:.25,pitch:1.5});}catch{}
    },action.ready-t);
-   system.runTimeout(()=>{
+   const pulses=move?.pulses??[0];
+   // Every scheduled pulse is its own revalidated hit test; no timers or
+   // damage survive a slot change, mode switch, teleport or unloaded path.
+   for(let pulse=0;pulse<pulses.length;pulse++)system.runTimeout(()=>{
     try{
      if(actions.get(p.id)!==action||action.cancelled||!eligible(p)||p.dimension.id!==dim||p.selectedSlotIndex!==slot||selected(p)?.typeId!==item.typeId||state(p).menu||state(p).busy||dist(origin,p.location)>3)return;
      const center={...p.location},rank=Number.isFinite(g.rank)?Math.max(1,Math.min(3,Math.floor(g.rank))):1;
-     const range=profile.range+(direction==='forward'?.4:direction==='back'?-.25:0),cone=stage===3?-1:profile.cone;
-     // Draw the sweep in the same geometry used to select enemies.
-     const spread=stage===3?Math.PI:Math.acos(cone),start=Math.atan2(facing.z,facing.x);
+     const shape=move?.shape??(stage===3?'spin':'class'),range=(move?.reach??profile.range)+(direction==='forward'?.4:direction==='back'?-.25:0);
+     const inner=move?.inner??.25,cone=shape==='spin'||shape==='ring'?-1:shape==='thrust'?.86:shape==='cleave'||shape==='cross'?.35:profile.cone;
+     const turn=shape==='cross'?(pulse%2?-.38:.38):(move?.angle??0),c=Math.cos(turn),sn=Math.sin(turn),f={x:facing.x*c-facing.z*sn,z:facing.z*c+facing.x*sn};
+     const spread=cone===-1?Math.PI:Math.acos(cone),start=Math.atan2(f.z,f.x);
      for(let i=0;i<18;i++){
-      const angle=start-spread+2*spread*i/17,r=range*.75;
-      try{p.dimension.spawnParticle('hakkai:wind_trace',{x:center.x+Math.cos(angle)*r,y:center.y+1,z:center.z+Math.sin(angle)*r});}catch{}
+      const angle=start-spread+2*spread*i/17,r=inner+(range-inner)*.7;
+      try{p.dimension.spawnParticle(i%4===0?'hakkai:wind_burst':`hakkai:${['shot_wind','shot_spore','shot_sand','shot_frost','shot_spark','shot_shadow','shot_wind','shot_time'][g.wardenBlade]??'wind_trace'}`,{x:center.x+Math.cos(angle)*r,y:center.y+.7+(i%3)*.25,z:center.z+Math.sin(angle)*r});}catch{}
      }
-     const targets=p.dimension.getEntities({location:center,maxDistance:range+1,closest:48}).filter(target=>{
-      try{
-       if(!target?.isValid||target.id===p.id||target.dimension?.id!==dim||!isCombatTarget(target,p))return false;
-       const dx=target.location.x-center.x,dz=target.location.z-center.z,r=Math.hypot(dx,dz);
-       return r>=.25&&r<=range&&Math.abs(target.location.y-center.y)<=2.25&&(dx*facing.x+dz*facing.z)/r>=cone&&clearLine(p,target);
-      }catch{return false;}
-     }).sort((a,b)=>dist(a.location,center)-dist(b.location,center)).slice(0,stage===3?6:3);
-     for(const target of targets){
-      if(actions.get(p.id)!==action||action.cancelled||!eligible(p)||p.dimension.id!==dim||p.selectedSlotIndex!==slot||selected(p)?.typeId!==item.typeId||dist(p.location,center)>.5||!target.isValid||target.dimension?.id!==dim||!isCombatTarget(target,p))continue;
+     const inside=target=>{
+      if(!target?.isValid||target.id===p.id||target.dimension?.id!==dim||!isCombatTarget(target,p))return false;
+      const health=target.getComponent('minecraft:health');if(health&&Number.isFinite(health.currentValue)&&health.currentValue<=0)return false;
       const dx=target.location.x-center.x,dz=target.location.z-center.z,r=Math.hypot(dx,dz);
-      if(r<.25||r>range||Math.abs(target.location.y-center.y)>2.25||(dx*facing.x+dz*facing.z)/r<cone||!clearLine(p,target))continue;
-      // Fixed class/rank/stage technique values, not the item's native attack.
-      const base=profile.damage+rank*3+(stage-1)*3;
-      // Each class rewards a different spacing, separately from native damage.
+      return r>=inner&&r<=range&&Math.abs(target.location.y-center.y)<=2.25&&(dx*f.x+dz*f.z)/r>=cone&&clearLine(p,target);
+     };
+     const targets=p.dimension.getEntities({location:center,maxDistance:range+1,closest:48}).filter(target=>{try{return inside(target);}catch{return false;}})
+      .sort((a,b)=>dist(a.location,center)-dist(b.location,center));
+     const seen=new Set();
+     for(const target of targets){
+      if(seen.has(target.id))continue;if(seen.size>=(stage===3?6:3))break;seen.add(target.id);
+      if(actions.get(p.id)!==action||action.cancelled||!eligible(p)||p.dimension.id!==dim||p.selectedSlotIndex!==slot||selected(p)?.typeId!==item.typeId||state(p).menu||state(p).busy||dist(origin,p.location)>3||dist(p.location,center)>.5||!inside(target))continue;
+      const dx=target.location.x-center.x,dz=target.location.z-center.z,r=Math.hypot(dx,dz);
+      const base=profile.damage+rank*3+(stage-1)*3+(move?.power??0);
       const sweet=g.kind==='剣'?r>=1.6&&r<=3:g.kind==='斧'?r>=.8&&r<=2.2:r>=3.2&&r<=5;
+      // Deep Shadow rewards positioning behind an opponent, not just weapon
+      // damage. If the target's orientation is unavailable there is no bonus.
+      let behind=false;
+      if(move?.backBonus)try{const v=target.getViewDirection(),n=Math.hypot(v.x,v.z);behind=n>.01&&(v.x*(-dx)+v.z*(-dz))/(n*r)<-.3;}catch{}
       let counter=false;try{counter=hasCounter(p,t)===true;}catch{}
-      const damage=base+(sweet?Math.ceil(base*.25):0)+(counter?6+rank*2:0);
+      const damage=base+(sweet?Math.ceil(base*.25):0)+(behind?move.backBonus:0)+(counter?6+rank*2:0);
       try{if(target.applyDamage(damage,{cause:EntityDamageCause.magic,damagingEntity:p})){
        if(counter)try{consumeCounter(p,t);}catch{}
-       onHit(p,target,g,damage);try{p.dimension.spawnParticle('hakkai:wind_burst',{...target.location,y:target.location.y+1});}catch{}
+       try{onHit(p,target,g,damage);}catch(err){report('アクション命中',err);}
+       try{p.dimension.spawnParticle('hakkai:wind_burst',{...target.location,y:target.location.y+1});}catch{}
+       // Extra crowd control and knockback do not pin major bosses. Recheck
+       // identity, world, target and visibility after synchronous callbacks.
+       const major=/^(?:hakkai:(?:time_warden|eclipse_colossus|fushi_chief|(?:king_)?guardian_[0-7])|minecraft:(?:wither|ender_dragon|warden))$/.test(target.typeId??'');
+       if(!major&&actions.get(p.id)===action&&!action.cancelled&&eligible(p)&&!state(p).menu&&!state(p).busy&&dist(origin,p.location)<=3&&dist(p.location,center)<=.5&&p.dimension.id===dim&&p.selectedSlotIndex===slot&&selected(p)?.typeId===item.typeId&&target.isValid&&inside(target)){
+        if(move?.effect)try{const old=target.getEffect(move.effect);if(!old||old.amplifier===0&&old.duration<40)target.addEffect(move.effect,40,{amplifier:0,showParticles:false});}catch{}
+        if(move?.push)try{target.applyKnockback({x:dx/r*move.push,z:dz/r*move.push},.08);}catch{}
+       }
       }}catch(err){report('アクション攻撃',err);}
      }
     }catch(err){report('アクション攻撃の判定',err);}
-   },profile.windup);
+   },windup+pulses[pulse]);
    return true;
   }catch(err){report('アクション攻撃',err);return false;}
  }
