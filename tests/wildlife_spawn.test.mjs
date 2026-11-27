@@ -263,3 +263,11 @@ for(let realm=0;realm<8;realm++){
  const actual=[...seen].map(i=>wildlife[i].id).sort();
  assert.deepEqual(actual,wildlife.filter(m=>m.dim===realm).map(m=>m.id).sort(),`all realm ${realm} normal species reached`);
 }
+// The wide search is wired only to add-on dimensions, not vanilla worlds.
+for(const id of ['hakkai:realm_0','hakkai:realm_7','hakkai:realm_8','hakkai:realm_9','hakkai:warden_arena','minecraft:overworld']){
+ const f=spawnFixture();f.d.id=id;f.p.location={x:500,y:90,z:500};const {ctx}=makeCtx(f);let args;
+ ctx.spawnWildlife=opts=>{args=opts;return false;};
+ const profile=id==='minecraft:overworld'?{id:'plains',key:'plains',profile:{mode:'land',species:wildlife[0].id}}:undefined;
+ ctx.wildlifeTick(f.p,profile,undefined);
+ assert.ok(args,`search invoked for ${id}`);assert.equal(args.wideRealmSearch,id.startsWith('hakkai:'),id);
+}

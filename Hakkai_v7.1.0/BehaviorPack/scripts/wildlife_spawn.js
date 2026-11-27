@@ -4,7 +4,11 @@
 // Search the same bounded directions but include floors up to 16 blocks away
 // vertically, helping deep cave ledges where a level surface is scarce.
 const HEIGHTS=[0,...Array.from({length:16},(_,i)=>[-i-1,i+1]).flat()];
-export function spawnWildlife({player,type,tick,safe,preferred=()=>true,allowNearbyBiome=false,avoid=()=>false,capacity=()=>true,confirm=()=>true}){
+// Rotate the first ring each one-second scan: otherwise a successful nearby
+// candidate always wins and the wider rings are never used. Do not force-load
+// distant chunks; the normal site and density checks still apply to each ring.
+const REALM_RADII=[10,16,22,28,34];
+export function spawnWildlife({player,type,tick,safe,preferred=()=>true,allowNearbyBiome=false,wideRealmSearch=false,avoid=()=>false,capacity=()=>true,confirm=()=>true}){
  const d=player.dimension,location=player.location;const fallbacks=[];
  // Keep density queries bounded even when several candidate regions are full.
  let capacityChecks=0,groundChecks=0;const maxCapacityChecks=4,maxGroundChecks=24,maxFallbacksPerColumn=2;
@@ -38,7 +42,8 @@ export function spawnWildlife({player,type,tick,safe,preferred=()=>true,allowNea
   try{const selected=typeof type==='function'?type(at):type;if(typeof selected!=='string'||!selected)return false;d.spawnEntity(selected,at,{spawnEvent:'hakkai:wild',initialPersistence:false});return true;}catch{return false;}
  }
  for(let i=0;i<12;i++){
-  const radius=8+(i%4)*2,angle=i*2.39996+(tick%100)/100;
+  const radius=wideRealmSearch?REALM_RADII[(Math.floor(tick/20)+i)%REALM_RADII.length]:8+(i%4)*2;
+  const angle=i*2.39996+(wideRealmSearch?Math.floor(tick/20)*2.39996:(tick%100)/100);
   const x=Math.floor(location.x+Math.cos(angle)*radius)+.5,z=Math.floor(location.z+Math.sin(angle)*radius)+.5;
   for(const dy of HEIGHTS){
    const at={x,y:Math.floor(location.y)+dy,z};

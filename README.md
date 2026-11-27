@@ -1,3 +1,13 @@
+# 8界風記 v7.1.64
+
+## v7.1.64 配布版
+
+[ダウンロード：Hakkai-v7.1.64.mcaddon](https://github.com/yustar032041/Minecraft/raw/refs/tags/v7.1.64/downloads/Hakkai-v7.1.64.mcaddon)
+
+追加世界の通常MOBの探索距離を約34ブロックまで広げました。[変更内容と導入手順](RELEASE_NOTES_v7.1.64.md)。**Switch参加者側の文字化け・テクスチャ不具合の原因は未特定で、解決も確認できていません。** Bedrock実機も未検証です。ワールドをバックアップし、旧版を重ねず導入してください。
+
+---
+
 # 8界風記 v7.1.63
 
 ## v7.1.63 配布版

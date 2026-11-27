@@ -5990,7 +5990,7 @@ function wildlifeTick(p,b,site){
   player:p,type:()=>ns+m.id,tick:t,safe:possibleWildlifeSite,confirm:validWildlifeGround,
   // Recheck density at the actual spawn point, not only around the player.
   capacity:(dim,pos)=>dim.getEntities({families:['hakkai_wildlife'],location:pos,maxDistance:32,closest:addonWorld?28:14}).length<(addonWorld?28:14),
-  allowNearbyBiome:addonWorld,
+  allowNearbyBiome:addonWorld,wideRealmSearch:addonWorld,
   avoid:pos=>{
    // Vanilla dimensions retain light restrictions. Add-on dimensions use
    // time-of-day weighting instead, including hostile spawns in daylight.
