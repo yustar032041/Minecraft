@@ -1,10 +1,8 @@
 {
   "format_version": "1.16.100",
-  "minecraft": {
-    "texture_set": {
-      "color": "hakkai_moon_bamboo",
-      "metalness_emissive_roughness": "hakkai_moon_bamboo_mer",
-      "normal": "hakkai_moon_bamboo_n"
-    }
+  "minecraft:texture_set": {
+    "color": "hakkai_moon_bamboo",
+    "metalness_emissive_roughness": "hakkai_moon_bamboo_mer",
+    "normal": "hakkai_moon_bamboo_n"
   }
 }

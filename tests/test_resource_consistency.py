@@ -23,3 +23,31 @@ def paths(value):
 for key, item in atlas.items():
     for path in paths(item['textures']):
         assert (root / (path + '.png')).is_file() or (root / (path + '.tga')).is_file(), (key, path)
+
+# Every material instance, including permutations, resolves to our terrain
+# atlas. This checks identifiers, not lighting or in-game rendering.
+bp = root.parent / 'BehaviorPack'
+def material_instances(value):
+    if isinstance(value, dict):
+        for k, v in value.items():
+            if k == 'minecraft:material_instances' and isinstance(v, dict):
+                yield v
+            yield from material_instances(v)
+    elif isinstance(value, list):
+        for v in value:
+            yield from material_instances(v)
+for file in (bp / 'blocks').glob('*.json'):
+    for instances in material_instances(json.loads(file.read_text(encoding='utf8'))):
+        for side, material in instances.items():
+            if isinstance(material, dict) and 'texture' in material:
+                assert material['texture'] in atlas, (file, side, material['texture'])
+
+# Invalid bytes and replacement characters in the packed source are not a
+# substitute for testing actual Japanese glyph rendering on a device.
+for pack in (bp, root):
+    for file in pack.rglob('*'):
+        if not file.is_file() or file.suffix not in ('.json', '.lang', '.js', '.txt'):
+            continue
+        raw = file.read_bytes()
+        assert not raw.startswith(b'\xef\xbb\xbf'), file
+        assert '\ufffd' not in raw.decode('utf8'), file
