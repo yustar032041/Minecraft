@@ -9,7 +9,7 @@
       "minecraft:geometry": "minecraft:geometry.full_block",
       "minecraft:material_instances": {
         "*": {
-          "texture": "sea_lantern",
+          "texture": "hakkai_cloudstone",
           "render_method": "opaque"
         }
       },

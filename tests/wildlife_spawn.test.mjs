@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import {spawnWildlife} from '../Hakkai_v7.1.0/BehaviorPack/scripts/wildlife_spawn.js';
-import {validWildlifeGround} from '../Hakkai_v7.1.0/BehaviorPack/scripts/wildlife_ground.js';
+import {validWildlifeGround,possibleWildlifeSite} from '../Hakkai_v7.1.0/BehaviorPack/scripts/wildlife_ground.js';
 import {pickRealmWildlife} from '../Hakkai_v7.1.0/BehaviorPack/scripts/wildlife_selection.js';
 import {wildlife,places} from '../Hakkai_v7.1.0/BehaviorPack/scripts/data.js';
 import {Difficulty} from '@minecraft/server';
@@ -49,7 +49,7 @@ function makeCtx(f,opts={}){
  const state={};const marks=[];
  const ctx={ns:'hakkai:',state:()=>state,system:{currentTick:40},num:()=>opts.quiet?1:0,world,
   seededWorlds:opts.seededWorlds,wildlife,wildlifeById:new Map(wildlife.map(x=>['hakkai:'+x.id,x])),wildlifeIndex:new Map(wildlife.map((x,i)=>[x.id,i])),
-  Math:random,marked:()=>false,mark:(_p,k,i)=>marks.push([k,i]),pickRealmWildlife,spawnWildlife,validWildlifeGround:opts.confirm??(()=>true),safe:opts.safe??(()=>true),
+  Math:random,marked:()=>false,mark:(_p,k,i)=>marks.push([k,i]),pickRealmWildlife,spawnWildlife,validWildlifeGround:opts.confirm??(()=>true),safe:opts.safe??(()=>true),possibleWildlifeSite:opts.safe??(()=>true),
   spawnRealmEnder:()=>false,spawnFushi:()=>false,isMoonlitNight:()=>false,fushiThresholds:()=>({chief:0,normal:0}),
   disallowHostileSpawn,travelSites:new Map(),FACTORY_VILLAGE_ID:59, Difficulty,places,aspect:s=>s.theme??s.dim,dist:(a,b)=>Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z),coords:s=>({x:s.x+.5,y:89,z:s.z+.5}),families:{}};
  vm.createContext(ctx);vm.runInContext(code,ctx);return {ctx,world,state,marks};
@@ -115,8 +115,8 @@ for(let realm=0;realm<8;realm++){
  const {ctx}=makeCtx(f,{peaceful:true});ctx.pickRealmWildlife=(entries,realm,seen,peaceful)=>entries.find(m=>m.dim===realm&&(!peaceful||m.temper!=='hostile'));
  ctx.wildlifeTick(f.p,undefined,undefined);assert.equal(f.spawned.length,1);assert.notEqual(f.spawned[0][0],'hakkai:'+mob.id,'choose another species if nearby duplicate');
 }
-assert.match(main,/if\(p.getGameMode\(\)!==GameMode.Spectator\)try\{wildlifeTick\(p,profile,site\);\}/,'creative may observe wildlife in all eligible dimensions');
-assert.match(main,/try\{profile=survey\(p\);\}catch\{\}/,'survey errors are isolated');
+assert.match(main,/p.getGameMode\(\)===GameMode.Spectator\)continue/,'spectators do not trigger wildlife scans');
+assert.match(main,/try\{profile=biomeAt\(p\);\}catch\{\}/,'survey errors are isolated');
 console.log('Wildlife: 8 realms, reserved/no-biome sites, peaceful, realm creative inclusion, multiplayer cap, slopes, biome fallback and safe refusal (mocked/static)');
 // The cap is checked at the actual candidate as well as around the player.
 {
@@ -175,7 +175,7 @@ for(const waterlogged of [false,true]){
  const {ctx}=makeCtx(f,{confirm:validWildlifeGround});ctx.LiquidType={Water:'water'};
  const floorStart=main.indexOf('function safeFloor('),floorEnd=main.indexOf('function campfireNearby(',floorStart);
  const safeStart=main.indexOf('function safe(d,l){'),safeEnd=main.indexOf('function safeNear(',safeStart);
- vm.runInContext(main.slice(floorStart,floorEnd)+main.slice(safeStart,safeEnd),ctx);
+ vm.runInContext(main.slice(floorStart,floorEnd)+main.slice(safeStart,safeEnd),ctx);ctx.possibleWildlifeSite=possibleWildlifeSite;
  ctx.pickRealmWildlife=(entries,realm)=>entries.find(m=>m.dim===realm&&m.temper==='hostile');
  ctx.wildlifeTick(f.p,undefined,undefined);assert.equal(f.spawned.length,waterlogged?0:1,`waterlogged=${waterlogged}`);
  if(!waterlogged)assert.equal(f.spawned[0][1].y,40);
@@ -219,5 +219,17 @@ for(const realm of [8,9])for(const peaceful of [false,true]){
  const f=spawnFixture();f.d.id='hakkai:warden_arena';f.p.location={x:0,y:90,z:0};const {ctx}=makeCtx(f);
  ctx.wildlifeTick(f.p,undefined,undefined);assert.equal(f.spawned.length,1);
  const m=wildlife.find(x=>'hakkai:'+x.id===f.spawned[0][0]);assert.equal(m.dim,7);assert.notEqual(m.temper,'hostile');
- assert.match(main,/if\(!p.dimension.getEntities\(\{type:ns\+'time_warden',closest:1\}\).length\)wildlifeTick\(p,undefined,undefined\)/,'arena scan is skipped while the warden is present');
+ assert.match(main,/if\(!p.dimension.getEntities\(\{type:ns\+'time_warden'\}\).length\)wildlifeTick\(p,undefined,undefined\)/,'arena scan is skipped while the warden is present');
+}
+// Run wildlifeTick -> prefilter -> footprint -> real spawn call using the
+// stable API's spawn options, with absent ray hits and a nonblocking liquid
+// flow property. These are mocks, not an in-game simulation.
+for(const realm of [0,7]){
+ const f=spawnFixture();f.d.id=`hakkai:realm_${realm}`;f.p.location={x:500,y:40,z:500};
+ f.d.getBlock=pos=>pos.y===39?{typeId:'minecraft:stone',isAir:false,isLiquid:false,isWaterlogged:false,isLiquidBlocking:()=>false,location:{...pos}}:{typeId:'minecraft:air',isAir:true,isLiquid:false,isWaterlogged:false};
+ f.d.getBlockFromRay=()=>undefined;f.d.getBlocks=()=>({getBlockLocationIterator:()=>[][Symbol.iterator]()});
+ const {ctx}=makeCtx(f,{confirm:validWildlifeGround});ctx.possibleWildlifeSite=possibleWildlifeSite;
+ ctx.wildlifeTick(f.p,undefined,undefined);
+ assert.equal(f.spawned.length,1,`realm ${realm} reaches spawnEntity`);
+ assert.deepEqual(f.spawned[0][2],{spawnEvent:'hakkai:wild',initialPersistence:false});
 }

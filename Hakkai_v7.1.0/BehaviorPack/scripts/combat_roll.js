@@ -1,3 +1,4 @@
+import {knownFullCube} from './full_cube_floor.js';
 import {EntityDamageCause,GameMode,InputPermissionCategory} from '@minecraft/server';
 // 30 blocks is the maximum checked target (previously 24). This is a
 // target distance, not a promise about Bedrock physics or interrupted rolls.
@@ -41,11 +42,17 @@ function clearBody(d,pos){
 // Selection and collision shapes can differ; Bedrock validation is required.
 function supported(d,pos){
  try{
-  if(typeof d.getBlockFromRay!=='function')return false;
   for(const dx of [-.28,0,.28])for(const dz of [-.28,0,.28]){
-   const at={x:pos.x+dx,y:pos.y+.04,z:pos.z+dz};
-   if(!d.isChunkLoaded(at)||!d.isChunkLoaded({...at,y:pos.y-.08}))return false;
-   const hit=d.getBlockFromRay(at,{x:0,y:-1,z:0},{maxDistance:.12,includeLiquidBlocks:false,includePassableBlocks:false});
+   const x=pos.x+dx,z=pos.z+dz;
+   // For proven full cubes, inspect the block directly: no tiny ray, and no
+   // dependence on a ray starting almost exactly on a block boundary.
+   const floor={x:Math.floor(x),y:Math.floor(pos.y-.035),z:Math.floor(z)};
+   if(!d.isChunkLoaded(floor))return false;
+   if(Math.abs(floor.y+1-pos.y)<.035&&knownFullCube(d.getBlock(floor)))continue;
+   if(typeof d.getBlockFromRay!=='function')return false;
+   const from={x,y:pos.y+.5,z};
+   if(!d.isChunkLoaded(from))return false;
+   const hit=d.getBlockFromRay(from,{x:0,y:-1,z:0},{maxDistance:1,includeLiquidBlocks:false,includePassableBlocks:false});
    if(!hit?.block||dangerous(hit.block,FLOOR_HAZARDS)||!hit.faceLocation||String(hit.face).toLowerCase()!=='up')return false;
    const y=hit.block.location?.y+hit.faceLocation.y;
    if(!Number.isFinite(y)||Math.abs(y-pos.y)>.035)return false;
@@ -135,7 +142,7 @@ export function setupCombatRoll({notice,safe}){
    if(n<.01||![n,at.x,at.y,at.z].every(Number.isFinite))return;
    const side=input.x,forwardAmount=input.y,rawX=view.x/n*forwardAmount-view.z/n*side,rawZ=view.z/n*forwardAmount+view.x/n*side,dirLen=Math.hypot(rawX,rawZ);
    if(!Number.isFinite(dirLen)||dirLen<.01)return;
-   // Activation never depends on the support ray. Movement requires verified
+   // Activation never depends on the support probe. Movement requires verified
    // support at every sample; if unavailable the roll still plays in place.
    e.motion={dir:{x:rawX/dirLen,z:rawZ/dirLen},remaining:DISTANCE,floorY:at.y,requireSupport:true};
    move(p,e); // A blocked movement still performs the roll in place.

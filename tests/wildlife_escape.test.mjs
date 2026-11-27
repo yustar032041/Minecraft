@@ -5,7 +5,7 @@ import {Difficulty,GameMode} from '@minecraft/server';
 function fixture(){
  const particles=[],impulses=[],effects=[],floorQueries=[];let mode='clear';
  const d={id:'realm',isChunkLoaded:()=>mode!=='unloaded',getBlock:p=>{
-  if(p.y===79){floorQueries.push({x:p.x,z:p.z});const valid=mode!=='cliff'&&!(mode==='direct-cliff'&&p.x<0&&p.z===0);return valid?{typeId:'minecraft:stone',isAir:false,isLiquid:false,isWaterlogged:false}:{typeId:'minecraft:air',isAir:true,isLiquid:false,isWaterlogged:false};}
+  if(p.y===79){floorQueries.push({x:p.x,z:p.z});const valid=mode!=='cliff'&&!(mode==='direct-cliff'&&p.x<0&&p.z===0);return valid?{typeId:mode==='missing-ray'?'minecraft:unknown_shape':'minecraft:stone',isAir:false,isLiquid:false,isWaterlogged:false}:{typeId:'minecraft:air',isAir:true,isLiquid:false,isWaterlogged:false};}
   return mode==='wall'?{typeId:'minecraft:stone',isAir:false,isLiquid:false,isWaterlogged:false}:{typeId:'minecraft:air',isAir:true,isLiquid:false,isWaterlogged:false};
  },getBlockFromRay:p=>mode==='missing-ray'?undefined:{block:{location:{x:Math.floor(p.x),y:79,z:Math.floor(p.z)}},face:'Up',faceLocation:{y:1}},spawnParticle:(...a)=>particles.push(a)};
  const p={id:'p',isValid:true,typeId:'minecraft:player',dimension:d,location:{x:2.5,y:80,z:.5},getGameMode:()=>GameMode.Survival};

@@ -83,7 +83,7 @@ import { isNaturalSite, initializeNaturalSitePlans, siteBounds, inSite } from '.
 import { setupSeededWorlds } from './seeded_worlds.js';
 import { pickRealmWildlife } from './wildlife_selection.js';
 import { spawnWildlife } from './wildlife_spawn.js';
-import { validWildlifeGround } from './wildlife_ground.js';
+import { validWildlifeGround, possibleWildlifeSite } from './wildlife_ground.js';
 import { setupExpeditionRecords } from './expedition_records.js';
 import { GUIDE_ENTRIES, GUIDE_ICONS, GUIDE_SECTIONS, selectGuidePage, creatureEntriesByRealm, gearKinds, filterGear, sortCombatFamilies, searchGuideEntries } from './guide_navigation.js';
 
@@ -5995,7 +5995,7 @@ function wildlifeTick(p,b,site){
  if(!m||m.temper==='hostile'&&peaceful)return;
  if(around.some(e=>e.typeId===ns+m.id&&dist(e.location,p.location)<10))return;
  const spawned=spawnWildlife({
-  player:p,type:ns+m.id,tick:t,safe,confirm:validWildlifeGround,allowNearbyBiome:inRealm||extraRealm,
+  player:p,type:ns+m.id,tick:t,safe:possibleWildlifeSite,confirm:validWildlifeGround,allowNearbyBiome:inRealm||extraRealm,
   // Recheck density at the actual spawn point, not only around the player.
   capacity:(dim,pos)=>dim.getEntities({families:['hakkai_wildlife'],location:pos,maxDistance:32,closest:14}).length<14,
   avoid:pos=>{
@@ -6384,13 +6384,8 @@ system.runInterval(()=>{
        if(!guarding)s.s=bounds(s.s+ultimateRegen(p.isSwimming?-1.4:s.campResting?4.5:2.5,finalSet),0,max);
        s.m=bounds(s.m+ultimateRegen(s.campResting?2.2:1.1,finalSet),0,max);
      }
-     // The trial arena admits only peaceful wildlife while no warden is
-     // present; an unknown boss query skips the spawn rather than interfering.
+     // The trial arena keeps its own HUD and persistence path.
      if(p.dimension.id===ns+'warden_arena'){
-       if(t>=(s.natureAt??0)){
-         s.natureAt=t+40;
-         try{if(!p.dimension.getEntities({type:ns+'time_warden',closest:1}).length)wildlifeTick(p,undefined,undefined);}catch{}
-       }
        if(t>=(s.wardenAt??0)){s.wardenAt=t+40;persist(p,s);}
        const hud=hudLine(p,s,t);if(hud!==undefined)p.onScreenDisplay.setActionBar(hud);
        continue;
@@ -6498,9 +6493,7 @@ system.runInterval(()=>{
        }
        villagerGuardTick(p,t);
        if([GameMode.Survival,GameMode.Adventure].includes(p.getGameMode()))friendlySupportTick(p,s,t,e=>villagerJob(e,world));
-       let profile;try{profile=survey(p);}catch{}
-       // Creative players participate in the same bounded wildlife scans; spectators do not.
-       if(p.getGameMode()!==GameMode.Spectator)try{wildlifeTick(p,profile,site);}catch(err){if(t%200===0)report('生き物の出現',err);}
+       try{survey(p);}catch{}
      try{mobSystem?.tick(p,t);realmEnders?.tick(p,t);fushiSystem?.tick(p,t);}catch{}
      }
      const hud=hudLine(p,s,t);
@@ -6508,6 +6501,24 @@ system.runInterval(()=>{
    }catch(err){if(p.isValid&&t%200===0)report('定期処理',err);}
  }
 },10);
+
+// Wildlife gets an independent bounded scan so an unrelated HUD, village,
+// equipment or persistence error cannot suppress spawning for that player.
+system.runInterval(()=>{
+ const t=system.currentTick;
+ for(const p of world.getAllPlayers())try{
+  if(!p.isValid||p.getGameMode()===GameMode.Spectator)continue;
+  if(p.dimension.id===ns+'warden_arena'){
+   // Never spawn during a boss fight or if the boss query fails.
+   if(!p.dimension.getEntities({type:ns+'time_warden'}).length)wildlifeTick(p,undefined,undefined);
+   continue;
+  }
+  let site,profile;
+  try{site=currentPlace(p);}catch{}
+  try{profile=biomeAt(p);}catch{}
+  wildlifeTick(p,profile,site);
+ }catch(err){if(t%200===0)report('生き物の出現',err);}
+},40);
 
 // Terrain queue pump: scans remain throttled to once a second per player,
 // while the next single adaptive job can start as soon as the previous ends.

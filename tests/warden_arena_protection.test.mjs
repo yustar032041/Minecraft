@@ -40,7 +40,7 @@ test('before-event callbacks are registered through real main entry point',()=>{
 
 test('new structural definitions resist mining and explosions and cannot be moved by pistons',()=>{
  const bp='Hakkai_v7.1.0/BehaviorPack/blocks/';
- for(const [id,texture,light] of [['warden_arena_stone','hakkai_clockstone',4],['warden_arena_light','sea_lantern',15]]){
+ for(const [id,texture,light] of [['warden_arena_stone','hakkai_clockstone',4],['warden_arena_light','hakkai_cloudstone',15]]){
   const block=JSON.parse(fs.readFileSync(bp+id+'.json'))['minecraft:block'];
   assert.equal(block.description.identifier,'hakkai:'+id);
   assert.equal(block.components['minecraft:destructible_by_mining'],false);

@@ -4,9 +4,6 @@
   "padding": 8,
   "num_mip_levels": 4,
   "texture_data": {
-    "sea_lantern": {
-      "textures": "textures/blocks/sea_lantern"
-    },
     "hakkai_ore_0": {
       "textures": "textures/blocks/hakkai_ore_0"
     },

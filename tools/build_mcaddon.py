@@ -24,9 +24,9 @@ def build(destination):
         raise ValueError('crafting recipes are missing unlock data; run tools/sync_crafting_unlocks.py --apply')
     manifests = [json.loads((PACK_ROOT / name / 'manifest.json').read_text(encoding='utf-8-sig')) for name in PACKS]
     for manifest in manifests:
-        if manifest['header']['version'] != [7, 1, 59]:
+        if manifest['header']['version'] != [7, 1, 60]:
             raise ValueError('unexpected pack version')
-    if not any(dep.get('uuid') == manifests[1]['header']['uuid'] and dep.get('version') == [7, 1, 59]
+    if not any(dep.get('uuid') == manifests[1]['header']['uuid'] and dep.get('version') == [7, 1, 60]
                for dep in manifests[0]['dependencies']):
         raise ValueError('resource pack dependency mismatch')
     paths = []
