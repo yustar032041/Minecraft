@@ -75,8 +75,17 @@ for (const msg of ['通常の警告', render({hud_pos: 2, stamina: 70, mana: 90,
 // unpublished source. Presence of the marker decides routing in this model.
 const resetMessage = '§a警告§r§r§r§r通常のメッセージ';
 const resetCollision = resetMessage.includes(hudTokens.base);
-assert.equal(evaluate(ui.hud_actionbar_text.visible, resetMessage), !resetCollision);
 assert.equal(evaluate(ui.hakkai_overlay.visible, resetMessage), resetCollision);
+assert.equal(evaluate(ui.hud_actionbar_text.visible, resetMessage), !resetCollision);
+// Exercise a synthetic, format-only state marker embedded in extra text.
+// Report whether it makes the UI choose the wrong frame or heartbeat.
+const markedPayload = `§l警告${hudTokens.right}位置${hudTokens.pulse}心拍`;
+const marked = render({hud_pos: 0, hud_size: 0, stamina: 100, mana: 100, tick: 10, until: 20, action: markedPayload});
+const markedFrames = Object.entries(frames).filter(([, f]) => evaluate(f.visible, marked));
+assert.equal(markedFrames.length, 1);
+const markedControls: Record<string, any> = Object.fromEntries(markedFrames[0]![1].controls.map((entry: any) => Object.entries(entry)[0]));
+const payloadCollision = markedFrames[0]![0] !== 'hakkai_frame_00' || evaluate(markedControls.heart_pulse.visible, marked);
+if (source.includes('function normalizeHudPayload(')) assert.equal(payloadCollision, false, 'normalization failed to protect the synthetic payload');
 // This third-party implementation models substring subtraction as removing all
 // occurrences, unlike our older test's first-only assumption. Neither model
 // establishes Switch behaviour; the synthetic case exposes that test boundary.
@@ -97,5 +106,5 @@ const injectedTile = allFlipTiles.find(tile => /lava/i.test(tile))!;
 const injected = mergeTerrainLayers([vanillaTerrain, { texture_data: { [injectedTile]: { textures: 'textures/fake/injected' } } }]);
 assert.notDeepEqual(injected[injectedTile], base[injectedTile]);
 console.log(JSON.stringify({hud_states: count, vanilla_flipbook_tiles: allFlipTiles.length, parsed_expressions: parsed.size,
-  reset_only_message_misclassified_as_hud: resetCollision,
+  reset_only_message_misclassified_as_hud: resetCollision, embedded_payload_forges_state: Boolean(payloadCollision),
   note: 'Third-party model only; no native Bedrock, client download, GPU or Switch rendering performed.'}, null, 2));

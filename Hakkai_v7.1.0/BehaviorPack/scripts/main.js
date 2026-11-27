@@ -6330,13 +6330,32 @@ safeSub('world','after','playerSpawn',({player:p,initialSpawn})=>{
 });
 safeSub('world','after','playerLeave',({playerId})=>{sessions.delete(playerId);TOME_SELECTIONS.delete(playerId);mobSystem?.clearMarks(playerId);customShield.clear(playerId);shrineChiefs.clearPlayer(playerId);expeditionRecords?.clear(playerId);wardenArena?.clearPlayer(playerId);wardenBoss?.clearMusic(playerId);combatCharge?.clear(playerId);weaponTrace?.clear(playerId);bowTrail?.clear(playerId);combatResonance?.clear(playerId);combatGuard?.clear(playerId);combatRoll?.clear(playerId);combatParry?.clear(playerId);airDash?.clear(playerId);airStrike?.clear(playerId);combatUltimate?.clear(playerId);});
 const bar=n=>'■'.repeat(Math.floor(n/20))+'□'.repeat(5-Math.floor(n/20));
+// Keep HUD control codes out of the extra player-facing text. Consecutive
+// reset+color pairs are redundant; a full base marker ends in reset. Replacing
+// these invisible sequences preserves modeled formatting and prevents the UI
+// from treating text as position/size/heartbeat control codes. Real Bedrock
+// rendering and formatting behavior still require client verification.
+function normalizeHudPayload(text){
+ let previous;
+ do{
+   previous=text;
+   text=text.split(hudTokens.base).join('§r');
+   for(const key of ['right','large','low','pulse','small','dim']){
+     const token=hudTokens[key];
+     text=text.split(token).join(token.slice(0,4));
+   }
+ }while(text!==previous);
+ return text;
+}
 function hudLine(p,s,t){
  const pale=num(p,'hud_color'),st=Math.floor(s.s),mana=Math.floor(s.m),show=t<s.until,mode=num(p,'hud_pos');
  const held=gear.get(selected(p)?.typeId),boss=mobSystem?.bossHudLine(p,t),marks=combatResonance?.level(p,held,t)??0,guard=combatGuard?.status(p,held,t);
  const remaining=held?Math.max(0,(s.cd.get(held.id)??0)-t):0;
  const hint=isTraceWeapon(held)?(p.isSneaking?(held.kind==='弓'?'§7溜め撃ち：少し引いて離す':'§7溜め技：使うボタン'):(p.isOnGround?'§7通常技：使う｜必殺：跳んで使う':'§6必殺：使う（スタミナ20・魔力10）')):undefined;
- const extra=[hint,customShield.cooldown(p,t)>0?`§e盾の構え直し ${Math.ceil(customShield.cooldown(p,t)/20)}秒`:undefined,combatCharge?.status(p,t),combatUltimate?.status(p,t),combatParry?.status(p,t),combatRoll?.status(p,t),airDash?.status(p),guard,marks?`§b風紋 ${'◆'.repeat(marks)}${'◇'.repeat(3-marks)}${marks===3?' 解放可能':marks===2?' 溜め終撃可能':''}`:undefined,remaining?`§7武器技 ${Math.ceil(remaining/20)}秒`:undefined,show?s.action:undefined,boss].filter(Boolean).join('\n');
- if(num(p,'hide_hud'))return extra||undefined;
+ const extraRaw=[hint,customShield.cooldown(p,t)>0?`§e盾の構え直し ${Math.ceil(customShield.cooldown(p,t)/20)}秒`:undefined,combatCharge?.status(p,t),combatUltimate?.status(p,t),combatParry?.status(p,t),combatRoll?.status(p,t),airDash?.status(p),guard,marks?`§b風紋 ${'◆'.repeat(marks)}${'◇'.repeat(3-marks)}${marks===3?' 解放可能':marks===2?' 溜め終撃可能':''}`:undefined,remaining?`§7武器技 ${Math.ceil(remaining/20)}秒`:undefined,show?s.action:undefined,boss].filter(Boolean).join('\n');
+ const hidden=Boolean(num(p,'hide_hud'));
+ const extra=hidden||mode===2?extraRaw:normalizeHudPayload(extraRaw);
+ if(hidden)return extra||undefined;
  if(mode===2){
    const line=`${pale?'§f':'§c'}スタミナ ${bar(st)} ${st}§r  ${pale?'§7':'§b'}魔力 ${bar(mana)} ${mana}§r`;
    return extra?`${line}\n${extra}`:line;
