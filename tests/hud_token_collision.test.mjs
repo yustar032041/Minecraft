@@ -1,5 +1,5 @@
-// Document an existing routing ambiguity; this models text subtraction, not
-// the Bedrock client, and does not establish the cause of any reported bug.
+// Verify the narrowly scoped mitigation for a possible actionbar collision.
+// These checks do not simulate Bedrock's UI parsing or rendering.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -7,11 +7,17 @@ import { hudTokens } from '../Hakkai_v7.1.0/BehaviorPack/scripts/data.js';
 
 const ui = JSON.parse(fs.readFileSync('Hakkai_v7.1.0/ResourcePack/ui/hud_screen.json', 'utf8'));
 
-test('base marker is ordinary formatting and can occur in an unrelated message', () => {
-  assert.equal(hudTokens.base, '§r§r§r§r');
-  assert.ok(ui.hud_actionbar_text.visible.includes(`'${hudTokens.base}'`));
-  assert.ok(ui.hakkai_overlay.visible.includes(`'${hudTokens.base}'`));
-  const foreignMessage = `§a警告${hudTokens.base}通常のメッセージ`;
-  const isRecognizedAsHakkai = foreignMessage !== foreignMessage.replace(hudTokens.base, '');
-  assert.equal(isRecognizedAsHakkai, true, 'the substring-only marker is not exclusive to this addon');
+test('distinctive base marker no longer mistakes four reset codes for an addon HUD message', () => {
+  const oldMarker = '§r§r§r§r';
+  const newMarker = hudTokens.base;
+  assert.notEqual(newMarker, oldMarker);
+  assert.match(newMarker, /^(?:§[0-9a-fr])+$/);
+  assert.ok(newMarker.endsWith('§r'), 'reset formatting before subsequent text');
+  assert.ok(ui.hud_actionbar_text.visible.includes(`'${newMarker}'`));
+  assert.ok(ui.hakkai_overlay.visible.includes(`'${newMarker}'`));
+  const foreignMessage = `§a警告${oldMarker}通常のメッセージ`;
+  assert.equal(foreignMessage.includes(newMarker), false);
+  for (const [key, value] of Object.entries(hudTokens)) {
+    if (key !== 'base') assert.equal(newMarker.includes(value), false, `marker overlaps state token ${key}`);
+  }
 });

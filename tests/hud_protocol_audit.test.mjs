@@ -49,7 +49,7 @@ function evaluate(expression, message) {
 
 function renderLine(options) {
   const cfg = { hud_pos: 0, hud_size: 0, hud_color: 0, hide_hud: 0, ...options };
-  const s = { s: cfg.stamina, m: cfg.mana, cd: new Map(), until: 0 };
+  const s = { s: cfg.stamina, m: cfg.mana, cd: new Map(), until: cfg.until ?? 0, action: cfg.action };
   const ctx = {
     hudTokens, Math, num: (_p, key) => cfg[key] ?? 0,
     gear: new Map(), selected: () => undefined, isTraceWeapon: () => false,
@@ -106,8 +106,16 @@ test('real hudLine tokens route to one matching frame and leave Japanese readout
   assert.equal(checked, 768);
 });
 
+test('embedded short reset sequences remain in addon action text under the model', () => {
+  const action = '§a警告§r§r§r§r通常のメッセージ';
+  const message = renderLine({hud_pos: 0, stamina: 70, mana: 90, tick: 10, until: 20, action});
+  const frame = Object.values(frames).find(f => evaluate(f.visible, message));
+  assert.ok(frame);
+  assert.ok(evaluate(elements(frame).hakkai_readout.text, message).includes(action));
+});
+
 test('ordinary actionbar messages and mode 2 do not select the overlay under the model', () => {
-  for (const message of ['テスト', '§c通常の警告§r', renderLine({hud_pos: 2, stamina: 70, mana: 90, tick: 10})]) {
+  for (const message of ['テスト', '§c通常の警告§r', '§a警告§r§r§r§r通常のメッセージ', renderLine({hud_pos: 2, stamina: 70, mana: 90, tick: 10})]) {
     assert.equal(evaluate(ui.hud_actionbar_text.visible, message), true);
     assert.equal(evaluate(ui.hakkai_overlay.visible, message), false);
   }

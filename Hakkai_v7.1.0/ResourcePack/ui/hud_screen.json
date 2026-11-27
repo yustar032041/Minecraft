@@ -2,7 +2,7 @@
   "namespace": "hud",
   "hud_actionbar_text": {
     "$hakkai_msg": "$actionbar_text",
-    "visible": "(not (not ($hakkai_msg = ($hakkai_msg - '§r§r§r§r'))))"
+    "visible": "(not (not ($hakkai_msg = ($hakkai_msg - '§r§0§r§1§r§2§r§3§r§4§r§5§r§6§r'))))"
   },
   "hakkai_overlay": {
     "type": "panel",
@@ -11,7 +11,7 @@
       "100%"
     ],
     "$hakkai_msg": "$actionbar_text",
-    "visible": "(not ($hakkai_msg = ($hakkai_msg - '§r§r§r§r')))",
+    "visible": "(not ($hakkai_msg = ($hakkai_msg - '§r§0§r§1§r§2§r§3§r§4§r§5§r§6§r')))",
     "alpha": "@hud.anim_actionbar_text_alpha_out",
     "propagate_alpha": true,
     "controls": [
@@ -130,7 +130,7 @@
                   17,
                   1
                 ],
-                "text": "(((((((($hakkai_msg - '§r§r§r§r') - '§r§f§r§f') - '§r§7§r§7') - '§r§c§r§c') - '§r§a§r§a') - '§r§b§r§b') - '§r§8§r§8') + '§r')",
+                "text": "(((((((($hakkai_msg - '§r§0§r§1§r§2§r§3§r§4§r§5§r§6§r') - '§r§f§r§f') - '§r§7§r§7') - '§r§c§r§c') - '§r§a§r§a') - '§r§b§r§b') - '§r§8§r§8') + '§r')",
                 "text_alignment": "left",
                 "localize": false,
                 "shadow": true,
@@ -256,7 +256,7 @@
                   21.25,
                   1
                 ],
-                "text": "(((((((($hakkai_msg - '§r§r§r§r') - '§r§f§r§f') - '§r§7§r§7') - '§r§c§r§c') - '§r§a§r§a') - '§r§b§r§b') - '§r§8§r§8') + '§r')",
+                "text": "(((((((($hakkai_msg - '§r§0§r§1§r§2§r§3§r§4§r§5§r§6§r') - '§r§f§r§f') - '§r§7§r§7') - '§r§c§r§c') - '§r§a§r§a') - '§r§b§r§b') - '§r§8§r§8') + '§r')",
                 "text_alignment": "left",
                 "localize": false,
                 "shadow": true,
@@ -382,7 +382,7 @@
                   17,
                   1
                 ],
-                "text": "(((((((($hakkai_msg - '§r§r§r§r') - '§r§f§r§f') - '§r§7§r§7') - '§r§c§r§c') - '§r§a§r§a') - '§r§b§r§b') - '§r§8§r§8') + '§r')",
+                "text": "(((((((($hakkai_msg - '§r§0§r§1§r§2§r§3§r§4§r§5§r§6§r') - '§r§f§r§f') - '§r§7§r§7') - '§r§c§r§c') - '§r§a§r§a') - '§r§b§r§b') - '§r§8§r§8') + '§r')",
                 "text_alignment": "left",
                 "localize": false,
                 "shadow": true,
@@ -508,7 +508,7 @@
                   21.25,
                   1
                 ],
-                "text": "(((((((($hakkai_msg - '§r§r§r§r') - '§r§f§r§f') - '§r§7§r§7') - '§r§c§r§c') - '§r§a§r§a') - '§r§b§r§b') - '§r§8§r§8') + '§r')",
+                "text": "(((((((($hakkai_msg - '§r§0§r§1§r§2§r§3§r§4§r§5§r§6§r') - '§r§f§r§f') - '§r§7§r§7') - '§r§c§r§c') - '§r§a§r§a') - '§r§b§r§b') - '§r§8§r§8') + '§r')",
                 "text_alignment": "left",
                 "localize": false,
                 "shadow": true,
