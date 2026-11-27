@@ -3637,7 +3637,7 @@ async function realmAdventureRequest(p,i){
 }
 async function realmAdventureRequestBoard(p){
  realmRankUpdate(p);
- const rank=realmRankIndex(p),rows=realmRankRequests.map((r,i)=>[`${marked(p,'realm_journey_requests',i)?'◆':rank>=r.rank?'◇':'§8🔒'} ${r.name}｜必要ランク：${realmRanks[r.rank][1]}\n${r.desc}\n${marked(p,'realm_journey_requests',i)?'達成済み':r.check(p)?'達成条件クリア・受注可能':'条件未達成'}`]);
+ const rank=realmRankIndex(p),rows=realmRankRequests.map((r,i)=>[`${marked(p,'realm_journey_requests',i)?'◆':rank>=r.rank?'◇':'§8【未解放】'} ${r.name}｜必要ランク：${realmRanks[r.rank][1]}\n${r.desc}\n${marked(p,'realm_journey_requests',i)?'達成済み':r.check(p)?'達成条件クリア・受注可能':'条件未達成'}`]);
  rows.push(['戻る']);
  const pick=await form(p,'冒険者ランク別・特別依頼',`現在のランク：${realmRanks[rank][1]}\n依頼は条件を満たしたあと、ここから報酬を受け取れます。`,rows);
  if(pick!==undefined&&pick<4)return realmAdventureRequest(p,pick);
@@ -3713,7 +3713,7 @@ async function realmGuideConversation(p,i){
  }
 }
 async function realmGuideConversationBoard(p){
- const rows=realmGuideDialogues.map(([name],i)=>[`${marked(p,'realm_discoveries',i)?'◇':'§8🔒'} ${name}｜${marked(p,'realm_discoveries',i)?'対話できます':'発見記録で解放'}`]);
+ const rows=realmGuideDialogues.map(([name],i)=>[`${marked(p,'realm_discoveries',i)?'◇':'§8【未解放】'} ${name}｜${marked(p,'realm_discoveries',i)?'対話できます':'発見記録で解放'}`]);
  rows.push(['閉じる']);
  const pick=await form(p,'風記の案内人たち',`八界を巡る案内人の言葉を聞き、季節の物語や秘密の章を年鑑に残しましょう。\n季節の物語：${realmSeasonStoryCount(p)}/8\n秘密の章：${realmSecretChapterCount(p)}/8`,rows);
  if(pick!==undefined&&pick<8)return realmGuideConversation(p,pick);
@@ -3813,7 +3813,7 @@ system.runInterval(()=>{
 },20);
 
 async function realmNpcPlaceBoard(p){
- const rows=realmGuideDialogues.map(([name],i)=>[`${marked(p,'realm_discoveries',i)?'◇':'§8🔒'} ${name}｜${marked(p,'realm_discoveries',i)?'ワールドに呼ぶ':'発見記録で解放'}`]);
+ const rows=realmGuideDialogues.map(([name],i)=>[`${marked(p,'realm_discoveries',i)?'◇':'§8【未解放】'} ${name}｜${marked(p,'realm_discoveries',i)?'ワールドに呼ぶ':'発見記録で解放'}`]);
  rows.push(['閉じる']);
  const pick=await form(p,'案内人NPCを配置',`発見済みの世界の案内人を、現在地の近くに呼び出します。配置した案内人はワールド内に残り、近づいて操作すると会話できます。
 
@@ -4232,7 +4232,7 @@ const realmAwakenedGear=[
 ];
 async function realmAwakeningBoard(p){
  const c=space(p);if(!c)return;const rank=realmRankIndex(p),guards=num(p,'guards',0),claims=num(p,'realm_awakened_claims',0);
- const rows=realmAwakenedGear.map(([realm,label,item,idx,need],i)=>{const done=Boolean(claims&(1<<i)),cleared=Boolean(guards&(1<<i));return [`${done?'§a◆':cleared&&rank>=need?'◇':'§8🔒'} ${label}\n守護者：${guardians[idx]}｜必要ランク：${realmRanks[need][1]}\n${done?'継承済み・再製作可':!cleared?'守護者の討伐記録が必要':rank<need?'冒険者ランクが不足':'継承可能'}`];});
+ const rows=realmAwakenedGear.map(([realm,label,item,idx,need],i)=>{const done=Boolean(claims&(1<<i)),cleared=Boolean(guards&(1<<i));return [`${done?'§a◆':cleared&&rank>=need?'◇':'§8【未解放】'} ${label}\n守護者：${guardians[idx]}｜必要ランク：${realmRanks[need][1]}\n${done?'継承済み・再製作可':!cleared?'守護者の討伐記録が必要':rank<need?'冒険者ランクが不足':'継承可能'}`];});
  const pick=await form(p,'八界の覚醒装備・継承試練',`八界の守護者から、それぞれの界に伝わる覚醒鎧を継承します。\n現在のランク：${realmRanks[rank][1]}\n継承済み：${realmAwakenedGear.filter((_,i)=>claims&(1<<i)).length}/8\n\n同じ条件と素材で何度でも作れます。素材は対応する界の結晶×4、欠片×8、エメラルド×16、ダイヤモンド×1です。`,[...rows,['閉じる']]);
  if(pick===undefined||pick<0||pick>=8||!p.isValid)return;
  const [realm,label,item,idx,need]=realmAwakenedGear[pick],bit=1<<pick;
