@@ -64,4 +64,23 @@ assert texture_collisions(['textures/blocks/Grass.TGA'],['textures/blocks/grass.
 assert not texture_collisions(['pack_icon.png','textures/ui/custom.png'],['pack_icon.png','textures/ui/default.png'])
 texture_overlap=texture_collisions(files,vanilla['resource_paths'])
 assert not texture_overlap,sorted(texture_overlap)
-print(f'Pinned vanilla snapshot: no language/atlas key or extensionless texture collisions, {len(overlap)} expected shared paths; rendering unverified')
+
+# Different image extensions can also shadow *each other within this pack*;
+# a client may pick the wrong one even when all exact filenames differ.
+# The vanilla-vs-addon test above alone cannot detect that situation.
+from collections import defaultdict
+
+def image_aliases(paths):
+    groups=defaultdict(list)
+    for path in paths:
+        key=texture_key(path)
+        if key is not None:
+            groups[key].append(path)
+    return {key: names for key,names in groups.items() if len(names)>1}
+
+assert image_aliases(['textures/blocks/Grass.TGA','textures/blocks/grass.png']) == {
+    'textures/blocks/grass':['textures/blocks/Grass.TGA','textures/blocks/grass.png']}
+assert not image_aliases(['textures/ui/icon.png','textures/ui/other.png','pack_icon.png'])
+aliases=image_aliases(files)
+assert not aliases,aliases
+print(f'Pinned vanilla snapshot: no language/atlas key or extensionless texture collisions; no internal image aliases; {len(overlap)} expected shared paths; rendering unverified')
