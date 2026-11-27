@@ -11,5 +11,5 @@ for(const order of ['hurt-first','hit-first']){
  if(order==='hurt-first'){a();b();}else{b();a();}
  assert.equal(records.length,2,order);assert.equal(air,0,'no additional airstrike');assert.equal(casts,0,'no automatic skill overlap');
 }
-assert.ok(src.includes('signal.subscribe(e=>{weaponTrace?.swing(e);vanillaSwingMotion(e,selected,state);})'));assert.ok(src.includes('weaponTrace?.clear(playerId)'));
+assert.ok(src.includes('if(actionCombat?.controls(e.player))actionCombat.swing(e);else{weaponTrace?.swing(e);vanillaSwingMotion(e,selected,state);}'));assert.ok(src.includes('weaponTrace?.clear(playerId)'));assert.ok(src.includes('actionCombat?.clear(playerId)'));
 console.log('Actual trace, native attack and skill integration: both event orders (mocked)');

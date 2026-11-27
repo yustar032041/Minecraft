@@ -67,6 +67,7 @@ import { setupCombatResonance, combatEnemies, applyCombatHit, combatEffectAllowe
 import { setupCombatGuard } from './combat_guard.js';
 import { setupCombatParry } from './combat_parry.js';
 import { setupCombatRoll } from './combat_roll.js';
+import { setupActionCombat } from './combat_action.js';
 import { setupAirDash } from './combat_air_dash.js';
 import { setupAirStrike } from './combat_air_strike.js';
 import { prepareWindRay, renderWindRay } from './combat_wind_ray.js';
@@ -93,7 +94,8 @@ configureFriendlyFire(world);
 const ns='hakkai:', dimID=(id)=>ns+'realm_'+id;
 const guardianMultiplayer=createGuardianMultiplayer({spectator:GameMode.Spectator,resolveAttacker:playerAttacker});
 const bossMultiplayer=createGuardianMultiplayer({spectator:GameMode.Spectator,tracked:e=>Boolean(COOP_BOSS_REWARDS[e?.typeId])});
-let frontierWorlds, expeditionRecords, seededWorlds, mobSystem, realmEnders, fushiSystem, wardenArena, wardenBoss, combatResonance, combatGuard, combatRoll, combatParry, airDash, airStrike, fushiTotem, combatUltimate, combatCharge, weaponTrace, bowTrail;
+let frontierWorlds, expeditionRecords, seededWorlds, mobSystem, realmEnders, fushiSystem, wardenArena, wardenBoss, combatResonance, combatGuard, combatRoll, combatParry, airDash, airStrike, fushiTotem, combatUltimate, combatCharge, weaponTrace, bowTrail, actionCombat;
+let actionHurtAvailable=false;
 const shieldWear=setupShieldWear({system});
 const customShield=setupCustomShield({catalog,prepare:shieldWear.prepare});
 const gear=new Map([...catalog,...ULTIMATE_WEAPONS,...WARDEN_BLADES].map(g=>[ns+g.id,g]));
@@ -3242,7 +3244,8 @@ async function settings(p){
    [`追加モブの出現：${num(p,'quiet_wildlife')?'控えめ':'有効'}`],
    [`各界の霧と天候演出：${num(p,'quiet_climate')?'無効':'有効'}`],
    [`バニラ村の自動検出：${num(p,'no_bell_search')?'無効':'有効'}`],
-   [`プレイヤー同士の攻撃：${friendlyFireEnabled()?'ON（当たる）':'OFF（当たらない）'}｜全員共通`]
+   [`プレイヤー同士の攻撃：${friendlyFireEnabled()?'ON（当たる）':'OFF（当たらない）'}｜全員共通`],
+   [`試作アクション戦闘：${num(p,'action_prototype')?'ON':'OFF'}（剣・斧・槍）`]
  ]);
  if(ix===undefined)return;
  if(ix<3){const k=['hide_hud','hud_color','mute'][ix];property(p,k,1-num(p,k));return;}
@@ -3251,6 +3254,11 @@ async function settings(p){
  if(ix===6){property(p,'quiet_wildlife',1-num(p,'quiet_wildlife'));return;}
  if(ix===7){property(p,'quiet_climate',1-num(p,'quiet_climate'));return;}
  if(ix===8){property(p,'no_bell_search',1-num(p,'no_bell_search'));return;}
+ if(ix===10){
+  if(!num(p,'action_prototype')&&(!actionHurtAvailable||!weaponSwingAvailable))return notice(p,'§e必要な戦闘イベントが使えません。従来の攻撃を使用します');
+  property(p,'action_prototype',1-num(p,'action_prototype'));actionCombat?.clear(p.id);weaponTrace?.clear(p.id);
+  return notice(p,num(p,'action_prototype')?'§e試作アクション戦闘ON：新規ワールドで操作を試してください':'§a試作アクション戦闘OFF：従来の攻撃に戻りました',80);
+ }
  if(ix===9){
   const desired=!friendlyFireEnabled();
   const yes=await form(p,'プレイヤー同士の攻撃',`ワールド全員に適用されます。${desired?'ONにすると攻撃技もプレイヤーを狙います。本体のPvP設定も影響します。':'OFFにすると直接攻撃や技から保護します。攻撃元不明の間接被害は防げない場合があります。'}\n他の人に確認してから変更してください。`,[[desired?'ONにする':'OFFにする'],['変更しない']]);
@@ -6102,9 +6110,9 @@ safeSub('world','after','entityDie',({deadEntity,damageSource})=>{
 safeSub('world','after','entityDie',e=>{combatParry?.clearAttacker(e.deadEntity.id);try{realmEnders?.onDeath(e);fushiSystem?.onDeath(e);wardenBoss?.onDeath(e);mobSystem?.onDeath(e);}catch(err){report('追加MOBの討伐記録',err);}});
 // Optional events clear a stored wind mark promptly; the identity/expiry
 // check in the controller still protects older API versions.
-try{world.afterEvents.playerHotbarSelectedSlotChange?.subscribe(({player})=>{combatResonance?.clear(player.id);combatGuard?.invalidate(player.id);combatParry?.clear(player.id);combatCharge?.clear(player.id);weaponTrace?.clear(player.id);});}catch{}
-try{world.afterEvents.playerDimensionChange?.subscribe(({player})=>{combatResonance?.clear(player.id);combatGuard?.invalidate(player.id);combatRoll?.clear(player.id);combatParry?.clear(player.id);airDash?.clear(player.id);airStrike?.clear(player.id);combatUltimate?.invalidate(player.id);combatCharge?.clear(player.id);weaponTrace?.clear(player.id);bowTrail?.clear(player.id);});}catch{}
-safeSub('world','after','entityDie',({deadEntity})=>{if(deadEntity?.typeId==='minecraft:player'){customShield.clear(deadEntity.id);wardenBoss?.clearMusic(deadEntity.id);combatResonance?.clear(deadEntity.id);combatGuard?.clear(deadEntity.id);combatRoll?.clear(deadEntity.id);combatParry?.clear(deadEntity.id);airDash?.clear(deadEntity.id);airStrike?.clear(deadEntity.id);combatUltimate?.clear(deadEntity.id);combatCharge?.clear(deadEntity.id);weaponTrace?.clear(deadEntity.id);bowTrail?.clear(deadEntity.id);}});
+try{world.afterEvents.playerHotbarSelectedSlotChange?.subscribe(({player})=>{combatResonance?.clear(player.id);combatGuard?.invalidate(player.id);combatParry?.clear(player.id);combatCharge?.clear(player.id);weaponTrace?.clear(player.id);actionCombat?.invalidate(player.id);});}catch{}
+try{world.afterEvents.playerDimensionChange?.subscribe(({player})=>{combatResonance?.clear(player.id);combatGuard?.invalidate(player.id);combatRoll?.clear(player.id);combatParry?.clear(player.id);airDash?.clear(player.id);airStrike?.clear(player.id);combatUltimate?.invalidate(player.id);combatCharge?.clear(player.id);weaponTrace?.clear(player.id);bowTrail?.clear(player.id);actionCombat?.invalidate(player.id);});}catch{}
+safeSub('world','after','entityDie',({deadEntity})=>{if(deadEntity?.typeId==='minecraft:player'){customShield.clear(deadEntity.id);wardenBoss?.clearMusic(deadEntity.id);combatResonance?.clear(deadEntity.id);combatGuard?.clear(deadEntity.id);combatRoll?.clear(deadEntity.id);combatParry?.clear(deadEntity.id);airDash?.clear(deadEntity.id);airStrike?.clear(deadEntity.id);combatUltimate?.clear(deadEntity.id);combatCharge?.clear(deadEntity.id);weaponTrace?.clear(deadEntity.id);bowTrail?.clear(deadEntity.id);actionCombat?.clear(deadEntity.id);}});
 safeSub('world','before','playerInteractWithEntity',e=>{
  const p=e.player;
  if(p.isSneaking&&['minecraft:villager','minecraft:villager_v2'].includes(e.target.typeId)&&typeof e.target.nameTag==='string'&&e.target.nameTag.startsWith('§d風記の案内人§r｜')){
@@ -6289,6 +6297,7 @@ safeSub('world','after','projectileHitBlock',patrolArrowImpact);
 safeSub('world','after','entityHitEntity',event=>nativeMobStrikes.hit(event,system.currentTick));
 safeSub('world','after','entityDie',({deadEntity})=>nativeMobStrikes.clear(deadEntity?.id));
 safeSub('world','after','entityHitEntity',({damagingEntity:p,hitEntity})=>{
+ if(typeof actionCombat!=='undefined'&&actionCombat?.controls(p))return;
  try{weaponTrace?.record(p,hitEntity);}catch{}
  if(p.typeId!=='minecraft:player'||!p.isValid||p.getGameMode()===GameMode.Spectator)return;
  if(protectsPlayer(hitEntity,{damagingEntity:p}))return;
@@ -6335,7 +6344,7 @@ safeSub('world','after','playerSpawn',({player:p,initialSpawn})=>{
    }
  },12);
 });
-safeSub('world','after','playerLeave',({playerId})=>{sessions.delete(playerId);TOME_SELECTIONS.delete(playerId);mobSystem?.clearMarks(playerId);customShield.clear(playerId);shrineChiefs.clearPlayer(playerId);expeditionRecords?.clear(playerId);wardenArena?.clearPlayer(playerId);wardenBoss?.clearMusic(playerId);combatCharge?.clear(playerId);weaponTrace?.clear(playerId);bowTrail?.clear(playerId);combatResonance?.clear(playerId);combatGuard?.clear(playerId);combatRoll?.clear(playerId);combatParry?.clear(playerId);airDash?.clear(playerId);airStrike?.clear(playerId);combatUltimate?.clear(playerId);});
+safeSub('world','after','playerLeave',({playerId})=>{sessions.delete(playerId);TOME_SELECTIONS.delete(playerId);mobSystem?.clearMarks(playerId);customShield.clear(playerId);shrineChiefs.clearPlayer(playerId);expeditionRecords?.clear(playerId);wardenArena?.clearPlayer(playerId);wardenBoss?.clearMusic(playerId);combatCharge?.clear(playerId);weaponTrace?.clear(playerId);bowTrail?.clear(playerId);actionCombat?.clear(playerId);combatResonance?.clear(playerId);combatGuard?.clear(playerId);combatRoll?.clear(playerId);combatParry?.clear(playerId);airDash?.clear(playerId);airStrike?.clear(playerId);combatUltimate?.clear(playerId);});
 const bar=n=>'■'.repeat(Math.floor(n/20))+'□'.repeat(5-Math.floor(n/20));
 // Keep HUD control codes out of the extra player-facing text. Consecutive
 // reset+color pairs are redundant; a full base marker ends in reset. Replacing
@@ -6613,8 +6622,10 @@ fushiTotem=setupFushiTotem({system,notice,report});
 combatUltimate=setupCombatUltimate({system,notice,visibleFrom});
 combatCharge=setupCombatCharge({system,gear,selected,state,cast,tapMode:true});
 let weaponSwingAvailable=false;
-try{const signal=world.afterEvents.playerSwingStart;if(signal){signal.subscribe(e=>{weaponTrace?.swing(e);vanillaSwingMotion(e,selected,state);});weaponSwingAvailable=true;}}catch(err){report('武器の振りイベント',err);}
-weaponTrace=setupWeaponTrace({system,gear,selected,state,visibleFrom,airAttack:(p,s,g,t)=>airStrike?.beginSwing(p,s,g,t)??false,enabled:weaponSwingAvailable,report});
+try{const signal=world.afterEvents.playerSwingStart;if(signal){signal.subscribe(e=>{if(actionCombat?.controls(e.player))actionCombat.swing(e);else{weaponTrace?.swing(e);vanillaSwingMotion(e,selected,state);}});weaponSwingAvailable=true;}}catch(err){report('武器の振りイベント',err);}
+weaponTrace=setupWeaponTrace({system,gear,selected,state,visibleFrom,airAttack:(p,s,g,t)=>airStrike?.beginSwing(p,s,g,t)??false,consumeCounter:(p,t)=>combatRoll?.consumeCounter(p,t)??false,enabled:weaponSwingAvailable,report});
+try{const signal=world.beforeEvents.entityHurt;if(signal){signal.subscribe(e=>actionCombat?.cancelNative(e));actionHurtAvailable=true;}}catch(err){report('試作戦闘のダメージイベント',err);}
+actionCombat=setupActionCombat({system,gear,selected,state,visibleFrom,enabled:p=>weaponSwingAvailable&&actionHurtAvailable&&num(p,'action_prototype')===1,onHit:(p,e,g,damage)=>combatResonance?.onHurt(p,e,g,damage),hasCounter:(p,t)=>combatRoll?.hasCounter(p,t)??false,consumeCounter:(p,t)=>combatRoll?.consumeCounter(p,t)??false,report});
 bowTrail=setupBowTrail({system,gear,selected,state,airAttack:(p,s,g,t)=>airStrike?.beginSwing(p,s,g,t)??false});
 safeSub('world','after','entitySpawn',({entity})=>bowTrail?.spawned(entity));
 combatGuard=setupCombatGuard({notice});

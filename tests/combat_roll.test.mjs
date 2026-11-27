@@ -77,7 +77,28 @@ for(const prepare of [f=>f.p.isSneaking=false,f=>f.p.isSwimming=true,f=>f.p.isGl
  const f=fixture();tap(f,0);f.ctrl.clear(f.p.id);f.set(0,0);f.ctrl.tick(f.p,f.s,3);tap(f,4);
  assert.equal(f.s.s,30,'explicit session cleanup clears local cooldown');
 }
-console.log('Roll: checked 3-block target, 5-tick cooldown, stamina, attack immunity and invalid contexts (mocked)');
+// Ground dodges can now be deliberately aimed in every horizontal direction.
+for(const [x,y,expectedX,expectedZ] of [[0,-1,-1,0],[-1,0,0,-1],[1,0,0,1],[0,1,1,0]]){
+ const f=fixture();f.set(x,y);f.ctrl.tick(f.p,f.s,0);f.set(0,0);f.ctrl.tick(f.p,f.s,1);f.set(x,y);f.ctrl.tick(f.p,f.s,2);
+ assert.equal(f.s.s,40);assert.ok(Math.abs(f.p.location.x-(.5+expectedX*.75))<1e-8);assert.ok(Math.abs(f.p.location.z-(.5+expectedZ*.75))<1e-8);
+}
+{
+ const f=fixture();f.set(0,1);f.ctrl.tick(f.p,f.s,0);f.set(0,0);f.ctrl.tick(f.p,f.s,1);f.set(0,-1);f.ctrl.tick(f.p,f.s,2);
+ assert.equal(f.s.s,50,'reversing between taps must not trigger a dodge');
+ f.set(0,0);f.ctrl.tick(f.p,f.s,3);f.set(0,-1);f.ctrl.tick(f.p,f.s,4);assert.equal(f.s.s,40,'new matching double tap works');
+}
+{
+ const f=fixture();tap(f,0);
+ assert.equal(f.ctrl.consumeCounter(f.p,1),false,'an earlier swing cannot use a later roll');
+ assert.equal(f.ctrl.consumeCounter(f.p,3),true);assert.equal(f.ctrl.consumeCounter(f.p,4),false,'only one counter per roll');
+}
+{
+ const f=fixture();tap(f,0);assert.equal(f.ctrl.consumeCounter(f.p,32),false,'counter expires at 30 ticks after activation');
+}
+{
+ const f=fixture();tap(f,0);f.p.dimension={...f.d,id:'other'};assert.equal(f.ctrl.consumeCounter(f.p,3),false,'dimension change cannot spend a counter');
+}
+console.log('Roll: four directions, checked 3-block target, stamina, attack immunity and one counter opportunity (mocked)');
 {
  const f=fixture();tap(f,0);f.p.isSneaking=false;
  for(let t=3;t<=11;t++)f.ctrl.tick(f.p,f.s,t);

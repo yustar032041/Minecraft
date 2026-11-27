@@ -21,7 +21,12 @@ for i in range(8):
  write(BP/'recipes'/f'{name}.json',rec)
  # Copy the exact boss blade cubes/UV, then reduce and move into the standard
  # held-item space; the boss's model and existing animations are untouched.
- g=copy.deepcopy(json.loads((RP/'models/entity'/f'warden_sword_{i}.geo.json').read_text(encoding='utf8')));geo=g['minecraft:geometry'][0];geo['description']['identifier']='geometry.hakkai.'+name;geo['description']['visible_bounds_width']=4;geo['description']['visible_bounds_height']=4
+ g=copy.deepcopy(json.loads((RP/'models/entity'/f'warden_sword_{i}.geo.json').read_text(encoding='utf8')))
+ # The boss entity geometry is 1.12.0, but slot-based bone binding belongs
+ # to modern attachable geometry. Copying that old version made the binding
+ # unreliable/ignored by clients; match vanilla's 1.16.0 trident format.
+ g['format_version']='1.16.0'
+ geo=g['minecraft:geometry'][0];geo['description']['identifier']='geometry.hakkai.'+name;geo['description']['visible_bounds_width']=4;geo['description']['visible_bounds_height']=4
  weapon=geo['bones'][0];weapon['name']='blade';weapon['parent']='prop';weapon['pivot']=[0,24,0]
  for c in weapon['cubes']:
   c['origin']=[round(c['origin'][0]*.7,4),round(24+(c['origin'][1]-3.5)*.7,4),round(c['origin'][2]*.7,4)];c['size']=[round(v*.7,4) for v in c['size']]

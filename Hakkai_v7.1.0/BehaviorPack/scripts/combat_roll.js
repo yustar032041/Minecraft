@@ -111,7 +111,7 @@ export function setupCombatRoll({notice,safe}){
   let e=entries.get(p.id);
   if(!e){e={down:false,first:undefined,until:0,dimension:p.dimension.id};entries.set(p.id,e);}
   if(e.dimension!==p.dimension.id){entries.delete(p.id);return;}
-  let forward,input;
+  let direction,input;
   try{
    if(!p.isValid||p.typeId!=='minecraft:player'||s.menu||s.busy||![GameMode.Survival,GameMode.Creative].includes(p.getGameMode())||
       p.isSwimming||p.isGliding||p.isFlying||p.getComponent('minecraft:riding')){
@@ -127,15 +127,17 @@ export function setupCombatRoll({notice,safe}){
    if(!p.isSneaking){e.down=false;e.first=undefined;return;}
    input=p.inputInfo.getMovementVector();
    if(!Number.isFinite(input.x)||!Number.isFinite(input.y)){e.down=false;e.first=undefined;return;}
-   forward=input.y>.4&&Math.abs(input.x)<.9;
+   const magnitude=Math.hypot(input.x,input.y);
+   direction=magnitude>.4?{x:input.x/magnitude,y:input.y/magnitude}:undefined;
   }catch{e.down=false;e.first=undefined;e.motion=undefined;return;}
-  if(!forward){e.down=false;return;}
+  if(!direction){e.down=false;return;}
   if(e.down)return;e.down=true;
-  // Ground is required only for a NEW roll, not for a roll already moving.
-  // Do not retain an airborne first tap for an accidental launch on landing.
-  if(!p.isOnGround){e.first=undefined;return;}
-  if(e.first===undefined||t-e.first>DOUBLE_TAP){e.first=t;return;}
-  e.first=undefined;
+  // Require two taps in approximately the same direction. Reversing or
+  // changing direction arms a new first tap rather than rolling unexpectedly.
+  // Ground is required only for a NEW roll, not an already-moving roll.
+  if(!p.isOnGround){e.first=undefined;e.firstDir=undefined;return;}
+  if(e.first===undefined||t-e.first>DOUBLE_TAP||!e.firstDir||direction.x*e.firstDir.x+direction.y*e.firstDir.y<.7){e.first=t;e.firstDir=direction;return;}
+  e.first=undefined;e.firstDir=undefined;
   if(t<(e.cooldownUntil??0))return; // no cost, animation or immunity renewal
   if(p.getGameMode()!==GameMode.Creative&&s.s<COST){notice(p,'§e回避に必要なスタミナが足りない',35);return;}
   try{
@@ -148,6 +150,8 @@ export function setupCombatRoll({notice,safe}){
    e.motion={dir:{x:rawX/dirLen,z:rawZ/dirLen},remaining:DISTANCE,floorY:at.y,requireSupport:true};
    move(p,e); // A blocked movement still performs the roll in place.
    if(p.getGameMode()!==GameMode.Creative)s.s-=COST;e.until=t+INVULNERABLE;e.cooldownUntil=t+COOLDOWN;
+   // One follow-up counter opportunity, consumed only by a confirmed hit.
+   e.counterFrom=t;e.counterUntil=t+30;
    try{p.playAnimation('animation.hakkai.dodge_roll',{blendOutTime:.12,stopExpression:'query.any_animation_finished'});}catch{}
    try{p.playSound('random.orb',{volume:.22,pitch:1.25});}catch{}
    for(let i=0;i<8;i++)try{const a=i*Math.PI/4;d.spawnParticle('hakkai:wind_trace',{x:at.x+Math.cos(a)*.5,y:at.y+.3,z:at.z+Math.sin(a)*.5});}catch{}
@@ -159,6 +163,16 @@ export function setupCombatRoll({notice,safe}){
  }
  function blocks(p,source,t){return ATTACKS.has(source?.cause)&&evading(p,t);}
  function status(p,t){const e=entries.get(p.id);return e&&e.dimension===p.dimension.id&&t<e.until?'§bロール回避中':'';}
+ function hasCounter(p,t){
+  try{
+   const e=entries.get(p?.id);
+   return !!(e&&p.isValid&&p.dimension.id===e.dimension&&Number.isFinite(t)&&Number.isFinite(e.counterFrom)&&Number.isFinite(e.counterUntil)&&t>=e.counterFrom&&t<e.counterUntil);
+  }catch{return false;}
+ }
+ function consumeCounter(p,t){
+  if(!hasCounter(p,t))return false;
+  const e=entries.get(p.id);e.counterFrom=undefined;e.counterUntil=undefined;return true;
+ }
  function clear(id){entries.delete(id);}
- return {tick,evading,blocks,status,clear};
+ return {tick,evading,blocks,status,hasCounter,consumeCounter,clear};
 }

@@ -15,8 +15,12 @@ for i in range(8):
  assert {x['item'] for x in recipe['ingredients']}=={'minecraft:netherite_sword','hakkai:warden_core',f'hakkai:guardian_core_{i}',f'hakkai:crystal_{i}'}
  a=load(RP/'attachables'/f'{name}.json')['minecraft:attachable']['description'];assert a['identifier']==ident and a['textures']['default']==f'textures/entity/hakkai_warden_sword_{i}'
  assert a['geometry']['default']==f'geometry.hakkai.{name}' and a['animations']['motion']=='animation.hakkai.warden_blade.motion'
- model=load(RP/'models/entity'/f'{name}.geo.json')['minecraft:geometry'][0];boss=load(RP/'models/entity'/f'warden_sword_{i}.geo.json')['minecraft:geometry'][0]
+ model_file=load(RP/'models/entity'/f'{name}.geo.json');model=model_file['minecraft:geometry'][0];boss=load(RP/'models/entity'/f'warden_sword_{i}.geo.json')['minecraft:geometry'][0]
+ # Slot binding is a modern geometry feature; copying the boss's 1.12 format
+ # can leave the player's sword unbound at the body. Also check inheritance.
+ assert model_file['format_version']=='1.16.0'
  assert model['description']['identifier']==a['geometry']['default'];assert model['bones'][0]['binding']=='q.item_slot_to_bone_name(c.item_slot)'
+ assert model['bones'][1]['parent']==model['bones'][0]['name']
  assert len(model['bones'][1]['cubes'])==len(boss['bones'][0]['cubes'])
  assert [c['uv'] for c in model['bones'][1]['cubes']]==[c['uv'] for c in boss['bones'][0]['cubes']]
  assert atlas[f'hakkai_{name}']['textures']==f'textures/items/hakkai_{name}'

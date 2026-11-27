@@ -12,7 +12,7 @@ const RANGE={'剣':4.5,'斧':4.0,'弓':4.0,'杖':16,'ハンマー':4.3,'槍':6,'
 const CONE={'剣':.50,'斧':.32,'弓':.78,'杖':.50,'ハンマー':.38,'槍':.82,'盾':.55,'扇':.28};
 const d3=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z);
 export function isTraceWeapon(g){return !!g&&TRACE_WEAPON_KINDS.has(g.kind)&&typeof g.id==='string'&&Number.isFinite(g.damage)&&g.damage>0;}
-export function setupWeaponTrace({system,gear,selected,state,visibleFrom,airAttack=()=>false,enabled=true,report=()=>{}}){
+export function setupWeaponTrace({system,gear,selected,state,visibleFrom,airAttack=()=>false,consumeCounter=()=>false,enabled=true,report=()=>{}}){
  const recent=new Map(),lastSwing=new Map(),tokens=new Map(),motionIndex=new Map(),styles=new Map();
  function record(p,target,damage){
   try{
@@ -49,7 +49,15 @@ export function setupWeaponTrace({system,gear,selected,state,visibleFrom,airAtta
    const s=state(p);if(s.busy||s.menu||t-(lastSwing.get(p.id)??-100)<4)return false;
    const view=p.getViewDirection(),n=Math.hypot(view.x,view.z),full=Math.hypot(view.x,view.y,view.z);if(!Number.isFinite(full)||full<.01||!Number.isFinite(n))return false;
    const aim={x:view.x/full,y:view.y/full,z:view.z/full},origin={...p.location},dim=p.dimension.id,slot=p.selectedSlotIndex;let range=RANGE[g.kind],cone=CONE[g.kind];
-   const style=resolveSwingStyle(styles.get(p.id),p,g,t);styles.set(p.id,style);
+   const style=resolveSwingStyle(styles.get(p.id),p,g,t);
+   // Linked attacks are a deliberate, stamina-priced commitment. Running out
+   // of stamina breaks the chain without charging, instead of giving free
+   // linked hits. Native Minecraft attacks remain intact.
+   if(style.linked&&p.getGameMode()!==GameMode.Creative){
+    if(!Number.isFinite(s.s)||s.s<4){style.linked=false;style.stage=1;}
+    else s.s-=4;
+   }
+   styles.set(p.id,style);
    const f=styleFacing(n<.01?{x:0,z:1}:{x:view.x/n,z:view.z/n},g.kind==='杖'?'neutral':style.direction);
    const geometry=styleGeometry(style.direction,range,cone);range=geometry.range;cone=geometry.cone;
    // Linked technique damage is defined by class/rank/chain, not the native
@@ -92,7 +100,38 @@ export function setupWeaponTrace({system,gear,selected,state,visibleFrom,airAtta
       }
      }
      if(direct.some(x=>x.friendly))return; // no sweeping past a friendly direct target
+     // Previously a linked swing did nothing to the enemy actually struck by
+     // the weapon: only secondary sweep targets got technique damage. Give a
+     // confirmed hostile direct hit its own bounded, weapon-independent rhythm
+     // bonus. Never treat entityHitEntity alone as proof of damage. Deduplicate
+     // both engine event orders and keep native damage as a separate hit.
+     {
+      const hit=direct.find(x=>x.damage>0&&!x.friendly),target=hit?.target;
+      if(target?.isValid&&p.isValid&&p.dimension.id===dim&&p.selectedSlotIndex===slot&&selected(p)?.typeId===item.typeId&&target.dimension?.id===dim&&isCombatTarget(target,p)&&d3(p.location,target.location)<=range+1&&lineClear(p,target)){
+       let counter=false;try{counter=consumeCounter(p,t)===true;}catch{}
+       const rank=Number.isFinite(g.rank)?Math.max(1,Math.min(3,Math.floor(g.rank))):1;
+       const bonus=(style.linked?Math.ceil(linkedTechnique(g,style)/2):0)+(counter?6+rank*2:0);
+       if(bonus)try{
+        if(target.applyDamage(bonus,{cause:EntityDamageCause.magic,damagingEntity:p})){
+         const at=target.location;
+         for(let i=0;i<8;i++){const a=i*Math.PI/4;try{p.dimension.spawnParticle('hakkai:wind_burst',{x:at.x+Math.cos(a)*.65,y:at.y+.8,z:at.z+Math.sin(a)*.65});}catch{}}
+         try{p.playSound('random.orb',{volume:.35,pitch:style.stage===3?1.6:1.25});}catch{}
+        }
+       }catch(err){report('連撃の追加技',err);}
+      }
+     }
      const damage=fallback;
+     // For a successful scripted hit (rather than a native direct hit), spend
+     // the same one-shot roll counter only after damage was accepted.
+     function counterOnHit(target){
+      try{
+       if(!p.isValid||p.dimension.id!==dim||p.selectedSlotIndex!==slot||selected(p)?.typeId!==item.typeId||!target?.isValid||target.dimension?.id!==dim||!isCombatTarget(target,p)||d3(p.location,target.location)>range+1||!lineClear(p,target)||!consumeCounter(p,t))return;
+       const rank=Number.isFinite(g.rank)?Math.max(1,Math.min(3,Math.floor(g.rank))):1;
+       if(target.applyDamage(6+rank*2,{cause:EntityDamageCause.magic,damagingEntity:p})){
+        const at=target.location;try{p.dimension.spawnParticle('hakkai:wind_burst',{x:at.x,y:at.y+1,z:at.z});}catch{}
+       }
+      }catch(err){report('回避反撃',err);}
+     }
      if(g.kind==='杖'){
       // A confirmed direct hit absorbs the staff shot. Otherwise a bounded
       // script projectile advances, raycasting each segment and stopping at
@@ -107,7 +146,7 @@ export function setupWeaponTrace({system,gear,selected,state,visibleFrom,airAtta
         for(let k=.25;k<=travel+.01;k+=.5)try{p.dimension.spawnParticle('hakkai:wind_trace',{x:pos.x+aim.x*k,y:pos.y+aim.y*k,z:pos.z+aim.z*k});}catch{}
         const end={x:pos.x+aim.x*travel,y:pos.y+aim.y*travel,z:pos.z+aim.z*travel};
         if((steps++%2)===0)try{p.dimension.spawnParticle(`hakkai:${g.visualId??g.id}`,end);}catch{}
-        if(beam.target){try{if(beam.target.isValid&&beam.target.dimension.id===dim&&isCombatTarget(beam.target,p)){const landed=beam.target.applyDamage(damage,{cause:EntityDamageCause.magic,damagingEntity:p});linkFinisher(p,beam.target,g,style,landed);p.dimension.spawnParticle('hakkai:wind_burst',end);}}catch(err){report('杖の弾',err);}return;}
+        if(beam.target){try{if(beam.target.isValid&&beam.target.dimension.id===dim&&isCombatTarget(beam.target,p)){const landed=beam.target.applyDamage(damage,{cause:EntityDamageCause.magic,damagingEntity:p});linkFinisher(p,beam.target,g,style,landed);if(landed)counterOnHit(beam.target);p.dimension.spawnParticle('hakkai:wind_burst',end);}}catch(err){report('杖の弾',err);}return;}
         if(beam.blocked)return;
         pos=end;remaining-=length;if(remaining>0)system.runTimeout(step,1);
        }catch(err){report('杖の弾',err);}
@@ -130,7 +169,7 @@ export function setupWeaponTrace({system,gear,selected,state,visibleFrom,airAtta
       // Magic cause avoids retriggering native melee/airstrike/affinity hooks;
       // Neutral damage uses the base attack; linked technique damage uses its
       // own class/rank/chain value. Exhaustion and armor can alter final loss.
-      try{const landed=target.applyDamage(damage,{cause:EntityDamageCause.magic,damagingEntity:p});linkFinisher(p,target,g,style,landed);}catch(err){report('武器の軌跡ダメージ',err);}
+      try{const landed=target.applyDamage(damage,{cause:EntityDamageCause.magic,damagingEntity:p});linkFinisher(p,target,g,style,landed);if(landed)counterOnHit(target);}catch(err){report('武器の軌跡ダメージ',err);}
      }
     }catch(err){report('武器の軌跡',err);}
    },4);
