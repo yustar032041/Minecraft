@@ -1,0 +1,17 @@
+{
+  "format_version": "1.8.0",
+  "animations": {
+    "animation.hakkai.warden_blade.motion": {
+      "loop": true,
+      "bones": {
+        "blade": {
+          "rotation": [
+            0,
+            0,
+            "math.sin(query.anim_time * 90) * 3"
+          ]
+        }
+      }
+    }
+  }
+}

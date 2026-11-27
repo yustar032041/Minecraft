@@ -1,0 +1,29 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "8界風記｜日本語フォント比較実験",
+    "description": "任意の比較用。未検証・表示不具合の解決は保証されません。",
+    "uuid": "4b3446bf-9f91-4952-ac54-40eae6509231",
+    "version": [
+      0,
+      2,
+      0
+    ],
+    "min_engine_version": [
+      1,
+      26,
+      60
+    ]
+  },
+  "modules": [
+    {
+      "type": "resources",
+      "uuid": "96fb0b91-d1a7-4f82-8c04-39786e4414f4",
+      "version": [
+        0,
+        2,
+        0
+      ]
+    }
+  ]
+}

@@ -21,6 +21,15 @@ def make_animation(i,bone_names):
  tail=f'g{i}_tail_detail_0'
  if tail not in bone_names:raise ValueError(f'Missing tail detail {tail}')
  tracks[tail]={'rotation':[0,f'math.sin(query.anim_time * {54+i*4}) * {2+i%3}',0]}
+ # Realm-specific crest/back motion makes the silhouettes legible even while
+ # idle. Child joints follow the body and head during existing attack tracks.
+ rates=[98,45,34,60,145,51,110,72]
+ amounts=[5,3,2,4,6,4,5,4]
+ for parent in ('head','body'):
+  for name in sorted(bone_names):
+   if name.startswith(f'g{i}_{parent}_detail_'):
+    j=int(name.rsplit('_',1)[1]);sign=1 if j%2==0 else -1
+    tracks[name]={'rotation':[0,0,f'math.sin(query.anim_time * {rates[i]} + {j*45}) * {sign*amounts[i]}']}
  if i==6:
   for side,sign in [('l',1),('r',-1)]:
    for j in (0,1):

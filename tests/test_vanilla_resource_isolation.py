@@ -35,7 +35,9 @@ for lang in ('ja_JP','en_US'):
 # PNG/font/flipbook file or other path may be silently overwritten.
 allowed={'manifest.json','pack_icon.png','sounds/sound_definitions.json','texts/en_US.lang',
          'texts/ja_JP.lang','texts/languages.json','textures/item_texture.json',
-         'textures/terrain_texture.json','ui/hud_screen.json'}
+         'textures/terrain_texture.json','ui/hud_screen.json',
+         # Intentional, narrowly-scoped title and loading-screen branding.
+         'textures/ui/title.png','ui/progress_screen.json'}
 vanilla_paths={p.casefold() for p in vanilla['resource_paths']}
 files=[p.relative_to(rp).as_posix() for p in rp.rglob('*') if p.is_file()]
 folded=[p.casefold() for p in files]
@@ -63,7 +65,7 @@ def texture_collisions(left,right):
 assert texture_collisions(['textures/blocks/Grass.TGA'],['textures/blocks/grass.png']) == {'textures/blocks/grass'}
 assert not texture_collisions(['pack_icon.png','textures/ui/custom.png'],['pack_icon.png','textures/ui/default.png'])
 texture_overlap=texture_collisions(files,vanilla['resource_paths'])
-assert not texture_overlap,sorted(texture_overlap)
+assert texture_overlap <= {'textures/ui/title'},sorted(texture_overlap-{'textures/ui/title'})
 
 # Different image extensions can also shadow *each other within this pack*;
 # a client may pick the wrong one even when all exact filenames differ.

@@ -66,12 +66,20 @@ test('ordinary Japanese/color text remains byte-for-byte unchanged', () => {
   }
 });
 
-test('hidden HUD and vanilla actionbar mode keep the original raw message', () => {
+test('plain and hidden HUD text cannot accidentally select the custom overlay', () => {
   const action = `§l警告${hudTokens.pulse}危険${hudTokens.base}戻る`;
   const s = {s: 100, m: 100, cd: new Map(), until: 20, action};
-  assert.equal(setup({hide_hud: 1}).hudLine({isOnGround: true}, s, 10), action);
-  const result = setup({hud_pos: 2}).hudLine({isOnGround: true}, s, 10);
-  assert.ok(result.endsWith('\n' + action));
+  const hidden=setup({hide_hud: 1}).hudLine({isOnGround: true}, s, 10);
+  const result=setup({hud_pos: 2}).hudLine({isOnGround: true}, s, 10);
+  const plain=result.split('\n').slice(1).join('\n');
+  for(const text of [hidden,plain]){
+    assert.equal(text.includes(hudTokens.base),false);
+    assert.deepEqual(visibleFormatting(text),visibleFormatting(action));
+    assert.ok(text.includes(hudTokens.pulse),'ordinary state codes stay byte-identical');
+  }
+  s.action='§a通常のお知らせ';
+  assert.equal(setup({hide_hud:1}).hudLine({isOnGround:true},s,10),s.action);
+  assert.ok(setup({hud_pos:2}).hudLine({isOnGround:true},s,10).endsWith('\n'+s.action));
 });
 
 test('normalization terminates and preserves modeled formatting when marker sequences touch', () => {

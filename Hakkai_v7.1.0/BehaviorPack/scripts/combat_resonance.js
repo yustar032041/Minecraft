@@ -1,3 +1,5 @@
+import {playWeaponMotion} from './combat_weapon_motion.js';
+import {weaponDirection} from './combat_weapon_style.js';
 import { EntityDamageCause, GameMode } from '@minecraft/server';
 import { friendlyFireEnabled,isPlayerOpponent } from './friendly_fire.js';
 // An original Hakkai combat prototype: confirmed melee hits gather wind marks;
@@ -11,7 +13,7 @@ export function isCombatTarget(entity,attacker){
  if(entity.typeId==='hakkai:time_warden'||entity.typeId==='hakkai:fushi_chief'||/^hakkai:ender_[0-7]$/.test(entity.typeId??''))return true;
  try{return !!entity.getComponent('minecraft:type_family')?.hasTypeFamily('monster');}catch{return false;}
 }
-export function setupCombatResonance({system,notice}){
+export function setupCombatResonance({system,notice,attackMotionHandled=()=>false}){
  const entries=new Map();
  const identity=(p,g)=>`${p.dimension.id}|${p.selectedSlotIndex}|${g.id}`;
  function current(p,g,t){
@@ -26,11 +28,11 @@ export function setupCombatResonance({system,notice}){
   const count=Math.min(MAX,(old?.count??0)+1);
   entries.set(p.id,{identity:identity(p,g),count,last:t,expires:t+(count===MAX?READY_GAP:GAP)});
   // Telegraphs are cosmetic only: all existing weapon damage remains native.
-  trace(p,target,count);
+  trace(p,target,count,g);
   if(count===MAX&&old?.count!==MAX)notice(p,'§b風紋が満ちた！ 武器スキルを使うと威力上昇',45);
   return count;
  }
- function trace(p,target,count){
+ function trace(p,target,count,g){
   const a=p.location,b=target.location,dx=b.x-a.x,dz=b.z-a.z,len=Math.hypot(dx,dz)||1,fx=dx/len,fz=dz/len;
   // A tilted sequence of short wind strokes, changing direction with each hit.
   const sign=count%2?1:-1,n=8+count*3;
@@ -39,7 +41,9 @@ export function setupCombatResonance({system,notice}){
    const at={x:a.x+fx*(1+curve)-fz*side,y:a.y+.55+(sign>0?u:1-u)*1.3,z:a.z+fz*(1+curve)+fx*side};
    try{p.dimension.spawnParticle('hakkai:wind_trace',at);}catch{}
   }
-  try{p.playAnimation(count%2?'animation.hakkai.wind_trace_a':'animation.hakkai.wind_trace_b',{blendOutTime:.12,stopExpression:'query.any_animation_finished'});}catch{}
+  // Swing-start already plays the selected individual motion when supported.
+  // Keep this fallback only for API versions that lack that event.
+  try{if(!attackMotionHandled())playWeaponMotion(p,g,'attack',count-1,weaponDirection(p));}catch{}
   try{p.playSound('random.orb',{volume:.22,pitch:1+count*.12});}catch{}
  }
  function consume(p,g){

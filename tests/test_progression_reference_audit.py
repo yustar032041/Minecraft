@@ -38,5 +38,5 @@ with tempfile.TemporaryDirectory() as tmp:
 
 counts,errors,unchecked=audit(ROOT/'Hakkai_v7.1.0')
 assert not errors and not unchecked,(errors,unchecked)
-assert counts['items']==397 and counts['blocks']==164 and counts['recipes']>=412
+assert counts['items']==405 and counts['blocks']==164 and counts['recipes']>=412
 print('Progression reference audit: live pack and injected missing recipe, loot, placer, name and icon faults OK (static only)')

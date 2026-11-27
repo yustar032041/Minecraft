@@ -52,13 +52,14 @@ for path in sorted((BP/'recipes').glob('*.json')):
         detail='並べ方は自由：\n'+'\n'.join(f'{n} ×{c}' for n,c in grouped.items())
     elif kind=='furnace': detail='入力：'+ingredient(recipe['input'])+'\n燃料が必要です。'
     else: detail='入力：'+ingredient(recipe['input'])+'\n材料：'+ingredient(recipe['reagent'])
-    category=0 if out_id.startswith('hakkai:gear_') or out_id.startswith('hakkai:ult_') or out_id.startswith('hakkai:series_leggings_') or out_id.startswith('hakkai:guardian_armor_') or out_id.startswith('hakkai:nightwalker_armor_') or out_id.startswith('hakkai:united_armor_') else 1 if kind in ('shaped','shapeless') else 2
+    category=0 if out_id.startswith('hakkai:gear_') or out_id.startswith('hakkai:ult_') or out_id.startswith('hakkai:warden_blade_') or out_id.startswith('hakkai:series_leggings_') or out_id.startswith('hakkai:guardian_armor_') or out_id.startswith('hakkai:nightwalker_armor_') or out_id.startswith('hakkai:united_armor_') else 1 if kind in ('shaped','shapeless') else 2
     title=name(out_id)
     inputs = (list(recipe['key'].values()) if kind=='shaped' else recipe['ingredients'] if kind=='shapeless' else [recipe['input'],recipe['reagent']] if kind=='brewing_mix' else [recipe['input']])
     for obj in inputs:
         item=obj if isinstance(obj,str) else obj.get('item')
         if item and len(entries) not in uses[item]:uses[item].append(len(entries))
     note={'hakkai:dodge_scroll':'\n\n使い道：手に持って使うと1個消費し、移動速度上昇Iが8秒間。無敵や攻撃回避ではありません。', 'hakkai:taunt_scroll':'\n\n使い道：手に持って使うと1個消費し、自分に耐性Iが8秒間。敵を引き寄せる機能ではありません。', 'hakkai:war_horn':'\n\n使い道：手に持って使うと自分に攻撃力上昇Iが10秒間。消費せず、成功後20秒の待機が必要。敵の誘導や味方への効果はありません。', 'hakkai:awaken_book':'\n\n使い道：手に持って使うと覚醒・継承の画面を開きます。本は消費せず、各試練の条件や素材は必要です。'}.get(out_id,'')
+    if out_id.startswith('hakkai:warden_blade_'):note+='\n\n管理者の核は管理者への再挑戦、守護獣の核は対応する守護獣との再戦で入手可能。武器として使うと固有効果が発動し、材料の剣の耐久・エンチャントは引き継がれません。'
     armor_outputs={f'hakkai:gear_{base+16*i:03}' for i in range(11) for base in (10,11,12)} | {f'hakkai:series_leggings_{i:02}' for i in range(11)}
     if out_id in armor_outputs or out_id.startswith('hakkai:guardian_armor_') or out_id.startswith('hakkai:nightwalker_armor_') or out_id.startswith('hakkai:united_armor_'):note+='\n\n材料の元防具のエンチャント・耐久等は引き継がれません。'
     if out_id.startswith('hakkai:gear_') and any((isinstance(o,dict) and (o.get('item','').startswith('minecraft:iron_sword') or o.get('item','').startswith('minecraft:iron_axe') or o.get('item') in ('minecraft:bow','minecraft:shield','minecraft:iron_pickaxe') or o.get('item','').startswith('hakkai:gear_'))) for o in inputs) and out_id not in armor_outputs:note+='\n\n材料の元装備のエンチャント・耐久等は引き継がれません。'

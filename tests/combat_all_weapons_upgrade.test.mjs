@@ -4,6 +4,7 @@ import {ULTIMATE_WEAPONS} from '../Hakkai_v7.1.0/BehaviorPack/scripts/ultimate_w
 import {isTraceWeapon,setupWeaponTrace} from '../Hakkai_v7.1.0/BehaviorPack/scripts/combat_weapon_trace.js';
 import {setupAirStrike} from '../Hakkai_v7.1.0/BehaviorPack/scripts/combat_air_strike.js';
 import {setupCombatUltimate} from '../Hakkai_v7.1.0/BehaviorPack/scripts/combat_ultimate.js';
+import {ultimateSignature,ultimateDamage} from '../Hakkai_v7.1.0/BehaviorPack/scripts/combat_ultimate_signature.js';
 import {setupBowTrail} from '../Hakkai_v7.1.0/BehaviorPack/scripts/combat_bow_trail.js';
 const weapons=[...catalog,...ULTIMATE_WEAPONS].filter(isTraceWeapon);assert.equal(weapons.length,97);
 const mkPlayer=(d)=>({id:'p',typeId:'minecraft:player',isValid:true,dimension:d,location:{x:0,y:0,z:0},selectedSlotIndex:0,isOnGround:true,isSneaking:false,getVelocity:()=>({x:0,y:-.2,z:0}),getGameMode:()=> 'survival',getComponent:()=>undefined,getHeadLocation:()=>({x:0,y:1,z:0}),getViewDirection:()=>({x:1,y:0,z:0}),playAnimation:()=>{},playSound:()=>{}});
@@ -19,7 +20,7 @@ for(const change of [p=>p.isSneaking=true,p=>p.isSwimming=true,p=>p.isFlying=tru
 for(const g of weapons){
  const hits=[],particles=[],d={id:'d',spawnParticle:(id)=>particles.push(id),isChunkLoaded:()=>true,getEntitiesFromRay:()=>[]},p=mkPlayer(d),s={s:20,m:20},system={currentTick:1};
  const z=enemy(d,'z',2);z.applyDamage=n=>hits.push(n);d.getEntities=()=>[z];
- const ctrl=setupCombatUltimate({system,notice:()=>{},visibleFrom:()=>true});assert.equal(ctrl.cast(p,s,g),true,g.id);assert.deepEqual(hits,[20],g.id);assert.equal(s.s,0);assert.equal(s.m,10);assert.ok(particles.includes(`hakkai:${g.visualId??g.id}`));assert.equal(ctrl.cast(p,{s:20,m:20},g),false,'cooldown');
+ const ctrl=setupCombatUltimate({system,notice:()=>{},visibleFrom:()=>true});assert.equal(ctrl.cast(p,s,g),true,g.id);assert.deepEqual(hits,[ultimateDamage(ultimateSignature(g),p.location,z.location)],g.id);assert.equal(s.s,0);assert.equal(s.m,10);assert.ok(particles.includes(`hakkai:${g.visualId??g.id}`));assert.equal(ctrl.cast(p,{s:20,m:20},g),false,'cooldown');
 }
 // The new weapon cost has no upper resource threshold; insufficient
 // resources never pay for a failed ultimate.
@@ -52,6 +53,9 @@ function staffFixture(){
  const f=staffFixture();f.swing();f.step();assert.equal(f.hits.length,0,'not instant');while(f.jobs.length)f.step();assert.deepEqual(f.hits,[f.g.damage]);assert.ok(f.particles.some(([id,pos])=>id==='hakkai:wind_trace'&&pos.x>8));
 }
 for(const stop of [f=>f.setBlock(true),f=>f.setFriend(true),f=>f.setLoaded(false),f=>f.ctrl.clear(f.p.id)]){const f=staffFixture();f.swing();stop(f);while(f.jobs.length)f.step();assert.equal(f.hits.length,0);}
+{
+ const f=staffFixture();f.swing();f.step();assert.ok(f.jobs.length,'projectile in flight');f.p.selectedSlotIndex=1;while(f.jobs.length)f.step();assert.equal(f.hits.length,0,'slot switch cancels in-flight staff even if the optional event is missing');
+}
 // The flying staff also uses the shared ray: a tied friendly blocks it.
 for(const reverse of [false,true]){
  const f=staffFixture(),friend=enemy(f.d,'cow',11,'minecraft:cow');

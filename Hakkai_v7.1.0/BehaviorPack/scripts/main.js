@@ -75,6 +75,8 @@ import { setupFushiTotem } from './combat_totem.js';
 import { setupCombatUltimate } from './combat_ultimate.js';
 import { hasUltimateArmor, ultimateRegen, ultimateParryHeal, applyUltimateArmorBonus } from './ultimate_armor.js';
 import { ULTIMATE_WEAPONS } from './ultimate_weapons.js';
+import { playWeaponMotion,vanillaSwingMotion } from './combat_weapon_motion.js';
+import { WARDEN_BLADES,wardenBladeOnCast,wardenBladeOnHit } from './warden_blades.js';
 import { equippedSeries, seriesLegUpgrade } from './armor_series.js';
 import { setupCombatCharge, RELEASE_WEAPON_KINDS } from './combat_charge.js';
 import { places, atlas, linkedRealms, attrs, home, pairs, guardians, catalog, anchor, baseY, width, expandedY, expandedHeight, patterns, chronicles, biomes, families, wildlife, hudTokens, civicRoles, seasonalPlants } from './data.js';
@@ -94,7 +96,7 @@ const bossMultiplayer=createGuardianMultiplayer({spectator:GameMode.Spectator,tr
 let frontierWorlds, expeditionRecords, seededWorlds, mobSystem, realmEnders, fushiSystem, wardenArena, wardenBoss, combatResonance, combatGuard, combatRoll, combatParry, airDash, airStrike, fushiTotem, combatUltimate, combatCharge, weaponTrace, bowTrail;
 const shieldWear=setupShieldWear({system});
 const customShield=setupCustomShield({catalog,prepare:shieldWear.prepare});
-const gear=new Map([...catalog,...ULTIMATE_WEAPONS].map(g=>[ns+g.id,g]));
+const gear=new Map([...catalog,...ULTIMATE_WEAPONS,...WARDEN_BLADES].map(g=>[ns+g.id,g]));
 const atlasGrid=new Map(atlas.map(a=>[`${a.col},${a.row}`,a]));
 const travelSites=new Map([...places,...atlas,...linkedRealms].map(s=>[s.id,s]));
 const sessions=new Map();
@@ -2754,16 +2756,17 @@ function cast(p,g,charged=false){
  const beam=wantsRay?prepareWindRay(p,g):undefined;
  if(wantsRay&&!beam){notice(p,'§e風紋閃の進路を確認できません');return;}
  if(!isCreative(p)){s.m-=cost;s.s-=effort;}
+ const linked=(typeof weaponTrace!=='undefined'&&isTraceWeapon(g))?(weaponTrace?.takeLink?.(p,g,t)??false):false;
  const resonance=combatResonance?.consume(p,g)??false;
  const combo=charged&&!resonance&&(combatResonance?.consumeCombo(p,g)??false);
  s.cd.set(g.id,t+g.seconds*20);
  const key=`xp_${g.id}`,old=num(p,key), lv=Math.min(5,1+Math.floor(old/8));
  if(old<32)property(p,key,old+1);
- const radius={'剣':4,'斧':5,'弓':14,'杖':9,'ハンマー':6,'槍':7,'扇':7,'盾':3,'鎧':3,'兜':2,'靴':3,'指輪':5,'首飾り':4,'マント':4}[g.kind]??5;
+ const radius=({'剣':4,'斧':5,'弓':14,'杖':9,'ハンマー':6,'槍':7,'扇':7,'盾':3,'鎧':3,'兜':2,'靴':3,'指輪':5,'首飾り':4,'マント':4}[g.kind]??5)+(linked?.direction==='forward'?1:0);
  const pushes={'ハンマー':.72,'斧':1.5,'扇':1.9,'盾':1.15,'槍':.54};
  const push=(pushes[g.kind]??.65)*(combo?1.5:1), site=currentPlace(p);
  const such=site?.id>0&&home[aspect(site)].includes(g.a), night=world.getTimeOfDay()>13000;
- const str=Math.round((3+g.damage*.28+g.power*.05+lv*1.4+(g.a===4?3:0)+(such||g.a===8&&night?2:0)+(charged?2:0))*(resonance?1.25:combo?1.2:1));
+ const str=Math.round((3+g.damage*.28+g.power*.05+lv*1.4+(g.a===4?3:0)+(such||g.a===8&&night?2:0)+(charged?2:0))*(resonance?1.25:combo?1.2:1)*(linked?1.08:1));
  const directional=['剣','槍','扇','弓'].includes(g.kind), view=directional?p.getViewDirection():undefined;
  const candidates=beam?(beam.target?[beam.target]:[]):enemies(p,radius+(charged?4:0),9).filter(e=>{
    if(!directional){
@@ -2776,14 +2779,17 @@ function cast(p,g,charged=false){
    if(cos<=({'剣':.18,'槍':.79,'扇':.22,'弓':.55}[g.kind]))return false;
    try{return visibleFrom(p,e.getHeadLocation());}catch{return false;}
  });
- const targetCount=({'槍':2,'剣':3,'弓':5,'盾':2,'兜':1,'杖':3}[g.kind]??6)+(charged&&['弓','扇','杖'].includes(g.kind)?1:0);
+ const targetCount=({'槍':2,'剣':3,'弓':5,'盾':2,'兜':1,'杖':3}[g.kind]??6)+(charged&&['弓','扇','杖'].includes(g.kind)?1:0)+(['left','right'].includes(linked?.direction)?1:0);
  for(const e of candidates.slice(0,targetCount)){
    if(g.kind==='弓')try{e.dimension.spawnParticle('minecraft:basic_crit_particle',{...e.location,y:e.location.y+.5});}catch{}
    const landed=hit(p,e,g.kind==='扇'?Math.max(2,str-2):str,g.a,g.modifier,push);
+   if(Number.isInteger(g.wardenBlade))wardenBladeOnHit(p,e,g,landed);
    if(landed&&g.kind==='ハンマー'&&combatEffectAllowed(p,e))try{e.addEffect('slowness',35,{showParticles:false});}catch{}
    if(resonance&&e.isValid)for(let i=0;i<4;i++){const a=i*Math.PI/2;try{e.dimension.spawnParticle('hakkai:wind_burst',{x:e.location.x+Math.cos(a)*.5,y:e.location.y+1,z:e.location.z+Math.sin(a)*.5});}catch{}}
  }
  if(!beam&&g.kind==='槍'&&candidates.length&&view)try{along(p,view.x,view.z,.42,.08);}catch{}
+ if(Number.isInteger(g.wardenBlade))wardenBladeOnCast(p,g);
+ if(linked?.direction==='back')try{p.addEffect('resistance',40,{showParticles:false});}catch{}
  // Optional status APIs must not abort the visual and animation portion of
  // a skill after its damage and cost have already been applied.
  if(g.kind==='靴'||g.kind==='マント')try{p.addEffect(g.kind==='靴'?'speed':'slow_falling',95,{showParticles:false});}catch{}
@@ -2793,10 +2799,11 @@ function cast(p,g,charged=false){
  const skillDefense=g.skillDefense??g.defense;
  if(g.kind==='盾'||skillDefense>=5)try{p.addEffect('resistance',55+skillDefense*6,{showParticles:false});}catch{}
  if(g.a===6)try{p.addEffect('regeneration',35,{showParticles:false});}catch{}
- notice(p,`§b${beam?'風紋閃・':resonance?'風紋解放・':combo?'二連終撃・':''}${charged?(g.kind==='弓'?'溜め撃ち・':'溜め技・'):''}${g.skill} §7Lv.${lv}`);
+ notice(p,`§b${linked?({'forward':'連携・踏込','left':'連携・横薙ぎ','right':'連携・横薙ぎ','back':'連携・退き守り'}[linked.direction]??'連携')+'・':''}${beam?'風紋閃・':resonance?'風紋解放・':combo?'二連終撃・':''}${charged?(g.kind==='弓'?'溜め撃ち・':'溜め技・'):''}${g.skill} §7Lv.${lv}`);
  const v=p.getViewDirection(), l=p.location,n=Number(g.number),visualId=g.visualId??g.id;
  const where={x:l.x+v.x*(directional?1.4:.3),y:l.y+(g.kind==='ハンマー'?.13:g.kind==='弓'?2.1:1),z:l.z+v.z*(directional?1.4:.3)};
- try{p.playAnimation(`animation.hakkai.cast.${visualId}`,{blendOutTime:.13,stopExpression:'query.any_animation_finished'});}catch{}
+ if(charged&&['剣','斧','弓','杖','ハンマー','槍','盾','扇'].includes(g.kind)){try{playWeaponMotion(p,g,'charged');}catch{}}
+ else try{p.playAnimation(Number.isInteger(g.wardenBlade)?`animation.hakkai.warden_blade_skill_${g.wardenBlade}`:`animation.hakkai.cast.${visualId}`,{blendOutTime:.13,stopExpression:'query.any_animation_finished'});}catch{}
  if(beam)renderWindRay(p,beam);
  if(combo){
    const count=g.kind==='斧'?14:g.kind==='槍'?9:12;
@@ -6347,6 +6354,13 @@ function normalizeHudPayload(text){
  }while(text!==previous);
  return text;
 }
+// The custom UI also inspects ordinary actionbar messages. Strip only its
+// full routing marker from our plain/hidden messages, so they cannot be
+// mistaken for a custom frame. Other formatting is left byte-for-byte alone.
+function normalizeHudRouting(text){
+ while(text.includes(hudTokens.base))text=text.split(hudTokens.base).join('§r');
+ return text;
+}
 function hudLine(p,s,t){
  const pale=num(p,'hud_color'),st=Math.floor(s.s),mana=Math.floor(s.m),show=t<s.until,mode=num(p,'hud_pos');
  const held=gear.get(selected(p)?.typeId),boss=mobSystem?.bossHudLine(p,t),marks=combatResonance?.level(p,held,t)??0,guard=combatGuard?.status(p,held,t);
@@ -6354,7 +6368,7 @@ function hudLine(p,s,t){
  const hint=isTraceWeapon(held)?(p.isSneaking?(held.kind==='弓'?'§7溜め撃ち：少し引いて離す':'§7溜め技：使うボタン'):(p.isOnGround?'§7通常技：使う｜必殺：跳んで使う':'§6必殺：使う（スタミナ20・魔力10）')):undefined;
  const extraRaw=[hint,customShield.cooldown(p,t)>0?`§e盾の構え直し ${Math.ceil(customShield.cooldown(p,t)/20)}秒`:undefined,combatCharge?.status(p,t),combatUltimate?.status(p,t),combatParry?.status(p,t),combatRoll?.status(p,t),airDash?.status(p),guard,marks?`§b風紋 ${'◆'.repeat(marks)}${'◇'.repeat(3-marks)}${marks===3?' 解放可能':marks===2?' 溜め終撃可能':''}`:undefined,remaining?`§7武器技 ${Math.ceil(remaining/20)}秒`:undefined,show?s.action:undefined,boss].filter(Boolean).join('\n');
  const hidden=Boolean(num(p,'hide_hud'));
- const extra=hidden||mode===2?extraRaw:normalizeHudPayload(extraRaw);
+ const extra=hidden||mode===2?normalizeHudRouting(extraRaw):normalizeHudPayload(extraRaw);
  if(hidden)return extra||undefined;
  if(mode===2){
    const line=`${pale?'§f':'§c'}スタミナ ${bar(st)} ${st}§r  ${pale?'§7':'§b'}魔力 ${bar(mana)} ${mana}§r`;
@@ -6599,7 +6613,7 @@ fushiTotem=setupFushiTotem({system,notice,report});
 combatUltimate=setupCombatUltimate({system,notice,visibleFrom});
 combatCharge=setupCombatCharge({system,gear,selected,state,cast,tapMode:true});
 let weaponSwingAvailable=false;
-try{const signal=world.afterEvents.playerSwingStart;if(signal){signal.subscribe(e=>weaponTrace?.swing(e));weaponSwingAvailable=true;}}catch(err){report('武器の振りイベント',err);}
+try{const signal=world.afterEvents.playerSwingStart;if(signal){signal.subscribe(e=>{weaponTrace?.swing(e);vanillaSwingMotion(e,selected,state);});weaponSwingAvailable=true;}}catch(err){report('武器の振りイベント',err);}
 weaponTrace=setupWeaponTrace({system,gear,selected,state,visibleFrom,airAttack:(p,s,g,t)=>airStrike?.beginSwing(p,s,g,t)??false,enabled:weaponSwingAvailable,report});
 bowTrail=setupBowTrail({system,gear,selected,state,airAttack:(p,s,g,t)=>airStrike?.beginSwing(p,s,g,t)??false});
 safeSub('world','after','entitySpawn',({entity})=>bowTrail?.spawned(entity));
@@ -6624,4 +6638,4 @@ realmEnders=setupRealmEnders({world,system,report,safe,isEvading,tryParry:tryScr
 fushiSystem=setupFushiSystem({world,system,report,isEvading,tryParry:tryScriptParry});
 wardenArena=setupWardenArena({world,system,num,property,notice,report,loaded,safe,safeNear,point,parsePoint,returnNatural,form,total,space});
 wardenBoss=setupWardenBoss({world,system,property,report,musicMuted:p=>Boolean(num(p,'mute')),isEvading,tryParry:tryScriptParry,spendParry:(p,cost)=>{const s=state(p);if(s.s<cost){notice(p,'§eパリィに必要なスタミナが足りない');return false;}s.s-=cost;return true;}});
-combatResonance=setupCombatResonance({system,notice});
+combatResonance=setupCombatResonance({system,notice,attackMotionHandled:()=>weaponTrace?.enabled()??false});

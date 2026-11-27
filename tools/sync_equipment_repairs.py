@@ -23,6 +23,7 @@ def repair_material(ident):
         if n<10:return 'minecraft:diamond'
         if n==10:return 'minecraft:netherite_scrap'
     if re.fullmatch(r'guardian_armor_[0-7]_(helmet|leggings|boots)',ident) or re.fullmatch(r'nightwalker_armor_(helmet|leggings|boots)',ident):return 'minecraft:diamond'
+    if re.fullmatch(r'warden_blade_[0-7]',ident):return 'minecraft:netherite_scrap'
     if re.fullmatch(r'united_armor_(helmet|leggings|boots)',ident) or ident in {'ult_helmet','ult_chest','ult_leggings','ult_boots','ult_sword','ult_axe','ult_pickaxe'}:return 'minecraft:netherite_scrap'
     raise ValueError(f'durable item has no reviewed repair policy: {ident}')
 
@@ -44,6 +45,6 @@ def main():
             newline='\r\n' if b'\r\n' in raw else '\n'
             path.write_bytes((json.dumps(obj,ensure_ascii=False,indent=2)+'\n').replace('\n',newline).encode())
         checked+=1;materials[material]=materials.get(material,0)+1
-    assert checked==250,(checked,'expected 250 reviewed durable equipment items')
+    assert checked==258,(checked,'expected 258 reviewed durable equipment items')
     print(f'{checked} durable items '+('written' if args.write else 'verified')+f': {materials} (static; anvil not tested)')
 if __name__=='__main__':main()

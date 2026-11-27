@@ -20,6 +20,12 @@ function fixture(){
  assert.ok(f.particles.every(([id])=>id==='hakkai:wind_trace'));
 }
 {
+ const f=fixture();let handled=true;
+ const c=setupCombatResonance({system:f.system,notice:()=>{},attackMotionHandled:()=>handled});
+ assert.equal(c.onHurt(f.player,f.target,gear,4),1);assert.equal(f.animations.length,0,'swing-start already played motion');assert.equal(f.particles.length,11,'hit effects remain');
+ handled=false;f.system.currentTick=8;assert.equal(c.onHurt(f.player,f.target,gear,4),2);assert.equal(f.animations.length,1,'fallback without swing-start event');
+}
+{
  const f=fixture(),{ctrl,player:p,target:e,system:t}=f;
  ctrl.onHurt(p,e,gear,4);t.currentTick=81;assert.equal(ctrl.level(p,gear),0,'partial expires');
  ctrl.onHurt(p,e,gear,4);t.currentTick=89;ctrl.onHurt(p,e,gear,4);t.currentTick=97;ctrl.onHurt(p,e,gear,4);

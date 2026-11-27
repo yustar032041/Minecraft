@@ -362,7 +362,15 @@
     "united_armor_boots",
     "united_armor_helmet",
     "united_armor_leggings",
-    "warden_core"
+    "warden_core",
+    "warden_blade_0",
+    "warden_blade_1",
+    "warden_blade_2",
+    "warden_blade_3",
+    "warden_blade_4",
+    "warden_blade_5",
+    "warden_blade_6",
+    "warden_blade_7"
   ],
   "provisional_misc_existing": [],
   "refined_misc_existing": [

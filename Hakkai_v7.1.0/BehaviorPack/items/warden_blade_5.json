@@ -1,0 +1,51 @@
+{
+  "format_version": "1.26.60",
+  "minecraft:item": {
+    "description": {
+      "identifier": "hakkai:warden_blade_5",
+      "menu_category": {
+        "category": "equipment",
+        "group": "minecraft:itemGroup.name.sword"
+      }
+    },
+    "components": {
+      "minecraft:display_name": {
+        "value": "item.hakkai:warden_blade_5.name"
+      },
+      "minecraft:icon": "hakkai_warden_blade_5",
+      "minecraft:max_stack_size": 1,
+      "minecraft:damage": 27,
+      "minecraft:hand_equipped": true,
+      "minecraft:durability": {
+        "max_durability": 5000
+      },
+      "minecraft:use_modifiers": {
+        "use_duration": 15.0,
+        "movement_modifier": 0.85
+      },
+      "hakkai:use": {},
+      "minecraft:interact_button": "action.interact.hakkai.use",
+      "minecraft:enchantable": {
+        "slot": "sword",
+        "value": 15
+      },
+      "minecraft:tags": {
+        "tags": [
+          "minecraft:is_sword",
+          "minecraft:is_tool",
+          "minecraft:netherite_tier"
+        ]
+      },
+      "minecraft:repairable": {
+        "repair_items": [
+          {
+            "items": [
+              "minecraft:netherite_scrap"
+            ],
+            "repair_amount": 1250
+          }
+        ]
+      }
+    }
+  }
+}

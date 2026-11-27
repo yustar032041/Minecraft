@@ -32,7 +32,7 @@ with TemporaryDirectory() as folder:
 
 item = atlas_report(ROOT / 'Hakkai_v7.1.0/ResourcePack', 'item_texture.json')
 terrain = atlas_report(ROOT / 'Hakkai_v7.1.0/ResourcePack', 'terrain_texture.json')
-assert item['entries'] == 398 and terrain['entries'] == 182
+assert item['entries'] == 406 and terrain['entries'] == 182
 assert len([image for image in item['images'] if image['above_limit']]) == 23
 assert len([image for image in terrain['images'] if image['above_limit']]) == 5
 print('Read-only atlas source audit OK; actual Bedrock atlas and GPU memory not measured')

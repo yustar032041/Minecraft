@@ -86,6 +86,14 @@ assert.equal(markedFrames.length, 1);
 const markedControls: Record<string, any> = Object.fromEntries(markedFrames[0]![1].controls.map((entry: any) => Object.entries(entry)[0]));
 const payloadCollision = markedFrames[0]![0] !== 'hakkai_frame_00' || evaluate(markedControls.heart_pulse.visible, marked);
 if (source.includes('function normalizeHudPayload(')) assert.equal(payloadCollision, false, 'normalization failed to protect the synthetic payload');
+// Our own messages sent in plain/hidden modes must not be routed to the
+// overlay if their text happens to contain its marker. External addons are
+// outside this sanitizer. The old source is allowed to demonstrate failure.
+const plainAction = `§l警告${hudTokens.base}戻る`;
+const routingCollision = [render({hud_pos: 2, stamina: 70, mana: 90, tick: 10, action: plainAction, until: 20}),
+  render({hide_hud: 1, stamina: 70, mana: 90, tick: 10, action: plainAction, until: 20})]
+  .some(message => Boolean(evaluate(ui.hakkai_overlay.visible, message)));
+if (source.includes('function normalizeHudRouting(')) assert.equal(routingCollision, false, 'plain/hidden message was misrouted');
 // This third-party implementation models substring subtraction as removing all
 // occurrences, unlike our older test's first-only assumption. Neither model
 // establishes Switch behaviour; the synthetic case exposes that test boundary.
@@ -106,5 +114,5 @@ const injectedTile = allFlipTiles.find(tile => /lava/i.test(tile))!;
 const injected = mergeTerrainLayers([vanillaTerrain, { texture_data: { [injectedTile]: { textures: 'textures/fake/injected' } } }]);
 assert.notDeepEqual(injected[injectedTile], base[injectedTile]);
 console.log(JSON.stringify({hud_states: count, vanilla_flipbook_tiles: allFlipTiles.length, parsed_expressions: parsed.size,
-  reset_only_message_misclassified_as_hud: resetCollision, embedded_payload_forges_state: Boolean(payloadCollision),
+  reset_only_message_misclassified_as_hud: resetCollision, embedded_payload_forges_state: Boolean(payloadCollision), plain_or_hidden_payload_misrouted: routingCollision,
   note: 'Third-party model only; no native Bedrock, client download, GPU or Switch rendering performed.'}, null, 2));

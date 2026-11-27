@@ -7,7 +7,10 @@ rows=json.loads((root/'tools/equipment_durability_policy.json').read_text())
 assert len(rows)==250 and len({r['id'] for r in rows})==250
 bp=root/'Hakkai_v7.1.0/BehaviorPack/items'
 actual={p.stem for p in bp.glob('*.json') if 'minecraft:durability' in json.loads(p.read_bytes())['minecraft:item']['components']}
-assert actual=={r['id'] for r in rows}
+assert actual=={r['id'] for r in rows}|{f'warden_blade_{i}' for i in range(8)}
+for i in range(8):
+ c=json.loads((bp/f'warden_blade_{i}.json').read_bytes())['minecraft:item']['components']
+ assert c['minecraft:durability']['max_durability']==5000 and c['minecraft:repairable']['repair_items']==[{'items':['minecraft:netherite_scrap'],'repair_amount':1250}]
 for row in rows:
  c=json.loads((bp/(row['id']+'.json')).read_bytes())['minecraft:item']['components']
  assert row['new']==row['old']*2==c['minecraft:durability']['max_durability']

@@ -1,0 +1,4 @@
+Glyphs derived from Noto Sans CJK JP Medium.
+Copyright 2014-2021 Adobe (http://www.adobe.com/).
+Source: https://github.com/googlefonts/noto-cjk/tree/f8d157532fbfaeda587e826d4cd5b21a49186f7c/Sans/OTF/Japanese
+Font licensed under SIL Open Font License 1.1; see OFL.txt.

@@ -11,7 +11,10 @@ export const GUARDIAN_TECHNIQUES=[
  {name:'守護の波動',radius:6,damage:9,effect:'slowness',visual:'cast'}
 ];
 const PALETTE=['wind','spore','sand','frost','spark','shadow','wind','time'];
-const SPEED=.65,HEIGHT=1.5;
+// Different travel speeds make realm patterns react and read differently.
+// King shadows keep their existing speed; damage and warned windup stay intact.
+export const GUARDIAN_WAVE_SPEEDS=Object.freeze([.72,.58,.56,.62,.9,.68,.8,.64]);
+const KING_SPEED=.65,HEIGHT=1.5;
 const finite=p=>p&&[p.x,p.y,p.z].every(Number.isFinite);
 const same=(a,b)=>finite(a)&&finite(b)&&a.x===b.x&&a.y===b.y&&a.z===b.z;
 export function guardianVisualAnimation(entity,attack,phase){
@@ -23,7 +26,8 @@ export function setupGuardianBoss({world,system,isEvading=()=>false,tryParry=()=
  function launch(e,s,p,realm,t){
   const origin={...e.location};if(!finite(origin))return;
   const direction=p.direction,dimensionId=p.dimensionId;
-  const wave={origin,direction,realm,attack:p.attack,design:p.design,at:t+1,last:0,hit:new Set()};
+  const speed=e.typeId.startsWith('hakkai:king_guardian_')?KING_SPEED:GUARDIAN_WAVE_SPEEDS[realm];
+  const wave={origin,direction,realm,attack:p.attack,design:p.design,speed,at:t+1,last:0,hit:new Set()};
   s.flight=wave;
   function finish(now){if(s.flight===wave){s.flight=undefined;s.nextAt=now+40;}}
   function schedule(){try{if(!system?.runTimeout)throw Error('scheduler unavailable');system.runTimeout(step,1);}catch{finish(system?.currentTick??t);}}
@@ -32,7 +36,7 @@ export function setupGuardianBoss({world,system,isEvading=()=>false,tryParry=()=
    try{
     if(states.get(e.id)!==s||s.flight!==wave)return;
     if(now!==wave.at||!e.isValid||e.dimension.id!==dimensionId||world.getDifficulty()===Difficulty.Peaceful){finish(Number.isFinite(now)?now:t);return;}
-    const d=e.dimension,r=Math.min(wave.attack.radius,wave.last+SPEED),dir=wave.direction;
+    const d=e.dimension,r=Math.min(wave.attack.radius,wave.last+wave.speed),dir=wave.direction;
     const center={x:origin.x,y:origin.y+.8,z:origin.z};
     if(!d.isChunkLoaded(center)||!d.getBlock(center)?.isAir){finish(now);return;}
     // Each visible point is tested against the exact same angular shape and
@@ -40,7 +44,11 @@ export function setupGuardianBoss({world,system,isEvading=()=>false,tryParry=()=
     // a warning or a target-floor marker.
     const count=Math.max(16,Math.min(64,Math.ceil(2*Math.PI*r/.65)));
     for(let i=0;i<count;i++){
-     const a=2*Math.PI*i/count,x=Math.cos(a),z=Math.sin(a),forward=x*dir.x+z*dir.z,side=-x*dir.z+z*dir.x;
+     const a=2*Math.PI*i/count,x=Math.cos(a),z=Math.sin(a);
+     // Check the exact emitted position, including floating-point rounding at
+     // the translated origin, against the same predicate used for hits.
+     const dx=(origin.x+x*r)-origin.x,dz=(origin.z+z*r)-origin.z;
+     const forward=dx*dir.x+dz*dir.z,side=-dx*dir.z+dz*dir.x;
      if(!guardianShapeContains(wave.design.shape,forward,side))continue;
      // Three visible heights bracket the accepted vertical extent. Obstacle
      // rays are evaluated at each displayed height, not only at the floor.
@@ -54,7 +62,7 @@ export function setupGuardianBoss({world,system,isEvading=()=>false,tryParry=()=
      if(!valid(target)||target.dimension.id!==dimensionId||wave.hit.has(target.id))continue;
      const point={...target.location};if(!finite(point)||Math.abs(point.y-origin.y)>HEIGHT)continue;
      const x=point.x-origin.x,z=point.z-origin.z,n=Math.hypot(x,z);
-     if(n>wave.last+SPEED+1e-6||n+1e-6<wave.last||n>wave.attack.radius+1e-6)continue;
+     if(n>wave.last+wave.speed+1e-6||n+1e-6<wave.last||n>wave.attack.radius+1e-6)continue;
      const forward=x*dir.x+z*dir.z,side=-x*dir.z+z*dir.x;
      if(!guardianShapeContains(wave.design.shape,forward,side))continue;
      if(n>.001){if(guardianClearDistance(d,origin,x/n,z/n,n,point.y-origin.y+.8)<n-.001)continue;}

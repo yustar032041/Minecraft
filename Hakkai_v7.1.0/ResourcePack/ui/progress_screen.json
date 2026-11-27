@@ -1,0 +1,12 @@
+{
+  "namespace": "progress",
+  "overworld_loading_background": {
+    "texture": "textures/ui/hakkai_loading_background"
+  },
+  "nether_loading_background": {
+    "texture": "textures/ui/hakkai_loading_background"
+  },
+  "theend_loading_background": {
+    "texture": "textures/ui/hakkai_loading_background"
+  }
+}

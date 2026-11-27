@@ -1195,6 +1195,30 @@
     },
     "hakkai_drop_element_19": {
       "textures": "textures/items/hakkai_drop_element_19"
+    },
+    "hakkai_warden_blade_0": {
+      "textures": "textures/items/hakkai_warden_blade_0"
+    },
+    "hakkai_warden_blade_1": {
+      "textures": "textures/items/hakkai_warden_blade_1"
+    },
+    "hakkai_warden_blade_2": {
+      "textures": "textures/items/hakkai_warden_blade_2"
+    },
+    "hakkai_warden_blade_3": {
+      "textures": "textures/items/hakkai_warden_blade_3"
+    },
+    "hakkai_warden_blade_4": {
+      "textures": "textures/items/hakkai_warden_blade_4"
+    },
+    "hakkai_warden_blade_5": {
+      "textures": "textures/items/hakkai_warden_blade_5"
+    },
+    "hakkai_warden_blade_6": {
+      "textures": "textures/items/hakkai_warden_blade_6"
+    },
+    "hakkai_warden_blade_7": {
+      "textures": "textures/items/hakkai_warden_blade_7"
     }
   }
 }

@@ -6,6 +6,7 @@ import {combatEnemies,applyCombatHit} from '../Hakkai_v7.1.0/BehaviorPack/script
 import {prepareWindRay} from '../Hakkai_v7.1.0/BehaviorPack/scripts/combat_wind_ray.js';
 import {setupWeaponTrace} from '../Hakkai_v7.1.0/BehaviorPack/scripts/combat_weapon_trace.js';
 import {setupCombatUltimate} from '../Hakkai_v7.1.0/BehaviorPack/scripts/combat_ultimate.js';
+import {ultimateSignature,ultimateDamage} from '../Hakkai_v7.1.0/BehaviorPack/scripts/combat_ultimate_signature.js';
 import {castNewMagic} from '../Hakkai_v7.1.0/BehaviorPack/scripts/combat_magic.js';
 const properties=new Map(),world={getDynamicProperty:k=>properties.get(k),setDynamicProperty:(k,v)=>properties.set(k,v)};
 configureFriendlyFire(world);assert.equal(friendlyFireEnabled(),false);
@@ -39,7 +40,7 @@ setFriendlyFire(false);while(jobs.length)jobs.shift()();assert.deepEqual(hits,[]
 // The weapon ultimate includes players only when enabled.
 const ultimate=setupCombatUltimate({system,notice:()=>{},visibleFrom:()=>true}),u={s:50,m:50};
 assert.equal(ultimate.cast(p,u,g),false);assert.equal(u.s,50);setFriendlyFire(true);
-assert.equal(ultimate.cast(p,u,g),true);assert.deepEqual(hits,[['q',20]]);
+assert.equal(ultimate.cast(p,u,g),true);assert.deepEqual(hits,[['q',ultimateDamage(ultimateSignature(g),p.location,q.location)]]);
 q.getGameMode=()=> 'creative';assert.equal(isPlayerOpponent(p,q),false);q.getGameMode=()=> 'survival';
 // Read failures fail closed; write failures are reported to the caller.
 configureFriendlyFire({getDynamicProperty(){throw Error('read');},setDynamicProperty(){throw Error('write');}});assert.equal(friendlyFireEnabled(),false);assert.equal(protectsPlayer(q,{damagingEntity:p}),true);assert.equal(setFriendlyFire(true),false);configureFriendlyFire(world);setFriendlyFire(false);

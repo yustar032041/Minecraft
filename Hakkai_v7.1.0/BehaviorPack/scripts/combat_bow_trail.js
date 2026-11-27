@@ -1,3 +1,4 @@
+import {playWeaponMotion,playVanillaWeaponMotion} from './combat_weapon_motion.js';
 import {GameMode} from '@minecraft/server';
 // Native arrows remain responsible for their own collision and damage. This
 // observer never applies damage, so the trail cannot double-hit the arrow.
@@ -11,10 +12,12 @@ export function setupBowTrail({system,gear,selected,state,airAttack=()=>false}){
     if(!arrow.isValid)return;
     const p=arrow.getComponent('minecraft:projectile')?.owner;
     if(!p?.isValid||p.typeId!=='minecraft:player'||![GameMode.Survival,GameMode.Creative].includes(p.getGameMode())||p.dimension.id!==arrow.dimension.id)return;
-    const g=gear.get(selected(p)?.typeId);if(g?.kind!=='弓')return;
+    const id=selected(p)?.typeId,g=gear.get(id);
+    if(g?.kind!=='弓'){if(id==='minecraft:bow'||id==='minecraft:crossbow')playVanillaWeaponMotion(p,id);return;}
     let set=active.get(p.id);if(!set){set=new Set();active.set(p.id,set);}if(set.size>=4)return;
     const token={cancelled:false};set.add(token);const dim=p.dimension.id;
     try{airAttack(p,state(p),g,system.currentTick);}catch{}
+    playWeaponMotion(p,g,'attack');
     try{arrow.dimension.spawnParticle(`hakkai:${g.visualId??g.id}`,arrow.location);}catch{}
     let remaining=100;
     const tick=()=>{
