@@ -14,6 +14,7 @@ for path in paths:
     assert isinstance(ts, dict) and 'color' in ts, path
     assert not ({'heightmap', 'normal'} <= ts.keys()), path
     assert not ({'metalness_emissive_roughness', 'metalness_emissive_roughness_subsurface'} <= ts.keys()), path
+    dimensions = {}
     for key, value in ts.items():
         assert key in {'color', 'normal', 'heightmap', 'metalness_emissive_roughness', 'metalness_emissive_roughness_subsurface'}, (path, key)
         channels = {'color': (3, 4), 'normal': (3, 4), 'heightmap': (1,),
@@ -24,6 +25,7 @@ for path in paths:
             assert image.is_file(), (path, key, image)
             with Image.open(image) as im:
                 assert len(im.getbands()) in channels, (path, key, im.mode)
+                dimensions[key] = im.size
                 im.verify()
         elif isinstance(value, list):
             assert key in ('color', 'metalness_emissive_roughness', 'metalness_emissive_roughness_subsurface', 'heightmap')
@@ -31,7 +33,10 @@ for path in paths:
             assert all(isinstance(n, int) and 0 <= n <= 255 for n in value)
         else:
             assert isinstance(value, str) and re.fullmatch(r'#[0-9a-fA-F]{6}(?:[0-9a-fA-F]{2})?', value), (path, key, value)
-print(f'{len(paths)} texture sets: schema, image references, channels and PNG decoding OK; rendering unverified')
+    # Project convention: align PBR layers. This is not asserted to be a
+    # universal Bedrock schema requirement.
+    assert len(set(dimensions.values())) <= 1, (path, dimensions)
+print(f'{len(paths)} texture sets: schema, image references, channel dimensions and PNG decoding OK; rendering unverified')
 
 # Used atlas art must not be fully transparent. An invisible *unused* asset
 # is not evidence that any block or item currently renders incorrectly.

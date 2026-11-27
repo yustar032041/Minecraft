@@ -51,3 +51,10 @@ for pack in (bp, root):
         raw = file.read_bytes()
         assert not raw.startswith(b'\xef\xbb\xbf'), file
         assert '\ufffd' not in raw.decode('utf8'), file
+
+# These are addon-only atlases. Never reclaim vanilla atlas identifiers or
+# font resources as a speculative repair for a rendering problem.
+for name in ('terrain_texture.json', 'item_texture.json'):
+    data = json.loads((root / 'textures' / name).read_text(encoding='utf8'))['texture_data']
+    assert all(key.startswith('hakkai_') for key in data), name
+assert not (root / 'font').exists(), 'do not replace vanilla glyphs'
