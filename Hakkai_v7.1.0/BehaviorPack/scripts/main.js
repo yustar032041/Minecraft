@@ -3244,8 +3244,7 @@ async function settings(p){
    [`追加モブの出現：${num(p,'quiet_wildlife')?'控えめ':'有効'}`],
    [`各界の霧と天候演出：${num(p,'quiet_climate')?'無効':'有効'}`],
    [`バニラ村の自動検出：${num(p,'no_bell_search')?'無効':'有効'}`],
-   [`プレイヤー同士の攻撃：${friendlyFireEnabled()?'ON（当たる）':'OFF（当たらない）'}｜全員共通`],
-   [`試作アクション戦闘：${num(p,'action_prototype')?'ON':'OFF'}（剣・斧・槍）`]
+   [`プレイヤー同士の攻撃：${friendlyFireEnabled()?'ON（当たる）':'OFF（当たらない）'}｜全員共通`]
  ]);
  if(ix===undefined)return;
  if(ix<3){const k=['hide_hud','hud_color','mute'][ix];property(p,k,1-num(p,k));return;}
@@ -3254,11 +3253,6 @@ async function settings(p){
  if(ix===6){property(p,'quiet_wildlife',1-num(p,'quiet_wildlife'));return;}
  if(ix===7){property(p,'quiet_climate',1-num(p,'quiet_climate'));return;}
  if(ix===8){property(p,'no_bell_search',1-num(p,'no_bell_search'));return;}
- if(ix===10){
-  if(!num(p,'action_prototype')&&(!actionHurtAvailable||!weaponSwingAvailable))return notice(p,'§e必要な戦闘イベントが使えません。従来の攻撃を使用します');
-  property(p,'action_prototype',1-num(p,'action_prototype'));actionCombat?.clear(p.id);weaponTrace?.clear(p.id);
-  return notice(p,num(p,'action_prototype')?'§e試作アクション戦闘ON：新規ワールドで操作を試してください':'§a試作アクション戦闘OFF：従来の攻撃に戻りました',80);
- }
  if(ix===9){
   const desired=!friendlyFireEnabled();
   const yes=await form(p,'プレイヤー同士の攻撃',`ワールド全員に適用されます。${desired?'ONにすると攻撃技もプレイヤーを狙います。本体のPvP設定も影響します。':'OFFにすると直接攻撃や技から保護します。攻撃元不明の間接被害は防げない場合があります。'}\n他の人に確認してから変更してください。`,[[desired?'ONにする':'OFFにする'],['変更しない']]);
@@ -6619,13 +6613,13 @@ combatRoll=setupCombatRoll({notice,safe});
 airDash=setupAirDash({notice});
 airStrike=setupAirStrike({notice,visibleFrom});
 fushiTotem=setupFushiTotem({system,notice,report});
-combatUltimate=setupCombatUltimate({system,notice,visibleFrom});
+combatUltimate=setupCombatUltimate({system,notice,visibleFrom,selected});
 combatCharge=setupCombatCharge({system,gear,selected,state,cast,tapMode:true});
 let weaponSwingAvailable=false;
 try{const signal=world.afterEvents.playerSwingStart;if(signal){signal.subscribe(e=>{if(actionCombat?.controls(e.player))actionCombat.swing(e);else{weaponTrace?.swing(e);vanillaSwingMotion(e,selected,state);}});weaponSwingAvailable=true;}}catch(err){report('武器の振りイベント',err);}
 weaponTrace=setupWeaponTrace({system,gear,selected,state,visibleFrom,airAttack:(p,s,g,t)=>airStrike?.beginSwing(p,s,g,t)??false,consumeCounter:(p,t)=>combatRoll?.consumeCounter(p,t)??false,enabled:weaponSwingAvailable,report});
 try{const signal=world.beforeEvents.entityHurt;if(signal){signal.subscribe(e=>actionCombat?.cancelNative(e));actionHurtAvailable=true;}}catch(err){report('試作戦闘のダメージイベント',err);}
-actionCombat=setupActionCombat({system,gear,selected,state,visibleFrom,enabled:p=>weaponSwingAvailable&&actionHurtAvailable&&num(p,'action_prototype')===1,onHit:(p,e,g,damage)=>combatResonance?.onHurt(p,e,g,damage),notice,hasCounter:(p,t)=>combatRoll?.hasCounter(p,t)??false,consumeCounter:(p,t)=>combatRoll?.consumeCounter(p,t)??false,report});
+actionCombat=setupActionCombat({system,gear,selected,state,visibleFrom,enabled:()=>weaponSwingAvailable&&actionHurtAvailable,onHit:(p,e,g,damage)=>combatResonance?.onHurt(p,e,g,damage),notice,hasCounter:(p,t)=>combatRoll?.hasCounter(p,t)??false,consumeCounter:(p,t)=>combatRoll?.consumeCounter(p,t)??false,report});
 bowTrail=setupBowTrail({system,gear,selected,state,airAttack:(p,s,g,t)=>airStrike?.beginSwing(p,s,g,t)??false});
 safeSub('world','after','entitySpawn',({entity})=>bowTrail?.spawned(entity));
 combatGuard=setupCombatGuard({notice});

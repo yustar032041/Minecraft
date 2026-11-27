@@ -1,11 +1,12 @@
 import {playWeaponMotion} from './combat_weapon_motion.js';
+import {authoredUltimate,individualUltimate,ultimateContains,authoredUltimateBonus,showAuthoredUltimate} from './combat_ultimate_authored.js';
 import {ultimateSignature,ultimateDamage,ultimateShow,ultimateStatus,ultimateSelf} from './combat_ultimate_signature.js';
 import {GameMode} from '@minecraft/server';
 import {combatEnemies,applyCombatHit,isCombatTarget,combatEffectAllowed} from './combat_resonance.js';
 import {isTraceWeapon} from './combat_weapon_trace.js';
 const COOLDOWN=600,DURATION=20;
 const excluded=new Set(['void','selfDestruct','override']);
-export function setupCombatUltimate({system,notice,visibleFrom}){
+export function setupCombatUltimate({system,notice,visibleFrom,selected}){
  const entries=new Map();
  function active(p,t){const e=entries.get(p?.id);return !!(e&&p?.isValid&&[GameMode.Survival,GameMode.Creative].includes(p.getGameMode())&&p.dimension.id===e.dim&&t<e.until);}
  function blocks(p,source,t){return active(p,t)&&typeof source?.cause==='string'&&!excluded.has(source.cause);}
@@ -23,49 +24,61 @@ export function setupCombatUltimate({system,notice,visibleFrom}){
    const t=system.currentTick,e=entries.get(p.id);
    if(e&&t<e.ready){notice(p,'§e必殺技はまだ再使用できません');return false;}
    const weapon=isTraceWeapon(g)?g:undefined;
+   const castDim=p.dimension.id,slot=p.selectedSlotIndex,itemId=selected?.(p)?.typeId,origin={...p.location};
+   if(weapon&&selected&&itemId!==`hakkai:${weapon.id}`)return false;
+   const castValid=()=>{try{return p.isValid&&p.dimension.id===castDim&&p.selectedSlotIndex===slot&&(!selected||selected(p)?.typeId===itemId)&&!s.menu&&!s.busy&&[GameMode.Survival,GameMode.Creative].includes(p.getGameMode())&&Math.hypot(p.location.x-origin.x,p.location.y-origin.y,p.location.z-origin.z)<=.5;}catch{return false;}};
    if(p.getGameMode()!==GameMode.Creative){
-    if(weapon&&(s.s<20||s.m<10)){notice(p,'§e必殺にはスタミナ20と魔力10が必要',45);return false;}
+    if(weapon&&(!Number.isFinite(s.s)||!Number.isFinite(s.m)||s.s<20||s.m<10)){notice(p,'§e必殺にはスタミナ20と魔力10が必要',45);return false;}
     if(!weapon&&!(s.s>0&&s.s<=20&&s.m>=0&&s.m<=20)){notice(p,'§e護符はスタミナと魔力が両方20以下の時に使えます');return false;}
    }
-   const spec=weapon?({剣:[8,.15],斧:[7,-1],弓:[14,.75],杖:[15,.7],ハンマー:[7,-1],槍:[12,.8],盾:[5,.35],扇:[9,.05]})[weapon.kind]:[8,-1];
-   const view=spec[1]>-1?p.getViewDirection():undefined,vl=view?Math.hypot(view.x,view.z):1;
+   const authored=authoredUltimate(weapon);
+   const spec=authored?[authored.range,-1]:weapon?({剣:[8,.15],斧:[7,-1],弓:[14,.75],杖:[15,.7],ハンマー:[7,-1],槍:[12,.8],盾:[5,.35],扇:[9,.05]})[weapon.kind]:[8,-1];
+   const view=authored||spec[1]>-1?p.getViewDirection():undefined,vl=view?Math.hypot(view.x,view.z):1;
    if(view&&(!Number.isFinite(vl)||vl<.01))return false;
    const pool=weapon?p.dimension.getEntities({location:p.location,maxDistance:spec[0],closest:48}).filter(x=>x?.isValid&&x.id!==p.id&&isCombatTarget(x,p)):combatEnemies(p,8,8);
    const targets=pool.filter(x=>{
     try{
      if(weapon?!weaponLineClear(p,x):!visibleFrom(p,x.getHeadLocation()))return false;
-     if(view){const dx=x.location.x-p.location.x,dz=x.location.z-p.location.z,n=Math.hypot(dx,dz);if(n>.01&&(dx*view.x+dz*view.z)/(n*vl)<spec[1])return false;}
+     if(authored&&!ultimateContains(authored,p.location,view,x.location))return false;
+     if(view&&!authored){const dx=x.location.x-p.location.x,dz=x.location.z-p.location.z,n=Math.hypot(dx,dz);if(n>.01&&(dx*view.x+dz*view.z)/(n*vl)<spec[1])return false;}
      return true;
     }catch{return false;}
    }).slice(0,6);
    if(!targets.length){notice(p,'§e見通せる敵が近くにいません');return false;}
-   const profile=weapon?ultimateSignature(weapon):undefined;
+   const baseProfile=weapon?ultimateSignature(weapon):undefined;
+   const profile=authored?{...baseProfile,effect:authored.effect??baseProfile.effect,push:authored.push??baseProfile.push}:baseProfile;
    if(p.getGameMode()!==GameMode.Creative){if(weapon){s.s-=20;s.m-=10;}else s.s=0;}entries.set(p.id,{dim:p.dimension.id,until:t+DURATION,ready:t+COOLDOWN});
    if(profile)try{ultimateSelf(p,profile);}catch{}
+   const seen=new Set();
    for(const target of targets){
+    if(!castValid())break;
+    if(seen.has(target.id))continue;seen.add(target.id);
     // Every hit is independently revalidated in case an earlier damage
     // callback changed teams, dimension, entity validity or visibility.
     if(!p.isValid||weapon&&!isCombatTarget(target,p)||!combatEffectAllowed(p,target))continue;
     if(weapon){
      const dx=target.location.x-p.location.x,dy=target.location.y-p.location.y,dz=target.location.z-p.location.z,dist=Math.hypot(dx,dy,dz),horizontal=Math.hypot(dx,dz);
-     if(!Number.isFinite(dist)||dist>spec[0]||view&&horizontal>.01&&(dx*view.x+dz*view.z)/(horizontal*vl)<spec[1])continue;
+     if(!Number.isFinite(dist)||dist>spec[0]||authored&&!ultimateContains(authored,p.location,view,target.location)||!authored&&view&&horizontal>.01&&(dx*view.x+dz*view.z)/(horizontal*vl)<spec[1])continue;
     }
     let clear=false;try{clear=weapon?weaponLineClear(p,target):visibleFrom(p,target.getHeadLocation());}catch{}if(!clear)continue;
-    const landed=applyCombatHit(p,target,profile?ultimateDamage(profile,p.location,target.location):20,profile?-1:2,-1,profile?.push??1.2);
+    const landed=applyCombatHit(p,target,profile?ultimateDamage(profile,p.location,target.location)+(authored?authoredUltimateBonus(authored,p.location,target):0):20,profile?-1:2,-1,profile?.push??1.2);
     const major=/^(?:hakkai:(?:time_warden|eclipse_colossus|fushi_chief|(?:king_)?guardian_[0-7])|minecraft:(?:wither|ender_dragon|warden))$/.test(target.typeId??'');
-    if(landed&&combatEffectAllowed(p,target)&&!major){
+    if(landed&&castValid()&&combatEffectAllowed(p,target)&&!major&&(!authored||ultimateContains(authored,p.location,view,target.location))&&(!weapon||weaponLineClear(p,target))){
      if(profile)ultimateStatus(p,target,profile);
      else try{target.addEffect('slowness',40,{amplifier:1,showParticles:false});}catch{}
     }
     try{p.dimension.spawnParticle('hakkai:wind_burst',{...target.location,y:target.location.y+1});}catch{}
    }
+   if(!castValid())return true;
    if(weapon)try{p.dimension.spawnParticle(`hakkai:${weapon.visualId??weapon.id}`,{...p.location,y:p.location.y+1});}catch{}
-   if(profile)try{ultimateShow(p,profile);}catch{}
+   if(authored)try{showAuthoredUltimate(p,authored,view,profile.particle);}catch{}
+   else if(profile)try{ultimateShow(p,profile);}catch{}
    else for(let i=0;i<16;i++)try{const a=i*Math.PI/8;p.dimension.spawnParticle('hakkai:wind_burst',{x:p.location.x+Math.cos(a)*2,y:p.location.y+.7,z:p.location.z+Math.sin(a)*2});}catch{}
-   if(weapon)playWeaponMotion(p,weapon,'ultimate');
+   if(individualUltimate(weapon))try{p.playAnimation(`animation.hakkai.action_finisher_${weapon.id.replace('warden_blade_','warden_')}`,{blendOutTime:.1,stopExpression:'query.any_animation_finished'});}catch{}
+   else if(weapon)playWeaponMotion(p,weapon,'ultimate');
    else try{p.playAnimation('animation.hakkai.magic_cast',{blendOutTime:.1,stopExpression:'query.any_animation_finished'});}catch{}
    try{p.playSound('random.levelup',{volume:.8,pitch:1.5});}catch{}
-   try{notice(p,weapon?`§6極式・${weapon.label??weapon.id} §e${weapon.skill}！`:'§6必殺・あきらめない！',50);}catch{}
+   try{notice(p,weapon?(authored?`§6${authored.name}！`:`§6極式・${weapon.label??weapon.id} §e${weapon.skill}！`):'§6必殺・あきらめない！',50);}catch{}
    return true;
   }catch{return false;}
  }

@@ -49,7 +49,9 @@ test('successful weapon ultimates play kind-specific motions, failed casts do no
   const enemy={id:'z',typeId:'minecraft:zombie',isValid:true,dimension:dim,location:{x:2,y:0,z:0},getHeadLocation:()=>({x:2,y:1,z:0}),getComponent:()=>({hasTypeFamily:()=>true}),applyDamage:()=>true,applyKnockback(){},setOnFire(){},addEffect(){}};dim.getEntities=()=>[enemy];
   const c=setupCombatUltimate({system:{currentTick:10},notice(){},visibleFrom:()=>true});
   assert.equal(c.cast(p,{s:19,m:100},g),false);assert.deepEqual(ids,[]);
-  assert.equal(c.cast(p,{s:20,m:100},g),true,g.id);assert.deepEqual(ids,[weaponMotionId(g,'ultimate')],g.id);
+  assert.equal(c.cast(p,{s:20,m:100},g),true,g.id);
+  const expected=['ult_sword','ult_axe'].includes(g.id)||/^warden_blade_[0-7]$/.test(g.id)?`animation.hakkai.action_finisher_${g.id.replace('warden_blade_','warden_')}`:weaponMotionId(g,'ultimate');
+  assert.deepEqual(ids,[expected],g.id);
  }
  assert.equal(playWeaponMotion({playAnimation(){throw Error('unavailable')}},weapons[0],'attack'),false);
  assert.equal(weaponMotionId({kind:'鎧'},'attack'),undefined);

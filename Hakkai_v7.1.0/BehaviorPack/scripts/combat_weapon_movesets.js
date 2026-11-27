@@ -1,3 +1,4 @@
+import {catalogFamily,catalogFamilyMove} from './combat_weapon_families.js';
 // Hand-authored experimental melee movesets for the eight boss-derived swords
 // and two endgame weapons. These are gameplay patterns, not hash-based visual
 // variants. Other weapons intentionally use the existing class fallback.
@@ -46,8 +47,8 @@ const moves={
   {name:'終刻の払い',shape:'cleave',reach:3.8,power:2,move:.30},
   {name:'終刻の断環',shape:'ring',inner:.8,reach:4.5,windup:8,recovery:24,power:7,push:1.2,move:.25,animation:'ult_axe'}]}
 };
-export function authoredMoveset(g){return moves[g?.id];}
+export function authoredMoveset(g){return moves[g?.id]??catalogFamily(g);}
 export function authoredMove(g,stage){
- const set=authoredMoveset(g);return Number.isInteger(stage)&&stage>=1&&stage<=3?set?.stages[stage-1]:undefined;
+ const set=moves[g?.id];return set&&Number.isInteger(stage)&&stage>=1&&stage<=3?set.stages[stage-1]:catalogFamilyMove(g,stage);
 }
 export const AUTHORED_WEAPONS=Object.freeze(Object.keys(moves));

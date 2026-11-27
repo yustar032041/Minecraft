@@ -89,7 +89,7 @@ export function applyCombatHit(p,e,str,a,mod,push){
   if(!e?.isValid||e.typeId==='minecraft:player'&&!isPlayerOpponent(p,e))return false;
   let vector;
   try{const dx=e.location.x-p.location.x,dz=e.location.z-p.location.z,d=Math.hypot(dx,dz)||1;vector={x:push*dx/d,z:push*dz/d};}catch{}
-  const anchored=e.typeId==='hakkai:time_warden'||e.typeId==='hakkai:eclipse_colossus'||e.typeId==='hakkai:fushi_chief'||/^hakkai:guardian_[0-7]$/.test(e.typeId??'');
+  const anchored=/^(?:hakkai:(?:time_warden|eclipse_colossus|fushi_chief|(?:king_)?guardian_[0-7])|minecraft:(?:wither|ender_dragon|warden))$/.test(e.typeId??'');
   if(!e.applyDamage(str,{cause:EntityDamageCause.magic,damagingEntity:p}))return false;
   try{
    if(!combatEffectAllowed(p,e))return true;

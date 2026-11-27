@@ -9,7 +9,7 @@ function setup(){
  return {p,s,ctrl,hits,status,setVisible:x=>visible=x,setBlocker:x=>blocker=x};
 }
 test('synchronous hit can create a friendly obstruction; following targets are revalidated',()=>{
- const f=setup();assert.equal(f.ctrl.cast(f.p,f.s,weapon),true);assert.deepEqual(f.hits,['one']);assert.deepEqual(f.status,['one']);
+ const f=setup();assert.equal(f.ctrl.cast(f.p,f.s,weapon),true);assert.deepEqual(f.hits,['one']);assert.deepEqual(f.status,[],'a new friendly obstruction suppresses post-hit status');
 });
 test('unknown or tied blocker distance fails closed without paying for an ultimate',()=>{
  for(const distance of [NaN,-1,2]){

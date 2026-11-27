@@ -4,12 +4,14 @@ import {weaponDirection} from './combat_weapon_style.js';
 import {planRollSegment} from './combat_roll.js';
 import {authoredMove} from './combat_weapon_movesets.js';
 
-// Experimental replacement combat, limited to these three melee classes.
+// Experimental replacement combat for five add-on melee classes.
 // No animation is assumed to have rendered merely because playAnimation returned.
 const PROFILE=Object.freeze({
  '剣':{windup:4,recovery:11,range:3.8,cone:.50,damage:12},
  '斧':{windup:6,recovery:15,range:3.5,cone:.25,damage:16},
- '槍':{windup:5,recovery:13,range:5.2,cone:.80,damage:13}
+ '槍':{windup:5,recovery:13,range:5.2,cone:.80,damage:13},
+ 'ハンマー':{windup:7,recovery:17,range:3.8,cone:.35,damage:18},
+ '扇':{windup:4,recovery:12,range:4.7,cone:.25,damage:10}
 });
 export const isActionWeapon=g=>!!g&&Object.hasOwn(PROFILE,g.kind)&&typeof g.id==='string';
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z);
@@ -66,7 +68,7 @@ export function setupActionCombat({system,gear,selected,state,enabled,visibleFro
     const step=direction==='forward'?facing:direction==='back'?{x:-facing.x,z:-facing.z}:direction==='left'?{x:facing.z,z:-facing.x}:{x:-facing.z,z:facing.x};
     try{const speed=move?.move??.36,hop=move?.hop??.20;const path=planRollSegment(p.dimension,origin,step,1.8,true);if(path&&path.travel>=1.79)p.applyImpulse({x:step.x*speed,y:direction==='forward'?hop:0,z:step.z*speed});}catch{}
    }
-   const anim=move?.animation?`finisher_${move.animation}`:stage===3?'spin':direction==='forward'?'lunge':direction==='back'?'retreat':direction==='left'?'sidestep_left':direction==='right'?'sidestep_right':stage===2?'cut_b':'cut_a';
+   const anim=move?.animation?`finisher_${move.animation}`:stage===3?(['spin','ring'].includes(move?.shape??'spin')?'spin':move?.shape==='thrust'?'lunge':'cut_b'):direction==='forward'?'lunge':direction==='back'?'retreat':direction==='left'?'sidestep_left':direction==='right'?'sidestep_right':stage===2?'cut_b':'cut_a';
    try{p.playAnimation(`animation.hakkai.action_${anim}`,{blendOutTime:.1,stopExpression:'query.any_animation_finished'});}catch{}
    if(move?.name)try{notice(p,`§b${move.name}`,22);}catch{}
    try{p.playSound('random.orb',{volume:.30,pitch:stage===3?1.5:1.05});}catch{}
@@ -103,7 +105,7 @@ export function setupActionCombat({system,gear,selected,state,enabled,visibleFro
       if(actions.get(p.id)!==action||action.cancelled||!eligible(p)||p.dimension.id!==dim||p.selectedSlotIndex!==slot||selected(p)?.typeId!==item.typeId||state(p).menu||state(p).busy||dist(origin,p.location)>3||dist(p.location,center)>.5||!inside(target))continue;
       const dx=target.location.x-center.x,dz=target.location.z-center.z,r=Math.hypot(dx,dz);
       const base=profile.damage+rank*3+(stage-1)*3+(move?.power??0);
-      const sweet=g.kind==='剣'?r>=1.6&&r<=3:g.kind==='斧'?r>=.8&&r<=2.2:r>=3.2&&r<=5;
+      const sweet=g.kind==='剣'?r>=1.6&&r<=3:['斧','ハンマー'].includes(g.kind)?r>=.8&&r<=2.2:g.kind==='槍'?r>=3.2&&r<=5:r>=2.5&&r<=4.3;
       // Deep Shadow rewards positioning behind an opponent, not just weapon
       // damage. If the target's orientation is unavailable there is no bonus.
       let behind=false;
