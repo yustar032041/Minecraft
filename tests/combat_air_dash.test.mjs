@@ -24,10 +24,10 @@ function tap(f,t=2){f.set(0,1);f.ctrl.tick(f.p,f.s,t);f.set(0,0);f.ctrl.tick(f.p
 }
 {
  const f=fixture();f.p.isOnGround=false;f.ctrl.tick(f.p,f.s,0);f.set(0,0);f.ctrl.tick(f.p,f.s,1);tap(f,2);
- assert.equal(f.impulses.length,0,'joining while airborne requires landing first');
+ assert.equal(f.impulses.length,1,'joining while airborne can dash after a fresh double tap');
 }
 {
- const f=fixture();arm(f);f.set(0,1);f.ctrl.tick(f.p,f.s,2);f.set(0,0);f.ctrl.tick(f.p,f.s,3);f.set(0,1);f.ctrl.tick(f.p,f.s,12);assert.equal(f.impulses.length,0,'late second tap starts a new sequence');
+ const f=fixture();arm(f);f.set(0,1);f.ctrl.tick(f.p,f.s,2);f.set(0,0);f.ctrl.tick(f.p,f.s,3);f.set(0,1);f.ctrl.tick(f.p,f.s,17);assert.equal(f.impulses.length,0,'late second tap starts a new sequence');
 }
 for(const change of [f=>f.s.s=14,f=>f.d.isChunkLoaded=()=>false,f=>f.p.applyImpulse=()=>{throw Error('rejected')},f=>f.p.getViewDirection=()=>({x:0,z:0})]){
  const f=fixture();arm(f);change(f);const before=f.s.s;tap(f);assert.equal(f.s.s,before);assert.equal(f.impulses.length,0,'failed dash never consumes');
@@ -37,7 +37,7 @@ for(const change of [f=>f.p.isSneaking=true,f=>f.p.isSwimming=true,f=>f.p.isGlid
 }
 {
  const f=fixture();arm(f);const other={...f.p,id:'q'};tap(f);assert.equal(f.ctrl.status(other),'','separate player state');
- f.p.dimension={...f.d,id:'elsewhere'};f.ctrl.tick(f.p,f.s,7);assert.equal(f.ctrl.status(f.p),'');f.ctrl.clear('p');
+ f.p.dimension={...f.d,id:'elsewhere'};f.ctrl.tick(f.p,f.s,7);assert.notEqual(f.ctrl.status(f.p),'','airtime remains used across dimensions');f.ctrl.clear('p');
 }
 {
  const f=fixture(),second=fixture();second.p.id='q';const shared=setupAirDash({notice:()=>{}});f.ctrl=shared;second.ctrl=shared;
@@ -54,3 +54,13 @@ for(const change of [f=>f.p.isSneaking=true,f=>f.p.isSwimming=true,f=>f.p.isGlid
  assert.equal(f.impulses.length,1,'creative can preview air dash');assert.equal(f.s.s,0);
 }
 console.log('Air dash: gesture, rearming, safe path, costs, permissions, isolation and roll separation OK (mocked)');
+
+{
+ const f=fixture();arm(f);f.set(.5,.5);f.ctrl.tick(f.p,f.s,2);f.set(0,0);f.ctrl.tick(f.p,f.s,3);f.set(.5,.5);f.ctrl.tick(f.p,f.s,16);
+ assert.equal(f.impulses.length,1,'moderate diagonal input and 14-tick window accepted');
+ f.p.dimension={...f.d,id:'new'};f.ctrl.tick(f.p,f.s,17);tap(f,18);assert.equal(f.impulses.length,1,'dimension transition does not rearm midair');
+}
+{
+ const f=fixture();f.p.getViewDirection=()=>({x:0,y:-1,z:0});f.p.getRotation=()=>({x:90,y:0});arm(f);tap(f);
+ assert.equal(f.impulses.length,1);assert.equal(f.impulses[0].z,1.5,'vertical view uses yaw');
+}

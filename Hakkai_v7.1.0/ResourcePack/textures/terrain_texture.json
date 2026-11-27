@@ -238,18 +238,6 @@
     "hakkai_water_wheel_3": {
       "textures": "textures/blocks/hakkai_water_wheel_3"
     },
-    "hakkai_crusher": {
-      "textures": "textures/blocks/hakkai_crusher"
-    },
-    "hakkai_washer": {
-      "textures": "textures/blocks/hakkai_washer"
-    },
-    "hakkai_press": {
-      "textures": "textures/blocks/hakkai_press"
-    },
-    "hakkai_saw": {
-      "textures": "textures/blocks/hakkai_saw"
-    },
     "hakkai_factory_pipe": {
       "textures": "textures/blocks/hakkai_factory_pipe"
     },

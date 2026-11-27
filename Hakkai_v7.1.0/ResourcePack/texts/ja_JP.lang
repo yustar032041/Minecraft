@@ -383,11 +383,8 @@ tile.hakkai:cloudstone.name=雲石ブロック
 tile.hakkai:aether_stone.name=天晶岩
 tile.hakkai:sky_crystal.name=空色結晶
 
-tile.hakkai:clockstone.name=時紋石
 
-tile.hakkai:brasswork.name=時計仕掛けの金属
 
-tile.hakkai:timeglass.name=時晶ガラス
 
 tile.hakkai:clockstone.name=時紋石
 
@@ -783,7 +780,6 @@ tile.hakkai:factory_pipe_up.name=搬送管（上行き）
 tile.hakkai:factory_pipe_down.name=搬送管（下行き）
 tile.hakkai:clutch.name=動力クラッチ
 tile.hakkai:fluid_pipe.name=液体管
-tile.hakkai:fluid_tank.name=貯水槽
 tile.hakkai:fluid_pump.name=動力ポンプ（東行き）
 tile.hakkai:fluid_pump_west.name=動力ポンプ（西行き）
 tile.hakkai:fluid_pump_north.name=動力ポンプ（北行き）

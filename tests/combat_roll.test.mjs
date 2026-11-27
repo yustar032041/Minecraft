@@ -27,7 +27,7 @@ function tap(f,t){f.set(0,1);f.ctrl.tick(f.p,f.s,t);f.set(0,0);f.ctrl.tick(f.p,f
  f.set(0,0);f.ctrl.tick(f.p,f.s,7);tap(f,10);assert.equal(f.s.s,30,'at exactly ten ticks a new roll can start');assert.equal(f.animations.length,2);
 }
 {
- const f=fixture();f.set(0,1);f.ctrl.tick(f.p,f.s,0);f.set(0,0);f.ctrl.tick(f.p,f.s,1);f.set(0,1);f.ctrl.tick(f.p,f.s,10);
+ const f=fixture();f.set(0,1);f.ctrl.tick(f.p,f.s,0);f.set(0,0);f.ctrl.tick(f.p,f.s,1);f.set(0,1);f.ctrl.tick(f.p,f.s,15);
  assert.equal(f.moves.length,0,'double tap window expires');
 }
 for(const prepare of [f=>f.s.s=9,f=>f.p.getViewDirection=()=>({x:0,z:0})]){
@@ -86,4 +86,13 @@ console.log('Roll: checked 3-block target, 5-tick cooldown, stamina, attack immu
 {
  const f=fixture();tap(f,0);f.set(0,0);f.ctrl.tick(f.p,f.s,3);tap(f,5);
  assert.equal(f.s.s,30,'a new roll is permitted five ticks after activation');
+}
+
+{
+ const f=fixture();f.set(.45,.5);f.ctrl.tick(f.p,f.s,0);f.set(0,0);f.ctrl.tick(f.p,f.s,1);f.set(.45,.5);f.ctrl.tick(f.p,f.s,14);
+ assert.equal(f.s.s,40,'diagonal moderate input and 14-tick tap accepted');
+}
+{
+ const f=fixture();f.p.getViewDirection=()=>({x:0,y:1,z:0});f.p.getRotation=()=>({x:-90,y:0});tap(f,0);
+ assert.equal(f.s.s,40);assert.ok(f.p.location.z>.5,'vertical view falls back to yaw');
 }

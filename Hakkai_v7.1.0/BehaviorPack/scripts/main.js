@@ -81,7 +81,7 @@ import { places, atlas, linkedRealms, attrs, home, pairs, guardians, catalog, an
 import { setupFrontierWorlds } from './frontier_worlds.js';
 import { isNaturalSite, initializeNaturalSitePlans, siteBounds, inSite } from './natural_sites.js';
 import { setupSeededWorlds } from './seeded_worlds.js';
-import { pickRealmWildlife } from './wildlife_selection.js';
+import { pickRealmWildlife, pickTimedRealmWildlife } from './wildlife_selection.js';
 import { spawnWildlife } from './wildlife_spawn.js';
 import { validWildlifeGround, possibleWildlifeSite } from './wildlife_ground.js';
 import { setupExpeditionRecords } from './expedition_records.js';
@@ -5938,12 +5938,13 @@ function wildlifeTick(p,b,site){
  const s=state(p), t=system.currentTick, d=p.dimension;
  if(num(p,'quiet_wildlife')||s.busy||t<(s.wildAt??0))return;
  if(!(world.gameRules.doMobSpawning))return;
- s.wildAt=t+80+Math.floor(Math.random()*40);
  const realmId=d.id.startsWith(ns+'realm_')?Number(d.id.slice((ns+'realm_').length)):-1;
  const seededBiome=realmId>=0&&realmId<8?seededWorlds?.biomeAt(realmId,p.location):undefined;
  const inRealm=Number.isInteger(realmId)&&realmId>=0&&realmId<8;
  const arena=d.id===ns+'warden_arena';
  const extraRealm=realmId===8||realmId===9||arena; // atlas, highway and idle arena
+ const addonWorld=inRealm||extraRealm;
+ s.wildAt=t+(addonWorld?20:80+Math.floor(Math.random()*40));
  const localTheme=inRealm?realmId:arena?7:Number.isInteger(site?.theme)&&site.theme>=0&&site.theme<8?site.theme:0;
  if(seededBiome)b=seededBiome;
  const procedural=Boolean(seededBiome&&b?.id===seededBiome.id);
@@ -5952,18 +5953,25 @@ function wildlifeTick(p,b,site){
  // still need a local wildlife pool. Keep vanilla-world rules unchanged.
  if(!inRealm&&!extraRealm&&!place&&!procedural&&(!b||b.profile.mode==='water'||b.key==='end'&&Math.hypot(p.location.x,p.location.z)<160))return;
  // 近距離の密度を制限しつつ、遠くの個体が新規出現を永久に塞がないようにする。
- const around=d.getEntities({families:['hakkai_wildlife'],location:p.location,maxDistance:32,closest:16});
- const night=world.getTimeOfDay()>=13000;
+ const around=d.getEntities({families:['hakkai_wildlife'],location:p.location,maxDistance:32,closest:addonWorld?28:16});
+ const time=world.getTimeOfDay(),night=time>=13000&&time<23000;
  if(realmId===7){
   const grove=seededWorlds?.isGenerated(7,p.location)&&seededWorlds?.isMoonGrove(p.location);
   const roll=Math.random(),chances=fushiThresholds(grove,isMoonlitNight(world));
-  if(roll<chances.chief&&spawnFushi(p,t,true))return;
-  if(roll<chances.normal&&spawnFushi(p,t,false))return;
+  if(roll<chances.chief/4&&spawnFushi(p,t,true))return;
+  if(roll<chances.normal/4&&spawnFushi(p,t,false))return;
  }
- if(realmId>=0&&realmId<8&&Math.random()<(night?.18:.09)&&spawnRealmEnder(p,realmId,t))return;
- if(around.length>=14)return;
+ if(realmId>=0&&realmId<8&&Math.random()<(night?.045:.0225)&&spawnRealmEnder(p,realmId,t))return;
+ if(around.length>=(addonWorld?28:14))return;
  let m;
- if(site?.kind==='atlas')m=wildlifeById.get(ns+families[site.family].species);
+ const peaceful=world.getDifficulty()===Difficulty.Peaceful;
+ const observed=entry=>marked(p,'sight',wildlifeIndex.get(entry.id))||marked(p,'wild_spawn_seen',wildlifeIndex.get(entry.id));
+ const available=wildlife.filter(entry=>!around.some(e=>e.typeId===ns+entry.id&&dist(e.location,p.location)<10));
+ if(addonWorld){
+   const protectedArrival=inRealm&&places.slice(0,9).some(s=>s.dim===realmId&&Math.hypot(p.location.x-s.x,p.location.z-s.z)<20);
+   const favourites=procedural?[b.profile.species,b.profile.rareSpecies].filter(Boolean):[];
+   m=pickTimedRealmWildlife(available,localTheme,observed,arena||peaceful||protectedArrival,night,favourites);
+ }else if(site?.kind==='atlas')m=wildlifeById.get(ns+families[site.family].species);
  else if(place){
    m=pickRealmWildlife(wildlife,aspect(site),entry=>marked(p,'sight',wildlifeIndex.get(entry.id))||marked(p,'wild_spawn_seen',wildlifeIndex.get(entry.id)),world.getDifficulty()===Difficulty.Peaceful);
  }else if(procedural){
@@ -5976,31 +5984,20 @@ function wildlifeTick(p,b,site){
  }else if(extraRealm){
    m=pickRealmWildlife(wildlife,localTheme,entry=>marked(p,'sight',wildlifeIndex.get(entry.id))||marked(p,'wild_spawn_seen',wildlifeIndex.get(entry.id)),arena||world.getDifficulty()===Difficulty.Peaceful);
  }else m=wildlifeById.get(ns+b.profile.species);
- const peaceful=world.getDifficulty()===Difficulty.Peaceful;
- if(!procedural&&(inRealm||extraRealm)&&(!m||m.temper==='hostile'&&peaceful||around.some(e=>e.typeId===ns+m.id&&dist(e.location,p.location)<10))){
-   const available=wildlife.filter(entry=>!around.some(e=>e.typeId===ns+entry.id&&dist(e.location,p.location)<10));
-   m=pickRealmWildlife(available,localTheme,entry=>marked(p,'sight',wildlifeIndex.get(entry.id))||marked(p,'wild_spawn_seen',wildlifeIndex.get(entry.id)),arena||peaceful);
- }
- // Near protected arrival centres a hostile draw cannot spawn at most candidate
- // sites. Prefer an available peaceful species instead of repeatedly failing.
- if(inRealm&&!procedural&&m?.temper==='hostile'&&places.slice(0,9).some(s=>s.dim===realmId&&Math.hypot(p.location.x-s.x,p.location.z-s.z)<20)){
-   const available=wildlife.filter(entry=>!around.some(e=>e.typeId===ns+entry.id&&dist(e.location,p.location)<10));
-   m=pickRealmWildlife(available,realmId,entry=>marked(p,'sight',wildlifeIndex.get(entry.id))||marked(p,'wild_spawn_seen',wildlifeIndex.get(entry.id)),true);
- }
- if(procedural&&m?.temper==='hostile'&&peaceful)m=wildlifeById.get(ns+b.profile.species);
+ if(!addonWorld&&procedural&&m?.temper==='hostile'&&peaceful)m=wildlifeById.get(ns+b.profile.species);
  if(!m||m.temper==='hostile'&&peaceful)return;
  const spawned=spawnWildlife({
   player:p,type:()=>ns+m.id,tick:t,safe:possibleWildlifeSite,confirm:validWildlifeGround,
   // Recheck density at the actual spawn point, not only around the player.
-  capacity:(dim,pos)=>dim.getEntities({families:['hakkai_wildlife'],location:pos,maxDistance:32,closest:14}).length<14,
+  capacity:(dim,pos)=>dim.getEntities({families:['hakkai_wildlife'],location:pos,maxDistance:32,closest:addonWorld?28:14}).length<(addonWorld?28:14),
+  allowNearbyBiome:addonWorld,
   avoid:pos=>{
-   // Use the actual engine light at the candidate: daylight counts. Unknown
-   // light is not a license to spawn. Safe geometry remains independent of
-   // which block the player used to build the floor.
-   const light=d.getLightLevel(pos);
-   if(!Number.isFinite(light)||light<0||light>15)return true;
+   // Vanilla dimensions retain light restrictions. Add-on dimensions use
+   // time-of-day weighting instead, including hostile spawns in daylight.
+   const light=addonWorld?undefined:d.getLightLevel(pos);
+   if(!addonWorld&&(!Number.isFinite(light)||light<0||light>15))return true;
    const eligible=entry=>entry&&(!peaceful||entry.temper!=='hostile')&&
-    (entry.temper==='hostile'?light<=7:light>=8)&&
+    (addonWorld||(entry.temper==='hostile'?light<=7:light>=8))&&
     !around.some(e=>e.typeId===ns+entry.id&&dist(e.location,p.location)<10);
    if(!eligible(m)){
     // Prefer an eligible species for this exact candidate's light instead of
@@ -6025,7 +6022,7 @@ function wildlifeTick(p,b,site){
  if(spawned){
   // Recording a spawn is separate from observing an entity in the guide.
   mark(p,'wild_spawn_seen',wildlifeIndex.get(m.id));
- }else s.wildAt=t+80; // retry at the next bounded nature scan
+ }else s.wildAt=t+(addonWorld?20:80); // retry at the next bounded nature scan
 
 }
 safeSub('world','after','entityHurt',({hurtEntity:e,damageSource:source,damage})=>{
@@ -6513,10 +6510,12 @@ system.runInterval(()=>{
 
 // Wildlife gets an independent bounded scan so an unrelated HUD, village,
 // equipment or persistence error cannot suppress spawning for that player.
+let wildlifeScanParity=false;
 system.runInterval(()=>{
- const t=system.currentTick;
+ const t=system.currentTick;wildlifeScanParity=!wildlifeScanParity;
  for(const p of world.getAllPlayers())try{
   if(!p.isValid||p.getGameMode()===GameMode.Spectator)continue;
+  if(!p.dimension.id.startsWith(ns+'realm_')&&p.dimension.id!==ns+'warden_arena'&&!wildlifeScanParity)continue;
   if(p.dimension.id===ns+'warden_arena'){
    // Never spawn during a boss fight or if the boss query fails.
    if(!p.dimension.getEntities({type:ns+'time_warden'}).length)wildlifeTick(p,undefined,undefined);
@@ -6527,7 +6526,7 @@ system.runInterval(()=>{
   try{profile=biomeAt(p);}catch{}
   wildlifeTick(p,profile,site);
  }catch(err){if(t%200===0)report('生き物の出現',err);}
-},40);
+},20);
 
 // Terrain queue pump: scans remain throttled to once a second per player,
 // while the next single adaptive job can start as soon as the previous ends.

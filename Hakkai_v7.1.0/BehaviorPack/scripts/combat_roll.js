@@ -1,8 +1,9 @@
+import {horizontalView} from './movement_direction.js';
 import {knownFullCube} from './full_cube_floor.js';
 import {EntityDamageCause,GameMode,InputPermissionCategory} from '@minecraft/server';
 // Three blocks is the maximum checked target. This is a
 // target distance, not a promise about Bedrock physics or interrupted rolls.
-const DOUBLE_TAP=9,COST=10,INVULNERABLE=10,COOLDOWN=5,DISTANCE=3,PER_TICK=.75,SAMPLE=.1;
+const DOUBLE_TAP=14,COST=10,INVULNERABLE=10,COOLDOWN=5,DISTANCE=3,PER_TICK=.75,SAMPLE=.1;
 const ATTACKS=new Set([EntityDamageCause.entityAttack,EntityDamageCause.projectile,
  EntityDamageCause.entityExplosion,EntityDamageCause.magic,EntityDamageCause.sonicBoom,
  EntityDamageCause.ramAttack,EntityDamageCause.maceSmash].filter(x=>typeof x==='string'));
@@ -126,7 +127,7 @@ export function setupCombatRoll({notice,safe}){
    if(!p.isSneaking){e.down=false;e.first=undefined;return;}
    input=p.inputInfo.getMovementVector();
    if(!Number.isFinite(input.x)||!Number.isFinite(input.y)){e.down=false;e.first=undefined;return;}
-   forward=input.y>.6&&Math.abs(input.x)<.7;
+   forward=input.y>.4&&Math.abs(input.x)<.9;
   }catch{e.down=false;e.first=undefined;e.motion=undefined;return;}
   if(!forward){e.down=false;return;}
   if(e.down)return;e.down=true;
@@ -138,9 +139,9 @@ export function setupCombatRoll({notice,safe}){
   if(t<(e.cooldownUntil??0))return; // no cost, animation or immunity renewal
   if(p.getGameMode()!==GameMode.Creative&&s.s<COST){notice(p,'§e回避に必要なスタミナが足りない',35);return;}
   try{
-   const view=p.getViewDirection(),n=Math.hypot(view.x,view.z),at=p.location,d=p.dimension;
-   if(n<.01||![n,at.x,at.y,at.z].every(Number.isFinite))return;
-   const side=input.x,forwardAmount=input.y,rawX=view.x/n*forwardAmount-view.z/n*side,rawZ=view.z/n*forwardAmount+view.x/n*side,dirLen=Math.hypot(rawX,rawZ);
+   const view=horizontalView(p),at=p.location,d=p.dimension;
+   if(!view||![at.x,at.y,at.z].every(Number.isFinite))return;
+   const side=input.x,forwardAmount=input.y,rawX=view.x*forwardAmount-view.z*side,rawZ=view.z*forwardAmount+view.x*side,dirLen=Math.hypot(rawX,rawZ);
    if(!Number.isFinite(dirLen)||dirLen<.01)return;
    // Activation never depends on the support probe. Movement requires verified
    // support at every sample; if unavailable the roll still plays in place.
